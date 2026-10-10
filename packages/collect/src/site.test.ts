@@ -151,9 +151,24 @@ describe('collectSite on the fixture site', () => {
   it('measures speed with Lighthouse and keeps the median', async () => {
     const lh = await runLighthouse(polite, `${base}/`, 'mobile', 2);
     expect(lh!.runs).toHaveLength(2);
+    expect(lh!.runs.every((r) => !r.error)).toBe(true);
     expect(lh!.median.performance).toBeGreaterThan(0);
     expect(lh!.median.lcpMs).toBeGreaterThan(0);
     expect(lh!.version).toMatch(/^13\./);
     expect(requests.length).toBeGreaterThan(0);
   }, 120_000);
+
+  it('runs several Lighthouse measurements at once without them disturbing each other', async () => {
+    const all = await Promise.all([runLighthouse(polite, `${base}/`, 'mobile', 1), runLighthouse(polite, `${base}/tours/`, 'desktop', 1), runLighthouse(polite, `${base}/about/`, 'mobile', 1)]);
+    expect(all.map((l) => l!.runs[0]!.error ?? null)).toEqual([null, null, null]);
+    expect(all.every((l) => (l!.median.performance ?? 0) > 0)).toBe(true);
+  }, 180_000);
+
+  it('keeps the median of the runs that worked and records the ones that failed', async () => {
+    let i = 0;
+    const lh = await runLighthouse(polite, `${base}/`, 'mobile', 3, async () => (i++ === 1 ? { error: 'timed out' } : { version: '13.5.0', performance: i === 1 ? 40 : 60, lcpMs: 3000, cls: 0, tbtMs: 10, images: [] }));
+    expect(lh!.runs.map((r) => r.performance)).toEqual([40, null, 60]);
+    expect(lh!.runs[1]!.error).toBe('timed out');
+    expect(lh!.median.performance).toBe(50);
+  });
 });
