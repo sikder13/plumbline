@@ -1,0 +1,35 @@
+{
+  "currency": "USD",
+  "approved_on": "2026-10-10",
+  "providers": {
+    "openai": {
+      "source_url": "https://developers.openai.com/api/docs/pricing",
+      "read_on": "2026-10-10",
+      "tools": { "web_search_per_call": 0.01 },
+      "models": {
+        "gpt-6-luna": { "input_per_mtok": 0.1, "cached_input_per_mtok": 0.01, "output_per_mtok": 0.5 },
+        "gpt-5-nano": { "input_per_mtok": 0.05, "cached_input_per_mtok": 0.005, "output_per_mtok": 0.4 }
+      },
+      "notes": "Search content tokens are billed at the model's input rate."
+    },
+    "perplexity": {
+      "source_url": "https://docs.perplexity.ai/docs/getting-started/pricing",
+      "read_on": "2026-10-10",
+      "tools": { "web_search_per_call": 0.0025, "fetch_url_per_call": 0.0005 },
+      "models": {
+        "perplexity/sonar": { "input_per_mtok": 0.25, "cached_input_per_mtok": 0.0625, "output_per_mtok": 2.5 },
+        "openai/gpt-6-luna": { "input_per_mtok": 0.1, "cached_input_per_mtok": 0.01, "output_per_mtok": 0.5 }
+      },
+      "notes": "Agent API. Each response reports its own cost in usage.cost.total_cost, which is what the ledger records."
+    },
+    "google_places": {
+      "source_url": "https://developers.google.com/maps/billing-and-pricing/pricing",
+      "read_on": "2026-10-10",
+      "sku": "Places API (New) Text Search Enterprise",
+      "per_call": 0.035,
+      "free_calls_per_month": 1000,
+      "count_as_free_until": 900,
+      "notes": "The field mask includes websiteUri, rating, userRatingCount and nationalPhoneNumber, which are Enterprise fields. Calls are recorded at 0 actual while the month's count is under 900, and at list price above that."
+    }
+  }
+}
