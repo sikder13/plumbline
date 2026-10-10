@@ -1,0 +1,23 @@
+# Local-only material
+.claude/
+CLAUDE.md
+*.local.*
+.env
+data/
+reports/
+exports/
+inputs/
+
+# Dependencies and build output
+node_modules/
+dist/
+.next/
+*.tsbuildinfo
+coverage/
+.turbo/
+
+# Editor and OS
+.DS_Store
+.idea/
+.vscode/
+*.log
