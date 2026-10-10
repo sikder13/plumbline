@@ -31,15 +31,23 @@ export function findPhrases(page: PageCapture, phrases: Phrase[]): TextHit[] {
   return out;
 }
 
-const COPYRIGHT = /(?:©|\(c\)|&copy;|\bcopyright\b)[^\d\n]{0,40}?((?:19|20)\d{2})(?:\s*[-–—/to]+\s*((?:19|20)\d{2}))?/gi;
+const COPYRIGHT_WORD = /©|\(c\)|&copy;|\bcopy(?:right|write)\b|\ball rights reserved\b/gi;
+const YEAR = /(?<![\d$.,/-])(?<!\d[\s-])((?:19[89]|20[0-4])\d)(?![\d/]|\.\d|\s?(?:km|m\b|kg|ft|people|guests))/g;
 
 /** The newest year a visible copyright line claims, with where it was seen. */
 export function copyrightYear(page: PageCapture): { year: number; hit: TextHit } | null {
   let best: { year: number; hit: TextHit } | null = null;
   for (const block of page.blocks) {
-    for (const m of block.text.matchAll(COPYRIGHT)) {
-      const year = Math.max(Number(m[1]), m[2] ? Number(m[2]) : 0);
-      if (!best || year > best.year) best = { year, hit: hit(page, block, 'copyright', m) };
+    const words = [...block.text.matchAll(COPYRIGHT_WORD)];
+    if (!words.length) continue;
+    for (const y of block.text.matchAll(YEAR)) {
+      const near = words.some((w) => Math.abs((w.index ?? 0) - (y.index ?? 0)) <= 80);
+      if (!near) continue;
+      const year = Number(y[1]);
+      if (!best || year > best.year) {
+        const start = Math.min(y.index ?? 0, ...words.map((w) => w.index ?? 0));
+        best = { year, hit: { label: 'copyright', match: y[0], excerpt: excerptAround(block.text, start, 40, 70), block, pageUrl: page.finalUrl, viewport: page.viewport } };
+      }
     }
   }
   return best;
@@ -107,16 +115,20 @@ export function datedNotices(page: PageCapture, now: Date): NoticeHit[] {
   return out;
 }
 
-/** Months (1 to 12) in which a seasonal promotion can fairly be on show in New Zealand. */
-const SEASONS: { label: string; re: RegExp; months: number[] }[] = [
-  { label: 'summer', re: /\bsummer\b/i, months: [10, 11, 12, 1, 2, 3] },
-  { label: 'autumn', re: /\b(autumn|fall)\b/i, months: [1, 2, 3, 4, 5, 6] },
-  { label: 'winter', re: /\bwinter\b/i, months: [4, 5, 6, 7, 8, 9] },
-  { label: 'spring', re: /\bspring\b/i, months: [7, 8, 9, 10, 11, 12] },
-  { label: 'christmas', re: /\b(christmas|xmas)\b/i, months: [10, 11, 12, 1] },
-  { label: 'easter', re: /\beaster\b/i, months: [2, 3, 4] },
+/**
+ * Months (1 to 12) in New Zealand. `promo` is when a promotion for the season can fairly be on show,
+ * which starts a month early. `current` is when a line saying the season is here can be true.
+ */
+const SEASONS: { label: string; re: RegExp; promo: number[]; current: number[] }[] = [
+  { label: 'summer', re: /\bsummer\b/i, promo: [11, 12, 1, 2, 3], current: [12, 1, 2, 3] },
+  { label: 'autumn', re: /\b(autumn|fall)\b/i, promo: [2, 3, 4, 5, 6], current: [3, 4, 5, 6] },
+  { label: 'winter', re: /\bwinter\b/i, promo: [5, 6, 7, 8, 9], current: [6, 7, 8, 9] },
+  { label: 'spring', re: /\bspring\b/i, promo: [8, 9, 10, 11, 12], current: [9, 10, 11, 12] },
+  { label: 'christmas', re: /\b(christmas|xmas)\b/i, promo: [9, 10, 11, 12, 1], current: [11, 12, 1] },
+  { label: 'easter', re: /\beaster\b/i, promo: [2, 3, 4], current: [3, 4] },
 ];
 const PROMO = /\b(special|specials|sale|deal|deals|offer|offers|promo|promotion|discount|\d{1,2}\s?% off|book now for|limited time)\b/i;
+const HERE_NOW = /\b(has (?:started|arrived|begun)|is (?:here|now here|upon us|in full swing)|is now on|have started)\b/i;
 
 export function seasonalMismatches(page: PageCapture, month: number): (TextHit & { season: string })[] {
   const out: (TextHit & { season: string })[] = [];
@@ -125,9 +137,12 @@ export function seasonalMismatches(page: PageCapture, month: number): (TextHit &
     for (const s of SEASONS) {
       const m = s.re.exec(block.text);
       if (!m) continue;
+      const here = HERE_NOW.exec(block.text.slice(m.index, m.index + 60));
       const promo = PROMO.exec(block.text);
-      if (!promo || Math.abs((promo.index ?? 0) - m.index) > 60) continue;
-      if (!s.months.includes(month)) out.push({ ...hit(page, block, s.label, m), season: s.label });
+      const promoNear = promo && Math.abs((promo.index ?? 0) - m.index) <= 60;
+      if (here ? !s.current.includes(month) : promoNear ? !s.promo.includes(month) : false) {
+        out.push({ ...hit(page, block, s.label, m), season: s.label });
+      }
     }
   }
   return out;

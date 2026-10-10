@@ -13,9 +13,17 @@ export interface ContactLinkProblem {
 const EMAIL_OK = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$/;
 
 /** Checks the form of one link. Returns null when there is nothing wrong with it. */
-export function contactLinkProblem(link: Pick<PageLink, 'raw' | 'href'>): Omit<ContactLinkProblem, 'link'> | null {
+export function contactLinkProblem(link: Pick<PageLink, 'raw' | 'href'> & { text?: string }): Omit<ContactLinkProblem, 'link'> | null {
   const raw = link.raw.trim();
   const lower = raw.toLowerCase();
+  const text = (link.text ?? '').trim();
+
+  // A link that shows an email address or a phone number but goes nowhere.
+  if (raw === '' || raw === '#') {
+    if (EMAIL_OK.test(text)) return { kind: 'mailto', problem: `The link showing "${text}" has no address behind it.` };
+    if (/^\+?[\d\s()-]{8,}$/.test(text) && text.replace(/\D/g, '').length >= 8) return { kind: 'tel', problem: `The link showing "${text}" has no number behind it.` };
+    return null;
+  }
 
   if (lower.startsWith('mailto:')) {
     const address = decodeURIComponent(raw.slice(7).split('?')[0] ?? '').trim();
@@ -30,6 +38,7 @@ export function contactLinkProblem(link: Pick<PageLink, 'raw' | 'href'>): Omit<C
     if (!digits) return { kind: 'tel', problem: 'The phone link has no number.' };
     if (digits.length < 7) return { kind: 'tel', problem: `The phone link holds "${number}", which is too short to dial.` };
     if (/[a-z]{3,}/i.test(number.replace(/ext\.?|x/gi, ''))) return { kind: 'tel', problem: `The phone link holds "${number}", which is not a phone number.` };
+    if (/^64[2-9]\d{7,9}$/.test(number.replace(/[\s()-]/g, ''))) return { kind: 'tel', problem: `The phone link holds "${number}", a country code with no plus sign, so it will not dial from overseas.` };
     return null;
   }
   if (/^https?:\/\/https?(:|\/|%3a)/i.test(raw) || /^https?:\/\/https?$/i.test(raw) || /^https?:\/\/Http/.test(raw)) {
@@ -40,6 +49,7 @@ export function contactLinkProblem(link: Pick<PageLink, 'raw' | 'href'>): Omit<C
     if (!rest || /^https?:|^www\.|facebook\.com/i.test(rest)) return { kind: 'messenger', problem: `The Messenger link is malformed: "${raw.slice(0, 80)}".` };
     return null;
   }
+  if (/^https?:\/\/(www\.)?whatsapp\.com\/dl\/?$/i.test(raw)) return { kind: 'whatsapp', problem: 'The link opens the WhatsApp download page, not a chat with the business.' };
   if (/^https?:\/\/(wa\.me|api\.whatsapp\.com|web\.whatsapp\.com)(\/|$)/i.test(raw) || lower.startsWith('whatsapp:')) {
     const digits = /^https?:\/\/wa\.me\//i.test(raw) ? (raw.replace(/^https?:\/\/wa\.me\//i, '').split(/[/?]/)[0] ?? '').replace(/\D/g, '') : (/phone=([^&]*)/i.exec(raw)?.[1] ?? '').replace(/\D/g, '');
     if (digits.length < 7) return { kind: 'whatsapp', problem: `The WhatsApp link has no usable phone number: "${raw.slice(0, 80)}".` };

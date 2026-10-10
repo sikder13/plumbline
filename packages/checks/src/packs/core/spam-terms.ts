@@ -1,0 +1,30 @@
+/** Terms that mark injected content when they appear on a business site that has nothing to do with them. */
+export const SPAM_TERMS: RegExp[] = [
+  /\b(?:online )?casinos?\b/i,
+  /\bkasin[oa]\b/i,
+  /\b(?:sports ?)?betting\b/i,
+  /\bbookmakers?\b/i,
+  /\bsportsbook\b/i,
+  /\bgambling\b/i,
+  /\bslots?\b(?= (?:machine|game|online|bonus))/i,
+  /\bfree spins\b/i,
+  /\bno deposit bonus\b/i,
+  /\bpoker\b/i,
+  /\bs[áa]zk(?:a|y|ov[áýé]|en[íi])\w*/i,
+  /\bhazard\w*/i,
+  /\bbukmacher\w*/i,
+  /\bwett(?:en|anbieter)\b/i,
+  /\bapuestas\b/i,
+  /\bviagra\b/i,
+  /\bcialis\b/i,
+  /\bpayday loans?\b/i,
+  /\bonline pharmacy\b/i,
+  /\bcbd gummies\b/i,
+  /\breplica (?:watches|handbags)\b/i,
+  /\bessay writing service\b/i,
+  /\bescorts?\b(?= (?:service|girls|agency))/i,
+  /\bcrypto (?:casino|betting|signals)\b/i,
+  /\bforex (?:signals|broker)\b/i,
+];
+
+export const SPAM_HOSTS = /(bet|casino|kasino|poker|slots?|gambl|wager|pharma|viagra|loan|escort|sazk)/i;

@@ -26,6 +26,11 @@ describe('content analysis', () => {
     expect(copyrightYear(page(['Copyright © 2012 - 2026 Fixture Ltd']))!.year).toBe(2026);
     expect(copyrightYear(page(['(c) Fixture Tours 2019. All rights reserved']))!.year).toBe(2019);
     expect(copyrightYear(page(['Built in 2015 by hand']))).toBeNull();
+    expect(copyrightYear(page(['Copywrite 2023 Glacier Fixture Tours']))!.year).toBe(2023);
+    expect(copyrightYear(page(['2023 © Copyright - Fixture Penguins']))!.year).toBe(2023);
+    expect(copyrightYear(page(['ALL RIGHTS RESERVED. FIXTURE KAYAKS LTD 2018']))!.year).toBe(2018);
+    expect(copyrightYear(page(['Copyright 2020 - Fixture Guiding - All rights reserved']))!.year).toBe(2020);
+    expect(copyrightYear(page(['© Fixture Ltd. Phone 03 525 2019 or $2015 per boat']))).toBeNull();
   });
 
   it('parses dates day first', () => {
@@ -52,6 +57,8 @@ describe('content analysis', () => {
     expect(seasonalMismatches(page(['Our winter special is on now']), 7)).toEqual([]);
     expect(seasonalMismatches(page(['Summer deals from $99']), 6).map((s) => s.season)).toEqual(['summer']);
     expect(seasonalMismatches(page(['Summer deals from $99']), 11)).toEqual([]);
+    expect(seasonalMismatches(page(['Summer has started, Xmas parties are booking fast.']), 10).map((s) => s.season)).toEqual(['summer']);
+    expect(seasonalMismatches(page(['Summer has started, Xmas parties are booking fast.']), 12)).toEqual([]);
     expect(seasonalMismatches(page(['We love winter mornings on the lake']), 1)).toEqual([]);
   });
 
@@ -82,7 +89,7 @@ describe('content analysis', () => {
 });
 
 describe('contact link validation', () => {
-  const problem = (raw: string) => contactLinkProblem({ raw, href: raw })?.kind ?? null;
+  const problem = (raw: string, text = '') => contactLinkProblem({ raw, href: raw, text })?.kind ?? null;
   it('accepts well formed links', () => {
     for (const ok of ['mailto:info@fixture.co.nz', 'mailto:a@b.nz?subject=Hi', 'tel:+6494028105', 'tel:09 402 8105', 'https://wa.me/64274983323', 'https://m.me/fixturetours', 'https://example.com/', '/contact']) expect(problem(ok)).toBeNull();
   });
@@ -97,6 +104,13 @@ describe('contact link validation', () => {
     expect(problem('https://m.me/')).toBe('messenger');
     expect(problem('https://wa.me/')).toBe('whatsapp');
     expect(problem('https://api.whatsapp.com/send?phone=')).toBe('whatsapp');
+    expect(problem('http://Http')).toBe('scheme');
+    expect(problem('https://whatsapp.com/dl/')).toBe('whatsapp');
+    expect(problem('tel:64274275120')).toBe('tel');
+    expect(problem('', 'hello@fixture.co.nz')).toBe('mailto');
+    expect(problem('#', '+64 22 383 3051')).toBe('tel');
+    expect(problem('#', 'Tours')).toBeNull();
+    expect(problem('', '')).toBeNull();
   });
   it('counts only statuses that mean a page is gone', () => {
     expect([404, 410, 500, 502].every(isBrokenStatus)).toBe(true);

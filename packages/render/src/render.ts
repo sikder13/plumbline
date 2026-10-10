@@ -246,10 +246,14 @@ export async function collectVisible(page: Page): Promise<Collected> {
   return (await page.evaluate('window.__plumb.collect()')) as Collected;
 }
 
+/** Width of a screenshot tile in CSS pixels. A phone page that overflows is laid out wider than the device. */
+export function tileCssWidth(viewport: Viewport, layout: Pick<PageLayout, 'innerWidth'>): number {
+  return Math.max(VIEWPORTS[viewport].width, Math.min(layout.innerWidth, 1440));
+}
+
 async function screenshotTiles(page: Page, viewport: Viewport, layout: PageLayout, dir: string): Promise<Tile[]> {
   const docH = layout.docH;
-  // A phone page that overflows is laid out wider than the device, so the tile follows the layout width.
-  const width = Math.max(VIEWPORTS[viewport].width, Math.min(layout.innerWidth, 1440));
+  const width = tileCssWidth(viewport, layout);
   const total = Math.min(Math.max(docH, VIEWPORTS[viewport].height), MAX_CAPTURE_HEIGHT[viewport]);
   // Tiles come out at the device's pixel width, however wide the layout is.
   const scale = (VIEWPORTS[viewport].deviceScaleFactor * VIEWPORTS[viewport].width) / width;
