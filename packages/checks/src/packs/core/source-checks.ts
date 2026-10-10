@@ -24,11 +24,15 @@ function siteEmails(site: SiteData): Set<string> {
 }
 
 /** A listing is trusted for comparison only when it is a directory page that names this business. */
-function comparable(site: SiteData, l: ListingData): boolean {
-  if (l.status !== 'fetched' || l.kind !== 'directory' || !l.name) return false;
-  const a = foldName(site.business.name).split(' ').filter((w) => w.length > 2);
+function namesBusiness(site: SiteData, l: ListingData): boolean {
+  if (!l.name) return false;
+  const a = foldName(site.business.name.replace(/\(.*?\)/g, ' ')).split(' ').filter((w) => w.length > 2);
   const b = foldName(l.name);
   return a.length > 0 && a.filter((w) => b.includes(w)).length / a.length >= 0.6;
+}
+
+function comparable(site: SiteData, l: ListingData): boolean {
+  return l.status === 'fetched' && l.kind === 'directory' && namesBusiness(site, l);
 }
 
 export const C37_not_named_by_ai: Check = {
@@ -49,7 +53,7 @@ export const C37_not_named_by_ai: Check = {
         pageUrl: null,
         viewport: null,
         where: 'homepage_mobile',
-        detail: { namedIn: ai.namedIn, questions: ai.questions, othersNamed: strong.slice(0, 6), business: site.business.name },
+        detail: { namedIn: ai.namedIn, questions: ai.questions, othersNamed: strong.slice(0, 6), business: site.business.name, spanMinutes: Math.round(ai.spanMinutes), reproducedAcrossPasses: ai.holdsInBothPasses },
         evidence: [
           {
             kind: 'ai',
@@ -74,7 +78,7 @@ export const C38_inconsistent_contact_details: Check = {
     const emails = siteEmails(site);
     const differences: { listing: string; field: string; site: string[]; listingValue: string[] }[] = [];
     for (const l of site.listings.filter((x) => comparable(site, x))) {
-      const lp = l.phones.map(normalizePhone).filter((p) => p.length >= 7);
+      const lp = l.phones.map(normalizePhone).filter((p) => p.length >= 7 && p.length <= 10);
       const le = l.emails.map(normalizeEmail);
       // Freephone and local numbers are both valid for one business, so a difference needs no number in common at all.
       if (phones.size && lp.length && !lp.some((p) => phones.has(p))) differences.push({ listing: l.url, field: 'phone', site: [...phones], listingValue: l.phones });
@@ -106,8 +110,9 @@ export const C61_price_differs_from_listing: Check = {
     const amounts = new Set(sitePrices.map((p) => p.amount));
     if (!amounts.size) return [];
     for (const l of site.listings) {
-      if (l.status !== 'fetched' || !l.prices.length || !(l.kind === 'directory' || l.kind === 'booking_platform' || l.kind === 'booking_system')) continue;
-      if (l.kind === 'directory' && !comparable(site, l)) continue;
+      // Only listings that price in New Zealand dollars and name this business are compared.
+      if (l.status !== 'fetched' || !l.prices.length || l.prices.length > 12) continue;
+      if (!(l.kind === 'directory' || l.platform === 'Bookme') || !namesBusiness(site, l)) continue;
       const listingAmounts = [...new Set(l.prices.map((p) => p.amount))].filter((a) => a >= 10);
       // Any figure in common means the two may well agree, so nothing is claimed.
       if (!listingAmounts.length || listingAmounts.some((a) => amounts.has(a))) continue;
@@ -126,7 +131,7 @@ export const C61_price_differs_from_listing: Check = {
   },
 };
 
-const REVIEW_TEXT = /\b(\d(?:\.\d)?\s*(?:\/|out of)\s*5|\d(?:\.\d)?\s*stars?|\d[\d,]*\+?\s*(?:google |tripadvisor |five[- ]star |5[- ]star )?reviews?|reviews?|testimonials?|tripadvisor|trip advisor|travell?ers'? choice|certificate of excellence|what (?:our )?(?:guests|customers|clients|people) (?:say|are saying)|rated)\b|★|⭐/i;
+const REVIEW_TEXT = /\b(\d(?:\.\d)?\s*(?:\/|out of)\s*5|\d(?:\.\d)?\s*stars?|\d[\d,]*\+?\s*(?:google |tripadvisor |five[- ]star |5[- ]star )?reviews?|reviews?|testimonials?|tripadvisor|trip advisor|travell?ers'? choice|certificate of excellence|what (?:our )?(?:guests|customers|clients|people) (?:say|are saying)|rated \d(?:\.\d)?)\b|★|⭐/i;
 const REVIEW_WIDGET = /(trustindex|elfsight|taggbox|tripadvisor\.[a-z.]+\/(?:WidgetEmbed|widgets)|jscache\.com|widget\.trustpilot|reviews\.io|birdeye|google.*reviews|sociablekit|featurable|embedsocial|rezdy.*reviews)/i;
 
 export function showsReviews(site: SiteData): string | null {

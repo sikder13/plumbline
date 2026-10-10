@@ -21,3 +21,6 @@ coverage/
 .idea/
 .vscode/
 *.log
+
+# Review app build output
+apps/review/next-env.d.ts

@@ -1,4 +1,4 @@
-import { bothTimes, config, minutesBetween, paths, utcIso, type CandidateFinding, type Db, type EvidenceSpec, type Tier } from '@plumbline/core';
+import { bothTimes, config, minutesBetween, paths, type CandidateFinding, type Db, type EvidenceSpec, type Tier } from '@plumbline/core';
 import type { SiteData } from '@plumbline/collect';
 import { cropElement, pageShot } from '@plumbline/evidence';
 import type { ImpactEntry } from '@plumbline/impact';
@@ -7,6 +7,15 @@ import { join } from 'node:path';
 import { CHECKS } from './ids.ts';
 import { checkById, checksFor } from './registry.ts';
 import type { AiSummary } from './types.ts';
+
+/**
+ * A finding built from AI answers is not re-measured by visiting the site. It counts as reproduced
+ * when its answers came in two passes at least 60 minutes apart and both passes agree.
+ */
+function settleAiFinding(db: Db, findingId: number, f: CandidateFinding, verifiedAt: string): void {
+  if (checkById(f.checkId)?.evidenceSpec !== 'ai') return;
+  if (f.detail.reproducedAcrossPasses === true) db.prepare("UPDATE findings SET status = CASE status WHEN 'candidate' THEN 'reproduced' ELSE status END, reproduced = 1, last_verified_at = ? WHERE id = ?").run(verifiedAt, findingId);
+}
 
 export function scoreOf(severity: number, where: CandidateFinding['where'], tier: Tier): number {
   return Math.round(severity * config.score.visibility[where] * config.score.tier[tier] * 100) / 100;
@@ -108,6 +117,7 @@ export async function recordRunA(db: Db, library: Map<string, ImpactEntry>, site
     const r = insert.run(businessId, batch, f.checkId, m.pack, m.tier, severity, f.fingerprint, f.title, f.pageUrl, f.viewport, config.score.visibility[f.where], scoreOf(severity, f.where, m.tier), JSON.stringify(f.detail), site.runId, site.runId, site.finishedAt);
     if (r.changes) {
       await writeEvidence(db, Number(r.lastInsertRowid), site.runId, site, f.evidence, evidenceRoot);
+      settleAiFinding(db, Number(r.lastInsertRowid), f, site.finishedAt);
       n += 1;
     }
   }
@@ -133,6 +143,16 @@ export async function recordRunB(db: Db, library: Map<string, ImpactEntry>, site
     const again = byKey.get(`${row.check_id}|${row.fingerprint}`);
     byKey.delete(`${row.check_id}|${row.fingerprint}`);
     const check = checkById(row.check_id);
+    if (check?.evidenceSpec === 'ai') {
+      // Seeing the same stored answers a second time proves nothing. Only the answers' own spread in time does.
+      if (again) {
+        db.prepare('UPDATE findings SET detail = ?, title = ?, last_run_id = ? WHERE id = ?').run(JSON.stringify(again.detail), again.title, site.runId, row.id);
+        await writeEvidence(db, row.id, site.runId, site, again.evidence, evidenceRoot);
+        settleAiFinding(db, row.id, again, site.finishedAt);
+        if (again.detail.reproducedAcrossPasses === true) result.reproduced += 1;
+      }
+      continue;
+    }
     const merged = again ? (check?.merge ? check.merge(JSON.parse(row.detail), again.detail) : again.detail) : null;
     if (!again || !merged) {
       if (row.status === 'candidate') result.notReproduced += 1;
@@ -155,6 +175,7 @@ export async function recordRunB(db: Db, library: Map<string, ImpactEntry>, site
     const r = insert.run(businessId, batch, f.checkId, m.pack, m.tier, severity, f.fingerprint, f.title, f.pageUrl, f.viewport, config.score.visibility[f.where], scoreOf(severity, f.where, m.tier), JSON.stringify(f.detail), site.runId, site.runId, site.finishedAt);
     if (r.changes) {
       await writeEvidence(db, Number(r.lastInsertRowid), site.runId, site, f.evidence, evidenceRoot);
+      settleAiFinding(db, Number(r.lastInsertRowid), f, site.finishedAt);
       result.newInB += 1;
     }
   }
@@ -187,19 +208,4 @@ export async function recordRecheck(db: Db, site: SiteData, batch: string, findi
   return result;
 }
 
-/** Flags the three highest scoring approved findings for a business. */
-export function refreshTop3(db: Db, businessId: number, batch: string): number[] {
-  db.prepare('UPDATE findings SET top3 = 0 WHERE business_id = ? AND batch = ?').run(businessId, batch);
-  const top = db.prepare("SELECT id FROM findings WHERE business_id = ? AND batch = ? AND status = 'approved' ORDER BY score DESC, severity DESC, id LIMIT 3").all(businessId, batch) as { id: number }[];
-  for (const t of top) db.prepare('UPDATE findings SET top3 = 1 WHERE id = ?').run(t.id);
-  return top.map((t) => t.id);
-}
-
-export function decide(db: Db, findingId: number, decision: 'approve' | 'reject', note: string | null): void {
-  const f = db.prepare('SELECT business_id, batch, reproduced, status FROM findings WHERE id = ?').get(findingId) as { business_id: number; batch: string; reproduced: number; status: string } | undefined;
-  if (!f) throw new Error(`no finding ${findingId}`);
-  if (decision === 'approve' && !f.reproduced) throw new Error('a finding must be reproduced before it can be approved');
-  db.prepare('INSERT INTO reviews (finding_id, decision, note, at) VALUES (?, ?, ?, ?)').run(findingId, decision, note, utcIso());
-  db.prepare('UPDATE findings SET status = ? WHERE id = ?').run(decision === 'approve' ? 'approved' : 'rejected', findingId);
-  refreshTop3(db, f.business_id, f.batch);
-}
+export { decide, refreshTop3 } from './review.ts';

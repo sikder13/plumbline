@@ -38,6 +38,8 @@ const YEAR = /(?<![\d$.,/-])(?<!\d[\s-])((?:19[89]|20[0-4])\d)(?![\d/]|\.\d|\s?(
 export function copyrightYear(page: PageCapture): { year: number; hit: TextHit } | null {
   let best: { year: number; hit: TextHit } | null = null;
   for (const block of page.blocks) {
+    // Map and widget credits carry their own year and say nothing about the site.
+    if (/map data|google|mapbox|openstreetmap|leaflet|tripadvisor llc|powered by/i.test(block.text) && block.text.length < 120) continue;
     const words = [...block.text.matchAll(COPYRIGHT_WORD)];
     if (!words.length) continue;
     for (const y of block.text.matchAll(YEAR)) {
@@ -209,10 +211,23 @@ export function pricesInText(text: string): { amount: number; text: string; cont
 
 const FOUNDED = /\b(?:since|established(?: in)?|est\.?|founded(?: in)?|operating since|in business since|started in|opened in|trading since|running since)\s+((?:19|20)\d{2})\b/gi;
 
-export function foundingYears(page: PageCapture): (TextHit & { year: number })[] {
+const ABOUT_SELF = /\b(we|we've|we're|our|us|family|sharing|operating|running|guiding|trading|proudly|locally owned)\b/i;
+
+/**
+ * Starting years the business claims for itself. A sentence about someone else ("the trust was
+ * founded in 1969") is left out: the claim must speak in the first person or carry the business name.
+ */
+export function foundingYears(page: PageCapture, businessName = ''): (TextHit & { year: number })[] {
   const out: (TextHit & { year: number })[] = [];
+  const nameWords = businessName.toLowerCase().split(/[^a-z0-9āēīōū]+/).filter((w) => w.length >= 5);
   for (const block of page.blocks) {
-    for (const m of block.text.matchAll(FOUNDED)) out.push({ ...hit(page, block, 'founded', m), year: Number(m[1]) });
+    for (const m of block.text.matchAll(FOUNDED)) {
+      const at = m.index ?? 0;
+      // A claim is often split from its subject by a full stop ("Fixture Tours. Est. 2004."), so nearby words count.
+      const sentence = block.text.slice(Math.max(0, at - 90), at + m[0].length + 60).toLowerCase();
+      const own = ABOUT_SELF.test(sentence) || nameWords.filter((w) => sentence.includes(w)).length >= Math.min(2, nameWords.length || 99);
+      if (own) out.push({ ...hit(page, block, 'founded', m), year: Number(m[1]) });
+    }
   }
   return out;
 }

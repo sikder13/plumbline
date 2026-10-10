@@ -27,6 +27,7 @@ describe('content analysis', () => {
     expect(copyrightYear(page(['(c) Fixture Tours 2019. All rights reserved']))!.year).toBe(2019);
     expect(copyrightYear(page(['Built in 2015 by hand']))).toBeNull();
     expect(copyrightYear(page(['Copywrite 2023 Glacier Fixture Tours']))!.year).toBe(2023);
+    expect(copyrightYear(page(['Map data ©2026 Google', 'ALL RIGHTS RESERVED. FIXTURE KAYAKS LTD 2018']))!.year).toBe(2018);
     expect(copyrightYear(page(['2023 © Copyright - Fixture Penguins']))!.year).toBe(2023);
     expect(copyrightYear(page(['ALL RIGHTS RESERVED. FIXTURE KAYAKS LTD 2018']))!.year).toBe(2018);
     expect(copyrightYear(page(['Copyright 2020 - Fixture Guiding - All rights reserved']))!.year).toBe(2020);
@@ -79,7 +80,9 @@ describe('content analysis', () => {
   });
 
   it('reads founding year claims', () => {
-    expect(foundingYears(page(['Established in 1998 and still going', 'Founded 2004.', 'Operating since 1998'])).map((f) => f.year)).toEqual([1998, 2004, 1998]);
+    expect(foundingYears(page(['We were established in 1998 and are still going', 'Fixture Kayak Tours. Founded 2004.', 'Operating since 1998']), 'Fixture Kayak Tours').map((f) => f.year)).toEqual([1998, 2004, 1998]);
+    expect(foundingYears(page(['The Akaroa Civic Trust protects the town. Established in 1960.', 'Hinewai Reserve was established in 1987 by Hugh Wilson.']), 'Fixture Kayak Tours')).toEqual([]);
+    expect(foundingYears(page(['Sharing Abel Tasman Since 1988', 'Family-run since 2010'])).map((f) => f.year)).toEqual([1988, 2010]);
   });
 
   it('pulls phone numbers and emails out of text', () => {

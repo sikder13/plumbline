@@ -92,7 +92,7 @@ export interface ListingData {
   url: string;
   platform: string;
   kind: 'booking_system' | 'booking_platform' | 'directory' | 'review' | 'other';
-  status: 'fetched' | 'robots' | 'error' | 'not_fetched';
+  status: 'fetched' | 'robots' | 'blocked' | 'error' | 'not_fetched';
   name: string | null;
   phones: string[];
   emails: string[];

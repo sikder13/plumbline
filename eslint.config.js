@@ -16,6 +16,10 @@ export default tseslint.config(
     },
   },
   {
+    files: ['apps/review/**/*.{ts,tsx}'],
+    languageOptions: { globals: { ...globals.browser, ...globals.node } },
+  },
+  {
     files: ['packages/*/src/inpage*.js'],
     languageOptions: { globals: { ...globals.browser }, sourceType: 'script' },
     rules: { '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }] },

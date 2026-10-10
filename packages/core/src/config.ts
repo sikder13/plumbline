@@ -2,7 +2,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
+/** The repository root. A bundler can move this file, so PLUMBLINE_ROOT overrides the computed path. */
+export const ROOT = process.env.PLUMBLINE_ROOT ? resolve(process.env.PLUMBLINE_ROOT) : resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 
 export const paths = {
   root: ROOT,
@@ -64,7 +65,7 @@ export const config = {
     robotsCacheMs: 24 * 60 * 60 * 1000,
     timeoutMs: 30_000,
   },
-  links: { timeoutMs: 15_000, retries: 2, maxInternal: 60, maxExternal: 40 },
+  links: { timeoutMs: 15_000, retries: 2, maxInternal: 40, maxExternal: 30 },
   reproduce: { minGapMinutes: 60, measurementsPerRun: 3 },
   fresh: { maxAgeHours: 24 },
   evidence: { contextPx: 120, boxPx: 4, boxColor: '#E4572E', maxWidth: { mobile: 1080, desktop: 1600 } },

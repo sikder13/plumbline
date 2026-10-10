@@ -159,7 +159,9 @@ export const C05_possible_compromise: Check = {
       const foreignText = foreign.map((f) => f.block.text).join('\n');
       const spam = SPAM_TERMS.map((re) => re.exec(foreignText)?.[0]).filter((x): x is string => !!x);
       const first = foreign[0]!;
-      // An outbound link sitting inside the foreign text, or to a host that names itself.
+      // A business often publishes its own pages in other languages. That is not a compromise, so a
+      // foreign block counts only with spam wording, or a link beside it to a host that names itself.
+      if (page.meta.hreflangs.length || /french|german|deutsch|chinese|japanese|korean|spanish|francais|\/(fr|de|zh|ja|ko|es|cn)(\/|$)/i.test(page.finalUrl)) continue;
       const top = Math.min(...foreign.map((f) => f.block.box.y));
       const bottom = Math.max(...foreign.map((f) => f.block.box.y + f.block.box.h));
       const outbound = page.links.filter((l) => {
@@ -171,7 +173,7 @@ export const C05_possible_compromise: Check = {
           return false;
         }
         if (host.replace(/^www\./, '') === new URL(page.finalUrl).hostname.replace(/^www\./, '')) return false;
-        return (l.box.y >= top - 40 && l.box.y <= bottom + 40) || SPAM_HOSTS.test(host);
+        return l.box.y >= top - 40 && l.box.y <= bottom + 40 && SPAM_HOSTS.test(host);
       });
       if (!spam.length && !outbound.length) continue;
       out.push({
@@ -224,8 +226,9 @@ export const C60_conflicting_facts: Check = {
   appliesTo: ({ site }) => !site.blocked,
   evaluate({ site }) {
     const byYear = new Map<number, { page: (typeof site.inner)[number]; hit: ReturnType<typeof foundingYears>[number] }>();
-    for (const page of pagesInOrder(site)) {
-      for (const f of foundingYears(page)) if (!byYear.has(f.year)) byYear.set(f.year, { page, hit: f });
+    // Only the homepage and pages about the business are read. History and blog pages talk about other people's dates.
+    for (const page of pagesInOrder(site).filter((p) => whereOf(site, p) !== 'inner' || /about|story|who-we-are|our-/i.test(p.finalUrl))) {
+      for (const f of foundingYears(page, site.business.name)) if (!byYear.has(f.year)) byYear.set(f.year, { page, hit: f });
     }
     if (byYear.size < 2) return [];
     const years = [...byYear.keys()].sort((a, b) => a - b);

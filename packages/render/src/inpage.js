@@ -263,8 +263,8 @@
   function regionOf(el) {
     return {
       inHeader: !!el.closest('header, [role="banner"]'),
-      inNav: !!el.closest('nav, [role="navigation"], [class*="menu" i], [class*="navbar" i], [id*="menu" i]'),
-      inFooter: !!el.closest('footer, [role="contentinfo"], [class*="footer" i], [id*="footer" i]'),
+      inNav: !!el.closest('nav, [role="navigation"], ul.menu, ul.nav, .navbar, .main-menu, .main-nav, .main-navigation, .nav-menu, .menu-item, #menu, #nav, #navigation, #main-menu, #mainmenu'),
+      inFooter: !!el.closest('footer, [role="contentinfo"], #footer, .footer, .site-footer, #colophon'),
     };
   }
 

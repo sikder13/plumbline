@@ -5,7 +5,7 @@ import { fingerprintUrl } from './booking.ts';
 import { emailsIn, phonesIn, pricesInText } from './content.ts';
 import type { ListingData } from './types.ts';
 
-const DIRECTORIES = /(^|\.)(newzealand\.com|northlandnz\.com|rotoruanz\.com|lovetaupo\.com|thecoromandel\.com|nelsontasman\.nz|marlboroughnz\.com|christchurchnz\.com|queenstownnz\.co\.nz|dunedinnz\.com|southlandnz\.com|fiordland\.org\.nz|westcoast\.co\.nz|wellingtonnz\.com|hawkesbaynz\.com|aucklandnz\.com|bayofplentynz\.com|waikatonz\.com|kaikoura\.co\.nz|mackenzienz\.com|lakewanaka\.co\.nz|rankers\.co\.nz|aa\.co\.nz|doc\.govt\.nz)$/;
+const DIRECTORIES = /(^|\.)(newzealand\.com|northlandnz\.com|rotoruanz\.com|lovetaupo\.com|thecoromandel\.com|nelsontasman\.nz|marlboroughnz\.com|christchurchnz\.com|queenstownnz\.co\.nz|dunedinnz\.com|southlandnz\.com|fiordland\.org\.nz|westcoast\.co\.nz|wellingtonnz\.com|hawkesbaynz\.com|aucklandnz\.com|bayofplentynz\.com|waikatonz\.com|kaikoura\.co\.nz|mackenzienz\.com|lakewanaka\.co\.nz)$/;
 const REVIEWS = /(^|\.)(tripadvisor\.[a-z.]+|google\.[a-z.]+|g\.page|facebook\.com|trustpilot\.com)$/;
 
 export function classifyListing(url: string): { platform: string; kind: ListingData['kind'] } {
@@ -91,6 +91,8 @@ export async function fetchListings(polite: Polite, urls: string[]): Promise<Lis
     const base = { url, ...classifyListing(url), name: null, phones: [], emails: [], prices: [], rating: null, reviewCount: null };
     const res = await polite.get(url, { timeoutMs: 20_000 });
     if (res.error === 'robots') out.push({ ...base, status: 'robots' });
+    // A refusal is a block. It is recorded and left alone.
+    else if (res.status === 401 || res.status === 403 || res.status === 429) out.push({ ...base, status: 'blocked' });
     else if (res.status !== 200) out.push({ ...base, status: 'error' });
     else out.push({ ...parseListing(url, res.body), status: 'fetched' });
   }

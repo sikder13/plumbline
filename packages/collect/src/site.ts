@@ -41,7 +41,7 @@ export function chooseInnerPages(homepages: PageCapture[], homepageUrl: string, 
   for (const page of homepages) {
     for (const link of page.links) {
       if (!link.visible && !link.inNav) continue;
-      const url = normalizeUrl(link.href);
+      const url = normalizeUrl(link.href)?.replace(/([^:])\/{2,}/g, '$1/');
       if (!url || !sameSite(url, homepageUrl) || NOT_A_PAGE.test(url)) continue;
       const key = url.replace(/\/$/, '');
       if (key === home || key === home.replace('://www.', '://') || key.replace('://www.', '://') === home) continue;
@@ -192,12 +192,15 @@ export async function collectSite(polite: Polite, renderer: Renderer, business: 
 
   const homepages = [site.homepage.mobile, site.homepage.desktop].filter((p): p is PageCapture => !!p && p.ok);
   const choices = chooseInnerPages(homepages, base, Math.min(opts.innerPages ?? 12, budget.max - 1));
-  site.robots = robotsFacts(rawRobots, homepageUrl, chooseInnerPages(homepages, base, 30).map((c) => c.url));
+  // Key pages are the ones a visitor comes for: booking, contact, prices, the experiences and the story.
+  site.robots = robotsFacts(rawRobots, homepageUrl, chooseInnerPages(homepages, base, 30).filter((c) => c.score >= 7).map((c) => c.url));
 
   for (const choice of choices) {
     if (!budget.take()) break;
     const cap = await renderer.render({ url: choice.url, viewport: 'mobile', outDir: pageDir(dir, 'mobile', choice.url) });
     if (cap.blocked) continue;
+    // Two addresses can land on one page. It is read once.
+    if ([...homepages, ...site.inner].some((p) => p.finalUrl.replace(/\/$/, '') === cap.finalUrl.replace(/\/$/, ''))) continue;
     site.inner.push(cap);
   }
 

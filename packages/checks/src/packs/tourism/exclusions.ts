@@ -19,12 +19,13 @@ export const EXCLUSIONS: Exclusion[] = [
   { group: 'Te Puia', names: /\b(te puia|new zealand maori arts and crafts institute)\b/, domains: /^tepuia\.com$/ },
   { group: 'Fullers and Explore', names: /\b(fullers(360| great sights)?|great sights|explore group|intercity)\b/, domains: /^(fullers\.co\.nz|fullersgreatsights\.co\.nz|greatsights\.co\.nz|exploregroup\.co\.nz|intercity\.co\.nz|dolphincruises\.co\.nz)$/ },
   { group: 'Entrada and Wayfare', names: /\b(wayfare|entrada travel)\b/ },
-  { group: 'Te Papa and public bodies', names: /\b(department of conservation|doc visitor centre|i-?site|isite visitor|visitor (information )?centre|information centre|district council|city council|regional council|museum of new zealand)\b/, domains: /^(doc\.govt\.nz|isite\.nz)$|\.govt\.nz$/ },
+  { group: 'Public bodies and information centres', names: /\b(department of conservation|doc visitor centre|i-?site|isite visitor|visitor information centre|information centre|district council|city council|regional council)\b/, domains: /^(doc\.govt\.nz|isite\.nz)$|\.govt\.nz$/ },
   { group: 'National chains and franchises', names: /\b(kiwi rail|kiwirail|interislander|bluebridge|air new zealand|jucy|wilderness motorhomes|rydges|hilton|novotel|mercure|accor|scenic hotel|heritage hotels?|millennium hotel|copthorne|kingsgate|top 10 holiday park|yha|base backpackers|haka (tours|lodge|tourism)|contiki|flying kiwi|stray travel|pure glenorchy|southern discoveries|ziptrek|oxbow|canyon swing|skydive (queenstown|wanaka|taupo|abel tasman|franz|auckland)|nzone|rainbow.?s end|kelly tarlton|sea life|sky ?city|sky tower|weta workshop|zealandia|mcdonald|starbucks)\b/ },
 ];
 
 export function exclusionFor(name: string, domain: string | null): string | null {
-  const folded = foldName(name);
+  // Words in brackets describe where a business is, not who owns it.
+  const folded = foldName(name.replace(/\(.*?\)/g, ' '));
   for (const e of EXCLUSIONS) {
     if (e.names.test(folded)) return e.group;
     if (domain && e.domains?.test(domain)) return e.group;

@@ -10,7 +10,7 @@
     "plumb": "tsx apps/cli/src/main.ts",
     "review": "tsx apps/cli/src/main.ts review",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && pnpm --filter @plumbline/review typecheck",
     "test": "vitest run",
     "validate:library": "tsx packages/impact/src/validate-cli.ts",
     "build": "pnpm validate:library && pnpm typecheck",

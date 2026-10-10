@@ -78,7 +78,7 @@ export function fingerprintUrl(url: string): BookingFingerprint | null {
 }
 
 /** Words on a link or button that mean a visitor can book or pay from here. */
-export const BOOKING_WORDS = /\b(book(ing|ings)?( (now|online|here|today|a|your|this|direct|tour|trip|charter))?|check availability|availability|reserve|reservations?|buy (tickets?|now|online)|get tickets|tickets|add to cart|add to basket|checkout|gift vouchers?|purchase)\b/i;
+export const BOOKING_WORDS = /\b(book(ing|ings)?( (now|online|here|today|a|your|this|direct|tour|trip|charter))?|check availability|availability|reserve (now|online|today|your|a (spot|place|seat|table|tour|trip))|reservations|make a reservation|buy (tickets?|now|online)|get tickets|tickets|add to cart|add to basket|checkout|gift vouchers?|purchase)\b/i;
 export const ENQUIRY_WORDS = /\b(enquir(e|y|ies)|inquir(e|y|ies)|contact( us)?|get in touch|email us|message us|call( us| now)?|phone|text us|whatsapp|request a quote|ask a question)\b/i;
 
 export function bookingSignals(pages: PageCapture[]): BookingSignal[] {

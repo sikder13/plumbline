@@ -9,6 +9,10 @@ export interface AiSummary {
   /** Other businesses and the number of answers that named each. */
   others: { name: string; answers: number }[];
   sample: { question: string; provider: string; askedAt: string; answer: string; citations: string[] } | null;
+  /** Minutes between the first and the last answer. */
+  spanMinutes: number;
+  /** True when the answers fall into two groups at least 60 minutes apart and both show the same picture. */
+  holdsInBothPasses: boolean;
 }
 
 export interface CheckContext {

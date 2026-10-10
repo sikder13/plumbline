@@ -3,7 +3,7 @@ import { okHomes, okInner, pagesInOrder, pathOf, siteFinding } from '../../helpe
 import type { Check } from '../../types.ts';
 
 const SOCIAL = /(^|\.)(facebook\.com|instagram\.com|twitter\.com|x\.com|youtube\.com|tiktok\.com|linkedin\.com|pinterest\.[a-z.]+|tripadvisor\.[a-z.]+|google\.[a-z.]+|g\.page|goo\.gl|maps\.app\.goo\.gl|newzealand\.com|qualmark\.co\.nz|tiaki\.nz|doc\.govt\.nz|metservice\.com)$/;
-const SHOP_TECH = /^(woocommerce|shopify|ecwid|bigcommerce|squarespace commerce|wix stores|wix bookings|bookly|amelia|easy appointments|opencart|magento|prestashop|stripe|paypal|windcave|afterpay)$/i;
+const SHOP_TECH = /^(woocommerce|shopify|ecwid|bigcommerce|wix bookings|bookly|amelia|easy appointments|opencart|magento|prestashop)$/i;
 
 /**
  * Ways a visitor might book that the fingerprints do not name: a booking-worded link to another

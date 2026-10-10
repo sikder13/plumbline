@@ -1,6 +1,7 @@
 import type { CandidateFinding } from '@plumbline/core';
 import { contactLinkProblems, isBrokenStatus } from '@plumbline/collect';
-import { common, elementEvidence, home, okHomes, pagesInOrder, pathOf, plural, whereOf } from '../../helpers.ts';
+import type { PageCapture, PageLink } from '@plumbline/render';
+import { common, elementEvidence, okHomes, pagesInOrder, pathOf, plural, whereOf } from '../../helpers.ts';
 import type { Check } from '../../types.ts';
 
 interface BrokenImage {
@@ -65,7 +66,8 @@ export const C10_broken_contact_links: Check = {
     const seen = new Set<string>();
     for (const page of pagesInOrder(site)) {
       for (const p of contactLinkProblems(page)) {
-        const fp = `${p.kind}|${p.link.raw.slice(0, 100)}|${p.link.text.slice(0, 40)}`;
+        // The same broken address behind several links is one problem. An empty address is told apart by its label.
+        const fp = `${p.kind}|${p.link.raw.slice(0, 100)}${p.link.raw.trim().length <= 1 ? `|${p.link.text.slice(0, 40)}` : ''}`;
         if (seen.has(fp)) continue;
         seen.add(fp);
         out.push({
@@ -84,6 +86,9 @@ export const C10_broken_contact_links: Check = {
   },
 };
 
+/** Buttons that open or close a menu, and language switches. They are controls, not menu items. */
+const TOGGLE = /^(menu|show menu|hide menu|open menu|close menu|close|open|toggle( navigation| menu)?|navigation|search|skip to (main )?content|back to top|top|more options|english|en|nz|☰|×|x)$/i;
+
 interface DeadNav {
   text: string;
   href: string;
@@ -97,25 +102,28 @@ export const C11_dead_navigation: Check = {
   evidenceSpec: 'element',
   appliesTo: ({ site }) => !site.blocked && okHomes(site).length > 0,
   evaluate({ site }) {
-    const page = home(site)!;
-    const items = new Map<string, { item: DeadNav; link: (typeof page.links)[number] }>();
+    // A phone hides the menu behind a button, so the desktop capture is read as well.
+    const items = new Map<string, { item: DeadNav; link: PageLink; page: PageCapture }>();
     const status = new Map(site.links.map((l) => [l.url, l]));
-    for (const link of page.links) {
-      if (!link.visible || !(link.inNav || link.inHeader) || !link.text) continue;
-      const raw = link.raw.trim();
-      let reason = '';
-      if (raw === '#' || raw === '' || /^#!?$/.test(raw)) reason = 'links to "#"';
-      else if (/^javascript:/i.test(raw)) reason = 'links to a javascript: address';
-      else {
-        const s = status.get(link.href.split('#')[0]!);
-        if (s?.internal && isBrokenStatus(s.status)) reason = `returns ${s.status}`;
+    for (const page of okHomes(site)) {
+      for (const link of page.links) {
+        if (!link.visible || !(link.inNav || link.inHeader) || !link.text || TOGGLE.test(link.text.trim())) continue;
+        const raw = link.raw.trim();
+        let reason = '';
+        if (raw === '#' || raw === '' || /^#!?$/.test(raw)) reason = 'links to "#"';
+        else if (/^javascript:/i.test(raw)) reason = 'links to a javascript: address';
+        else {
+          const s = status.get(link.href.split('#')[0]!);
+          if (s?.internal && isBrokenStatus(s.status)) reason = `returns ${s.status}`;
+        }
+        if (!reason) continue;
+        const key = `${link.text.toLowerCase()}|${reason}`;
+        if (!items.has(key)) items.set(key, { item: { text: link.text, href: raw, reason }, link, page });
       }
-      if (!reason) continue;
-      const key = `${link.text.toLowerCase()}|${reason}`;
-      if (!items.has(key)) items.set(key, { item: { text: link.text, href: raw, reason }, link });
     }
     if (!items.size) return [];
     const list = [...items.values()];
+    const page = list.some((x) => x.page.viewport === 'mobile') ? site.homepage.mobile! : list[0]!.page;
     return [
       {
         checkId: this.id,
@@ -125,7 +133,7 @@ export const C11_dead_navigation: Check = {
         viewport: page.viewport,
         where: whereOf(site, page),
         detail: { items: list.map((x) => x.item) },
-        evidence: list.slice(0, 3).map((x) => elementEvidence(page, x.link.selector, x.link.box, `Menu item "${x.item.text}" ${x.item.reason} (href="${x.item.href}")`)),
+        evidence: list.slice(0, 3).map((x) => elementEvidence(x.page, x.link.selector, x.link.box, `Menu item "${x.item.text}" ${x.item.reason} (href="${x.item.href}")`)),
       },
     ];
   },

@@ -161,6 +161,31 @@ describe('approval, top three and recheck', () => {
   });
 });
 
+describe('findings built from AI answers', () => {
+  const ai = (holds: boolean) => ({ questions: 6, namedIn: 0, others: [{ name: 'Rival One', answers: 6 }, { name: 'Rival Two', answers: 4 }], sample: { question: 'Q', provider: 'openai', askedAt: '2026-10-10T20:00:00Z', answer: 'Rival One', citations: [] }, spanMinutes: holds ? 95 : 0, holdsInBothPasses: holds });
+  const status = () => (db.prepare("SELECT status, reproduced FROM findings WHERE check_id = 'C37_not_named_by_ai'").get() as { status: string; reproduced: number });
+
+  it('stay candidates when every answer was asked at one time, however many site runs see them', async () => {
+    const a = await troubled(1, '2026-10-10T20:00:00.000Z');
+    await recordRunA(db, library, a, 'b', evaluateSite(a, 'tourism', NOW, ai(false)).findings, evidenceRoot);
+    expect(status()).toEqual({ status: 'candidate', reproduced: 0 });
+    const b = await troubled(2, '2026-10-10T21:15:00.000Z');
+    await recordRunB(db, library, b, 'b', evaluateSite(b, 'tourism', NOW, ai(false)).findings, a.finishedAt, evidenceRoot);
+    expect(status()).toEqual({ status: 'candidate', reproduced: 0 });
+  });
+
+  it('count as reproduced once the answers come in two passes an hour apart that agree', async () => {
+    const a = await troubled(1, '2026-10-10T20:00:00.000Z');
+    await recordRunA(db, library, a, 'b', evaluateSite(a, 'tourism', NOW, ai(false)).findings, evidenceRoot);
+    const b = await troubled(2, '2026-10-10T21:15:00.000Z');
+    await recordRunB(db, library, b, 'b', evaluateSite(b, 'tourism', NOW, ai(true)).findings, a.finishedAt, evidenceRoot);
+    expect(status()).toEqual({ status: 'reproduced', reproduced: 1 });
+    const ev = db.prepare("SELECT e.kind, e.excerpt FROM evidence e JOIN findings f ON f.id = e.finding_id WHERE f.check_id = 'C37_not_named_by_ai'").get() as { kind: string; excerpt: string };
+    expect(ev.kind).toBe('ai');
+    expect(ev.excerpt).toContain('Question: Q');
+  });
+});
+
 describe('evidence images', () => {
   it('takes the element plus 120 px of context, inside the page', () => {
     expect(regionFor({ x: 16, y: 2400, w: 300, h: 24 }, 390, 3000)).toEqual({ x: 0, y: 2280, w: 390, h: 264 });
