@@ -9,9 +9,15 @@ export default tseslint.config(
   {
     languageOptions: { globals: { ...globals.node } },
     rules: {
+      'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       '@typescript-eslint/consistent-type-imports': 'error',
       'no-console': 'off',
     },
+  },
+  {
+    files: ['packages/*/src/inpage*.js'],
+    languageOptions: { globals: { ...globals.browser }, sourceType: 'script' },
+    rules: { '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }] },
   },
 );
