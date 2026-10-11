@@ -32,9 +32,10 @@ function runCommand(name: string, kind: RunKind, description: string) {
     .option('--only <slugs>', 'comma separated slugs')
     .option('--inner <n>', 'inner pages per site', (v) => Number(v))
     .option('--concurrency <n>', 'sites collected at once', (v) => Number(v))
+    .option('--speed <n>', 'sites measured for speed at once', (v) => Number(v))
     .option('--force', 'run again even when this run already exists')
-    .action(async (o: { batch: string; source?: string; only?: string; inner?: number; concurrency?: number; force?: boolean }) => {
-      const s = await auditBatch(db(), { aiSummary, batch: o.batch, kind, source: o.source, only: o.only?.split(',').map((x) => x.trim()), innerPages: o.inner, concurrency: o.concurrency, force: o.force });
+    .action(async (o: { batch: string; source?: string; only?: string; inner?: number; concurrency?: number; speed?: number; force?: boolean }) => {
+      const s = await auditBatch(db(), { aiSummary, batch: o.batch, kind, source: o.source, only: o.only?.split(',').map((x) => x.trim()), innerPages: o.inner, concurrency: o.concurrency, speedConcurrency: o.speed, force: o.force });
       console.log(`${name} ${o.batch}: ${s.done} done, ${s.blocked} blocked, ${s.failed} failed, ${s.skipped} already done. New findings ${s.findings}, reproduced ${s.reproduced}, resolved ${s.resolved}.`);
       for (const n of s.notReady) console.log(`  not ready: ${n}`);
     });

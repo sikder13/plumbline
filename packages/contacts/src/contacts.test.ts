@@ -102,6 +102,12 @@ describe('people', () => {
     expect(names(['Qualmark Gold, operator of the year.'])).toEqual([]);
     expect(names(['The Owner reserves the right to cancel.'])).toEqual([]);
     expect(names(['our guides are friendly and our manager is on site'])).toEqual([]);
+    expect(names(['Office Hours: Tuesday - Friday 9am - 4pm'])).toEqual([]);
+    expect(names(['Co-Owner & Lead Guide'])).toEqual([]);
+    expect(names(['Director, Sales and Marketing'])).toEqual([]);
+    expect(names(['Mark’s Mobile (skipper) : 022 414 5711'])).toEqual([]);
+    expect(names(['Wine Hopper is owned and operated by Queenstown Wine Trail.'])).toEqual([]);
+    expect(names(['Founder & Director Visionary | International Captain'])).toEqual([]);
   });
 
   it('calls a page ambiguous when it speaks of owners but names none, or names too many', () => {

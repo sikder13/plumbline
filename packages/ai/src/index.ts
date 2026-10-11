@@ -40,12 +40,14 @@ export function parseOpenAi(data: Record<string, unknown>, model: string, prices
 export function openAiAsk(prices: Prices = loadPrices()): Ask {
   const model = requireEnv('OPENAI_MODEL');
   const key = requireEnv('OPENAI_API_KEY');
+  // Each search is billed, and the model runs several unless told otherwise. This caps them per answer.
+  const maxSearches = Number(env().OPENAI_MAX_SEARCHES ?? '') || 0;
   return async (question) => {
     const res = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
       signal: AbortSignal.timeout(120_000),
-      body: JSON.stringify({ model, input: question, instructions: INSTRUCTIONS, tools: [{ type: 'web_search', search_context_size: 'low' }], reasoning: { effort: 'low' }, max_output_tokens: 2500 }),
+      body: JSON.stringify({ model, input: question, instructions: INSTRUCTIONS, tools: [{ type: 'web_search', search_context_size: 'low' }], reasoning: { effort: 'low' }, max_output_tokens: 2500, ...(maxSearches ? { max_tool_calls: maxSearches } : {}) }),
     });
     if (!res.ok) throw new Error(`OpenAI returned ${res.status}: ${(await res.text()).slice(0, 200)}`);
     return parseOpenAi((await res.json()) as Record<string, unknown>, model, prices);

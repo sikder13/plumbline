@@ -79,7 +79,9 @@ export const C38_inconsistent_contact_details: Check = {
     const differences: { listing: string; field: string; site: string[]; listingValue: string[] }[] = [];
     for (const l of site.listings.filter((x) => comparable(site, x))) {
       const lp = l.phones.map(normalizePhone).filter((p) => p.length >= 7 && p.length <= 10);
-      const le = l.emails.map(normalizeEmail);
+      // A directory's own address on its page is not the business's.
+      const host = new URL(l.url).hostname.replace(/^(www|book)\./, '');
+      const le = l.emails.map(normalizeEmail).filter((e) => !e.endsWith(`@${host}`) && !e.endsWith(`.${host}`));
       // Freephone and local numbers are both valid for one business, so a difference needs no number in common at all.
       if (phones.size && lp.length && !lp.some((p) => phones.has(p))) differences.push({ listing: l.url, field: 'phone', site: [...phones], listingValue: l.phones });
       if (emails.size && le.length && !le.some((e) => emails.has(e))) differences.push({ listing: l.url, field: 'email', site: [...emails], listingValue: l.emails });

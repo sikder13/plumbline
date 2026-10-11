@@ -103,6 +103,11 @@ export function contactPageUrls(home: PageCapture, max = 5): string[] {
 
 export type Role = 'owner' | 'second';
 
+/** Whether a stored name still passes the rules for a person's name. */
+export function looksLikePersonName(name: string): boolean {
+  return cleanName(name) !== null;
+}
+
 export interface FoundPerson {
   name: string;
   role: Role;
@@ -112,11 +117,13 @@ export interface FoundPerson {
   how: 'pattern' | 'model';
 }
 
-const OWNER_WORDS = 'owner[- ]operators?|co[- ]?owners?|owners?|founders?|co[- ]?founders?|managing directors?|directors?|operators?|skippers?|captains?|hosts?|proprietors?|principals?';
+const OWNER_WORDS = 'owner[- ]operators?|co[- ]?owners?|owners?|founders?|co[- ]?founders?|managing directors?|directors?|operators?|skippers?|hosts?|proprietors?|principals?';
 const SECOND_WORDS = 'general managers?|operations managers?|office managers?|business managers?|managers?|head guides?|lead guides?|senior guides?|office administrators?|operations|office|bookings? managers?';
+/** Roles that may come before a name. Bare "office" and "operations" are left out: "Office Hours" is not a person. */
+const LEADING_SECOND_WORDS = 'general managers?|operations managers?|office managers?|business managers?|managers?|head guides?|lead guides?|senior guides?';
 const NAME = "(?:[A-Z][a-zāēīōū]+(?:['’-][A-Z]?[a-zāēīōū]+)?)";
 const FULL_NAME = `${NAME}(?: (?:${NAME}|[A-Z]\\.|van|de|der|von|Mc${NAME}|Mac${NAME})){0,3}`;
-const NOT_NAMES = new Set(['The', 'Our', 'We', 'Your', 'New', 'Zealand', 'Bay', 'Lake', 'Island', 'Islands', 'North', 'South', 'East', 'West', 'Mount', 'Port', 'Te', 'Aotearoa', 'Meet', 'About', 'Contact', 'Welcome', 'Home', 'Tours', 'Tour', 'Charters', 'Kayaks', 'Book', 'Booking', 'Bookings', 'Fishing', 'Cruises', 'Adventures', 'Company', 'Limited', 'Ltd', 'Team', 'Crew', 'Guide', 'Guides', 'Owner', 'Owners', 'Manager', 'Director', 'Skipper', 'Captain', 'Host', 'Hosts', 'Operator', 'Founder', 'Qualmark', 'Gold', 'Silver', 'Tripadvisor', 'Google', 'Facebook', 'Instagram', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'Kia', 'Ora', 'Haere', 'Mai', 'Nau', 'Read', 'More', 'Click', 'Here', 'Please', 'Since', 'With', 'Your', 'Their', 'This', 'That', 'They', 'She', 'He', 'It', 'In', 'On', 'At', 'For', 'From', 'As', 'And', 'Or', 'But', 'If', 'When', 'After', 'Before', 'Local', 'Family', 'Marine', 'Coastal', 'Nature', 'Eco', 'Wild', 'Sea', 'Ocean', 'River', 'Harbour', 'Sound', 'Sounds', 'Peninsula', 'Coast', 'National', 'Park', 'Department', 'Conservation', 'Māori', 'Maori', 'Pākehā', 'English', 'Kiwi', 'Mr', 'Mrs', 'Ms', 'Dr', 'Sir', 'Dame']);
+const NOT_NAMES = new Set(['The', 'Our', 'We', 'Your', 'New', 'Zealand', 'Bay', 'Lake', 'Island', 'Islands', 'North', 'South', 'East', 'West', 'Mount', 'Port', 'Te', 'Aotearoa', 'Meet', 'About', 'Contact', 'Welcome', 'Home', 'Tours', 'Tour', 'Charters', 'Kayaks', 'Book', 'Booking', 'Bookings', 'Fishing', 'Cruises', 'Adventures', 'Company', 'Limited', 'Ltd', 'Team', 'Crew', 'Guide', 'Guides', 'Owner', 'Owners', 'Manager', 'Director', 'Skipper', 'Captain', 'Host', 'Hosts', 'Operator', 'Founder', 'Qualmark', 'Gold', 'Silver', 'Tripadvisor', 'Google', 'Facebook', 'Instagram', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'Kia', 'Ora', 'Haere', 'Mai', 'Nau', 'Read', 'More', 'Click', 'Here', 'Please', 'Since', 'With', 'Your', 'Their', 'This', 'That', 'They', 'She', 'He', 'It', 'In', 'On', 'At', 'For', 'From', 'As', 'And', 'Or', 'But', 'If', 'When', 'After', 'Before', 'Local', 'Family', 'Marine', 'Coastal', 'Nature', 'Eco', 'Wild', 'Sea', 'Ocean', 'River', 'Harbour', 'Sound', 'Sounds', 'Peninsula', 'Coast', 'National', 'Park', 'Department', 'Conservation', 'Māori', 'Maori', 'Pākehā', 'English', 'Kiwi', 'Mr', 'Mrs', 'Ms', 'Dr', 'Sir', 'Dame', 'Co', 'Sales', 'Marketing', 'Operations', 'Finance', 'Admin', 'Administration', 'Reservations', 'Tourism', 'Hospitality', 'Mobile', 'Phone', 'Email', 'Shuttle', 'Hours', 'Visionary', 'International', 'Lead', 'Head', 'Senior', 'Chief', 'General', 'Wine', 'Wines', 'Winery', 'Trail', 'Estate', 'Vineyard', 'Fix', 'Fix-It', 'Office', 'Experience', 'Experiences', 'Safety', 'Health', 'Customer', 'Service', 'Services', 'Business', 'Group', 'Trust', 'Board', 'Award', 'Awards', 'Winner', 'Certified', 'Licensed', 'Professional', 'Master', 'Commercial', 'Vessel', 'Boat', 'Jet', 'Bus', 'Driver', 'Drivers', 'Pilot', 'Instructor', 'Staff', 'Member', 'Members', 'Info', 'Enquiries', 'Website', 'Online', 'Today', 'Now', 'All', 'Every', 'Each', 'Both', 'Some', 'Many', 'Most', 'One', 'Two', 'Three', 'First', 'Second', 'Third', 'French', 'British', 'German', 'European', 'Queenstown', 'Auckland', 'Wellington', 'Christchurch', 'Rotorua', 'Taupo', 'Taupō', 'Nelson', 'Dunedin', 'Akaroa', 'Kaikoura', 'Kaikōura', 'Picton', 'Wanaka', 'Wānaka']);
 
 const STRICT_NAME = new RegExp(`^${FULL_NAME}$`);
 
@@ -126,7 +133,7 @@ function cleanName(raw: string): string | null {
   const words = raw.trim().split(/\s+/).filter((w) => !['Mr', 'Mrs', 'Ms', 'Dr'].includes(w));
   if (!words.length || words.length > 4) return null;
   if (words.some((w) => NOT_NAMES.has(w))) return null;
-  if (words[0]!.length < 2) return null;
+  if (words[0]!.length < 3 || /['’]s$/.test(words[0]!) || words.some((w) => /['’]s$/.test(w))) return null;
   return words.join(' ');
 }
 
@@ -170,7 +177,7 @@ export function peopleByPattern(page: PageCapture): FoundPerson[] {
     // "Ross Taylor, owner and skipper" / "Dora and Chad - owners"
     new RegExp(`(${pair})\\s*(?:,|-|–|—|\\||:|\\()\\s*(?:the |our |your |is the |is our |are the |are our )?((?:${roles})(?:(?: and | & |/|, )(?:${roles}))?)\\b`, 'gi'),
     // "Owner: Ross Taylor" / "your skipper Ross" / "owned and operated by Ross and Frances"
-    new RegExp(`\\b((?:${roles})|owned (?:and (?:operated|run) )?by|operated by|run by|founded by|hosted by|skippered by|managed by)\\s*(?:,|:|-|–|is|are)?\\s+(${pair})`, 'gi'),
+    new RegExp(`\\b((?:${OWNER_WORDS}|${LEADING_SECOND_WORDS})|owned (?:and (?:operated|run) )?by|operated by|run by|founded by|hosted by|skippered by|managed by)\\s*(?:,|:|-|–|is|are)?\\s+(${pair})`, 'gi'),
     // "Ross is the owner"
     new RegExp(`(${pair}) (?:is|are|has been|have been) (?:the |our |your |now the )?((?:${roles}))\\b`, 'gi'),
     // "I'm Ross, your skipper" / "We are Dora and Chad, the owners"
