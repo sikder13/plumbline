@@ -17,10 +17,10 @@ export const C01_placeholder_text: Check = {
     const out: CandidateFinding[] = [];
     const seen = new Set<string>();
     const perPage = new Map<string, number>();
-    const add = (page: (typeof site.inner)[number], label: string, match: string, selector: string, box: Parameters<typeof elementEvidence>[2], excerpt: string) => {
+    const add = (page: (typeof site.inner)[number], label: string, match: string, selector: string, box: Parameters<typeof elementEvidence>[2], excerpt: string, whole: string = excerpt) => {
       const fp = `${pathOf(page.finalUrl)}|${norm(match)}`;
       // One finding for one piece of text, however many patterns it matches.
-      const place = `${pathOf(page.finalUrl)}|${norm(excerpt)}`;
+      const place = `${pathOf(page.finalUrl)}|${norm(whole)}`;
       if (seen.has(fp) || seen.has(place) || (perPage.get(page.finalUrl) ?? 0) >= 3) return;
       seen.add(fp);
       seen.add(place);
@@ -37,7 +37,7 @@ export const C01_placeholder_text: Check = {
       });
     };
     for (const page of pagesInOrder(site)) {
-      for (const h of findPhrases(page, PLACEHOLDERS)) add(page, h.label, h.match, h.block.selector, h.block.box, h.excerpt);
+      for (const h of findPhrases(page, PLACEHOLDERS)) add(page, h.label, h.match, h.block.selector, h.block.box, h.excerpt, h.block.text);
       for (const block of page.blocks) {
         const text = block.text.trim();
         if (FILE_NAME_ONLY.test(text) && (block.heading || block.href)) add(page, 'file name', text, block.selector, block.box, text);

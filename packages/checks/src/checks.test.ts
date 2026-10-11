@@ -37,7 +37,7 @@ describe('a healthy site', () => {
 
 describe('content checks', () => {
   it('C01 fires on placeholder text and on a file name shown as a link', () => {
-    const s = editHomes(healthySite(), (p) => p.blocks.splice(1, 0, block('Lorem ipsum dolor sit amet, consectetur adipiscing elit.')));
+    const s = editHomes(healthySite(), (p) => p.blocks.splice(1, 0, block('Want something a bit special? We can plan a day around you. '.repeat(3) + 'Lorem ipsum dolor sit amet, and then a good deal more filler text follows here, consectetur adipiscing elit.')));
     const f = one(s, 'C01_placeholder_text');
     expect(f.where).toBe('homepage_mobile');
     expect(f.evidence[0]).toMatchObject({ kind: 'element', viewport: 'mobile' });
