@@ -47,7 +47,8 @@ export function importResearchContacts(db: Db): number {
         n += 1;
       }
       if (s.owner_names && !/^(unconfirmed|unknown|not found|none)/i.test(s.owner_names)) {
-        const names = s.owner_names.replace(/\(.*?\)/g, ' ').split(/;|\band\b|&|,/).map((x) => x.trim()).filter((x) => /^[A-ZĀĒĪŌŪ][\p{L}'’.-]+(?: [A-ZĀĒĪŌŪ][\p{L}'’.-]+){0,3}$/u.test(x));
+        // Only the list of names before the first full stop is read. Notes after it ("Site photo caption: ...") are not owners.
+        const names = s.owner_names.replace(/\(.*?\)/g, ' ').split(/\.\s/)[0]!.split(/;|\band\b|&|,/).map((x) => x.replace(/\s+/g, ' ').replace(/\.$/, '').trim()).filter((x) => /^[A-ZĀĒĪŌŪ][\p{L}'’.-]+(?: [A-ZĀĒĪŌŪ][\p{L}'’.-]+){0,3}$/u.test(x));
         for (const [i, name] of names.slice(0, 2).entries()) {
           ins.run(row.id, i === 0 ? 'owner' : 'second', name, i === 0 ? 'owner' : 'co-owner', null, null, null, null, /https?:\/\/[^\s;,)]+/.exec(s.owner_source_url ?? '')?.[0] ?? null, `input research: ${s.owner_names.slice(0, 200)}`, at);
           n += 1;

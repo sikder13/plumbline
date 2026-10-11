@@ -30,7 +30,7 @@ function inputs(): string {
     [
       'rank,business_name,town,region,activity_type,website,email,email_source_url,contact_form_url,phone,owner_names,owner_source_url,booking_system,ota_listings,reviews,fit_reason',
       '1,Fixture Kayakers,Paihia (Waitangi),Northland,Kayak tours,https://fixturekayakers.co.nz,info@fixturekayakers.co.nz,https://fixturekayakers.co.nz,,09 402 0000,"Dora and Chad (first names only; surnames unconfirmed)",https://fixturekayakers.co.nz/about,Rezdy (fixturekayakers.rezdy.com),"Bookme: https://www.bookme.co.nz/x/1 ; reseller https://kiwidrivertours.rezdy.com/1/tour",TripAdvisor 5.0,Owner-run',
-      '2,Second Charters (MV Example),Taupō,Taupō,Fishing charter,https://www.secondcharters.co.nz (also https://other.example),fish@secondcharters.co.nz,,,07 378 0000,Ross Michael Taylor; Frances Rae Taylor,https://register.example/second,Phone only,FishingBooker: https://fishingbooker.com/charters/view/1,,',
+      '2,Second Charters (MV Example),Taupō,Taupō,Fishing charter,https://www.secondcharters.co.nz (also https://other.example),fish@secondcharters.co.nz,,,07 378 0000,"Ross (Rossy) Michael Taylor; Frances Rae Taylor (directors). Site photo caption: Ross, Fran and Kye",https://register.example/second,Phone only,FishingBooker: https://fishingbooker.com/charters/view/1,,',
       '3,No Site Tours,Invercargill,Southland,Guided tours,none found (newzealand.com links only to https://www.newzealand.com/x),,,,,,,,,,',
     ].join('\n'),
   );

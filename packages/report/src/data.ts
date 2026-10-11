@@ -118,7 +118,9 @@ export function businessView(db: Db, b: Business, batch: string, library: Map<st
 
   const approved = findings.filter((f) => f.status === 'approved');
   const proven = findings.filter((f) => f.status === 'reproduced' || f.status === 'approved');
-  const top = (approved.length ? approved : proven).slice(0, 3);
+  // The three highest scoring, one per check, so the top three are three different problems.
+  const seenChecks = new Set<string>();
+  const top = (approved.length ? approved : proven).filter((f) => (seenChecks.has(f.checkId) ? false : (seenChecks.add(f.checkId), true))).slice(0, 3);
   const run = (kind: string) => db.prepare("SELECT id, finished_at FROM runs WHERE business_id = ? AND batch = ? AND kind = ? AND status IN ('done', 'blocked') ORDER BY id DESC LIMIT 1").get(b.id, batch, kind) as { id: number; finished_at: string } | undefined;
   const a = run('A');
   const bRun = run('B');

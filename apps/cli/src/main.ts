@@ -6,12 +6,23 @@ import { ROOT, db } from '@plumbline/core';
 import { CHECK_IDS } from '@plumbline/checks';
 import { loadLibraryRaw, validateLibrary } from '@plumbline/impact';
 import { auditBatch, type RunKind } from './audit.ts';
-import { writeCalibration } from './calibrate.ts';
+import { calibrate, writeCalibration } from './calibrate.ts';
 import { aiCommand, aiSummary, brandCommand, contactsCommand, evaluateStoredCommand, costCommand, discoverCommand, purgeCommand, qualifyCommand } from './commands.ts';
 import { exportBusiness } from '@plumbline/export';
 import { writeReport } from '@plumbline/report';
 import { seed } from './seed.ts';
 import { selectBatch } from './select.ts';
+
+/** Limits of this build that anyone reading a report should know. */
+const UNCERTAIN = [
+  'Speed (C20) is measured with Lighthouse under simulated phone conditions, several sites at a time on one machine. The scores are comparable between the two runs but should be read as indicative, not as what every visitor sees.',
+  'For businesses found through Google Places, the activity is the search phrase that found them. A few are not tour operators at all (a reserve, a car park). They are best rejected in the review app.',
+  'In the AI finding (C37), the other names counted come partly from answer text and are candidates until confirmed in the AI tab.',
+  'OpenAI answers were limited to one web search each to stay inside the budget.',
+  'newzealand.com and Rezdy storefronts refuse automated requests (403). That is recorded as a block and not worked around, so contact and price comparisons against those listings were not made.',
+  'A contact form is counted when it is present with an email or message field. It was not submitted, so "working" is not proven.',
+  'Inner pages are read at the phone size only, and at most eight per site in this batch.',
+];
 
 const program = new Command().name('plumb').description('Audit small business websites and keep only what can be proven.');
 
@@ -98,8 +109,14 @@ program
   .command('report')
   .description('Write the internal report for a batch')
   .requiredOption('--batch <name>', 'batch name')
-  .action((o: { batch: string }) => {
-    const r = writeReport(db(), o.batch);
+  .option('--calibration <name>', 'calibration batch to summarise', 'calib-20')
+  .action((o: { batch: string; calibration: string }) => {
+    const c = calibrate(db(), o.calibration);
+    const t = c.totals;
+    const r = writeReport(db(), o.batch, {
+      calibration: `On the first 20 (batch \`${o.calibration}\`): ${t.matches} of ${t.verified} verified dossier problems matched, ${t.falseFindings} false findings, ${t.missedExplained} missed with a known reason, ${t.missed - t.missedExplained} missed and not detected, ${t.fresh} new findings for UD to judge. Details are in calibration/REPORT.md.`,
+      uncertain: UNCERTAIN,
+    });
     console.log(`Report for ${o.batch}: ${r.audited} audited businesses, ${r.excluded} not audited. ${r.dir}/index.html`);
   });
 
