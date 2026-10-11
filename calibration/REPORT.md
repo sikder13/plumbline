@@ -1,6 +1,6 @@
 # Calibration on the first 20
 
-Batch `calib-20`, written 2026-10-11 12:58:34 NZDT.
+Batch `calib-20`, written 2026-10-11 16:27:32 NZDT.
 
 Truth comes from `calibration/truth.json`, built from the 20 dossiers. A match is a verified dossier problem that Plumbline found. A false finding is anything the dossiers mark as false or unverified. A new finding is something Plumbline found that the dossiers do not list, for UD to judge.
 
@@ -8,44 +8,44 @@ Truth comes from `calibration/truth.json`, built from the 20 dossiers. A match i
 
 | Measure | Count |
 |---|---|
-| Verified problems that map to a check | 69 |
+| Verified problems that map to a check | 70 |
 | Matches | 37 |
 | False findings (must be zero) | 0 |
-| Missed, with a known reason | 32 |
+| Missed, with a known reason | 33 |
 | Missed, not detected | 0 |
-| New findings for UD to judge | 84 |
+| New findings for UD to judge | 78 |
 
 ## By business
 
 | Business | Stage | Matches | False | Missed | New |
 |---|---|---|---|---|---|
-| target-charters | run A only | T01, T03 | 0 | C61, C38 | C20, C13, C14, C31, C50 |
-| coastal-kayakers | run A only | C02, C11, C14 | 0 | C70 | C20, C13, C61, C31, C50, C12 |
-| trek-lake-okareka | run A only | C61 | 0 | C05, C38, C70, C41 | C20, C13, C14, C31, C50 |
-| taupo-boating-and-fishing-charters | run A only | C14, T01, T03, C70 | 0 | C01 | C23, C61, C31, C50 |
-| cathedral-cove-kayak-tours | run A only | C61 | 0 | C36, C15, C33, C03 | C20, C14, C31, C50 |
-| spellbound-glowworm-and-cave-tours | run A only | 0 | 0 | C60 | C20, C13, C61, C31, C50 |
-| raglan-boat-charters | run A only | C04, C14, C03 | 0 | C61 | C20, C31, C50 |
-| kahu-kayaks | run A only | C02 | 0 | C03, C60 | C20, C31, C50 |
-| golden-bay-kayaks | run A only | C60, C14 | 0 | 0 | C10, C20, C23, C50, C12 |
-| marlborough-sounds-adventure-company | run A only | C14 | 0 | C15, C13, C03 | C20, C61, C38, C11, C50, C12 |
-| reel-therapy-charters | run A only | T01, T03, C14 | 0 | 0 | C20, C50 |
-| bladen-wines | run A only | C36 | 0 | 0 | T01, C13, C14, T03, C15, C50 |
-| seal-swim-kaikoura | run A only | 0 | 0 | C61, T01, T03, C03 | C20, C31, C50 |
-| okarito-kayaks | run A only | C03 | 0 | C14, T02, C38, C70 | C10, C20, C12, C50 |
-| glacier-valley-eco-tours | run A only | C14, C02 | 0 | C11 | C50 |
-| hokitika-scenic-tours | run A only | C01, C14 | 0 | 0 | C20, C13, C70, C50 |
-| the-seventh-generation-tours | run A only | C10, T01, T03 | 0 | 0 | C41, C13, C14, C50 |
-| pohatu-penguins | run A only | C02 | 0 | C11 | C20, C14, C10, C50 |
-| grey-ridge-vineyard | run A only | C11, C14 | 0 | C01, T05 | T01, C20, C41, C13, C31, C50 |
-| top-of-the-lake-guiding | run A only | C10, C14, C02, T01 | 0 | C01 | C20, C13, C15, C50 |
+| target-charters | reproduced | T01, T03 | 0 | C61, C38 | C20, C13, C14, C31, C50 |
+| coastal-kayakers | reproduced | C02, C11, C14 | 0 | C70 | C20, C13, C31, C50, C12 |
+| trek-lake-okareka | reproduced | C05b, C61 | 0 | C05, C38, C70, C41 | C20, C13, C14, C31, C50 |
+| taupo-boating-and-fishing-charters | reproduced | C14, T01, T03, C70 | 0 | C01 | C23, C61, C31, C50 |
+| cathedral-cove-kayak-tours | reproduced | C61 | 0 | C36, C15, C33, C03 | C20, C14, C31, C50 |
+| spellbound-glowworm-and-cave-tours | reproduced | 0 | 0 | C60 | C20, C13, C61, C31, C50 |
+| raglan-boat-charters | reproduced | C04, C14, C03 | 0 | C61 | C20, C31, C50 |
+| kahu-kayaks | reproduced | C02 | 0 | C03, C60 | C20, C31, C50 |
+| golden-bay-kayaks | reproduced | C60, C14 | 0 | 0 | C10, C20, C23, C50, C12 |
+| marlborough-sounds-adventure-company | reproduced | C14 | 0 | C15, C13, C03 | C20, C61, C11, C50, C12 |
+| reel-therapy-charters | reproduced | T01, T03, C14 | 0 | 0 | C20, C50 |
+| bladen-wines | reproduced | C36 | 0 | 0 | T01, C13, C14, T03, C15, C50 |
+| seal-swim-kaikoura | reproduced | 0 | 0 | C61, T01, T03, C03 | C20, C31, C50 |
+| okarito-kayaks | reproduced | 0 | 0 | C14, T02, C38, C03, C70 | 0 |
+| glacier-valley-eco-tours | reproduced | C14, C02 | 0 | C11 | C50 |
+| hokitika-scenic-tours | reproduced | C01, C14 | 0 | 0 | C20, C13, C70, C50 |
+| the-seventh-generation-tours | reproduced | C10, T01, T03 | 0 | 0 | C41, C13, C14, C50 |
+| pohatu-penguins | reproduced | C02 | 0 | C11 | C20, C14, C10, C50 |
+| grey-ridge-vineyard | reproduced | C11, C14 | 0 | C01, T05 | T01, C20, C41, C13, C31, C50 |
+| top-of-the-lake-guiding | reproduced | C10, C14, C02, T01 | 0 | C01 | C20, C13, C15, C50 |
 
 ## Missed findings and why
 
 - **target-charters** C61_price_differs_from_listing (Site from $200 per person, newzealand.com Adult $135.) Reason: The newzealand.com listing answers automated requests with 403. That is a block and is not worked around, so the listing could not be read.
 - **target-charters** C38_inconsistent_contact_details (Site email is a personal xtra address, newzealand.com shows sales@.) Reason: The newzealand.com listing answers automated requests with 403. That is a block and is not worked around, so the listing could not be read.
 - **coastal-kayakers** C70_reviews_not_shown (5.0 from 289 reviews not shown.) Reason: The site shows TripAdvisor award badges and a testimonial, so the check stays quiet by design.
-- **trek-lake-okareka** C05_possible_compromise (Czech betting article with a link to betzoid.com on the homepage.) Reason: The Czech text was not on the homepage as rendered in a browser at either screen size on 10 October 2026. It was reported from a text fetch, so it may be served only to some readers or have been removed. Nothing invisible is reported.
+- **trek-lake-okareka** C05_possible_compromise (Czech betting article with a link to betzoid.com on the homepage.) Reason: The Czech text is in the page code but hidden from visitors (a block one pixel high), so it is reported under C05b, not as visible content.
 - **trek-lake-okareka** C38_inconsistent_contact_details (021 292 2233 on the site, 07 362 8185 on newzealand.com.) Reason: The newzealand.com listing answers automated requests with 403. That is a block and is not worked around, so the listing could not be read.
 - **trek-lake-okareka** C70_reviews_not_shown (4.8 from 857 TripAdvisor reviews, no score on the homepage.) Reason: The site shows a TripAdvisor sign image, so the check stays quiet by design.
 - **trek-lake-okareka** C41_outdated_platform (WordPress 6.2.14.) Reason: The 6.2 branch still receives security releases (6.2.14 is one), so it is not past end of life by the table's rule.
@@ -68,6 +68,7 @@ Truth comes from `calibration/truth.json`, built from the 20 dossiers. A match i
 - **okarito-kayaks** C14_no_price_visible (No prices on the homepage.) Reason: In a browser the homepage shows prices (from $150 and from $80 per person).
 - **okarito-kayaks** T02_booking_system_not_linked (okarito.rezdy.com sells 6 products, the site does not link to it.) Reason: In a browser the site links to okarito.rezdy.com from Book buttons.
 - **okarito-kayaks** C38_inconsistent_contact_details (0800 652 748 on the site, +64 3 753 4014 on listings.) Reason: The newzealand.com listing answers automated requests with 403. That is a block and is not worked around, so the listing could not be read.
+- **okarito-kayaks** C03_stale_dated_notice (Forecast box showing Friday 19 August.) Reason: The dates carry no year, so their age cannot be measured.
 - **okarito-kayaks** C70_reviews_not_shown (241 TripAdvisor reviews not surfaced.) Reason: The site shows three testimonials, so the check stays quiet by design.
 - **glacier-valley-eco-tours** C11_dead_navigation (A More menu item with no link.) Reason: The More item is not a link, so there is no address to measure.
 - **pohatu-penguins** C11_dead_navigation (24 hour Pohatu package links to #.) Reason: Only reported if that link sits in the homepage menu.
@@ -78,22 +79,21 @@ Truth comes from `calibration/truth.json`, built from the 20 dossiers. A match i
 ## New findings for UD to judge
 
 **target-charters**
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 30 out of 100, main content after 10.4 s
+- C20_slow_mobile (The page is slow on a phone): Mobile speed score 31 out of 100, main content after 11.0 s
 - C13_no_action_above_fold (No way to book or contact on the first phone screen): The first phone screen has no way to book or get in touch
 - C14_no_price_visible (No price is visible): No price is shown on the homepage
 - C31_no_structured_data (No business structured data): The homepage has no structured data describing the business
 - C50_accessibility_failures (Serious accessibility failures): 1 serious accessibility failure on the homepage
 
 **coastal-kayakers**
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 13 out of 100, main content after 14.3 s
+- C20_slow_mobile (The page is slow on a phone): Mobile speed score 20 out of 100, main content after 14.0 s
 - C13_no_action_above_fold (No way to book or contact on the first phone screen): The first phone screen has no way to book or get in touch
-- C61_price_differs_from_listing (Price differs between site and listing): Prices on the site do not match the Bookme listing
 - C31_no_structured_data (No business structured data): The homepage has no structured data describing the business
-- C50_accessibility_failures (Serious accessibility failures): 5 serious accessibility failures on the homepage
+- C50_accessibility_failures (Serious accessibility failures): 4 serious accessibility failures on the homepage
 - C12_broken_internal_links (Internal links end in an error): 1 internal link ends in an error page
 
 **trek-lake-okareka**
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 36 out of 100, main content after 9.4 s
+- C20_slow_mobile (The page is slow on a phone): Mobile speed score 34 out of 100, main content after 9.9 s
 - C13_no_action_above_fold (No way to book or contact on the first phone screen): The first phone screen has no way to book or get in touch
 - C14_no_price_visible (No price is visible): No price is shown on the homepage
 - C31_no_structured_data (No business structured data): The homepage has no structured data describing the business
@@ -106,45 +106,44 @@ Truth comes from `calibration/truth.json`, built from the 20 dossiers. A match i
 - C50_accessibility_failures (Serious accessibility failures): 4 serious accessibility failures on the homepage
 
 **cathedral-cove-kayak-tours**
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 37 out of 100, main content after 4.7 s
+- C20_slow_mobile (The page is slow on a phone): Mobile speed score 41 out of 100, main content after 4.6 s
 - C14_no_price_visible (No price is visible): No price is shown on the homepage
 - C31_no_structured_data (No business structured data): The homepage has no structured data describing the business
 - C50_accessibility_failures (Serious accessibility failures): 3 serious accessibility failures on the homepage
 
 **spellbound-glowworm-and-cave-tours**
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 39 out of 100, main content after 4.8 s
+- C20_slow_mobile (The page is slow on a phone): Mobile speed score 39 out of 100, main content after 4.9 s
 - C13_no_action_above_fold (No way to book or contact on the first phone screen): The first phone screen has no way to book or get in touch
 - C61_price_differs_from_listing (Price differs between site and listing): Prices on the site do not match the Bookme listing
 - C31_no_structured_data (No business structured data): The homepage has no structured data describing the business
 - C50_accessibility_failures (Serious accessibility failures): 2 serious accessibility failures on the homepage
 
 **raglan-boat-charters**
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 32 out of 100, main content after 7.4 s
+- C20_slow_mobile (The page is slow on a phone): Mobile speed score 28 out of 100, main content after 8.6 s
 - C31_no_structured_data (No business structured data): The homepage has no structured data describing the business
 - C50_accessibility_failures (Serious accessibility failures): 7 serious accessibility failures on the homepage
 
 **kahu-kayaks**
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 26 out of 100, main content after 17.1 s
+- C20_slow_mobile (The page is slow on a phone): Mobile speed score 26 out of 100, main content after 21.1 s
 - C31_no_structured_data (No business structured data): The homepage has no structured data describing the business
 - C50_accessibility_failures (Serious accessibility failures): 5 serious accessibility failures on the homepage
 
 **golden-bay-kayaks**
 - C10_broken_contact_links (A contact link is broken): The phone link is broken
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 27 out of 100, main content after 15.8 s
+- C20_slow_mobile (The page is slow on a phone): Mobile speed score 27 out of 100, main content after 9.9 s
 - C23_not_mobile_friendly (The page does not fit a phone screen): The homepage does not fit a phone screen
 - C50_accessibility_failures (Serious accessibility failures): 4 serious accessibility failures on the homepage
 - C12_broken_internal_links (Internal links end in an error): 1 internal link ends in an error page
 
 **marlborough-sounds-adventure-company**
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 37 out of 100, main content after 8.0 s
+- C20_slow_mobile (The page is slow on a phone): Mobile speed score 29 out of 100, main content after 9.3 s
 - C61_price_differs_from_listing (Price differs between site and listing): Prices on the site do not match the book.marlboroughnz.com listing
-- C38_inconsistent_contact_details (Contact details differ between site and listing): The email on the site differs from the book.marlboroughnz.com listing
 - C11_dead_navigation (Menu items lead nowhere): 1 menu item leads nowhere: "About"
 - C50_accessibility_failures (Serious accessibility failures): 4 serious accessibility failures on the homepage
 - C12_broken_internal_links (Internal links end in an error): 1 internal link ends in an error page
 
 **reel-therapy-charters**
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 40 out of 100, main content after 8.7 s
+- C20_slow_mobile (The page is slow on a phone): Mobile speed score 43 out of 100, main content after 8.0 s
 - C50_accessibility_failures (Serious accessibility failures): 1 serious accessibility failure on the homepage
 
 **bladen-wines**
@@ -156,21 +155,15 @@ Truth comes from `calibration/truth.json`, built from the 20 dossiers. A match i
 - C50_accessibility_failures (Serious accessibility failures): 2 serious accessibility failures on the homepage
 
 **seal-swim-kaikoura**
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 12 out of 100, main content after 19.0 s
+- C20_slow_mobile (The page is slow on a phone): Mobile speed score 17 out of 100, main content after 20.3 s
 - C31_no_structured_data (No business structured data): The homepage has no structured data describing the business
 - C50_accessibility_failures (Serious accessibility failures): 7 serious accessibility failures on the homepage
-
-**okarito-kayaks**
-- C10_broken_contact_links (A contact link is broken): The phone link is broken
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 30 out of 100, main content after 35.4 s
-- C12_broken_internal_links (Internal links end in an error): 3 internal links end in an error page
-- C50_accessibility_failures (Serious accessibility failures): 4 serious accessibility failures on the homepage
 
 **glacier-valley-eco-tours**
 - C50_accessibility_failures (Serious accessibility failures): 2 serious accessibility failures on the homepage
 
 **hokitika-scenic-tours**
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 41 out of 100, main content after 10.2 s
+- C20_slow_mobile (The page is slow on a phone): Mobile speed score 47 out of 100, main content after 9.9 s
 - C13_no_action_above_fold (No way to book or contact on the first phone screen): The first phone screen has no way to book or get in touch
 - C70_reviews_not_shown (Strong reviews are not shown on the site): 5 from 48 reviews on Google, none shown on the site
 - C50_accessibility_failures (Serious accessibility failures): 2 serious accessibility failures on the homepage
@@ -182,22 +175,22 @@ Truth comes from `calibration/truth.json`, built from the 20 dossiers. A match i
 - C50_accessibility_failures (Serious accessibility failures): 1 serious accessibility failure on the homepage
 
 **pohatu-penguins**
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 36 out of 100, main content after 19.6 s
+- C20_slow_mobile (The page is slow on a phone): Mobile speed score 36 out of 100, main content after 19.0 s
 - C14_no_price_visible (No price is visible): No price is shown on the homepage
 - C10_broken_contact_links (A contact link is broken): The phone link is broken
 - C50_accessibility_failures (Serious accessibility failures): 8 serious accessibility failures on the homepage
 
 **grey-ridge-vineyard**
 - T01_no_online_booking (No online booking on the site): No online booking was found on the site
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 48 out of 100, main content after 6.0 s
+- C20_slow_mobile (The page is slow on a phone): Mobile speed score 44 out of 100, main content after 6.6 s
 - C41_outdated_platform (The site software is past end of life): PHP 5.4.45 is past its end of life (2018-12-31)
 - C13_no_action_above_fold (No way to book or contact on the first phone screen): The first phone screen has no way to book or get in touch
 - C31_no_structured_data (No business structured data): The homepage has no structured data describing the business
 - C50_accessibility_failures (Serious accessibility failures): 4 serious accessibility failures on the homepage
 
 **top-of-the-lake-guiding**
-- C20_slow_mobile (The page is slow on a phone): Mobile speed score 36 out of 100, main content after 7.0 s
+- C20_slow_mobile (The page is slow on a phone): Mobile speed score 41 out of 100, main content after 5.1 s
 - C13_no_action_above_fold (No way to book or contact on the first phone screen): The first phone screen has no way to book or get in touch
 - C15_contact_details_missing (No phone or email on the homepage): The homepage shows no phone number or email
-- C50_accessibility_failures (Serious accessibility failures): 5 serious accessibility failures on the homepage
+- C50_accessibility_failures (Serious accessibility failures): 4 serious accessibility failures on the homepage
 
