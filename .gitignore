@@ -24,3 +24,5 @@ coverage/
 
 # Review app build output
 apps/review/next-env.d.ts
+AGENTS.md
+apps/review/tsconfig.tsbuildinfo
