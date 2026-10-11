@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { db, nzTime } from '@plumbline/core';
 import { CHECKS } from '@plumbline/checks/ids';
+import { top3Eligible } from '@plumbline/checks/review';
 import { readEntries, type ImpactEntry } from '@plumbline/impact';
 
 export { nzTime };
@@ -43,8 +44,16 @@ export function businessRows(batch: string): BusinessRow[] {
        FROM businesses b JOIN batch_members m ON m.business_id = b.id WHERE m.batch = ? ORDER BY reproduced DESC, b.name`,
     )
     .all(batch) as Omit<BusinessRow, 'top'>[];
-  const top = db().prepare("SELECT check_id, status, score FROM findings WHERE business_id = ? AND batch = ? AND status IN ('reproduced', 'approved') ORDER BY (status = 'approved') DESC, score DESC, id LIMIT 3");
-  return rows.map((r) => ({ ...r, top: top.all(r.id, batch) as BusinessRow['top'] }));
+  const top = db().prepare("SELECT check_id, status, score, detail FROM findings WHERE business_id = ? AND batch = ? AND status IN ('reproduced', 'approved') ORDER BY (status = 'approved') DESC, score DESC, id");
+  return rows.map((r) => {
+    const seen = new Set<string>();
+    const list = (top.all(r.id, batch) as (BusinessRow['top'][number] & { detail: string })[])
+      .filter((t) => top3Eligible(t.check_id, JSON.parse(t.detail) as Record<string, unknown>))
+      .filter((t) => (seen.has(t.check_id) ? false : (seen.add(t.check_id), true)))
+      .slice(0, 3)
+      .map(({ check_id, status, score }) => ({ check_id, status, score }));
+    return { ...r, top: list };
+  });
 }
 
 export interface Evidence {

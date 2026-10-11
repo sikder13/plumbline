@@ -1,6 +1,6 @@
 import { config, nzTime, type Business, type Db } from '@plumbline/core';
 import { aiSummary } from '@plumbline/ai';
-import { CHECKS, CHECK_IDS, type AiSummary } from '@plumbline/checks';
+import { CHECKS, CHECK_IDS, top3Eligible, type AiSummary } from '@plumbline/checks';
 import { loadSite, sitePlatform, type SiteData } from '@plumbline/collect';
 import { usableName } from '@plumbline/contacts';
 import { loadLibrary, type ImpactEntry } from '@plumbline/impact';
@@ -120,7 +120,7 @@ export function businessView(db: Db, b: Business, batch: string, library: Map<st
   const proven = findings.filter((f) => f.status === 'reproduced' || f.status === 'approved');
   // The three highest scoring, one per check, so the top three are three different problems.
   const seenChecks = new Set<string>();
-  const top = (approved.length ? approved : proven).filter((f) => (seenChecks.has(f.checkId) ? false : (seenChecks.add(f.checkId), true))).slice(0, 3);
+  const top = (approved.length ? approved : proven).filter((f) => top3Eligible(f.checkId, f.detail)).filter((f) => (seenChecks.has(f.checkId) ? false : (seenChecks.add(f.checkId), true))).slice(0, 3);
   const run = (kind: string) => db.prepare("SELECT id, finished_at FROM runs WHERE business_id = ? AND batch = ? AND kind = ? AND status IN ('done', 'blocked') ORDER BY id DESC LIMIT 1").get(b.id, batch, kind) as { id: number; finished_at: string } | undefined;
   const a = run('A');
   const bRun = run('B');

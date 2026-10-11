@@ -7,7 +7,7 @@ import { memoryDb, type Db } from '@plumbline/core';
 import type { SiteData } from '@plumbline/collect';
 import { cropElement, pageShot, regionFor } from '@plumbline/evidence';
 import { loadLibrary } from '@plumbline/impact';
-import { applyCheckToStoredRuns, decide, evaluateSite, recordRecheck, recordRunA, recordRunB, refreshTop3, scoreOf } from './engine.ts';
+import { applyCheckToStoredRuns, decide, evaluateSite, recordRecheck, recordRunA, recordRunB, refreshTop3, scoreOf, top3Eligible } from './engine.ts';
 import { CHECK_IDS } from './ids.ts';
 import { block, editHomes, healthySite, link } from './testing.ts';
 
@@ -158,6 +158,34 @@ describe('approval, top three and recheck', () => {
     expect(r.C40_insecure_connection).toMatchObject({ status: 'approved', last_verified_at: c.finishedAt });
     expect(r.C02_stale_copyright).toMatchObject({ status: 'resolved', top3: 0 });
     expect(r.C41_outdated_platform).toMatchObject({ status: 'resolved' });
+  });
+});
+
+describe('slow mobile speed in the top three', () => {
+  it('takes a place only when the score is under 30 or main content comes after 6 seconds', () => {
+    expect(top3Eligible('C20_slow_mobile', { performance: 29, lcpMs: 3000 })).toBe(true);
+    expect(top3Eligible('C20_slow_mobile', { performance: 45, lcpMs: 6100 })).toBe(true);
+    expect(top3Eligible('C20_slow_mobile', { performance: 30, lcpMs: 6000 })).toBe(false);
+    expect(top3Eligible('C20_slow_mobile', { performance: 45, lcpMs: 4500 })).toBe(false);
+    expect(top3Eligible('C20_slow_mobile', {})).toBe(false);
+    expect(top3Eligible('C02_stale_copyright', {})).toBe(true);
+  });
+
+  it('is left out of the flagged top three when it is not severe, and stays approved', async () => {
+    const slow = (performance: number, lcpMs: number) => ({ ...healthySite().lighthouse.mobile!, runs: [1, 2, 3].map(() => ({ performance, lcpMs, cls: 0, tbtMs: 0 })), median: { performance, lcpMs, cls: 0, tbtMs: 0 } });
+    const make = (runId: number, at: string, perf: number, lcp: number) => troubled(runId, at, (s) => {
+      s.lighthouse.mobile = slow(perf, lcp);
+      s.https.certError = true;
+      s.eol = [{ product: 'PHP', version: '7.4.33', eolDate: '2022-11-28', sourceUrl: 'https://endoflife.date/php', detectedFrom: 'X-Powered-By header' }];
+    });
+    const a = await make(1, '2026-10-10T20:00:00.000Z', 42, 4800);
+    await recordRunA(db, library, a, 'b', evaluateSite(a, 'tourism', NOW).findings, evidenceRoot);
+    const b = await make(2, '2026-10-10T21:15:00.000Z', 44, 4700);
+    await recordRunB(db, library, b, 'b', evaluateSite(b, 'tourism', NOW).findings, a.finishedAt, evidenceRoot);
+    for (const f of db.prepare('SELECT id FROM findings').all() as { id: number }[]) decide(db, f.id, 'approve', null);
+    const r = Object.fromEntries(rows().map((x) => [x.check_id, x]));
+    expect(r.C20_slow_mobile).toMatchObject({ status: 'approved', top3: 0 });
+    expect(rows().filter((x) => x.top3).map((x) => x.check_id).sort()).toEqual(['C11_dead_navigation', 'C40_insecure_connection', 'C41_outdated_platform']);
   });
 });
 

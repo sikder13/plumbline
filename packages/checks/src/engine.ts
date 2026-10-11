@@ -258,4 +258,4 @@ export async function applyCheckToStoredRuns(db: Db, library: Map<string, Impact
   return result;
 }
 
-export { decide, refreshTop3 } from './review.ts';
+export { decide, refreshTop3, top3Eligible } from './review.ts';

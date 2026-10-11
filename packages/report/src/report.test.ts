@@ -149,6 +149,21 @@ describe('batch report', () => {
     expect(read('index.html')).toContain('id="master"');
   });
 
+  it('writes TOP25.md with everything about the highest scoring businesses, top three marked, and no images', () => {
+    writeReport(db, 'b', { outDir: out });
+    const md = read('TOP25.md');
+    expect(md).toContain('## 1. One Kayaks');
+    expect(md.indexOf('## 1. One Kayaks')).toBeLessThan(md.indexOf('## 2. Two Charters'));
+    expect(md).toContain('- **Owner:** Ross (not confirmed, first name only, owner). Source: https://one.co.nz/about');
+    expect(md).toContain('- **Email:** info@one.co.nz. Source page: https://one.co.nz/contact');
+    expect(md).toContain('- **Brand pack, colours:** #0b4f6c background 40%');
+    expect(md).toContain('| yes | C10_broken_contact_links | A contact link is broken | measured | candidate | Title for C10_broken_contact_links | crop-7.webp |');
+    expect(md).toContain('|  | C02_stale_copyright |');
+    expect(md).not.toContain('C11_dead_navigation');
+    expect(md).not.toContain('Taylor');
+    expect(md).not.toMatch(/!\[|<img/);
+  });
+
   it('lists every business not audited with its reason', () => {
     writeReport(db, 'b', { outDir: out });
     const csvText = read('excluded.csv');

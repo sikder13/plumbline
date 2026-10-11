@@ -208,8 +208,8 @@ entries:
     sources:
       - publisher: OpenAI, crawler documentation
         year: 2026
-        url: https://platform.openai.com/docs/bots
-        quote: "TO VERIFY: the sentence stating that sites blocking OAI-SearchBot are not shown in ChatGPT search answers"
+        url: https://developers.openai.com/api/docs/bots
+        quote: "Sites that are opted out of OAI-SearchBot will not be shown in ChatGPT search answers."
         verified_by_ud: false
     fix: "The new site welcomes search and AI readers and keeps a clean sitemap for them."
 
@@ -245,7 +245,7 @@ entries:
       - publisher: Google Business Profile Help
         year: 2026
         url: https://support.google.com/business/answer/7091
-        quote: "complete and accurate info makes a business more likely to show up in local search results (verify exact wording)"
+        quote: "Businesses with complete and accurate info are more likely to show up in local search results."
         verified_by_ud: false
     fix: "One set of contact details, used everywhere, with a checklist to update each listing."
 
@@ -340,6 +340,6 @@ entries:
       - publisher: Arival
         year: 2026
         url: https://arival.travel/article/4-findings-for-experiences-market-2026/
-        quote: "Between 27% and 34% of travellers cited concern that spots might not be available (verify exact wording)"
+        quote: "Between 27% and 34% of travelers cited concern that spots might not be available as their reason for booking in advance"
         verified_by_ud: false
     fix: "Season dates and departure times are shown on each experience."

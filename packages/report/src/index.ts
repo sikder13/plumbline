@@ -7,6 +7,7 @@ import { contactReady } from '@plumbline/contacts';
 import { loadLibrary } from '@plumbline/impact';
 import { MASTER_COLUMNS, businessView, masterRow, type BusinessView } from './data.ts';
 import { businessHtml, indexHtml } from './html.ts';
+import { topMarkdown } from './top.ts';
 
 export * from './data.ts';
 export { businessHtml, esc, indexHtml } from './html.ts';
@@ -109,7 +110,7 @@ function summaryMd(db: Db, batch: string, views: BusinessView[], stages: Record<
   return lines.join('\n') + '\n';
 }
 
-/** Writes the internal report for a batch: master.csv, index.html, one page per business, excluded.csv and SUMMARY.md. */
+/** Writes the internal report for a batch: master.csv, index.html, one page per business, TOP25.md, excluded.csv and SUMMARY.md. */
 export function writeReport(db: Db, batch: string, opts: ReportOptions = {}): ReportResult {
   const dir = opts.outDir ?? join(paths.reports, batch);
   mkdirSync(join(dir, 'businesses'), { recursive: true });
@@ -128,6 +129,8 @@ export function writeReport(db: Db, batch: string, opts: ReportOptions = {}): Re
   writeFileSync(join(dir, 'master.csv'), csv(views.map(masterRow), MASTER_COLUMNS));
   writeFileSync(join(dir, 'index.html'), indexHtml(batch, views, views.some((v) => v.topAreApproved)));
   for (const v of views) writeFileSync(join(dir, 'businesses', `${v.business.slug}.html`), businessHtml(batch, v, fileHref(v.business.slug)));
+
+  writeFileSync(join(dir, 'TOP25.md'), topMarkdown(batch, views, 25));
 
   const auditedIds = new Set(views.map((v) => v.business.id));
   const others = (db.prepare('SELECT * FROM businesses ORDER BY region, name').all() as Business[]).filter((b) => !auditedIds.has(b.id));

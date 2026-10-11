@@ -1,6 +1,4 @@
 # Local-only material
-.claude/
-CLAUDE.md
 *.local.*
 .env
 data/
