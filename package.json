@@ -1,0 +1,63 @@
+{
+  "name": "plumbline",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.11.2",
+  "engines": {
+    "node": ">=22.19"
+  },
+  "scripts": {
+    "plumb": "tsx apps/cli/src/main.ts",
+    "review": "tsx apps/cli/src/main.ts review",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p tsconfig.json && pnpm --filter @plumbline/review typecheck",
+    "test": "vitest run",
+    "validate:library": "tsx packages/impact/src/validate-cli.ts",
+    "build": "pnpm validate:library && pnpm typecheck",
+    "check": "pnpm lint && pnpm build && pnpm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/better-sqlite3": "9.6.0",
+    "@types/node": "26.6.5",
+    "eslint": "10.12.0",
+    "globals": "17.13.0",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.1",
+    "vitest": "5.0.3"
+  },
+  "dependencies": {
+    "@adobe/structured-data-validator": "1.7.0",
+    "@axe-core/playwright": "4.13.0",
+    "@marbec/web-auto-extractor": "2.2.1",
+    "@plumbline/ai": "workspace:*",
+    "@plumbline/brand": "workspace:*",
+    "@plumbline/budget": "workspace:*",
+    "@plumbline/checks": "workspace:*",
+    "@plumbline/collect": "workspace:*",
+    "@plumbline/contacts": "workspace:*",
+    "@plumbline/core": "workspace:*",
+    "@plumbline/discover": "workspace:*",
+    "@plumbline/evidence": "workspace:*",
+    "@plumbline/export": "workspace:*",
+    "@plumbline/fetch": "workspace:*",
+    "@plumbline/impact": "workspace:*",
+    "@plumbline/render": "workspace:*",
+    "@plumbline/report": "workspace:*",
+    "better-sqlite3": "13.0.3",
+    "cheerio": "1.2.0",
+    "chrome-launcher": "1.2.2",
+    "commander": "15.0.0",
+    "franc": "6.2.0",
+    "lighthouse": "13.5.0",
+    "p-limit": "7.3.3",
+    "playwright": "1.64.0",
+    "sharp": "0.35.5",
+    "simple-wappalyzer": "1.1.106",
+    "tldts": "7.4.18",
+    "undici": "8.11.2",
+    "yaml": "2.9.1",
+    "zod": "4.6.5"
+  }
+}

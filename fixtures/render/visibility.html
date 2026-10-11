@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visibility fixture</title>
+<style>
+  body { margin: 0; font: 16px/1.4 sans-serif; }
+  section { padding: 8px 16px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+  .sr-clip-path { position: absolute; clip-path: inset(50%); width: 200px; height: 20px; }
+  .visually-hidden-new { clip: rect(1px, 1px, 1px, 1px); position: absolute; height: 1px; width: 1px; overflow: hidden; }
+  .offscreen { position: absolute; left: -9999px; top: 0; }
+  .indent { text-indent: -9999px; width: 120px; height: 30px; background: #ccc; overflow: hidden; }
+  .carousel { width: 300px; height: 60px; overflow: hidden; position: relative; }
+  .track { width: 900px; display: flex; }
+  .slide { width: 300px; height: 60px; flex: none; }
+  .collapsed { height: 0; overflow: hidden; }
+  .fade-stack { position: relative; height: 40px; }
+  .fade-stack > div { position: absolute; inset: 0; }
+  .zero-font { font-size: 0; }
+  .scroller { width: 200px; height: 40px; overflow: auto; }
+  .abs-host { overflow: hidden; height: 20px; }
+  .abs-wrap { position: relative; height: 80px; }
+  .escapes { position: absolute; top: 40px; left: 0; }
+</style>
+</head>
+<body>
+<header><a id="logo-link" href="/" data-expect="visible">Fixture Tours</a></header>
+
+<section>
+  <p id="plain" data-expect="visible">PLAIN-VISIBLE paragraph text.</p>
+  <p id="display-none" data-expect="hidden" style="display:none">DISPLAY-NONE text.</p>
+  <p id="visibility-hidden" data-expect="hidden" style="visibility:hidden">VISIBILITY-HIDDEN text.</p>
+  <div style="visibility:hidden"><p id="visibility-child-shown" data-expect="visible" style="visibility:visible">VISIBILITY-CHILD-SHOWN text.</p></div>
+  <p id="opacity-zero" data-expect="hidden" style="opacity:0">OPACITY-ZERO text.</p>
+  <p id="opacity-low" data-expect="hidden" style="opacity:0.04">OPACITY-LOW text.</p>
+  <p id="opacity-faint" data-expect="visible" style="opacity:0.2">OPACITY-FAINT text.</p>
+  <div style="opacity:0"><p id="opacity-parent" data-expect="hidden">OPACITY-PARENT text.</p></div>
+  <p id="hidden-attr" data-expect="hidden" hidden>HIDDEN-ATTR text.</p>
+  <p id="content-vis" data-expect="hidden" style="content-visibility:hidden">CONTENT-VISIBILITY text.</p>
+</section>
+
+<section>
+  <span id="sr-only" class="sr-only" data-expect="hidden">SR-ONLY text.</span>
+  <span id="sr-clip-path" class="sr-clip-path" data-expect="hidden">SR-CLIP-PATH text.</span>
+  <span id="sr-new" class="visually-hidden-new" data-expect="hidden">SR-NEW text.</span>
+  <button id="toggle" data-expect="visible"><span class="sr-only">Toggle navigation</span><span>MENU-ICON</span></button>
+  <div id="offscreen" class="offscreen" data-expect="hidden">OFFSCREEN text.</div>
+  <div id="indent" class="indent" data-expect="visible">TEXT-INDENT text.</div>
+  <p id="zero-font" class="zero-font" data-expect="hidden">ZERO-FONT text.</p>
+</section>
+
+<section>
+  <noscript><iframe src="//www.googletagmanager.com/ns.html?id=GTM-FIXTURE" height="0" width="0"></iframe>NOSCRIPT-TEXT googletagmanager</noscript>
+  <template><p>TEMPLATE-TEXT</p></template>
+  <div aria-hidden="true"><p id="aria-hidden" data-expect="hidden">ARIA-HIDDEN text.</p></div>
+  <div aria-hidden="false"><p id="aria-false" data-expect="visible">ARIA-FALSE text.</p></div>
+  <script type="text/plain">SCRIPT-TEXT</script>
+  <style>.x::before { content: "STYLE-TEXT"; }</style>
+</section>
+
+<section>
+  <div class="carousel" id="carousel">
+    <div class="track">
+      <div class="slide" id="slide-1" data-expect="visible">SLIDE-ONE lorem-free</div>
+      <div class="slide" id="slide-2" data-expect="hidden">SLIDE-TWO Lorem ipsum</div>
+      <div class="slide" id="slide-3" data-expect="hidden">SLIDE-THREE</div>
+    </div>
+  </div>
+  <div class="collapsed"><p id="collapsed" data-expect="hidden">COLLAPSED accordion text.</p></div>
+  <details><summary id="summary" data-expect="visible">DETAILS-SUMMARY</summary><p id="details-body" data-expect="hidden">DETAILS-BODY text.</p></details>
+  <details open><summary>Open</summary><p id="details-open" data-expect="visible">DETAILS-OPEN text.</p></details>
+  <div class="fade-stack">
+    <div id="fade-on" data-expect="visible" style="opacity:1">FADE-ON</div>
+    <div id="fade-off" data-expect="hidden" style="opacity:0">FADE-OFF</div>
+  </div>
+  <div class="scroller"><p id="scroller-below" data-expect="visible" style="margin-top:100px">SCROLLER-BELOW text.</p></div>
+  <div class="abs-wrap"><div class="abs-host"><div id="escapes" class="escapes" data-expect="visible">ESCAPES-CLIP text.</div></div></div>
+</section>
+
+<section>
+  <img id="img-ok" data-expect="visible" alt="A red square" width="60" height="60" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Crect width='60' height='60' fill='red'/%3E%3C/svg%3E">
+  <img id="img-hidden" data-expect="hidden" alt="Hidden" width="60" height="60" style="display:none" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'/%3E">
+  <span id="empty" data-expect="hidden"></span>
+  <a id="float-link" href="/tours" data-expect="visible" style="display:inline"><span style="float:left;width:80px;height:20px">FLOAT-LINK</span></a>
+  <div style="clear:both"></div>
+  <div id="one-pixel" data-expect="hidden" style="width:1px;height:1px;overflow:hidden">ONE-PIXEL text.</div>
+</section>
+
+<section style="height: 1800px">
+  <p>Filler so the page scrolls.</p>
+</section>
+<footer><p id="footer-text" data-expect="visible">FOOTER-TEXT &copy; 2019 Fixture Tours</p></footer>
+</body>
+</html>

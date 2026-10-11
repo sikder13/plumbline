@@ -1,0 +1,483 @@
+{
+  "source": "inputs/NZ-FIRST-20-DOSSIERS.md, website problems as checked on 10 October 2026",
+  "notes": "verified lists the dossier problems that map to a check. miss_reason is filled where the check is not expected to fire and says why. false lists what the dossiers mark as false or unverified: a finding that matches one is a false finding. Reasons that begin 'In a browser' record what the site showed when rendered on 10 October 2026, where that differs from the dossier's text fetch.",
+  "businesses": [
+    {
+      "slug": "target-charters",
+      "verified": [
+        {
+          "check": "T01_no_online_booking",
+          "note": "All Book Now buttons lead to the contact form."
+        },
+        {
+          "check": "T03_platform_dependency",
+          "note": "FishingBooker sells the same trips."
+        },
+        {
+          "check": "C61_price_differs_from_listing",
+          "note": "Site from $200 per person, newzealand.com Adult $135.",
+          "miss_reason": "The newzealand.com listing answers automated requests with 403. That is a block and is not worked around, so the listing could not be read."
+        },
+        {
+          "check": "C38_inconsistent_contact_details",
+          "note": "Site email is a personal xtra address, newzealand.com shows sales@.",
+          "miss_reason": "The newzealand.com listing answers automated requests with 403. That is a block and is not worked around, so the listing could not be read."
+        }
+      ],
+      "false": []
+    },
+    {
+      "slug": "coastal-kayakers",
+      "verified": [
+        {
+          "check": "C02_stale_copyright",
+          "note": "Footer reads Copyright 2015."
+        },
+        {
+          "check": "C11_dead_navigation",
+          "note": "Guided Kayak Tours, Package Deals and More link to #."
+        },
+        {
+          "check": "C14_no_price_visible",
+          "note": "No prices on the homepage."
+        },
+        {
+          "check": "C70_reviews_not_shown",
+          "note": "5.0 from 289 reviews not shown.",
+          "miss_reason": "The site shows TripAdvisor award badges and a testimonial, so the check stays quiet by design."
+        }
+      ],
+      "false": []
+    },
+    {
+      "slug": "trek-lake-okareka",
+      "verified": [
+        {
+          "check": "C05_possible_compromise",
+          "note": "Czech betting article with a link to betzoid.com on the homepage.",
+          "miss_reason": "The Czech text is in the page code but hidden from visitors (a block one pixel high), so it is reported under C05b, not as visible content."
+        },
+        {
+          "check": "C05b_hidden_injected_content",
+          "note": "The Czech betting article and its link to betzoid.com are in the homepage code inside a block one pixel high, so visitors do not see it."
+        },
+        {
+          "check": "C38_inconsistent_contact_details",
+          "note": "021 292 2233 on the site, 07 362 8185 on newzealand.com.",
+          "miss_reason": "The newzealand.com listing answers automated requests with 403. That is a block and is not worked around, so the listing could not be read."
+        },
+        {
+          "check": "C70_reviews_not_shown",
+          "note": "4.8 from 857 TripAdvisor reviews, no score on the homepage.",
+          "miss_reason": "The site shows a TripAdvisor sign image, so the check stays quiet by design."
+        },
+        {
+          "check": "C61_price_differs_from_listing",
+          "note": "$100 against $95, Bookme $110."
+        },
+        {
+          "check": "C41_outdated_platform",
+          "note": "WordPress 6.2.14.",
+          "miss_reason": "The 6.2 branch still receives security releases (6.2.14 is one), so it is not past end of life by the table's rule."
+        }
+      ],
+      "false": []
+    },
+    {
+      "slug": "taupo-boating-and-fishing-charters",
+      "verified": [
+        {
+          "check": "C14_no_price_visible",
+          "note": "No package prices anywhere on the site."
+        },
+        {
+          "check": "T01_no_online_booking",
+          "note": "Phone or a long form only."
+        },
+        {
+          "check": "T03_platform_dependency",
+          "note": "Listed on FishingBooker."
+        },
+        {
+          "check": "C70_reviews_not_shown",
+          "note": "4.9 from 114 reviews, none shown."
+        },
+        {
+          "check": "C01_placeholder_text",
+          "note": "Stray text aaaaaaaaaaaaiii on About and Find Us.",
+          "miss_reason": "The stray text was not found as visible text on the 13 pages read in a browser."
+        }
+      ],
+      "false": []
+    },
+    {
+      "slug": "cathedral-cove-kayak-tours",
+      "verified": [
+        {
+          "check": "C36_thin_homepage",
+          "note": "97 visible words.",
+          "miss_reason": "In a browser the homepage shows about 340 words. The dossier's text fetch was refused and saw 97."
+        },
+        {
+          "check": "C15_contact_details_missing",
+          "note": "No phone, email or address on the homepage.",
+          "miss_reason": "In a browser the homepage shows a freephone number and an email address."
+        },
+        {
+          "check": "C33_robots_blocks_search_or_ai",
+          "note": "robots.txt disallows the tour pages.",
+          "miss_reason": "robots.txt as served on 10 October 2026 disallows only system folders, not the tour pages."
+        },
+        {
+          "check": "C61_price_differs_from_listing",
+          "note": "Vouchers NZ$125, tour $175 on listings."
+        },
+        {
+          "check": "C03_stale_dated_notice",
+          "note": "Yes we are open banner from the border closures.",
+          "miss_reason": "The banner carries no date and no COVID word, so no rule can date it."
+        }
+      ],
+      "false": []
+    },
+    {
+      "slug": "spellbound-glowworm-and-cave-tours",
+      "verified": [
+        {
+          "check": "C60_conflicting_facts",
+          "note": "Homepage prices differ from tour pages; over 30 years against 35+.",
+          "miss_reason": "The check compares founding years only. Prices that differ between two pages of the same site are not paired automatically."
+        }
+      ],
+      "false": [
+        {
+          "pattern": "googletagmanager|GTM-[A-Z0-9]+",
+          "note": "Google Tag Manager noscript iframe is not visible text."
+        }
+      ]
+    },
+    {
+      "slug": "raglan-boat-charters",
+      "verified": [
+        {
+          "check": "C04_seasonal_mismatch",
+          "note": "Summer has started, Xmas parties are booking fast, seen in October."
+        },
+        {
+          "check": "C14_no_price_visible",
+          "note": "No prices on the homepage."
+        },
+        {
+          "check": "C03_stale_dated_notice",
+          "note": "Due to the passed covid pandemic we continue to monitor."
+        },
+        {
+          "check": "C61_price_differs_from_listing",
+          "note": "newzealand.com $65/$40 against $75/$46 on the site.",
+          "miss_reason": "The newzealand.com listing answers automated requests with 403. That is a block and is not worked around, so the listing could not be read."
+        }
+      ],
+      "false": [
+        {
+          "check": "C06_broken_images",
+          "note": "Images are lazy-loaded, not broken."
+        },
+        {
+          "pattern": "rocketspark\\.co\\.nz/page/widgets",
+          "note": "Editor link has no visible text."
+        }
+      ]
+    },
+    {
+      "slug": "kahu-kayaks",
+      "verified": [
+        {
+          "check": "C03_stale_dated_notice",
+          "note": "Vaccine pass rule for RED and ORANGE levels.",
+          "miss_reason": "The vaccine pass wording was not visible on the pages read in a browser."
+        },
+        {
+          "check": "C02_stale_copyright",
+          "note": "ALL RIGHTS RESERVED. KAHU KAYAKS LTD 2018."
+        },
+        {
+          "check": "C60_conflicting_facts",
+          "note": "Swingers Delight NZ $260 pp on the homepage, from NZ$200 on the tours page.",
+          "miss_reason": "The check compares founding years only."
+        }
+      ],
+      "false": []
+    },
+    {
+      "slug": "golden-bay-kayaks",
+      "verified": [
+        {
+          "check": "C60_conflicting_facts",
+          "note": "Since 1988, since 2010, over 30 years, over 14 years."
+        },
+        {
+          "check": "C14_no_price_visible",
+          "note": "No prices on the homepage."
+        }
+      ],
+      "false": []
+    },
+    {
+      "slug": "marlborough-sounds-adventure-company",
+      "verified": [
+        {
+          "check": "C15_contact_details_missing",
+          "note": "No phone, email or address on the MSAC homepage.",
+          "miss_reason": "In a browser the homepage footer shows an email address."
+        },
+        {
+          "check": "C14_no_price_visible",
+          "note": "No prices on the MSAC homepage."
+        },
+        {
+          "check": "C13_no_action_above_fold",
+          "note": "No booking button on the MSAC homepage.",
+          "miss_reason": "In a browser the first phone screen shows Book Now and Enquire now."
+        },
+        {
+          "check": "C03_stale_dated_notice",
+          "note": "Prices valid until 31 August 2024, on nzseakayaking.com.",
+          "miss_reason": "That line is on the second website, nzseakayaking.com. The audit covers the main site, marlboroughsounds.co.nz."
+        }
+      ],
+      "false": []
+    },
+    {
+      "slug": "reel-therapy-charters",
+      "verified": [
+        {
+          "check": "T01_no_online_booking",
+          "note": "Enquire now only."
+        },
+        {
+          "check": "T03_platform_dependency",
+          "note": "Listed on FishingBooker."
+        },
+        {
+          "check": "C14_no_price_visible",
+          "note": "No from price on the homepage."
+        }
+      ],
+      "false": [
+        {
+          "pattern": "covid-clean-black",
+          "note": "What the footer image shows is unverified."
+        }
+      ]
+    },
+    {
+      "slug": "bladen-wines",
+      "verified": [
+        {
+          "check": "C36_thin_homepage",
+          "note": "Besides the banner the homepage has almost no text."
+        }
+      ],
+      "false": []
+    },
+    {
+      "slug": "seal-swim-kaikoura",
+      "verified": [
+        {
+          "check": "C61_price_differs_from_listing",
+          "note": "Site $110, Bookme and newzealand.com $179.",
+          "miss_reason": "No listing that prices this business in NZ dollars could be read and matched by name."
+        },
+        {
+          "check": "T01_no_online_booking",
+          "note": "Only a plain-text email, no link to their RTBS engine.",
+          "miss_reason": "In a browser the site shows a BOOK NOW link to its RTBS booking engine."
+        },
+        {
+          "check": "T03_platform_dependency",
+          "note": "Sold on Bookme.",
+          "miss_reason": "Depends on T01, which does not fire because the site links to its booking engine."
+        },
+        {
+          "check": "C03_stale_dated_notice",
+          "note": "November 14 earthquake road-closure notice from 2016.",
+          "miss_reason": "The notice gives a day and month with no year, so its age cannot be measured."
+        }
+      ],
+      "false": []
+    },
+    {
+      "slug": "okarito-kayaks",
+      "verified": [
+        {
+          "check": "C14_no_price_visible",
+          "note": "No prices on the homepage.",
+          "miss_reason": "In a browser the homepage shows prices (from $150 and from $80 per person)."
+        },
+        {
+          "check": "T02_booking_system_not_linked",
+          "note": "okarito.rezdy.com sells 6 products, the site does not link to it.",
+          "miss_reason": "In a browser the site links to okarito.rezdy.com from Book buttons."
+        },
+        {
+          "check": "C38_inconsistent_contact_details",
+          "note": "0800 652 748 on the site, +64 3 753 4014 on listings.",
+          "miss_reason": "The newzealand.com listing answers automated requests with 403. That is a block and is not worked around, so the listing could not be read."
+        },
+        {
+          "check": "C03_stale_dated_notice",
+          "note": "Forecast box showing Friday 19 August.",
+          "miss_reason": "The dates carry no year, so their age cannot be measured."
+        },
+        {
+          "check": "C70_reviews_not_shown",
+          "note": "241 TripAdvisor reviews not surfaced.",
+          "miss_reason": "The site shows three testimonials, so the check stays quiet by design."
+        }
+      ],
+      "false": []
+    },
+    {
+      "slug": "glacier-valley-eco-tours",
+      "verified": [
+        {
+          "check": "C14_no_price_visible",
+          "note": "No prices on the homepage."
+        },
+        {
+          "check": "C02_stale_copyright",
+          "note": "Copywrite 2023."
+        },
+        {
+          "check": "C11_dead_navigation",
+          "note": "A More menu item with no link.",
+          "miss_reason": "The More item is not a link, so there is no address to measure."
+        }
+      ],
+      "false": []
+    },
+    {
+      "slug": "hokitika-scenic-tours",
+      "verified": [
+        {
+          "check": "C01_placeholder_text",
+          "note": "Lorem ipsum dolor sit amet on the homepage."
+        },
+        {
+          "check": "C14_no_price_visible",
+          "note": "No prices on the homepage."
+        }
+      ],
+      "false": [
+        {
+          "pattern": "Made with\\s+by Innovate",
+          "note": "The gap is probably an icon font that renders in a browser."
+        }
+      ]
+    },
+    {
+      "slug": "the-seventh-generation-tours",
+      "verified": [
+        {
+          "check": "C10_broken_contact_links",
+          "note": "WhatsApp link to http://Http, email link with an empty href."
+        },
+        {
+          "check": "T01_no_online_booking",
+          "note": "Every button leads to a request form."
+        },
+        {
+          "check": "T03_platform_dependency",
+          "note": "Expedia sells the same tour."
+        }
+      ],
+      "false": [
+        {
+          "pattern": "error: Copyright",
+          "note": "Probably a hidden alert from a copy-protection plugin."
+        }
+      ]
+    },
+    {
+      "slug": "pohatu-penguins",
+      "verified": [
+        {
+          "check": "C02_stale_copyright",
+          "note": "2023 Copyright in the footer."
+        },
+        {
+          "check": "C11_dead_navigation",
+          "note": "24 hour Pohatu package links to #.",
+          "miss_reason": "Only reported if that link sits in the homepage menu."
+        }
+      ],
+      "false": [
+        {
+          "pattern": "Invalid login or password",
+          "note": "Text of a hidden login panel."
+        },
+        {
+          "check": "C01_placeholder_text",
+          "pattern": "Unique Adventure & Wildlife Tours",
+          "note": "Repeated hero block is carousel slides or hidden copies."
+        }
+      ]
+    },
+    {
+      "slug": "grey-ridge-vineyard",
+      "verified": [
+        {
+          "check": "C01_placeholder_text",
+          "note": "index.php shown as the first heading or link.",
+          "miss_reason": "index.php is the address behind the logo link. It is not shown as text in a browser."
+        },
+        {
+          "check": "C11_dead_navigation",
+          "note": "Wine, About, Media and Enquiries link to #."
+        },
+        {
+          "check": "C14_no_price_visible",
+          "note": "No tasting price on the site."
+        },
+        {
+          "check": "T05_season_info_missing",
+          "note": "No opening hours on the site.",
+          "miss_reason": "In a browser the homepage shows opening hours (Monday to Saturday 10am to 5pm, Sunday 1 to 5pm)."
+        }
+      ],
+      "false": [
+        {
+          "pattern": "Toggle navigation",
+          "note": "Screen-reader-only text in Bootstrap."
+        }
+      ]
+    },
+    {
+      "slug": "top-of-the-lake-guiding",
+      "verified": [
+        {
+          "check": "C10_broken_contact_links",
+          "note": "Messenger link is m.me/https://..., phone link lacks the plus sign."
+        },
+        {
+          "check": "C14_no_price_visible",
+          "note": "No price on the homepage."
+        },
+        {
+          "check": "C02_stale_copyright",
+          "note": "Copyright 2020."
+        },
+        {
+          "check": "C01_placeholder_text",
+          "note": "photography-hike.html shown as link text.",
+          "miss_reason": "The links to photography-hike.html show other text or none. The file name is not shown as text in a browser."
+        },
+        {
+          "check": "T01_no_online_booking",
+          "note": "Enquiry only, payment by bank transfer."
+        }
+      ],
+      "false": []
+    }
+  ]
+}

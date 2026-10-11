@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scroll reveal fixture</title>
+<style>
+  body { margin: 0; font: 16px/1.4 sans-serif; }
+  .spacer { height: 1500px; }
+  .reveal { opacity: 0; transition: opacity 0.1s; }
+  .reveal.on { opacity: 1; }
+  .never { opacity: 0; }
+</style>
+</head>
+<body>
+<h1>Scroll reveal</h1>
+<div class="spacer"></div>
+<p class="reveal" id="reveal">REVEAL-ON-SCROLL Adults $95</p>
+<p class="never" id="never">NEVER-SHOWN</p>
+<div class="spacer"></div>
+<img id="lazy" alt="Lazy" width="80" height="80" loading="lazy" src="/pixel.svg">
+<p>End.</p>
+<script>
+  // Shows the element while it is on screen and hides it again once it leaves, as scroll-reveal libraries do.
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) e.target.classList.toggle('on', e.isIntersecting);
+  });
+  io.observe(document.getElementById('reveal'));
+</script>
+</body>
+</html>

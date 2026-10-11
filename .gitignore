@@ -1,6 +1,4 @@
 # Local-only material
-.claude/
-CLAUDE.md
 *.local.*
 .env
 data/
@@ -21,3 +19,8 @@ coverage/
 .idea/
 .vscode/
 *.log
+
+# Review app build output
+apps/review/next-env.d.ts
+AGENTS.md
+apps/review/tsconfig.tsbuildinfo

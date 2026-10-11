@@ -1,0 +1,345 @@
+# Plumbline impact library, version 1 (October 10, 2026)
+#
+# One entry per check. Every problem Plumbline reports is shown to a business owner with
+# exactly this impact sentence and this fix sentence. Nothing is written on the fly.
+#
+# basis:
+#   BENCHMARK  a published figure or statement, with publisher, year, URL and the exact quote
+#   OBSERVED   the business's own measured data (their own speed score, their own AI answers)
+#   OUR_VIEW   plain reasoning, shown to the client labelled as our view, never as a statistic
+#
+# verified_by_ud: a BENCHMARK source is only usable in client copy after UD has opened the URL
+# and confirmed the quote word for word. The export gate refuses any entry where this is false.
+#
+# Writing rules for impact and fix text (enforced by the validator): plain English, at most
+# 35 words, no dash characters, none of these words: empower, leverage, unlock, transform,
+# harness, cutting-edge, innovative, world-class, solutions, forward-thinking.
+
+entries:
+
+  - check: C01_placeholder_text
+    severity: 5
+    impact: "Visitors see unfinished template text on your page. It tells them nobody is looking after the site, and they start to wonder about the business too."
+    basis: BENCHMARK
+    sources:
+      - publisher: Nielsen Norman Group
+        year: 2016
+        url: https://www.nngroup.com/articles/trustworthy-design/
+        quote: "Typos, broken links, and other mistakes quickly degrade credibility and communicate an overall lack of attention to detail."
+        verified_by_ud: false
+    fix: "Every word on the rebuilt page comes from your own business. Nothing is left over from a template."
+
+  - check: C02_stale_copyright
+    severity: 2
+    impact: "An old year in the footer makes the site look abandoned, even when the business is busy."
+    basis: BENCHMARK
+    sources:
+      - publisher: Stanford Persuasive Technology Lab
+        year: 2002
+        url: https://credibility.stanford.edu/guidelines/index.html
+        quote: "Update your site's content often (at least show it's been reviewed recently)."
+        verified_by_ud: false
+    fix: "The footer year updates itself every January."
+
+  - check: C03_stale_dated_notice
+    severity: 4
+    impact: "A notice about something long past, such as a road closure, COVID rules or an expired price list, makes visitors think the information on the page cannot be trusted."
+    basis: BENCHMARK
+    sources:
+      - publisher: Stanford Persuasive Technology Lab
+        year: 2002
+        url: https://credibility.stanford.edu/guidelines/index.html
+        quote: "Update your site's content often (at least show it's been reviewed recently)."
+        verified_by_ud: false
+    fix: "Old notices are removed. Any new notice carries an end date and disappears on its own."
+
+  - check: C04_seasonal_mismatch
+    severity: 3
+    impact: "A seasonal message shown in the wrong season tells visitors the page has not been touched in months."
+    basis: OUR_VIEW
+    sources: []
+    fix: "Seasonal messages are set with start and end dates, so they only show when they are true."
+
+  - check: C05_possible_compromise
+    severity: 5
+    impact: "Content that is not yours has been added to your page. Google can show a warning on hacked sites, and fixing only some pages does not lift it."
+    basis: BENCHMARK
+    sources:
+      - publisher: Google Search Central Help
+        year: 2026
+        url: https://support.google.com/webmasters/answer/9044101
+        quote: "can appear with a warning label in search results or an interstitial warning page in the browser"
+        verified_by_ud: false
+      - publisher: GoDaddy Annual Cybersecurity Report
+        year: 2025
+        url: https://www.godaddy.com/resources/news/godaddy-annual-cybersecurity-report-2024
+        quote: "38.4% of infections"
+        verified_by_ud: false
+    fix: "The rebuilt site starts clean, on maintained software that receives security updates."
+
+  - check: C05b_hidden_injected_content
+    severity: 5
+    impact: "Hidden text that is not yours has been added to your page's code. Visitors cannot see it, but search engines read it, and Google can show a warning on hacked sites."
+    basis: BENCHMARK
+    sources:
+      - publisher: Google Search Central Help
+        year: 2026
+        url: https://support.google.com/webmasters/answer/9044101
+        quote: "can appear with a warning label in search results or an interstitial warning page in the browser"
+        verified_by_ud: false
+    fix: "The rebuilt site starts clean, on maintained software that receives security updates."
+
+  - check: C06_broken_images
+    severity: 3
+    impact: "Pictures that fail to load leave gaps on the page, and visitors read gaps as neglect."
+    basis: OUR_VIEW
+    sources: []
+    fix: "Every image is checked on phone and desktop before the page goes live."
+
+  - check: C10_broken_contact_links
+    severity: 5
+    impact: "A visitor who taps your phone, email or message link and gets nothing has no easy way left to reach you."
+    basis: OUR_VIEW
+    sources: []
+    fix: "Phone, email and message links are tested on a real phone and work with one tap."
+
+  - check: C11_dead_navigation
+    severity: 3
+    impact: "Menu items that lead nowhere make visitors give up looking for the page they wanted."
+    basis: BENCHMARK
+    sources:
+      - publisher: Nielsen Norman Group
+        year: 2016
+        url: https://www.nngroup.com/articles/trustworthy-design/
+        quote: "Typos, broken links, and other mistakes quickly degrade credibility and communicate an overall lack of attention to detail."
+        verified_by_ud: false
+    fix: "Every menu item leads to a real page, checked by machine before launch."
+
+  - check: C12_broken_internal_links
+    severity: 3
+    impact: "Links that end in an error page stop visitors on their way to booking or contacting you."
+    basis: BENCHMARK
+    sources:
+      - publisher: Nielsen Norman Group
+        year: 2016
+        url: https://www.nngroup.com/articles/trustworthy-design/
+        quote: "Typos, broken links, and other mistakes quickly degrade credibility and communicate an overall lack of attention to detail."
+        verified_by_ud: false
+    fix: "All links are checked by machine before launch and again every month."
+
+  - check: C13_no_action_above_fold
+    severity: 4
+    impact: "On a phone, the first screen shows no way to book or contact you. Many visitors never scroll far enough to find one."
+    basis: OUR_VIEW
+    sources: []
+    fix: "The first screen on a phone carries one clear button to book or enquire."
+
+  - check: C14_no_price_visible
+    severity: 4
+    impact: "Visitors who cannot see a price often leave to find one somewhere else."
+    basis: BENCHMARK
+    sources:
+      - publisher: Baymard Institute
+        year: 2025
+        url: https://baymard.com/lists/cart-abandonment-rate
+        quote: "I couldn't see / calculate total order cost up-front"
+        verified_by_ud: false
+      - publisher: Nielsen Norman Group
+        year: 2016
+        url: https://www.nngroup.com/articles/trustworthy-design/
+        quote: "I would definitely not use HomeCleanz because they don't state the rate here."
+        verified_by_ud: false
+    fix: "Prices are shown next to each experience, from one source, so they always match."
+
+  - check: C15_contact_details_missing
+    severity: 3
+    impact: "Your homepage shows no phone number or email, so a visitor with a quick question has to hunt for one."
+    basis: OUR_VIEW
+    sources: []
+    fix: "Phone and email sit on every page, in the header on phones."
+
+  - check: C16_booking_hard_to_reach
+    severity: 4
+    impact: "It takes several steps, or a jump to another website, to book with you. Each extra step loses some people."
+    basis: OUR_VIEW
+    sources: []
+    fix: "Booking opens in one tap from every page, using the booking system you already pay for."
+
+  - check: C20_slow_mobile
+    severity: 4
+    impact: "Your page is slow on a phone. In a Deloitte study for Google, a tenth of a second faster on mobile lifted travel site conversions by 10.1%."
+    basis: BENCHMARK
+    sources:
+      - publisher: Deloitte for Google, Milliseconds Make Millions
+        year: 2020
+        url: https://web.dev/case-studies/milliseconds-make-millions
+        quote: "A 0.1 second improvement of mobile site speed increases conversion rates by 8.4% for retail sites and 10.1% for travel sites."
+        verified_by_ud: false
+      - publisher: Google
+        year: 2016
+        url: https://blog.amp.dev/2016/09/08/new-study-speedmatters-for-mobile-user-engagement-and-revenue/
+        quote: "53% of mobile site visits are abandoned"
+        verified_by_ud: false
+    fix: "The rebuilt page is built light, with compressed images, and measured with Google's own tool before launch."
+
+  - check: C23_not_mobile_friendly
+    severity: 4
+    impact: "Parts of your page do not fit a phone screen, so visitors have to pinch and scroll sideways."
+    basis: OUR_VIEW
+    sources: []
+    fix: "The page is designed for phones first and tested on real phone sizes."
+
+  - check: C31_no_structured_data
+    severity: 2
+    impact: "Your site does not describe the business in the format search engines read. Google says this makes richer results possible, though it does not guarantee them."
+    basis: BENCHMARK
+    sources:
+      - publisher: Google Search Central
+        year: 2026
+        url: https://developers.google.com/search/docs/appearance/structured-data/sd-policies
+        quote: "Using structured data enables a feature to be present, it does not guarantee that it will be present."
+        verified_by_ud: false
+    fix: "Your business, location, experiences and prices are described in that format on every page."
+
+  - check: C33_robots_blocks_search_or_ai
+    severity: 4
+    impact: "Your site tells some search and AI tools not to read it, so they cannot use your own pages when answering questions about you."
+    basis: BENCHMARK
+    sources:
+      - publisher: OpenAI, crawler documentation
+        year: 2026
+        url: https://developers.openai.com/api/docs/bots
+        quote: "Sites that are opted out of OAI-SearchBot will not be shown in ChatGPT search answers."
+        verified_by_ud: false
+    fix: "The new site welcomes search and AI readers and keeps a clean sitemap for them."
+
+  - check: C36_thin_homepage
+    severity: 3
+    impact: "Your homepage says very little about what you offer. Tourism New Zealand advises operators to write key website copy in clear, specific language."
+    basis: BENCHMARK
+    sources:
+      - publisher: Tourism New Zealand
+        year: 2026
+        url: https://www.tourismnewzealand.com/news-and-activity/tnz-hosts-ai-discoverability-workshops-for-industry/
+        quote: "Rewrite key website copy in clear, specific language"
+        verified_by_ud: false
+    fix: "The homepage tells your story and lists every experience with time, price and what is included."
+
+  - check: C37_not_named_by_ai
+    severity: 4
+    impact: "When we asked AI tools the questions a visitor asks about your area, they named other businesses and not you."
+    basis: OBSERVED
+    sources:
+      - publisher: BrightLocal Local Consumer Review Survey
+        year: 2026
+        url: https://www.brightlocal.com/research/local-consumer-review-survey/
+        quote: "45% use ChatGPT or other gen-AI tools for local recommendations"
+        verified_by_ud: false
+    fix: "Your pages answer those questions directly, in the plain language AI tools quote."
+
+  - check: C38_inconsistent_contact_details
+    severity: 3
+    impact: "Your phone, email or address differs between your site and your listings, so some visitors reach the wrong place."
+    basis: BENCHMARK
+    sources:
+      - publisher: Google Business Profile Help
+        year: 2026
+        url: https://support.google.com/business/answer/7091
+        quote: "Businesses with complete and accurate info are more likely to show up in local search results."
+        verified_by_ud: false
+    fix: "One set of contact details, used everywhere, with a checklist to update each listing."
+
+  - check: C40_insecure_connection
+    severity: 4
+    impact: "Browsers warn visitors that your page is not secure, which stops some of them from booking or sending their details."
+    basis: OUR_VIEW
+    sources: []
+    fix: "The new site runs fully on a secure connection with no mixed content."
+
+  - check: C41_outdated_platform
+    severity: 4
+    impact: "Your site runs on software that no longer receives security updates, which leaves it open to known attacks."
+    basis: OUR_VIEW
+    sources: []
+    fix: "The new site runs on maintained software that we keep updated."
+
+  - check: C50_accessibility_failures
+    severity: 2
+    impact: "Some text is hard to read or some controls are unlabelled, which makes the page harder to use for older visitors and anyone reading a phone in bright sun."
+    basis: OUR_VIEW
+    sources: []
+    fix: "Colours, text sizes and labels meet accessibility standards and are checked by machine."
+
+  - check: C60_conflicting_facts
+    severity: 3
+    impact: "Your site gives different answers to the same question, such as how long you have operated or what something costs. Visitors notice, and it lowers trust."
+    basis: BENCHMARK
+    sources:
+      - publisher: Nielsen Norman Group
+        year: 2016
+        url: https://www.nngroup.com/articles/trustworthy-design/
+        quote: "Typos, broken links, and other mistakes quickly degrade credibility and communicate an overall lack of attention to detail."
+        verified_by_ud: false
+    fix: "Each fact lives in one place and is shown the same way everywhere."
+
+  - check: C61_price_differs_from_listing
+    severity: 4
+    impact: "Your site shows a different price from your listings. Visitors who see two prices trust neither."
+    basis: OUR_VIEW
+    sources: []
+    fix: "Prices come from one source and match your listings."
+
+  - check: C70_reviews_not_shown
+    severity: 3
+    impact: "You have strong reviews elsewhere, but your own site does not show them. In a 2026 survey, 97% of consumers said they read reviews for local businesses."
+    basis: BENCHMARK
+    sources:
+      - publisher: BrightLocal Local Consumer Review Survey
+        year: 2026
+        url: https://www.brightlocal.com/research/local-consumer-review-survey/
+        quote: "97% of consumers read reviews for local businesses"
+        verified_by_ud: false
+    fix: "Your rating, review count and a few recent reviews sit on the homepage, linked to the source."
+
+  - check: T01_no_online_booking
+    severity: 5
+    impact: "Visitors cannot book on your own site. In 2025, booking platforms took 37% of tour and activity bookings while operator websites took 25%."
+    basis: BENCHMARK
+    sources:
+      - publisher: Arival, reported by PhocusWire
+        year: 2026
+        url: https://www.phocuswire.com/otas-increased-booking-share-experiences-arival-report
+        quote: "37% of bookings in 2025, up from 33% in 2024 and 28% in 2023"
+        verified_by_ud: false
+    fix: "A booking button on every page opens your own booking system, so the booking and the margin stay with you."
+
+  - check: T02_booking_system_not_linked
+    severity: 5
+    impact: "You already pay for an online booking system, but your own website does not link to it."
+    basis: OBSERVED
+    sources: []
+    fix: "Your existing booking system is connected to a button on every page."
+
+  - check: T03_platform_dependency
+    severity: 4
+    impact: "Booking platforms sell your experiences while your own site cannot. Operators report commissions of 20 to 30% per booking."
+    basis: BENCHMARK
+    sources:
+      - publisher: Arival
+        year: 2025
+        url: https://arival.travel/article/getyourguide-commission-increasing-for-some-operators
+        quote: "from 20% to 30%"
+        verified_by_ud: false
+    fix: "Direct booking on your own site, so more bookings arrive without commission."
+
+  - check: T05_season_info_missing
+    severity: 2
+    impact: "Your site does not say when you operate, so visitors planning ahead cannot tell if you are open on their dates."
+    basis: BENCHMARK
+    sources:
+      - publisher: Arival
+        year: 2026
+        url: https://arival.travel/article/4-findings-for-experiences-market-2026/
+        quote: "Between 27% and 34% of travelers cited concern that spots might not be available as their reason for booking in advance"
+        verified_by_ud: false
+    fix: "Season dates and departure times are shown on each experience."
