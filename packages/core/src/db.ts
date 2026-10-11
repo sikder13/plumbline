@@ -25,7 +25,8 @@ export function openDb(file: string = paths.db): Db {
   const db = new Database(file);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
-  db.pragma('busy_timeout = 10000');
+  // Several commands can run at once (an audit beside an AI run), so a writer waits rather than failing.
+  db.pragma('busy_timeout = 300000');
   migrate(db);
   return db;
 }

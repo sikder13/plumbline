@@ -324,8 +324,9 @@ export function indexMentions(db: Db, batch: string): number {
   const ins = db.prepare('INSERT INTO ai_mentions (answer_id, business_id, name, matched_by, confirmed) VALUES (?, ?, ?, ?, NULL)');
   const kept = db.prepare('SELECT name FROM ai_mentions WHERE answer_id = ?');
   let n = 0;
-  db.transaction(() => {
-    for (const a of answers) {
+  // One short transaction per answer, so other commands writing to the database are never held up for long.
+  for (const a of answers) {
+    db.transaction(() => {
       del.run(a.id);
       const already = new Set((kept.all(a.id) as { name: string }[]).map((r) => foldName(r.name)));
       const citations = JSON.parse(a.citations) as Citation[];
@@ -344,8 +345,8 @@ export function indexMentions(db: Db, batch: string): number {
         ins.run(a.id, null, name, 'answer_text');
         n += 1;
       }
-    }
-  })();
+    })();
+  }
   return n;
 }
 
