@@ -111,20 +111,27 @@ export interface NameMatch {
 
 const PLACE_WORDS = new Set(['northland', 'auckland', 'coromandel', 'waikato', 'rotorua', 'taupo', 'wellington', 'nelson', 'tasman', 'marlborough', 'kaikoura', 'canterbury', 'mackenzie', 'otago', 'queenstown', 'wanaka', 'fiordland', 'southland', 'christchurch', 'dunedin', 'hokitika', 'glenorchy', 'cathedral', 'aotearoa', 'peninsula', 'hawkes', 'plenty', 'islands', 'southern', 'northern', 'adventure', 'adventures', 'wilderness', 'discovery', 'experience', 'mountain', 'national', 'original', 'ultimate', 'paradise', 'heritage', 'vineyard', 'vineyards', 'fishing', 'kayaking', 'kayakers', 'charters', 'cruising', 'wildlife', 'stargazing', 'trekking', 'outdoors']);
 
+const COMMON_PLACE_PARTS = ['bay', 'of', 'islands', 'island', 'lake', 'lakes', 'coast', 'sound', 'sounds', 'harbour', 'north', 'south', 'east', 'west', 'mt', 'mount', 'the', 'new', 'zealand', 'nz', 'central', 'great', 'golden', 'abel', 'milford', 'doubtful', 'franz', 'josef', 'fox', 'glacier', 'stewart', 'banks', 'cook', 'strait', 'te', 'anau', 'waitomo', 'paihia', 'russell', 'picton', 'blenheim', 'napier', 'hastings', 'tauranga', 'whitianga', 'hahei', 'raglan', 'hamilton', 'tekapo', 'twizel', 'akaroa', 'oamaru', 'invercargill', 'bluff', 'catlins', 'hokianga', 'kerikeri', 'whangarei', 'matakana', 'waiheke', 'martinborough', 'wairarapa', 'kapiti', 'motueka', 'kaiteriteri', 'marahau', 'takaka', 'hanmer', 'arrowtown', 'cromwell', 'alexandra', 'glenorchy'];
+
 /** Whether an answer names a business: by its name in the text, or by its domain in the text or citations. */
 export function isNamed(business: { name: string; domain: string | null; town?: string | null; region?: string | null }, text: string, citations: Citation[]): NameMatch {
   const folded = ` ${foldName(text)} `;
   const full = foldName(business.name.replace(/\(.*?\)/g, ' '));
   if (full && folded.includes(` ${full} `)) return { named: true, by: 'name' };
+  const places = new Set([...PLACE_WORDS, ...COMMON_PLACE_PARTS, ...foldName(`${business.town ?? ''} ${business.region ?? ''}`).split(' ')]);
   const core = coreName(business.name);
-  const distinctive = core.filter((w) => !GENERIC_NAME_WORDS.has(w));
-  // Two or more words must appear together. A single word must be long and not a generic one.
-  if (core.length >= 2 && distinctive.length >= 1 && folded.includes(` ${core.join(' ')} `)) return { named: true, by: 'name' };
-  if (core.length === 1 && distinctive.length === 1 && core[0]!.length >= 7 && folded.includes(` ${core[0]} `)) return { named: true, by: 'name' };
-  // People shorten a long name to its first word. That counts when the word is unusual and is not a place.
-  const places = new Set([...PLACE_WORDS, ...foldName(`${business.town ?? ''} ${business.region ?? ''}`).split(' ')]);
-  const lead = core[0] ?? '';
-  if (core.length >= 2 && lead.length >= 8 && !GENERIC_NAME_WORDS.has(lead) && !places.has(lead) && folded.includes(` ${lead} `)) return { named: true, by: 'name' };
+  // A name made only of place and trade words ("Bay of Islands Tours") must appear whole, less any "Ltd".
+  const distinctive = core.filter((w) => !GENERIC_NAME_WORDS.has(w) && !places.has(w));
+  const withoutSuffix = full.replace(/ (ltd|limited|nz|new zealand)$/g, '');
+  if (withoutSuffix && withoutSuffix !== full && folded.includes(` ${withoutSuffix} `)) return { named: true, by: 'name' };
+  if (distinctive.length) {
+    // Two or more words must appear together. A single word must be long.
+    if (core.length >= 2 && folded.includes(` ${core.join(' ')} `)) return { named: true, by: 'name' };
+    if (core.length === 1 && core[0]!.length >= 7 && folded.includes(` ${core[0]} `)) return { named: true, by: 'name' };
+    // People shorten a long name to its first word. That counts when the word is unusual and is not a place.
+    const lead = core[0] ?? '';
+    if (core.length >= 2 && lead.length >= 8 && distinctive.includes(lead) && folded.includes(` ${lead} `)) return { named: true, by: 'name' };
+  }
   if (business.domain) {
     const d = business.domain.toLowerCase();
     if (text.toLowerCase().includes(d)) return { named: true, by: 'domain' };
@@ -139,7 +146,7 @@ const NOT_A_BUSINESS = /^(best|top|why|what|when|where|how|tips?|note|summary|ov
 export function namedCandidates(text: string): string[] {
   const out = new Map<string, string>();
   const add = (raw: string) => {
-    const name = raw.replace(/\[[^\]]*\]\([^)]*\)/g, (m) => m.slice(1, m.indexOf(']'))).replace(/\[(?:web:)?\d+\]/g, '').replace(/[*_`]+/g, '').replace(/\s+/g, ' ').replace(/[:.,;–—-]+$/, '').trim();
+    const name = raw.split(/\s+[—–|]\s+/)[0]!.replace(/\[[^\]]*\]\([^)]*\)/g, (m) => m.slice(1, m.indexOf(']'))).replace(/\[(?:web:)?\d+\]/g, '').replace(/[*_`]+/g, '').replace(/\s+/g, ' ').replace(/[:.,;–—-]+$/, '').trim();
     if (name.length < 4 || name.length > 60 || name.split(' ').length > 8) return;
     if (!/^[A-ZĀĒĪŌŪ0-9]/.test(name) || NOT_A_BUSINESS.test(name)) return;
     if (!/[a-z]/.test(name) || /[?!]$/.test(name)) return;

@@ -95,6 +95,10 @@ describe('named or not', () => {
     expect(isNamed(b, 'Many coastal operators hire kayaks. Kayakers love the bay.', []).named).toBe(false);
     expect(isNamed({ name: 'Kayak Tours', domain: null }, 'There are many kayak tours in the area.', []).named).toBe(true);
     expect(isNamed({ name: 'Bay Tours', domain: null }, 'The bay has many tours.', []).named).toBe(false);
+    expect(isNamed({ name: 'Bay of Islands Tours', domain: null }, 'Fishing in the Bay of Islands is superb.', []).named).toBe(false);
+    expect(isNamed({ name: 'Bay of Islands Tours', domain: null }, 'Book with Bay of Islands Tours.', []).named).toBe(true);
+    expect(isNamed({ name: 'Bay of Islands Adventures Ltd', domain: null }, 'Bay of Islands Adventures runs trips; the Bay of Islands is lovely.', []).named).toBe(true);
+    expect(namedCandidates('- **Captain Bucko — Paihia**: good')).toEqual(['Captain Bucko']);
     expect(coreName('The Seventh Generation Tours')).toEqual(['seventh', 'generation']);
   });
   it('lists other names an answer puts forward', () => {
