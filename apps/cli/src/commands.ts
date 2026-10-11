@@ -5,6 +5,9 @@ import { env, paths, type Business, type Db } from '@plumbline/core';
 import { aiSummary, indexMentions, openAiAsk, perplexityAsk, plan, runPlan, type AiPlan } from '@plumbline/ai';
 import { brandDir, captureBrand, saveBrandPack, voiceSamples, type BrandCapture } from '@plumbline/brand';
 import { limits, loadPrices, spendByProvider, spent } from '@plumbline/budget';
+import { CHECK_IDS, applyCheckToStoredRuns } from '@plumbline/checks';
+import { loadSite } from '@plumbline/collect';
+import { loadLibrary } from '@plumbline/impact';
 import { contactReady, findContacts, openAiPeopleModel } from '@plumbline/contacts';
 import { TOURISM_ACTIVITIES, TOURISM_EXTRA_ACTIVITIES, discover, qualify } from '@plumbline/discover';
 import { Polite } from '@plumbline/fetch';
@@ -156,6 +159,24 @@ export async function brandCommand(db: Db, opts: { batch: string; force?: boolea
   );
   await renderer.stop();
   console.log(`Brand packs captured: ${done} of ${todo.length} still missing in ${opts.batch}.`);
+}
+
+/** Runs one check over the stored runs of a batch. Nothing is fetched. */
+export async function evaluateStoredCommand(db: Db, opts: { batch: string; check: string }): Promise<void> {
+  const library = loadLibrary(CHECK_IDS);
+  const run = db.prepare("SELECT id FROM runs WHERE business_id = ? AND batch = ? AND kind = ? AND status = 'done' ORDER BY id DESC LIMIT 1");
+  let candidates = 0;
+  let reproduced = 0;
+  const fired: string[] = [];
+  for (const b of batchMembers(db, opts.batch)) {
+    const a = run.get(b.id, opts.batch, 'A') as { id: number } | undefined;
+    const second = run.get(b.id, opts.batch, 'B') as { id: number } | undefined;
+    const r = await applyCheckToStoredRuns(db, library, opts.check, opts.batch, a ? loadSite(a.id) : null, second ? loadSite(second.id) : null);
+    candidates += r.candidates;
+    reproduced += r.reproduced;
+    if (db.prepare('SELECT 1 FROM findings WHERE business_id = ? AND batch = ? AND check_id = ?').get(b.id, opts.batch, opts.check)) fired.push(b.slug);
+  }
+  console.log(`${opts.check} on ${opts.batch}: ${candidates} new candidate(s), ${reproduced} reproduced. Fires for: ${fired.join(', ') || 'no business'}.`);
 }
 
 export function costCommand(db: Db): void {

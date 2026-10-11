@@ -1,3 +1,6 @@
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { CandidateFinding } from '@plumbline/core';
 import type { SiteData } from '@plumbline/collect';
@@ -97,6 +100,41 @@ describe('content checks', () => {
     const f = one(s, 'C60_conflicting_facts');
     expect((f.detail.values as { year: number }[]).map((v) => v.year)).toEqual([1988, 2010]);
     expect(f.evidence).toHaveLength(2);
+  });
+});
+
+describe('hidden injected content', () => {
+  const CZECH = 'V dnešní digitální éře se sázková industrie dramaticky proměnila díky pokročilým technologiím a datové analytice. Platformy představují novou generaci služeb, které kombinují umělou inteligenci, statistické modely a lidskou expertízu k vytváření kvalitních podkladů pro rozhodování.';
+  const withHtml = (hidden: string) => {
+    const s = healthySite();
+    const dir = mkdtempSync(join(tmpdir(), 'plumbline-c05b-'));
+    const body = s.homepage.mobile!.blocks.map((b) => `<p>${b.text}</p>`).join('\n');
+    writeFileSync(join(dir, 'page.html'), `<!doctype html><html lang="en"><body>${body}\n${hidden}</body></html>`);
+    for (const p of [s.homepage.mobile!, s.homepage.desktop!]) Object.assign(p, { dir, htmlFile: 'page.html' });
+    return s;
+  };
+
+  it('C05b fires on hidden foreign text that links to an unrelated domain, with the code, the link and the place on the page', () => {
+    const f = one(withHtml(`<div style="overflow: hidden; height: 1px;"><p>${CZECH}</p><a href="https://betzoid.com/cz/">sportovní tipy</a></div>`), 'C05b_hidden_injected_content');
+    expect(f.detail).toMatchObject({ language: 'ces', shownToVisitors: false, outboundLinks: [{ href: 'https://betzoid.com/cz/', domain: 'betzoid.com' }] });
+    expect(f.title).toContain('betzoid.com');
+    expect(f.evidence[0]).toMatchObject({ kind: 'element', viewport: 'mobile' });
+    expect(f.evidence[0]!.box).toBeDefined();
+    expect(f.evidence[0]!.excerpt).toContain('overflow: hidden; height: 1px;');
+    expect(f.evidence[0]!.excerpt).toContain('https://betzoid.com/cz/');
+    expect(f.evidence[0]!.excerpt).toContain('line ');
+  });
+
+  it('C05b stays quiet without an unrelated link, and C05 stays quiet because nothing foreign is visible', () => {
+    const s = withHtml(`<div style="display:none"><p>${CZECH}</p></div>`);
+    expect(ids(s)).not.toContain('C05b_hidden_injected_content');
+    expect(ids(s)).not.toContain('C05_possible_compromise');
+  });
+
+  it('C05b stays quiet when the same text is visible', () => {
+    const s = withHtml(`<div><p>${CZECH}</p><a href="https://betzoid.com/cz/">tipy</a></div>`);
+    editHomes(s, (p) => p.blocks.push(block(CZECH)));
+    expect(ids(s)).not.toContain('C05b_hidden_injected_content');
   });
 });
 

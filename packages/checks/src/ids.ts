@@ -14,6 +14,7 @@ export const CHECKS: CheckMeta[] = [
   { id: 'C03_stale_dated_notice', pack: 'core', tier: 'rule', title: 'A notice about a past date is still showing' },
   { id: 'C04_seasonal_mismatch', pack: 'core', tier: 'rule', title: 'A seasonal message is showing out of season' },
   { id: 'C05_possible_compromise', pack: 'core', tier: 'judgment', title: 'Content that does not belong to the business' },
+  { id: 'C05b_hidden_injected_content', pack: 'core', tier: 'judgment', title: 'Hidden content that does not belong to the business' },
   { id: 'C06_broken_images', pack: 'core', tier: 'measured', title: 'Images fail to load' },
   { id: 'C10_broken_contact_links', pack: 'core', tier: 'measured', title: 'A contact link is broken' },
   { id: 'C11_dead_navigation', pack: 'core', tier: 'measured', title: 'Menu items lead nowhere' },

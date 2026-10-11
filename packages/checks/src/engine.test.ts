@@ -7,7 +7,7 @@ import { memoryDb, type Db } from '@plumbline/core';
 import type { SiteData } from '@plumbline/collect';
 import { cropElement, pageShot, regionFor } from '@plumbline/evidence';
 import { loadLibrary } from '@plumbline/impact';
-import { decide, evaluateSite, recordRecheck, recordRunA, recordRunB, refreshTop3, scoreOf } from './engine.ts';
+import { applyCheckToStoredRuns, decide, evaluateSite, recordRecheck, recordRunA, recordRunB, refreshTop3, scoreOf } from './engine.ts';
 import { CHECK_IDS } from './ids.ts';
 import { block, editHomes, healthySite, link } from './testing.ts';
 
@@ -183,6 +183,29 @@ describe('findings built from AI answers', () => {
     const ev = db.prepare("SELECT e.kind, e.excerpt FROM evidence e JOIN findings f ON f.id = e.finding_id WHERE f.check_id = 'C37_not_named_by_ai'").get() as { kind: string; excerpt: string };
     expect(ev.kind).toBe('ai');
     expect(ev.excerpt).toContain('Question: Q');
+  });
+});
+
+describe('a check added after a batch was audited', () => {
+  it('is applied to the stored runs: candidate from run A alone, reproduced when run B shows it too', async () => {
+    const a = await troubled(1, '2026-10-10T20:00:00.000Z');
+    const r1 = await applyCheckToStoredRuns(db, library, 'C02_stale_copyright', 'b', a, null, evidenceRoot);
+    expect(r1).toEqual({ candidates: 1, reproduced: 0 });
+    expect(rows().map((r) => [r.check_id, r.status])).toEqual([['C02_stale_copyright', 'candidate']]);
+    const b = await troubled(2, '2026-10-10T21:15:00.000Z');
+    const r2 = await applyCheckToStoredRuns(db, library, 'C02_stale_copyright', 'b', a, b, evidenceRoot);
+    expect(r2).toEqual({ candidates: 0, reproduced: 1 });
+    expect(rows()[0]).toMatchObject({ status: 'reproduced', reproduced: 1, last_verified_at: b.finishedAt });
+    expect(db.prepare('SELECT COUNT(*) AS n FROM evidence').get()).toEqual({ n: 1 });
+  });
+
+  it('does not count two runs less than 60 minutes apart, or a problem only one run shows', async () => {
+    const a = await troubled(1, '2026-10-10T20:00:00.000Z');
+    const soon = await troubled(2, '2026-10-10T20:30:00.000Z');
+    expect((await applyCheckToStoredRuns(db, library, 'C02_stale_copyright', 'b', a, soon, evidenceRoot)).reproduced).toBe(0);
+    const fixed = await troubled(3, '2026-10-10T22:00:00.000Z', (s) => editHomes(s, (p) => (p.blocks[p.blocks.length - 1] = block('© 2026 Harbour Fixture Charters', { inFooter: true }))));
+    expect((await applyCheckToStoredRuns(db, library, 'C02_stale_copyright', 'b', a, fixed, evidenceRoot)).reproduced).toBe(0);
+    expect(rows()[0]).toMatchObject({ status: 'candidate', reproduced: 0 });
   });
 });
 

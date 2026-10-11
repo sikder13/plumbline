@@ -55,7 +55,11 @@
         {
           "check": "C05_possible_compromise",
           "note": "Czech betting article with a link to betzoid.com on the homepage.",
-          "miss_reason": "The Czech text was not on the homepage as rendered in a browser at either screen size on 10 October 2026. It was reported from a text fetch, so it may be served only to some readers or have been removed. Nothing invisible is reported."
+          "miss_reason": "The Czech text is in the page code but hidden from visitors (a block one pixel high), so it is reported under C05b, not as visible content."
+        },
+        {
+          "check": "C05b_hidden_injected_content",
+          "note": "The Czech betting article and its link to betzoid.com are in the homepage code inside a block one pixel high, so visitors do not see it."
         },
         {
           "check": "C38_inconsistent_contact_details",

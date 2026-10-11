@@ -77,6 +77,18 @@ entries:
         verified_by_ud: false
     fix: "The rebuilt site starts clean, on maintained software that receives security updates."
 
+  - check: C05b_hidden_injected_content
+    severity: 5
+    impact: "Hidden text that is not yours has been added to your page's code. Visitors cannot see it, but search engines read it, and Google can show a warning on hacked sites."
+    basis: BENCHMARK
+    sources:
+      - publisher: Google Search Central Help
+        year: 2026
+        url: https://support.google.com/webmasters/answer/9044101
+        quote: "can appear with a warning label in search results or an interstitial warning page in the browser"
+        verified_by_ud: false
+    fix: "The rebuilt site starts clean, on maintained software that receives security updates."
+
   - check: C06_broken_images
     severity: 3
     impact: "Pictures that fail to load leave gaps on the page, and visitors read gaps as neglect."

@@ -7,7 +7,7 @@ import { CHECK_IDS } from '@plumbline/checks';
 import { loadLibraryRaw, validateLibrary } from '@plumbline/impact';
 import { auditBatch, type RunKind } from './audit.ts';
 import { writeCalibration } from './calibrate.ts';
-import { aiCommand, aiSummary, brandCommand, contactsCommand, costCommand, discoverCommand, purgeCommand, qualifyCommand } from './commands.ts';
+import { aiCommand, aiSummary, brandCommand, contactsCommand, evaluateStoredCommand, costCommand, discoverCommand, purgeCommand, qualifyCommand } from './commands.ts';
 import { exportBusiness } from '@plumbline/export';
 import { writeReport } from '@plumbline/report';
 import { seed } from './seed.ts';
@@ -142,6 +142,13 @@ program
     git('commit', '-m', 'Mark impact sources verified', '--', 'impact/library.yaml');
     console.log(`Committed ${changed.length / 2} verified flag change(s).`);
   });
+
+program
+  .command('evaluate')
+  .description('Run one check over the stored runs of a batch, without fetching anything')
+  .requiredOption('--batch <name>', 'batch name')
+  .requiredOption('--check <id>', 'check id')
+  .action((o: { batch: string; check: string }) => evaluateStoredCommand(db(), o));
 
 program.command('cost').description('Show the spending ledger').action(() => costCommand(db()));
 

@@ -11,7 +11,7 @@ export const SPAM_TERMS: RegExp[] = [
   /\bno deposit bonus\b/i,
   /\bpoker\b/i,
   /\bs[áa]zk(?:a|y|ov[áýé]|en[íi])\w*/i,
-  /\bhazard\w*/i,
+  /\bhazard(?:ow|zist|u\b)\w*/i,
   /\bbukmacher\w*/i,
   /\bwett(?:en|anbieter)\b/i,
   /\bapuestas\b/i,

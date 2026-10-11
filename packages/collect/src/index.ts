@@ -9,3 +9,4 @@ export * from './listings.ts';
 export * from './lighthouse.ts';
 export * from './axe.ts';
 export * from './site.ts';
+export * from './hidden.ts';

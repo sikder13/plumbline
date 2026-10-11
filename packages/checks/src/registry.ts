@@ -1,6 +1,6 @@
 import { CHECKS } from './ids.ts';
 import { C13_no_action_above_fold, C14_no_price_visible, C15_contact_details_missing, C16_booking_hard_to_reach } from './packs/core/action-checks.ts';
-import { C01_placeholder_text, C02_stale_copyright, C03_stale_dated_notice, C04_seasonal_mismatch, C05_possible_compromise, C36_thin_homepage, C60_conflicting_facts } from './packs/core/content-checks.ts';
+import { C01_placeholder_text, C02_stale_copyright, C03_stale_dated_notice, C04_seasonal_mismatch, C05_possible_compromise, C05b_hidden_injected_content, C36_thin_homepage, C60_conflicting_facts } from './packs/core/content-checks.ts';
 import { C06_broken_images, C10_broken_contact_links, C11_dead_navigation, C12_broken_internal_links } from './packs/core/link-checks.ts';
 import { C37_not_named_by_ai, C38_inconsistent_contact_details, C61_price_differs_from_listing, C70_reviews_not_shown } from './packs/core/source-checks.ts';
 import { C20_slow_mobile, C23_not_mobile_friendly, C31_no_structured_data, C33_robots_blocks_search_or_ai, C40_insecure_connection, C41_outdated_platform, C50_accessibility_failures } from './packs/core/technical-checks.ts';
@@ -13,6 +13,7 @@ export const CORE_PACK: Check[] = [
   C03_stale_dated_notice,
   C04_seasonal_mismatch,
   C05_possible_compromise,
+  C05b_hidden_injected_content,
   C06_broken_images,
   C10_broken_contact_links,
   C11_dead_navigation,

@@ -208,4 +208,54 @@ export async function recordRecheck(db: Db, site: SiteData, batch: string, findi
   return result;
 }
 
+/**
+ * Runs one check over runs that are already stored, without visiting the site again. Used when a
+ * check is added after a batch was audited. A finding is reproduced when the check fires on the
+ * stored captures of both run A and run B, which were taken at least 60 minutes apart.
+ */
+export async function applyCheckToStoredRuns(db: Db, library: Map<string, ImpactEntry>, checkId: string, batch: string, a: SiteData | null, b: SiteData | null, evidenceRoot?: string): Promise<{ candidates: number; reproduced: number }> {
+  const check = checkById(checkId);
+  const first = a ?? b;
+  if (!check || !first) return { candidates: 0, reproduced: 0 };
+  const fire = (site: SiteData | null) => {
+    if (!site) return [];
+    const ctx = { site, now: new Date(site.finishedAt), ai: null };
+    return check.appliesTo(ctx) ? check.evaluate(ctx) : [];
+  };
+  const fa = fire(a);
+  const fb = fire(b);
+  const m = meta(checkId);
+  const severity = library.get(checkId)?.severity ?? 1;
+  const result = { candidates: 0, reproduced: 0 };
+  const insert = db.prepare(
+    `INSERT INTO findings (business_id, batch, check_id, pack, tier, severity, status, reproduced, fingerprint, title, page_url, viewport, visibility_weight, score, detail, first_run_id, last_run_id, first_seen_at)
+     VALUES (?, ?, ?, ?, ?, ?, 'candidate', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT (business_id, batch, check_id, fingerprint) DO NOTHING`,
+  );
+  const find = db.prepare('SELECT id, status FROM findings WHERE business_id = ? AND batch = ? AND check_id = ? AND fingerprint = ?');
+  for (const [site, list] of [[a, fa], [b, fb]] as const) {
+    if (!site) continue;
+    for (const f of list) {
+      const r = insert.run(site.business.id, batch, f.checkId, m.pack, m.tier, severity, f.fingerprint, f.title, f.pageUrl, f.viewport, config.score.visibility[f.where], scoreOf(severity, f.where, m.tier), JSON.stringify(f.detail), site.runId, site.runId, site.finishedAt);
+      if (r.changes) {
+        await writeEvidence(db, Number(r.lastInsertRowid), site.runId, site, f.evidence, evidenceRoot);
+        result.candidates += 1;
+      }
+    }
+  }
+  if (a && b && minutesBetween(a.finishedAt, b.startedAt) >= config.reproduce.minGapMinutes) {
+    for (const f of fb) {
+      const again = fa.find((x) => x.fingerprint === f.fingerprint);
+      const row = find.get(b.business.id, batch, checkId, f.fingerprint) as { id: number; status: string } | undefined;
+      if (!again || !row || row.status === 'rejected') continue;
+      const merged = check.merge ? check.merge(again.detail, f.detail) : f.detail;
+      if (!merged) continue;
+      db.prepare("UPDATE findings SET status = CASE status WHEN 'candidate' THEN 'reproduced' ELSE status END, reproduced = 1, detail = ?, last_run_id = ?, last_verified_at = ? WHERE id = ?").run(JSON.stringify(merged), b.runId, b.finishedAt, row.id);
+      await writeEvidence(db, row.id, b.runId, b, f.evidence, evidenceRoot);
+      result.reproduced += 1;
+    }
+  }
+  return result;
+}
+
 export { decide, refreshTop3 } from './review.ts';

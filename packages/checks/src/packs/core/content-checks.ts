@@ -1,5 +1,7 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { nzMonth, nzYear, type CandidateFinding } from '@plumbline/core';
-import { copyrightYear, datedNotices, findPhrases, foreignBlocks, foundingYears, seasonalMismatches } from '@plumbline/collect';
+import { copyrightYear, datedNotices, findPhrases, foreignBlocks, foundingYears, hiddenBlocks, seasonalMismatches } from '@plumbline/collect';
 import { elementEvidence, home, norm, okHomes, pagesInOrder, pathOf, whereOf } from '../../helpers.ts';
 import type { Check } from '../../types.ts';
 import { FILE_NAME_ONLY, PLACEHOLDERS } from './placeholders.ts';
@@ -189,6 +191,49 @@ export const C05_possible_compromise: Check = {
       break;
     }
     return out;
+  },
+};
+
+export const C05b_hidden_injected_content: Check = {
+  id: 'C05b_hidden_injected_content',
+  pack: 'core',
+  tier: 'judgment',
+  evidenceSpec: 'element',
+  appliesTo: ({ site }) => !site.blocked,
+  evaluate({ site }) {
+    const out: CandidateFinding[] = [];
+    const pages = pagesInOrder(site);
+    const done = new Set<string>();
+    for (const page of pages) {
+      if (done.has(page.finalUrl) || !page.dir || !page.htmlFile) continue;
+      done.add(page.finalUrl);
+      const file = join(page.dir, page.htmlFile);
+      if (!existsSync(file)) continue;
+      // Text shown at either screen size is not hidden, so every capture of this address counts.
+      const captures = pages.filter((p) => p.finalUrl === page.finalUrl);
+      const blocks = hiddenBlocks(readFileSync(file, 'utf8'), captures.map((p) => p.text), page.finalUrl, SPAM_TERMS, page.meta.lang || 'en');
+      for (const b of blocks.slice(0, 2)) {
+        // The place in the page where the hidden block sits: the visible text that comes just before it.
+        const anchor = b.before.map((t) => page.blocks.find((v) => v.text.replace(/\s+/g, ' ').includes(t.slice(0, 50)))).find((v) => !!v);
+        const what = [b.language ? `text in another language (${b.language})` : '', b.spamTerms.length ? `spam wording (${b.spamTerms.slice(0, 3).join(', ')})` : ''].filter(Boolean).join(' and ');
+        const excerpt = `Hidden in the page code${b.line ? ` at line ${b.line} of the saved HTML` : ''}, not shown to visitors: ${what}. Links to ${b.links.map((l) => l.href).join(', ')}.\nHTML: ${b.html}\nText: ${b.text.slice(0, 300)}`;
+        out.push({
+          checkId: this.id,
+          fingerprint: `${pathOf(page.finalUrl)}|${b.links.map((l) => l.domain).sort().join(',')}`,
+          title: `Hidden ${b.language ? 'foreign-language ' : ''}text in the page code links to ${b.links[0]!.domain}`,
+          pageUrl: page.finalUrl,
+          viewport: page.viewport,
+          where: whereOf(site, page),
+          detail: { language: b.language, spamTerms: b.spamTerms, outboundLinks: b.links, htmlLine: b.line, html: b.html, text: b.text.slice(0, 600), characters: b.text.length, shownToVisitors: false },
+          evidence: [
+            anchor
+              ? elementEvidence(page, anchor.selector, anchor.box, `${excerpt}\nThe screenshot shows the part of the page where this block sits in the code. The boxed text is the visible text just before it. The hidden text does not appear.`)
+              : { kind: 'page', url: page.finalUrl, viewport: page.viewport, excerpt: `${excerpt}\nThe screenshot shows the page as a visitor sees it. The hidden text does not appear.` },
+          ],
+        });
+      }
+    }
+    return out.slice(0, 3);
   },
 };
 
