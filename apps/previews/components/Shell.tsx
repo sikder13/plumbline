@@ -13,6 +13,8 @@ const TABS: { id: Tab; label: string }[] = [
 /** The slim bar at the top and the two tabs under it. Both tabs are in the page; one is shown. */
 export function Shell({ line, demo, found }: { line: string; demo: ReactNode; found: ReactNode }) {
   const [tab, setTab] = useState<Tab>('demo');
+  // Until this component is awake, a small script in the page answers the tabs. This tells it to stand down.
+  const [live, setLive] = useState(false);
 
   useEffect(() => {
     const read = () => {
@@ -21,6 +23,7 @@ export function Shell({ line, demo, found }: { line: string; demo: ReactNode; fo
       setTab(next);
     };
     read();
+    setLive(true);
     window.addEventListener('hashchange', read);
     return () => window.removeEventListener('hashchange', read);
   }, []);
@@ -38,7 +41,7 @@ export function Shell({ line, demo, found }: { line: string; demo: ReactNode; fo
         <p className="bar-line">{line}</p>
         <div className="bar-tabs" role="tablist" aria-label="Sections of this page">
           {TABS.map((t) => (
-            <button key={t.id} type="button" role="tab" id={`tab-${t.id}`} aria-selected={tab === t.id} aria-controls={t.id} tabIndex={tab === t.id ? 0 : -1} onClick={() => show(t.id)}>
+            <button key={t.id} type="button" role="tab" id={`tab-${t.id}`} aria-selected={tab === t.id} aria-controls={t.id} data-live={live ? '' : undefined} tabIndex={tab === t.id ? 0 : -1} onClick={() => show(t.id)}>
               {t.label}
             </button>
           ))}

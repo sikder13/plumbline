@@ -106,7 +106,10 @@ export function scriptsAfterPaint(html: string): string {
   });
   if (!sources.length) return html;
   out = out.replace(/<link rel="preload" as="script"[^>]*\/>/g, '');
-  const loader = `<script>(function(){var s=${JSON.stringify(sources)},done=false;function go(){s.forEach(function(u){var e=document.createElement('script');e.src=u;e.async=false;document.body.appendChild(e)})}function start(){if(done)return;done=true;(window.requestIdleCallback||function(f){setTimeout(f,200)})(go,{timeout:1500})}if(document.readyState==='complete')start();else window.addEventListener('load',start)})()</script>`;
+  // The scripts start on the visitor's first touch, scroll or key, or two seconds after the page has
+  // loaded, whichever comes first. Until they arrive, a tap on a tab is handled here, and the hash it
+  // sets is what the page reads when it wakes.
+  const loader = `<script>(function(){var s=${JSON.stringify(sources)},done=false,ev=['pointerdown','touchstart','keydown','scroll'];function go(){if(done)return;done=true;ev.forEach(function(n){removeEventListener(n,go,true)});s.forEach(function(u){var e=document.createElement('script');e.src=u;e.async=false;document.body.appendChild(e)})}ev.forEach(function(n){addEventListener(n,go,{capture:true,passive:true})});function later(){setTimeout(go,2000)}if(document.readyState==='complete')later();else addEventListener('load',later);document.addEventListener('click',function(e){var t=e.target&&e.target.closest&&e.target.closest('[role=tab][aria-controls=demo],[role=tab][aria-controls=found]');if(!t||t.hasAttribute('data-live'))return;var id=t.getAttribute('aria-controls');['demo','found'].forEach(function(k){var p=document.getElementById(k),b=document.getElementById('tab-'+k);if(p)p.hidden=k!==id;if(b)b.setAttribute('aria-selected',String(k===id))});history.replaceState(null,'',id==='found'?'#found':location.pathname);scrollTo(0,0)},true)})()</script>`;
   return out.replace('</body>', `${loader}</body>`);
 }
 
