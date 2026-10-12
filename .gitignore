@@ -24,3 +24,10 @@ coverage/
 apps/review/next-env.d.ts
 AGENTS.md
 apps/review/tsconfig.tsbuildinfo
+
+# Preview pages: business content, generated pages and review screenshots
+/previews/
+apps/previews/out/
+apps/previews/public/fonts/
+apps/previews/next-env.d.ts
+apps/previews/app/fonts.css

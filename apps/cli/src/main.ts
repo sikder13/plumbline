@@ -10,6 +10,7 @@ import { calibrate, writeCalibration } from './calibrate.ts';
 import { aiCommand, aiSummary, brandCommand, contactsCommand, evaluateStoredCommand, costCommand, discoverCommand, purgeCommand, qualifyCommand } from './commands.ts';
 import { exportBusiness } from '@plumbline/export';
 import { writeReport } from '@plumbline/report';
+import { registerPreview } from './preview.ts';
 import { seed } from './seed.ts';
 import { selectBatch } from './select.ts';
 
@@ -185,5 +186,7 @@ program
     console.log(`Calibration ${o.batch}: ${t.matches} of ${t.verified} verified problems matched, ${t.falseFindings} false, ${t.missedExplained} missed with a reason, ${t.missed - t.missedExplained} missed undetected, ${t.fresh} new.`);
     for (const r of c.rows) for (const f of r.falseFindings) console.log(`  FALSE ${r.slug} ${f.check}: ${f.title}`);
   });
+
+registerPreview(program);
 
 await program.parseAsync();

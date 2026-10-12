@@ -3,7 +3,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['**/node_modules/**', '**/.next/**', '**/dist/**', 'data/**', 'reports/**', 'exports/**', 'inputs/**', 'apps/review/next-env.d.ts'] },
+  { ignores: ['**/node_modules/**', '**/.next/**', '**/dist/**', 'data/**', 'reports/**', 'exports/**', 'inputs/**', 'apps/review/next-env.d.ts', 'apps/previews/next-env.d.ts', 'apps/previews/out/**', 'previews/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -16,7 +16,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['apps/review/**/*.{ts,tsx}'],
+    files: ['apps/review/**/*.{ts,tsx}', 'apps/previews/**/*.{ts,tsx}'],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
   },
   {

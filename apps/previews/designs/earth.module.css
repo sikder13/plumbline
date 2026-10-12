@@ -1,0 +1,512 @@
+.root {
+  --linen: #e5e3df;
+  --sage: #9b9c92;
+  --char: #414141;
+  --dark: #2c2c2b;
+  --lake: #5c8da8;
+  --lake-deep: #2f6480;
+  --sticky-bg: var(--linen);
+  --sticky-main-bg: var(--lake-deep);
+  --sticky-call-ink: var(--dark);
+  --sticky-radius: 3px;
+  font-family: 'Nunito Sans', system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--dark);
+  background: var(--linen);
+}
+
+.root h1,
+.root h2,
+.root h3,
+.brand,
+.time,
+.price {
+  font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.root h1,
+.root h2,
+.root h3 {
+  margin: 0;
+  line-height: 0.92;
+}
+
+.root h2 {
+  font-size: clamp(54px, 10vw, 112px);
+}
+
+.root p {
+  margin: 0 0 1em;
+}
+
+.root a:focus-visible {
+  outline: 3px solid var(--dark);
+  outline-offset: 3px;
+}
+
+.wrap {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  background: var(--dark);
+  color: #fff;
+}
+
+.brand {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1;
+  color: #fff;
+  text-decoration: none;
+}
+
+.nav {
+  display: none;
+  gap: 28px;
+}
+
+.nav a,
+.topCall {
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.nav a:hover {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+.topCall {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  white-space: nowrap;
+}
+
+/* Hero: words on linen, the photo beside them. On a phone the words come first, so the booking button is on the first screen. */
+.hero {
+  display: grid;
+}
+
+.heroText {
+  padding: 30px 20px 28px;
+}
+
+.place {
+  margin: 0 0 10px !important;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lake-deep);
+}
+
+.hero h1 {
+  max-width: 9ch;
+  font-size: clamp(64px, 17.5vw, 132px);
+  line-height: 0.86;
+}
+
+.heroLead {
+  max-width: 38ch;
+  margin: 16px 0 22px !important;
+}
+
+.heroRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+}
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  padding: 0 26px;
+  border-radius: 3px;
+  background: var(--lake-deep);
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.primary:hover {
+  background: #244f66;
+}
+
+.second {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--dark);
+  font-weight: 800;
+  text-underline-offset: 5px;
+}
+
+.heroPhoto {
+  position: relative;
+  overflow: hidden;
+  min-height: 300px;
+}
+
+.heroPhoto img {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  object-fit: cover;
+}
+
+.hand {
+  position: absolute;
+  right: 16px;
+  bottom: 14px;
+  margin: 0 !important;
+  padding: 6px 16px 8px;
+  background: var(--linen);
+  font-family: 'Shadows Into Light', cursive;
+  font-size: 24px;
+  line-height: 1.1;
+  transform: rotate(-3deg);
+}
+
+/* The rides: a ladder from the shortest to the longest. */
+.rides {
+  padding: 72px 0;
+  background: #f3f2ef;
+  scroll-margin-top: var(--bar-h);
+}
+
+.lead {
+  max-width: 56ch;
+  margin: 14px 0 30px !important;
+}
+
+.ladder {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 3px solid var(--dark);
+}
+
+.ladder li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 16px;
+  align-items: start;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--sage);
+}
+
+.time {
+  grid-column: 1;
+  margin: 0 !important;
+  font-size: 30px;
+  line-height: 1;
+  color: var(--lake-deep);
+}
+
+.price {
+  grid-column: 2;
+  grid-row: 1;
+  margin: 0 !important;
+  font-size: 44px;
+  line-height: 0.9;
+}
+
+.rideBody {
+  grid-column: 1 / -1;
+}
+
+.rideBody h3 {
+  margin: 6px 0 8px;
+  font-size: 34px;
+}
+
+.rideBody p {
+  margin: 0;
+  max-width: 52ch;
+}
+
+.rideBook {
+  grid-column: 1 / -1;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin-top: 12px;
+  padding: 0 22px;
+  border-radius: 3px;
+  background: var(--dark);
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.rideBook:hover {
+  background: var(--lake-deep);
+}
+
+.rideCall {
+  background: transparent;
+  color: var(--dark);
+  box-shadow: inset 0 0 0 2px var(--dark);
+}
+
+.rideCall:hover {
+  color: #fff;
+}
+
+.limits {
+  margin: 24px 0 0;
+  padding-left: 20px;
+  font-size: 15px;
+}
+
+/* Lucy. */
+.lucy {
+  padding: 72px 0;
+  background: var(--dark);
+  color: #fff;
+}
+
+.lucyGrid {
+  display: grid;
+  gap: 24px;
+}
+
+.lucy blockquote {
+  margin: 22px 0 0;
+  padding-left: 18px;
+  border-left: 4px solid var(--lake);
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.horsesH {
+  margin: 44px 0 16px !important;
+  font-size: 30px;
+  color: #cfd0c9;
+}
+
+.horses {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.horses img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 3px;
+}
+
+.horses span {
+  display: block;
+  margin-top: 8px;
+  font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+  font-size: 24px;
+  letter-spacing: 0.02em;
+}
+
+/* What to wear. */
+.wear {
+  padding: 72px 0;
+  scroll-margin-top: var(--bar-h);
+}
+
+.wearList {
+  margin: 28px 0 0;
+  display: grid;
+  gap: 0;
+  border-top: 3px solid var(--dark);
+}
+
+.wearList div {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--sage);
+}
+
+.wearList dt {
+  font-family: 'Bebas Neue', 'Arial Narrow', sans-serif;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.wearList dd {
+  margin: 8px 0 0;
+  max-width: 46ch;
+}
+
+/* Getting here. */
+.here {
+  padding: 72px 0;
+  background: var(--sage);
+  scroll-margin-top: var(--bar-h);
+}
+
+.hereGrid {
+  display: grid;
+  gap: 28px;
+}
+
+.here address {
+  margin: 20px 0 24px;
+  font-style: normal;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.here address span {
+  display: block;
+}
+
+.notes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 2px solid var(--dark);
+}
+
+.notes li {
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(44, 44, 43, 0.5);
+  font-weight: 600;
+}
+
+.contactRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 28px;
+  margin: 18px 0 0 !important;
+}
+
+.contactRow a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--dark);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.foot {
+  padding: 34px 20px 40px;
+  background: var(--dark);
+  color: #fff;
+}
+
+.foot .brand {
+  margin-bottom: 8px;
+}
+
+@media (min-width: 900px) {
+  .top {
+    padding: 14px 40px;
+  }
+  .nav {
+    display: flex;
+  }
+  .hero {
+    grid-template-columns: 42fr 58fr;
+    min-height: min(calc(100svh - var(--bar-h) - 72px), 800px);
+  }
+  .heroText {
+    align-self: center;
+    padding: 56px 48px 56px max(40px, calc((100vw - 1160px) / 2 + 20px));
+  }
+  .heroPhoto {
+    clip-path: polygon(7% 0, 100% 0, 100% 100%, 0 100%);
+  }
+  .hand {
+    right: 40px;
+    bottom: 36px;
+    font-size: 32px;
+  }
+  .wrap {
+    padding: 0 40px;
+  }
+  .rides,
+  .lucy,
+  .wear,
+  .here {
+    padding: 120px 0;
+  }
+  .ladder li {
+    grid-template-columns: 150px 1fr 120px 170px;
+    gap: 28px;
+    align-items: center;
+    padding: 26px 0;
+  }
+  .time,
+  .price,
+  .rideBody,
+  .rideBook {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  .price {
+    text-align: right;
+    font-size: 56px;
+  }
+  .rideBody h3 {
+    margin-top: 0;
+  }
+  .rideBook {
+    margin-top: 0;
+    justify-self: end;
+  }
+  .lucyGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 72px;
+    align-items: end;
+  }
+  .horses {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  .wearList {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0 48px;
+  }
+  .hereGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 72px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .heroPhoto img {
+    animation: amble 46s ease-in-out infinite alternate;
+  }
+  @keyframes amble {
+    from {
+      transform: scale(1.08) translate3d(2%, 0, 0);
+    }
+    to {
+      transform: scale(1.08) translate3d(-2%, 1%, 0);
+    }
+  }
+}

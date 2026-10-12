@@ -197,7 +197,8 @@ export async function recordRecheck(db: Db, site: SiteData, batch: string, findi
     const check = checkById(row.check_id);
     const merged = again ? (check?.merge ? check.merge(JSON.parse(row.detail), again.detail) : again.detail) : null;
     if (again && merged) {
-      db.prepare('UPDATE findings SET detail = ?, last_run_id = ?, last_verified_at = ? WHERE id = ?').run(JSON.stringify(merged), site.runId, site.finishedAt, row.id);
+      // The title carries measured numbers, so it follows the newest measurement like the evidence does.
+      db.prepare('UPDATE findings SET detail = ?, title = ?, last_run_id = ?, last_verified_at = ? WHERE id = ?').run(JSON.stringify(merged), again.title, site.runId, site.finishedAt, row.id);
       await writeEvidence(db, row.id, site.runId, site, again.evidence, evidenceRoot);
       result.reproduced += 1;
     } else {

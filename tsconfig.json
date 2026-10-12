@@ -16,5 +16,5 @@
     "types": ["node"]
   },
   "include": ["apps/cli/src", "packages/*/src", "calibration/*.ts", "vitest.config.ts"],
-  "exclude": ["node_modules", "apps/review"]
+  "exclude": ["node_modules", "apps/review", "apps/previews"]
 }
