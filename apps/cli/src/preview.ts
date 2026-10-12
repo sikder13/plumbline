@@ -84,7 +84,8 @@ const VERCEL_JSON = {
   installCommand: '',
   outputDirectory: 'site',
   cleanUrls: true,
-  trailingSlash: true,
+  // The main site drops a trailing slash before it forwards, so the pages must answer without one.
+  trailingSlash: false,
   headers: [
     { source: '/(.*)', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }, { key: 'Referrer-Policy', value: 'no-referrer' }, { key: 'X-Content-Type-Options', value: 'nosniff' }] },
     { source: '/demo/(_next/static|fonts)/(.*)', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
