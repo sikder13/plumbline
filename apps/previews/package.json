@@ -1,0 +1,32 @@
+{
+  "name": "@plumbline/previews",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fonts": "node scripts/fonts.mjs",
+    "dev": "node scripts/fonts.mjs && next dev -H 127.0.0.1 -p 4320",
+    "build": "node scripts/fonts.mjs && next build",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@fontsource-variable/figtree": "5.3.0",
+    "@fontsource-variable/karla": "5.3.0",
+    "@fontsource-variable/montserrat": "5.3.0",
+    "@fontsource-variable/newsreader": "5.3.0",
+    "@fontsource-variable/nunito-sans": "5.3.0",
+    "@fontsource-variable/open-sans": "5.3.0",
+    "@fontsource-variable/playfair-display": "5.3.0",
+    "@fontsource/bebas-neue": "5.3.0",
+    "@fontsource/dm-serif-display": "5.3.0",
+    "@fontsource/shadows-into-light": "5.3.0",
+    "@plumbline/preview": "workspace:*",
+    "next": "16.4.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
+  }
+}

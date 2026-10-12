@@ -1,0 +1,608 @@
+.root {
+  --green: #267836;
+  --deep: #1c5a28;
+  --char: #2b2d2f;
+  --mist: #f2f2f2;
+  --sticky-bg: #fff;
+  --sticky-main-bg: var(--deep);
+  --sticky-call-ink: var(--char);
+  --sticky-radius: 4px;
+  font-family: 'Montserrat', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--char);
+  background: #fff;
+}
+
+.root h1,
+.root h2,
+.root blockquote,
+.brand {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.root h1,
+.root h2,
+.root h3 {
+  margin: 0;
+  line-height: 1.1;
+}
+
+.root h2 {
+  font-size: clamp(32px, 5.4vw, 54px);
+  font-weight: 500;
+}
+
+.root p {
+  margin: 0 0 1em;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 3px solid #f0b429;
+  outline-offset: 3px;
+}
+
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Cover. */
+.cover {
+  position: relative;
+  min-height: min(calc(100svh - var(--bar-h) - var(--sticky-h)), 900px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  color: #fff;
+  background: var(--char);
+}
+
+.coverPhoto {
+  position: absolute;
+  inset: 0;
+}
+
+.coverPhoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.coverPhoto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(20, 24, 28, 0.55) 0%, rgba(20, 24, 28, 0.1) 28%, rgba(20, 24, 28, 0.25) 55%, rgba(20, 24, 28, 0.82) 100%);
+}
+
+.top {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+}
+
+.brand {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+}
+
+.nav {
+  display: none;
+  gap: 30px;
+}
+
+.nav a {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.nav a:hover {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+.coverText {
+  position: relative;
+  z-index: 2;
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 20px 30px;
+}
+
+.kicker {
+  margin: 0 0 12px !important;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.cover h1 {
+  max-width: 13ch;
+  font-size: clamp(40px, 9.6vw, 92px);
+  font-weight: 500;
+  line-height: 1.02;
+  text-wrap: balance;
+}
+
+.coverRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 20px;
+  margin-top: 26px;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 28px;
+  border-radius: 4px;
+  background: var(--deep);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.cta:hover {
+  background: #144a1f;
+}
+
+.badge {
+  margin: 0 !important;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 4px;
+  background: rgba(20, 24, 28, 0.35);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Tours: tabs, then glass cards over that region's own landscape. */
+.tours {
+  padding: 72px 0 40px;
+  scroll-margin-top: var(--bar-h);
+}
+
+.lead {
+  max-width: 62ch;
+  margin: 16px 0 28px !important;
+}
+
+.regions [data-tabs] {
+  display: flex;
+  gap: 4px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.regions [data-tabs] button {
+  flex: 0 0 auto;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: var(--char);
+  font: 600 14px/1 'Montserrat', system-ui, sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.regions [data-tabs] button[aria-selected='true'] {
+  border-bottom-color: var(--green);
+  color: var(--deep);
+}
+
+.region {
+  position: relative;
+  overflow: hidden;
+  background: var(--char);
+}
+
+.regionPhoto {
+  position: absolute;
+  inset: 0;
+}
+
+.regionPhoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.regionPhoto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 24, 28, 0.42);
+}
+
+.regionInner {
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 36px 20px 40px;
+}
+
+.blurb {
+  max-width: 52ch;
+  margin: 0 0 26px !important;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 500;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5);
+}
+
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 22px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.card h3 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.card dl {
+  margin: 14px 0;
+  border-top: 1px solid rgba(43, 45, 47, 0.25);
+}
+
+.card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(43, 45, 47, 0.25);
+  font-size: 14px;
+}
+
+.card dt {
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.card dd {
+  margin: 0;
+}
+
+.price {
+  margin: auto 0 14px !important;
+  font-size: 14px;
+}
+
+.price b {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--deep);
+}
+
+.card a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: 4px;
+  background: var(--char);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.card a:hover {
+  background: var(--deep);
+}
+
+.note {
+  margin: 16px auto 0 !important;
+  font-size: 14px;
+}
+
+/* Your guide: a feature spread. */
+.guide {
+  display: grid;
+  background: var(--mist);
+}
+
+.guidePhoto img {
+  width: 100%;
+  height: 100%;
+  max-height: 640px;
+  object-fit: cover;
+}
+
+.guideText {
+  padding: 48px 20px 56px;
+}
+
+.guideName {
+  margin: 14px 0 0 !important;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.guideName span {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--deep);
+}
+
+.guide blockquote {
+  margin: 24px 0;
+  font-size: clamp(24px, 3.2vw, 34px);
+  font-style: italic;
+  line-height: 1.25;
+}
+
+.aside {
+  margin: 22px 0 0 !important;
+  padding-top: 16px;
+  border-top: 1px solid rgba(43, 45, 47, 0.3);
+  font-size: 14px;
+}
+
+/* Marks. */
+.marks {
+  padding: 72px 0;
+}
+
+.markRow {
+  display: grid;
+  gap: 0;
+  margin-top: 28px;
+  border-top: 2px solid var(--char);
+}
+
+.mark {
+  padding: 24px 0;
+  border-bottom: 1px solid rgba(43, 45, 47, 0.25);
+}
+
+.mark h3 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--deep);
+}
+
+.mark p {
+  margin: 10px 0 0;
+  max-width: 56ch;
+}
+
+/* How a day works. */
+.day {
+  padding: 72px 0;
+  background: var(--char);
+  color: #fff;
+}
+
+.dayGrid {
+  display: grid;
+  gap: 36px;
+  margin-top: 32px;
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: step;
+}
+
+.steps li {
+  position: relative;
+  padding: 0 0 26px 62px;
+  counter-increment: step;
+}
+
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -8px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 46px;
+  font-style: italic;
+  line-height: 1;
+  color: #8fd19b;
+}
+
+.steps h3 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.steps p {
+  margin: 8px 0 0;
+  color: #e6e7e8;
+}
+
+.dayPhotos {
+  display: grid;
+  gap: 14px;
+}
+
+.dayPhotos img {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+/* Enquire. */
+.end {
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.end p {
+  max-width: 52ch;
+  margin: 16px auto 26px;
+}
+
+.endRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 24px;
+  border: 1.5px solid var(--char);
+  border-radius: 4px;
+  color: var(--char);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.endMail {
+  margin: 22px 0 0 !important;
+}
+
+.endMail a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--deep);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.foot {
+  padding: 34px 20px 40px;
+  background: var(--char);
+  color: #fff;
+  text-align: center;
+}
+
+.foot .brand {
+  margin-bottom: 6px;
+}
+
+@media (min-width: 900px) {
+  .nav {
+    display: flex;
+  }
+  .top {
+    padding: 26px 44px;
+  }
+  .coverText {
+    padding: 0 44px 64px;
+  }
+  .wrap,
+  .regions [data-tabs],
+  .regionInner {
+    padding-left: 44px;
+    padding-right: 44px;
+  }
+  .tours {
+    padding-top: 120px;
+  }
+  .regionInner {
+    padding-top: 56px;
+    padding-bottom: 64px;
+  }
+  .cards {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  .guide {
+    grid-template-columns: 0.8fr 1fr;
+    align-items: stretch;
+  }
+  .guideText {
+    padding: 96px 72px;
+    align-self: center;
+  }
+  .marks,
+  .day {
+    padding: 120px 0;
+  }
+  .markRow {
+    grid-template-columns: 1fr 1fr;
+    gap: 0 56px;
+  }
+  .dayGrid {
+    grid-template-columns: 1fr 0.8fr;
+    gap: 72px;
+  }
+  .end {
+    padding: 136px 20px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .coverPhoto img {
+    animation: glide 50s ease-in-out infinite alternate;
+  }
+  @keyframes glide {
+    from {
+      transform: scale(1.06) translate3d(1.5%, 0, 0);
+    }
+    to {
+      transform: scale(1.06) translate3d(-1.5%, -1%, 0);
+    }
+  }
+}
