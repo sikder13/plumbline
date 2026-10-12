@@ -29,7 +29,7 @@ pnpm exec playwright install chromium
 cp .env.example .env    # then fill in the keys
 ```
 
-`.env` holds the API keys and the two budget limits. It is never committed. `prices.json` holds the provider prices the spending ledger uses, each with the page it was read from and the date.
+`.env` holds the API keys, the two budget limits, the call booking link for preview pages (`CAL_LINK`) and the read-only access to the visit table (`DEMO_VISITS_URL`, `DEMO_VISITS_READ_KEY`). It is never committed. `prices.json` holds the provider prices the spending ledger uses, each with the page it was read from and the date.
 
 ## Commands
 
@@ -64,6 +64,33 @@ All commands run as `pnpm plumb <command>`.
 | `library-commit` | Commits the verified flags set in the review app, with the message "Mark impact sources verified". |
 | `calibrate --batch <name>` | Compares findings for the first 20 with `calibration/truth.json` and writes `calibration/REPORT.md`. |
 
+**Preview pages**
+
+A preview page is one private page per business: a redesigned homepage built from the business's own photos and words, the approved findings with their evidence, our offer, and a way to reply. The pages are served at `https://nahltech.com/demo/<slug>-<token>/`. The main site forwards `/demo/` to a separate Vercel project, `nahl-previews`, which is deployed from this machine.
+
+| Command | What it does |
+|---|---|
+| `preview recheck` | Re-verifies the approved findings behind every preview page and the Crawlmouse sentences. Run it within 24 hours of sending. |
+| `preview ai` | Asks the hand-written questions in `previews/content/<slug>/questions.json` through both providers, three runs each. Shows the estimate first; `--estimate` stops there. |
+| `preview crawlmouse` | Re-opens the example pages behind each Crawlmouse sentence and keeps only the sentences that still hold. |
+| `preview build` | Builds every page into `previews/out/`. Needs `CAL_LINK` in `.env`; `--draft` builds without it for looking at locally. |
+| `preview check` | Runs the quality gates and saves screenshots to `previews/review/`. `--live` checks the pages at their real address. |
+| `preview deploy` | `vercel build`, then `vercel deploy --prebuilt --prod`, from `previews/out/`. |
+| `preview visits` | Shows who has opened their page: first and last view, view count, findings tab, reply or call. |
+| `preview remove <slug>` | Takes one page down and deploys the site without it. |
+
+What goes where:
+
+- `apps/previews/` holds the page code: one design per business under `designs/`, the shared bar and findings tab, and our own offer in `lib/offer.ts`. No business content is in it.
+- `previews/content/<slug>/` holds what was read from the business's own site: `content.json` (the words and prices on the page, and which design it uses), `facts.json` and `html/` (the saved pages every number is traced to), `raw/` (their photos) and, for a business whose stored AI questions asked about the wrong trade, `questions.json`.
+- `previews/out/` is the generated site and `previews/review/` the screenshots and gate reports. Nothing under `previews/` is committed.
+
+The gates, per page: Lighthouse on a phone as the median of three runs (performance 90 or more, accessibility 95 or more, largest contentful paint under 2.5 s); no serious or critical axe issue; no sideways scroll at 360, 390 and 430 px; every link tested; no dash, no banned word, and every number traced to a stored measurement, to the business's own saved pages, or to our offer.
+
+On a finding card the library's impact sentence is shown without any sentence that leans on an outside figure, and the stored title and evidence carry the measured facts. A stored "not named by AI" finding is replaced by the corrected questions where a business has them, and is shown only if those still return no mention.
+
+Each page reports a visit to `https://nahltech.com/api/demo-visit` only after it has been on screen for three seconds, which a link scanner never reaches. It sends the page token and one of `view`, `tab_findings` or `cta_click`, and nothing else. A visitor with Do Not Track or Global Privacy Control set is not counted.
+
 **Housekeeping**
 
 | Command | What it does |
@@ -91,6 +118,7 @@ The impact and fix sentences shown with each finding come only from `impact/libr
 ```
 apps/cli/            the plumb command
 apps/review/         local review app (Next.js, 127.0.0.1 only)
+apps/previews/       preview pages (Next.js, written out as plain files)
 packages/core/       types, schemas, config, time helpers, database
 packages/budget/     spending ledger and estimates
 packages/discover/   finding and qualifying businesses
@@ -105,13 +133,14 @@ packages/impact/     library loader and validator
 packages/ai/         AI answer runs
 packages/report/     the batch report
 packages/export/     per-business bundle for preview pages
+packages/preview/    preview page data, images, corrected AI questions, gates and visits
 impact/library.yaml  client-facing impact and fix sentences
 calibration/         truth file and calibration report for the first 20
 fixtures/            pages used by the tests
 migrations/          SQL migrations
 ```
 
-Storage is local: SQLite at `data/plumbline.db`, captures and evidence images under `data/`. `data/`, `reports/`, `exports/` and `inputs/` are not committed.
+Storage is local: SQLite at `data/plumbline.db`, captures and evidence images under `data/`. `data/`, `reports/`, `exports/`, `inputs/` and `previews/` are not committed.
 
 ## Pinned versions
 
@@ -145,12 +174,14 @@ Checked against the registry on 10 October 2026 and pinned exactly.
 | eslint | 10.12.0 |
 | typescript-eslint | 8.71.1 |
 | tsx | 4.23.15 |
+| @fontsource and @fontsource-variable font packages | 5.3.0 |
 
 Notes on the choices:
 
 - TypeScript is held at 6.0.3. The latest release is 7.0.2, which the linter's parser does not yet support.
 - `simple-wappalyzer` ships fingerprint data under the GPL. It is used for internal analysis only and its data is not redistributed.
 - Link status is checked through the polite fetcher, not `linkinator`, because the two second spacing per host must hold for every request.
+- The preview pages set type in free fonts served from our own address: Figtree, Newsreader, Open Sans, Playfair Display, Montserrat, Karla, DM Serif Display, Bebas Neue, Nunito Sans and Shadows Into Light. Where a business licenses a paid font, the nearest of these stands in for it.
 - Each Lighthouse run happens in its own process. Lighthouse keeps timing state for the whole process, so runs sharing one process corrupt each other.
 
 ## Development
