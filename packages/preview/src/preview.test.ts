@@ -16,6 +16,8 @@ describe('finding text for a page', () => {
     expect(plainDates('PHP 5.4.45 is past its end of life (2018-12-31)')).toBe('PHP 5.4.45 is past its end of life (31 December 2018)');
     expect(plainSeen('Buttons must have discernible text (button-name, critical, 2 elements). <button type="button">x</button>')).toBe('Buttons must have discernible text.');
     expect(plainSeen('Support for this series ended on 2025-12-31 (https://endoflife.date/php).')).toBe('Support for this series ended on 31 December 2025.');
+    expect(plainSeen('The phone link holds "03 555 0100  (International calls 00 64 3 555 0100)", which is not a phone number.')).toBe('The phone link holds "03 555 0100 (International calls 00 64 3 555 0100)", which is not a phone number.');
+    expect(plainSeen('text in another language (ces) and spam wording (xyz).')).toBe('text in another language and spam wording.');
     expect(plainSeen(null)).toBeNull();
   });
 

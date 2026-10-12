@@ -112,7 +112,8 @@ export function plainDates(text: string): string {
 export function plainSeen(excerpt: string | null): string | null {
   if (!excerpt) return null;
   let s = excerpt.split(/\s+HTML:|\s<[a-z!]|\s+\|\s+Listing\b/i)[0]!;
-  s = plainDates(s.replace(/\s*\([^)]*\)/g, ''));
+  // Rule names, links and language codes in brackets are for us, not for the reader. Anything else in brackets is part of what was seen.
+  s = plainDates(s.replace(/\s*\((?:[a-z-]+, (?:serious|critical|moderate|minor), \d+ elements?|https?:[^)]*|[a-z]{2,3})\)/g, ''));
   s = s.replace(/\s+\|\s+/g, ', ').replace(/\s+/g, ' ').trim();
   if (s.length > 260) s = `${s.slice(0, 260).replace(/\s+\S*$/, '')}.`;
   return s || null;
