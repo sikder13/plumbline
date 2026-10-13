@@ -63,6 +63,8 @@ export interface PageData {
 /** previews/content/<slug>/content.json */
 export interface ContentFile {
   design: string;
+  /** Set when the business was prepared as part of a wave: its findings are then stated and ordered as the wave's are, and its photographs are read from the folder the wave was researched into. A recipe page always is. */
+  wave?: boolean;
   /** The business name as it should read on the page, when the stored name carries extra words. */
   name?: string;
   /** `quality` (20 to 60, 48 unless given) sets how hard a photograph is compressed: a busy one at the top of a page may need less to load in time. */

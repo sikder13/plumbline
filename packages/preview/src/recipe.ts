@@ -160,7 +160,7 @@ export function loadRecipe(slug: string): Recipe {
 
 /** A recipe as the build reads any page: its photos and film to prepare, and the rest for the recipe design to lay out. */
 export function recipeContent(recipe: Recipe): ContentFile {
-  return { design: 'recipe', name: recipe.name, images: recipe.images, video: recipe.video, strengths: recipe.strengths, demo: recipe };
+  return { design: 'recipe', wave: true, name: recipe.name, images: recipe.images, video: recipe.video, strengths: recipe.strengths, demo: recipe };
 }
 
 export function lookOf(recipe: Recipe): { hero: string; type: string; family: string } {

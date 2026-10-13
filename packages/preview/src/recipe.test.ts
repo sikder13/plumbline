@@ -30,6 +30,10 @@ describe('a page recipe', () => {
     expect(checkRecipe(recipe())).toEqual([]);
   });
 
+  it('is read as the page of a business prepared as part of a wave, so its findings are stated the wave\'s way', () => {
+    expect(recipeContent(recipe()).wave).toBe(true);
+  });
+
   it('is refused when its brief, its headline, its photos or its links do not hold together', () => {
     const problems = (r: unknown) => checkRecipe(r).join(' | ');
     expect(problems(recipe({ brief: { ...recipe().brief, mood: 'wild, close' } }))).toContain('the mood is three words');

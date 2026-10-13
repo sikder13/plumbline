@@ -2,10 +2,11 @@ import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { chromium } from 'playwright';
 import { describe, expect, it } from 'vitest';
-import { cropInPixels, nzReadable, plainDates, plainImpact, plainSeen, secondCheckOf, withoutDashes } from './build.ts';
+import { cropInPixels, mediaDir, nzReadable, plainDates, plainImpact, plainSeen, secondCheckOf, withoutDashes } from './build.ts';
 import { bannedIssues, dashIssues, numberIssues, numberSet, scanPage, splitPage, visibleText } from './copy.ts';
 import { holds, kindOf, pageFacts } from './crawlmouse.ts';
 import { quietContext, validMailto, validTel } from './gates.ts';
+import type { ContentFile } from './types.ts';
 import { summarise } from './visits.ts';
 
 describe('finding text for a page', () => {
@@ -66,6 +67,18 @@ describe('a crop given in fractions of a photograph', () => {
 
   it('is left as it is when it is already given in pixels', () => {
     expect(cropInPixels({ left: 120, top: 40, width: 800, height: 600 }, 2000, 1000)).toEqual({ left: 120, top: 40, width: 800, height: 600 });
+  });
+});
+
+describe('where a page reads its photographs from', () => {
+  const own: ContentFile = { design: 'coastal', images: {}, demo: {} };
+
+  it('is its own content folder for a page whose business was not prepared as part of a wave', () => {
+    expect(mediaDir('alpha-tours', own)).toMatch(/previews[\\/]content[\\/]alpha-tours$/);
+  });
+
+  it('is the folder its wave was researched into, for a page with a design of its own as much as for a recipe page', () => {
+    expect(mediaDir('alpha-tours', { ...own, wave: true })).toMatch(/data[\\/]wave[\\/]alpha-tours$/);
   });
 });
 
