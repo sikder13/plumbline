@@ -104,6 +104,7 @@ A wave is a hand-picked list of businesses prepared for outreach together. For e
 | `wave assets --name <wave>` | Measures every photo, picks the best three for the top of a page (at least 1800 px wide, crisp, not a logo, map or screenshot), and looks up videos, logo, colours and fonts. |
 | `wave ai --name <wave>` | Asks AI tools who to book each business's own activities with, both providers, three runs each. Shows the questions and the estimate first; `--estimate` stops there. `--pass 1`, then `--pass 2` an hour later, lets a finding count as reproduced. |
 | `wave crawlmouse --name <wave>` | Opens the example pages behind every Crawlmouse sentence again, finds which page links to a missing one, and stores what still holds as findings with the source "crawlmouse". |
+| `wave pack --name <wave> --file <csv>` | Writes `reports/<batch>/<WAVE>-PACK.md`, one section of at most 70 lines for each business in list order, and the same data as `reports/<batch>/<wave>/<slug>.json`. Only findings approved in the review app go in. |
 
 What is read for a wave is kept under `data/wave/<slug>/`: `pages/` (the source, the visible text and, for evidence, screenshots of each page), `collected.json`, the research file `facts.json`, `photos/` and `crawlmouse.json`.
 

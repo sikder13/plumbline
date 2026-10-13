@@ -42,6 +42,7 @@ import {
   videosIn,
   waveDir,
   waveMembers,
+  writePack,
   type FoundImage,
   type FoundVideo,
   type WaveEntry,
@@ -314,6 +315,26 @@ export async function waveAssets(d: Db, o: { name: string; only?: string; max?: 
   }
 }
 
+/** Writes the pack for a wave from the stored facts and the findings approved in the review app, and prints the hand-back table. */
+export function wavePack(d: Db, o: { name: string; batch?: string; file?: string }): void {
+  const list = members(d, o.name);
+  if (!list.length) throw new Error(`no businesses in ${o.name}`);
+  const batch = o.batch ?? latestBatch(d, list[0]!.id);
+  if (!batch) throw new Error(`${list[0]!.slug} has not been audited`);
+  // LinkedIn addresses are filled in by hand in the list itself.
+  const rows = o.file && existsSync(o.file) ? parseCsv(readFileSync(o.file, 'utf8')) : [];
+  const measured = (d.prepare("SELECT MAX(at) AS at FROM ledger WHERE provider = 'google_places'").get() as { at: string | null }).at;
+  const r = writePack(d, o.name, batch, join(paths.reports, batch), (slug) => {
+    const row = rows.find((x) => x.slug === slug);
+    return { linkedin: row?.linkedin_owner_url, linkedinNotes: row?.linkedin_notes, googleMeasuredOn: measured };
+  });
+  const yes = (b: boolean) => (b ? 'yes' : 'no');
+  console.log('slug | still trading | owner confirmed | email confirmed | approved findings | best hero photo found | own video found');
+  for (const p of r.businesses) console.log(`${p.slug} | ${p.trading.status === 'trading' ? 'yes' : p.trading.status} | ${yes(p.people.status === 'confirmed')} | ${yes(!!p.email?.published)} | ${p.findings.length} | ${yes(p.assets.photos.some((x) => x.hero !== null))} | ${yes(p.assets.videos.length > 0)}`);
+  console.log(`Pack: ${r.file}`);
+  console.log(`Data for each business: ${join(paths.reports, batch, o.name)}`);
+}
+
 export function registerWave(program: Command): void {
   const wave = program.command('wave').description('Prepare a hand-picked list of businesses: facts with their sources, findings and the pack');
 
@@ -374,4 +395,12 @@ export function registerWave(program: Command): void {
     .option('--only <slugs>', 'comma separated slugs')
     .option('--max <n>', 'pictures to fetch per business', (v) => Number(v))
     .action((o: { name: string; only?: string; max?: number }) => waveAssets(db(), o));
+
+  wave
+    .command('pack')
+    .description('Write the pack for a wave: one section for each business, from the stored facts and the approved findings')
+    .requiredOption('--name <name>', 'wave name')
+    .option('--batch <name>', 'batch the findings belong to (the newest one by default)')
+    .option('--file <path>', 'the wave list, for the LinkedIn addresses filled in by hand')
+    .action((o: { name: string; batch?: string; file?: string }) => wavePack(db(), o));
 }

@@ -35,9 +35,16 @@ export function savedPages(slug: string): PageCapture[] {
   return out;
 }
 
-/** Two addresses for one page: the scheme, a leading www, a trailing slash and a fragment do not matter. */
+/** Two addresses for one page: the scheme, a leading www, a trailing slash, a fragment and percent-encoding do not matter. */
 export function sameAddress(a: string, b: string): boolean {
-  const key = (u: string) => u.trim().replace(/#.*$/, '').replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, '').toLowerCase();
+  const decoded = (u: string) => {
+    try {
+      return decodeURIComponent(u);
+    } catch {
+      return u;
+    }
+  };
+  const key = (u: string) => decoded(u.trim().replace(/#.*$/, '')).replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, '').toLowerCase();
   return key(a) === key(b);
 }
 

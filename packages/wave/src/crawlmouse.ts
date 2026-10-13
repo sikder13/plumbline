@@ -94,16 +94,23 @@ export interface Linker {
   box: Box | null;
 }
 
-/** The pages that link to an address, one link for each: a link a visitor can see, or one folded away in the menu. */
+/** Link words as a person reads them: without icon glyphs and stray spacing. */
+const linkText = (t: string) => t.replace(/[\ue000-\uf8ff\u200b-\u200d\ufeff]/g, '').replace(/\s+/g, ' ').trim();
+
+/**
+ * The pages that link to an address, one link for each: a link a visitor can see, or one folded
+ * away in the menu. On a page the link with words on it is taken before a picture or a button,
+ * and pages whose link has words come first.
+ */
 export function linkersOf(pages: PageCapture[], target: string): Linker[] {
   const out: Linker[] = [];
   for (const page of pages) {
     if (!page.ok || sameAddress(page.finalUrl, target) || out.some((l) => sameAddress(l.pageUrl, page.finalUrl))) continue;
     const matches = page.links.filter((l) => sameAddress(l.href, target));
-    const link = matches.find((l) => l.visible) ?? matches.find((l) => l.inNav);
-    if (link) out.push({ pageUrl: page.finalUrl, text: link.text.replace(/\s+/g, ' ').trim(), where: link.inNav ? 'menu' : link.inFooter ? 'footer' : 'page', box: link.visible ? link.box : null });
+    const link = matches.find((l) => l.visible && linkText(l.text)) ?? matches.find((l) => l.visible) ?? matches.find((l) => l.inNav && linkText(l.text)) ?? matches.find((l) => l.inNav);
+    if (link) out.push({ pageUrl: page.finalUrl, text: linkText(link.text), where: link.inNav ? 'menu' : link.inFooter ? 'footer' : 'page', box: link.visible ? link.box : null });
   }
-  return out;
+  return [...out.filter((l) => l.text), ...out.filter((l) => !l.text)];
 }
 
 export interface ExampleState extends PageState {
@@ -119,21 +126,26 @@ export interface Verdict {
 }
 
 const THIN_WORDS = 150;
-const ABSENCE: Partial<Record<Claim, { label: string; shown: (p: PageState) => boolean; has: string }>> = {
-  no_meta_description: { label: 'meta description', shown: (p) => !p.metaDescription, has: 'has a meta description' },
-  no_main_heading: { label: 'main heading', shown: (p) => !p.mainHeading, has: 'has a main heading' },
-  no_structured_data: { label: 'structured data', shown: (p) => !p.structuredData, has: 'carries structured data' },
+const ABSENCE: Partial<Record<Claim, { label: string; shown: (p: PageState) => boolean; has: string; all: string }>> = {
+  no_meta_description: { label: 'meta description', shown: (p) => !p.metaDescription, has: 'has a meta description', all: 'have one' },
+  no_main_heading: { label: 'main heading', shown: (p) => !p.mainHeading, has: 'has a main heading', all: 'have one' },
+  no_structured_data: { label: 'structured data', shown: (p) => !p.structuredData, has: 'carries structured data', all: 'carry some' },
 };
 const live = (p: PageState) => p.status !== null && p.status >= 200 && p.status < 300 && !p.missing;
-const linkWords = (l: Linker) => `The ${l.where === 'page' ? '' : `${l.where} `}link "${l.text}" on ${l.pageUrl} leads to it.`;
 const pagesWord = (n: number) => (n === 1 ? 'the example page' : `the ${n} example pages`);
 
+function linkWords(l: Linker): string {
+  const where = l.where === 'page' ? '' : `${l.where} `;
+  return l.text ? `The ${where}link "${l.text}" on ${l.pageUrl} leads to it.` : `A ${where}link with no words on it (a picture or a button) on ${l.pageUrl} leads to it.`;
+}
+
+const answers = (e: ExampleState) => (e.status !== null && e.status >= 400 ? `answers ${e.status} (not found)` : `says it was not found (status ${e.status})`);
+
 /** Whether one example shows one claim, and if not, why not. */
-function shows(claim: Claim, e: ExampleState, read: number): { ok: boolean; why: string } {
+function shows(claim: Claim, e: ExampleState): { ok: boolean; why: string } {
   switch (claim) {
     case 'missing_page':
-      if (!e.missing) return { ok: false, why: `${e.url} now loads (status ${e.status})` };
-      return e.linkedFrom.length ? { ok: true, why: '' } : { ok: false, why: `${e.url} is missing, but none of the ${read} pages we read links to it` };
+      return e.missing ? { ok: true, why: '' } : { ok: false, why: `${e.url} now loads (status ${e.status})` };
     case 'orphan_page':
       if (!live(e)) return { ok: false, why: `${e.url} no longer loads (status ${e.status})` };
       return e.linkedFrom.length ? { ok: false, why: `${e.url} is linked from ${e.linkedFrom[0]!.pageUrl} ("${e.linkedFrom[0]!.text}")` } : { ok: true, why: '' };
@@ -152,7 +164,8 @@ function shows(claim: Claim, e: ExampleState, read: number): { ok: boolean; why:
 /**
  * Whether a sentence still holds. Every example must show at least one thing the sentence claims.
  * Every claim must be shown by an example, or, for something absent from pages, by two of the
- * other pages we read. A missing page counts only when one of their own pages links to it.
+ * other pages we read. Missing pages count only when one of their own pages links to at least
+ * one of them: a page nobody is sent to costs nothing.
  */
 export function judge(claims: Claim[], examples: ExampleState[], others: PageState[]): Verdict {
   const drop = (reason: string): Verdict => ({ confirmed: false, measured: null, reason });
@@ -160,24 +173,31 @@ export function judge(claims: Claim[], examples: ExampleState[], others: PageSta
   if (!examples.length) return drop('no example page was given');
   const rest = others.filter((o) => live(o) && !examples.some((e) => sameAddress(e.url, o.url)));
   for (const e of examples) {
-    const results = claims.map((c) => shows(c, e, others.length));
+    const results = claims.map((c) => shows(c, e));
     if (!results.some((r) => r.ok)) return drop(results[0]!.why);
   }
   const measured: string[] = [];
   for (const claim of claims) {
-    const showing = examples.filter((e) => shows(claim, e, others.length).ok);
+    const showing = examples.filter((e) => shows(claim, e).ok);
     const absence = ABSENCE[claim];
     const also = absence ? rest.filter(absence.shown).length : 0;
     if (!showing.length && also < 2) return drop(`no page we read shows: ${absence ? `no ${absence.label}` : claim.replace(/_/g, ' ')}`);
-    const first = showing[0];
-    if (claim === 'missing_page') measured.push(...showing.map((e) => `${e.status !== null && e.status >= 400 ? `The page answers ${e.status} (not found).` : `The page says it was not found (status ${e.status}).`} ${linkWords(e.linkedFrom[0]!)}`));
-    else if (claim === 'orphan_page') measured.push(showing.length === 1 ? `The page loads. None of the ${rest.length} other pages we read links to it.` : `The ${showing.length} example pages load. None of the ${rest.length} other pages we read links to them.`);
+    if (claim === 'missing_page') {
+      const linked = showing.filter((e) => e.linkedFrom.length);
+      const unlinked = showing.filter((e) => !e.linkedFrom.length);
+      if (!linked.length) return drop(`${showing[0]!.url} is missing, but none of the ${others.length} pages we read links to it`);
+      const name = (e: ExampleState) => (showing.length === 1 ? 'The page' : e.url);
+      measured.push(...linked.map((e) => `${name(e)} ${answers(e)}. ${linkWords(e.linkedFrom[0]!)}`), ...unlinked.map((e) => `${name(e)} ${answers(e)}. None of the ${others.length} pages we read links to it.`));
+    } else if (claim === 'orphan_page') measured.push(showing.length === 1 ? `The page loads. None of the ${rest.length} other pages we read links to it.` : `The ${showing.length} example pages load. None of the ${rest.length} other pages we read links to them.`);
     else if (claim === 'thin_page') measured.push(`${showing.length === 1 ? 'The example page shows' : 'The example pages show'} ${showing.map((e) => e.words).join(' and ')} words.`);
-    else if (claim === 'leftover_page') measured.push(`The page loads, with the title "${first!.title}".`);
+    else if (claim === 'leftover_page') measured.push(`The page loads, with the title "${showing[0]!.title}".`);
     else {
       const label = absence!.label;
-      const elsewhere = rest.length ? `on ${also} of the ${rest.length} other pages we read` : '';
-      measured.push(showing.length ? `No ${label} on ${pagesWord(showing.length)}${elsewhere ? `, nor ${elsewhere}` : ''}.` : `No ${label} ${elsewhere}.`);
+      if (!showing.length) measured.push(`No ${label} on ${also} of the ${rest.length} other pages we read.`);
+      else if (!rest.length) measured.push(`No ${label} on ${pagesWord(showing.length)}.`);
+      // Where the other pages we read do not bear out a count in the sentence, the line says so.
+      else if (!also) measured.push(`No ${label} on ${pagesWord(showing.length)}. The ${rest.length} other pages we read all ${absence!.all}.`);
+      else measured.push(`No ${label} on ${pagesWord(showing.length)}, nor on ${also} of the ${rest.length} other pages we read.`);
     }
   }
   return { confirmed: true, measured: measured.join(' '), reason: null };
@@ -255,6 +275,26 @@ function parents(url: string): string[] {
   return out.slice(0, 3);
 }
 
+/**
+ * A site kept in two folders links "Info.html" from each. When a page read in one folder links
+ * to a file of the same name as the missing page, the copy of that page in the missing page's
+ * own folder is the likely linker.
+ */
+function siblingGuesses(pages: PageCapture[], target: string): string[] {
+  const file = (u: string) => new URL(u).pathname.split('/').pop()!.toLowerCase();
+  const wanted = file(target);
+  if (!wanted) return [];
+  const out: string[] = [];
+  for (const p of pages) {
+    if (!p.ok || !p.links.some((l) => /^https?:/.test(l.href) && file(l.href) === wanted && !sameAddress(l.href, target))) continue;
+    const name = new URL(p.finalUrl).pathname.split('/').pop();
+    if (!name) continue;
+    const guess = new URL(name, target).toString();
+    if (!out.includes(guess) && !pages.some((x) => sameAddress(x.finalUrl, guess) || sameAddress(x.url, guess))) out.push(guess);
+  }
+  return out.slice(0, 2);
+}
+
 function describe(e: ExampleState): string {
   return [`Status ${e.status ?? 'none'}${e.missing ? ' (not found)' : ''}`, `title "${e.title}"`, `meta description ${e.metaDescription ? 'present' : 'absent'}`, `main heading ${e.mainHeading ? 'present' : 'absent'}`, `structured data ${e.structuredData ? 'present' : 'absent'}`, `${e.words} words`].join(', ');
 }
@@ -266,7 +306,9 @@ function describe(e: ExampleState): string {
  * to a missing page gets a second one with the link boxed.
  */
 export async function verifyCrawlmouse(renderer: Renderer, slug: string, summary: CrawlmouseSummary, known: PageCapture[], evidenceRoot: string = paths.evidence): Promise<SentenceResult[]> {
-  const pages = [...known];
+  // The same page can be held twice: read for the wave and again in an audit run. Each counts once.
+  const pages: PageCapture[] = [];
+  for (const p of known) if (!pages.some((x) => sameAddress(x.finalUrl, p.finalUrl))) pages.push(p);
   const states = new Map<string, PageState>();
   const stateOf = (p: PageCapture) => {
     if (!states.has(p.finalUrl)) states.set(p.finalUrl, pageState(p, savedHtml(p)));
@@ -283,9 +325,9 @@ export async function verifyCrawlmouse(renderer: Renderer, slug: string, summary
       const state = pageState(capture, savedHtml(capture));
       let linkedFrom = linkersOf(pages, url);
       if (claims.includes('missing_page') && state.missing && !linkedFrom.length) {
-        for (const parent of parents(url)) {
-          if (pages.some((p) => sameAddress(p.finalUrl, parent) || sameAddress(p.url, parent))) continue;
-          const p = await readPage(renderer, slug, parent);
+        for (const likely of [...siblingGuesses(pages, url), ...parents(url)]) {
+          if (pages.some((p) => sameAddress(p.finalUrl, likely) || sameAddress(p.url, likely))) continue;
+          const p = await readPage(renderer, slug, likely);
           if (p.ok) pages.push(p);
           linkedFrom = linkersOf(pages, url);
           if (linkedFrom.length) break;
@@ -300,7 +342,7 @@ export async function verifyCrawlmouse(renderer: Renderer, slug: string, summary
         const link = from.links.find((l) => sameAddress(l.href, url) && l.visible);
         const file = join(evidenceRoot, slug, `crawlmouse-${++shot}.webp`);
         const crop = link?.box ? await cropElement(from, link.box, file).catch(() => null) : await pageShot(from, file).catch(() => null);
-        evidence.push({ url: linker.pageUrl, path: crop?.file ?? null, excerpt: `The ${linker.where === 'page' ? '' : `${linker.where} `}link "${linker.text}" on this page leads to ${url}`, capturedAt: from.capturedAtUtc });
+        evidence.push({ url: linker.pageUrl, path: crop?.file ?? null, excerpt: `${linkWords(linker).replace(` on ${linker.pageUrl} leads to it.`, '')} on this page leads to ${url}`, capturedAt: from.capturedAtUtc });
       }
       const file = join(evidenceRoot, slug, `crawlmouse-${++shot}.webp`);
       const picture = capture.tiles.length ? await pageShot(capture, file).catch(() => null) : null;

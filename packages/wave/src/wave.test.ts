@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -13,6 +13,7 @@ import { heroCandidates, measure, mp4Info, photoKind, youtubeInfo, type Photo } 
 import { claimsIn, crawlmouseFileFor, judge, linkersOf, pageState, storeCrawlmouse, type ExampleState, type SentenceResult } from './crawlmouse.ts';
 import { factsFor, setFacts, statedActivities } from './facts.ts';
 import { importWave, waveMembers, waves } from './list.ts';
+import { PACK_MAX_LINES, packBusiness, packLines, writePack } from './pack.ts';
 import { groupOf, rankFindings, repeats, type Rankable } from './rank.ts';
 import { Research, checkResearch, storeResearch } from './research.ts';
 
@@ -314,6 +315,17 @@ describe('what a page shows when it is opened again', () => {
       ['https://fixture.co.nz/tours', 'Reserve your seat', 'page'],
     ]);
   });
+
+  it('leads with a link that has words on it, and reads an address the same however it is written', () => {
+    const picture = page('https://fixture.co.nz/', ['Home'], { links: [link('https://fixture.co.nz/booking', ''), link('https://fixture.co.nz/booking', '  ')] });
+    const visit = page('https://fixture.co.nz/visit-us', ['Visit'], { links: [link('https://fixture.co.nz/booking', ''), link('https://fixture.co.nz/booking', 'Book a \ue934\ue934 wine   tasting')] });
+    expect(linkersOf([picture, visit], 'https://fixture.co.nz/booking').map((l) => [l.pageUrl, l.text])).toEqual([
+      ['https://fixture.co.nz/visit-us', 'Book a wine tasting'],
+      ['https://fixture.co.nz/', ''],
+    ]);
+    const mail = page('https://fixture.co.nz/contact', ['Contact'], { links: [link('https://fixture.co.nz/hello%40fixture.co.nz.html', 'Email us')] });
+    expect(linkersOf([mail], 'https://fixture.co.nz/hello@fixture.co.nz.html')).toHaveLength(1);
+  });
 });
 
 describe('whether a Crawlmouse sentence still holds', () => {
@@ -327,6 +339,18 @@ describe('whether a Crawlmouse sentence still holds', () => {
     expect(judge(['missing_page'], [state({})], [])).toMatchObject({ confirmed: false, reason: 'https://fixture.co.nz/x now loads (status 200)' });
   });
 
+  it('keeps a sentence about several missing pages when all are missing and a link to at least one was found', () => {
+    const booking = state({ url: 'https://fixture.co.nz/booking', status: 404, missing: true, linkedFrom: [{ pageUrl: 'https://fixture.co.nz/visit-us', text: 'Book a wine tasting', where: 'page', box: null }] });
+    const picture = state({ url: 'https://fixture.co.nz/wine', status: 404, missing: true, linkedFrom: [{ pageUrl: 'https://fixture.co.nz/our-wine', text: '', where: 'page', box: null }] });
+    const unlinked = state({ url: 'https://fixture.co.nz/buy-wine', status: 404, missing: true });
+    expect(judge(['missing_page'], [unlinked, booking, picture], others)).toMatchObject({
+      confirmed: true,
+      measured:
+        'https://fixture.co.nz/booking answers 404 (not found). The link "Book a wine tasting" on https://fixture.co.nz/visit-us leads to it. https://fixture.co.nz/wine answers 404 (not found). A link with no words on it (a picture or a button) on https://fixture.co.nz/our-wine leads to it. https://fixture.co.nz/buy-wine answers 404 (not found). None of the 3 pages we read links to it.',
+    });
+    expect(judge(['missing_page'], [unlinked, state({ url: 'https://fixture.co.nz/shop' })], others)).toMatchObject({ confirmed: false, reason: 'https://fixture.co.nz/shop now loads (status 200)' });
+  });
+
   it('confirms an unlinked page when it loads and none of the pages read links to it', () => {
     expect(judge(['orphan_page'], [state({})], others)).toMatchObject({ confirmed: true, measured: 'The page loads. None of the 3 other pages we read links to it.' });
     const linked = state({ linkedFrom: [{ pageUrl: 'https://fixture.co.nz/', text: 'Packages', where: 'menu', box: null }] });
@@ -336,6 +360,9 @@ describe('whether a Crawlmouse sentence still holds', () => {
 
   it('confirms what is absent from a page when every example shows it', () => {
     expect(judge(['no_meta_description'], [state({ metaDescription: false })], others)).toMatchObject({ confirmed: true, measured: 'No meta description on the example page, nor on 2 of the 3 other pages we read.' });
+    // When our own reading does not bear out a count, the measured line says so plainly.
+    expect(judge(['no_structured_data'], [state({ structuredData: false })], others)).toMatchObject({ confirmed: true, measured: 'No structured data on the example page. The 3 other pages we read all carry some.' });
+    expect(judge(['no_main_heading'], [state({ mainHeading: false })], others)).toMatchObject({ confirmed: true, measured: 'No main heading on the example page. The 3 other pages we read all have one.' });
     expect(judge(['no_main_heading'], [state({})], others)).toMatchObject({ confirmed: false, reason: 'https://fixture.co.nz/x has a main heading' });
     expect(judge(['thin_page'], [state({ words: 40 })], [])).toMatchObject({ confirmed: true, measured: 'The example page shows 40 words.' });
     expect(judge(['leftover_page'], [state({ title: 'Copy of Cellar Door' })], [])).toMatchObject({ confirmed: true, measured: 'The page loads, with the title "Copy of Cellar Door".' });
@@ -564,5 +591,82 @@ describe('what can be learnt about a video without playing it', () => {
     const html = '<title>Sunset cruise &amp; dolphins - YouTube</title><meta name="title" content="Sunset cruise &amp; dolphins"><script>{"lengthSeconds":"94","formats":[{"qualityLabel":"360p"},{"qualityLabel":"1080p60"},{"qualityLabel":"720p"}]}</script>';
     expect(youtubeInfo(html)).toEqual({ title: 'Sunset cruise & dolphins', seconds: 94, quality: '1080p' });
     expect(youtubeInfo('<html></html>')).toEqual({ title: null, seconds: null, quality: null });
+  });
+});
+
+describe('the pack for a wave', () => {
+  function prepared(): Db {
+    const db = memoryDb();
+    seed(db, ['alpha']);
+    db.prepare("UPDATE businesses SET name = 'Alpha Kayaks', town = 'Paihia', region = 'Northland', google_rating = 4.8, google_review_count = 265 WHERE id = 1").run();
+    importWave(db, 'wave-2', [{ slug: 'alpha', position: 3, status: 'wave' }]);
+    const at = '2026-10-12T20:00:00.000Z';
+    setFacts(db, 1, 'trading', [{ label: 'status', value: { status: 'trading', note: null } }, { label: 'closed', value: 'closed', sourceUrl: 'https://alpha.co.nz/', quote: 'NOW CLOSED Re-open September 28th 2026', flag: 'closed' }], at);
+    setFacts(db, 1, 'people', [{ label: 'who to address', value: { status: 'confirmed', addressAs: 'Tony and Lisa', note: null } }], at);
+    setFacts(db, 1, 'owner', [{ label: 'Anthony John Smith', value: { firstNameUsed: 'Tony', role: 'owner', confirmed: true }, sourceUrl: 'https://alpha.co.nz/about', quote: 'Meet Tony' }, { label: 'Anthony John Smith', value: { firstNameUsed: 'Tony', role: 'owner', confirmed: true }, sourceUrl: 'https://opencorporates.com/companies/nz/1', quote: 'AJ Smith' }], at);
+    setFacts(db, 1, 'email', [{ label: 'hello@alpha.co.nz', value: { address: 'hello@alpha.co.nz', published: true, note: null }, sourceUrl: 'https://alpha.co.nz/contact', quote: 'hello@alpha.co.nz' }], at);
+    setFacts(db, 1, 'booking', [{ label: 'Rezdy', value: { system: 'Rezdy', link: 'https://alpha.rezdy.com/', note: null }, sourceUrl: 'https://alpha.co.nz/' }], at);
+    setFacts(db, 1, 'price', Array.from({ length: 9 }, (_, i) => ({ label: `Trip ${i + 1}`, value: { text: `$${100 + i}`, amount: 100 + i }, sourceUrl: 'https://alpha.co.nz/prices', flag: i === 0 ? 'conflict' : null })), at);
+    setFacts(db, 1, 'price_conflict', [{ label: 'Trip 1', value: '$100', sourceUrl: 'https://alpha.co.nz/prices' }, { label: 'Trip 1', value: '$110', sourceUrl: 'https://alpha.co.nz/tours' }], at);
+    setFacts(db, 1, 'activity', [{ value: 'kayak tour' }, { value: 'kayak hire' }], at);
+    setFacts(db, 1, 'ai', [{ label: 'Who should I book a kayak tour with in or near Paihia, New Zealand? Name specific operators.', value: { answers: 6, namedIn: 5, others: [] }, flag: 'strength' }], at);
+    setFacts(db, 1, 'strength', [{ label: 'certification', value: 'Qualmark Gold', sourceUrl: 'https://alpha.co.nz/about' }], at);
+    setFacts(db, 1, 'photo', [{ label: 'https://alpha.co.nz/bay.jpg', value: { width: 2400, height: 1350, kind: 'photo', file: '/data/wave/alpha/photos/001.jpg' }, sourceUrl: 'https://alpha.co.nz/', flag: 'hero 1' }, { label: 'https://alpha.co.nz/logo.png', value: { width: 300, height: 80, kind: 'logo', file: null }, sourceUrl: 'https://alpha.co.nz/' }], at);
+    setFacts(db, 1, 'video', [{ label: 'https://www.youtube.com/watch?v=abc', value: { kind: 'youtube', how: 'embedded', title: 'Paddle the bay', seconds: 94, quality: '1080p', note: null }, sourceUrl: 'https://alpha.co.nz/' }], at);
+    setFacts(db, 1, 'colour', [{ label: 'background', value: { hex: '#ffffff', share: 0.6 } }], at);
+    setFacts(db, 1, 'font', [{ value: { headings: 'Figtree', body: 'Open Sans' } }], at);
+    setFacts(db, 1, 'voice', Array.from({ length: 5 }, (_, i) => ({ value: `We love this bay, reason ${i + 1}.`, sourceUrl: 'https://alpha.co.nz/about' })), at);
+    setFacts(db, 1, 'agency', [{ label: 'summary', value: { name: 'Tidal Studio', note: null }, flag: 'agency' }, { label: 'Tidal Studio', value: 'footer credit', sourceUrl: 'https://alpha.co.nz/', quote: 'Website by Tidal Studio' }], at);
+    setFacts(db, 1, 'unknown', [{ value: 'The closed notice on the homepage is out of date.' }], at);
+    const add = db.prepare("INSERT INTO findings (business_id, batch, check_id, pack, tier, severity, status, reproduced, fingerprint, title, visibility_weight, score, detail, first_seen_at, last_verified_at, source) VALUES (1, 'b', ?, ?, 'measured', ?, ?, 1, ?, ?, 1, ?, ?, ?, ?, ?)");
+    add.run('C20_slow_mobile', 'core', 4, 'approved', 'speed', 'Mobile performance score 31, main content after 8.2 s', 4, '{}', at, at, 'plumbline');
+    const cm = add.run('CM_missing_page', 'crawlmouse', 5, 'approved', 'a-link', 'A link to your Contact page leads to a missing page (404).', 3, JSON.stringify({ measured: 'The page answers 404 (not found). The link "Contact Us" on https://alpha.co.nz/faq leads to it.', examples: [{ url: 'https://alpha.co.nz/contact-us' }] }), at, at, 'crawlmouse');
+    add.run('C31_no_structured_data', 'core', 2, 'reproduced', 'sd', 'No business structured data on the homepage', 2, '{}', at, at, 'plumbline');
+    db.prepare("INSERT INTO evidence (finding_id, kind, path, captured_at_utc, captured_at_nz) VALUES (?, 'page', '/data/evidence/alpha/crawlmouse-1.webp', ?, 'x')").run(cm.lastInsertRowid, at);
+    return db;
+  }
+
+  it('gathers the facts and the approved findings, ranked for the owner', () => {
+    const db = prepared();
+    const p = packBusiness(db, waveMembers(db, 'wave-2')[0]!, 'b', { linkedin: 'https://www.linkedin.com/in/tony', googleMeasuredOn: '2026-10-10T22:45:00.000Z' });
+    expect(p.findings.map((f) => [f.source, f.check, f.sentence])).toEqual([
+      ['Crawlmouse', 'CM_missing_page', 'A link to your Contact page leads to a missing page (404).'],
+      ['Plumbline', 'C20_slow_mobile', 'The page is slow on a phone'],
+    ]);
+    expect(p.findings[0]).toMatchObject({ measured: 'The page answers 404 (not found). The link "Contact Us" on https://alpha.co.nz/faq leads to it.', evidence: ['/data/evidence/alpha/crawlmouse-1.webp'] });
+    expect(p.findings[1]!.measured).toBe('Mobile performance score 31, main content after 8.2 s');
+    expect(p.people).toMatchObject({ status: 'confirmed', addressAs: 'Tony and Lisa', linkedin: 'https://www.linkedin.com/in/tony' });
+    expect(p.people.owners[0]!.sources.map((s) => s.url)).toEqual(['https://alpha.co.nz/about', 'https://opencorporates.com/companies/nz/1']);
+    expect(p.assets.photos.filter((x) => x.hero).map((x) => `${x.width}x${x.height}`)).toEqual(['2400x1350']);
+    expect(p.priceConflicts).toEqual([{ item: 'Trip 1', values: [{ text: '$100', sourceUrl: 'https://alpha.co.nz/prices' }, { text: '$110', sourceUrl: 'https://alpha.co.nz/tours' }] }]);
+  });
+
+  it('writes a section of no more than 70 lines that names every part, with sources and dates', () => {
+    const db = prepared();
+    const lines = packLines(packBusiness(db, waveMembers(db, 'wave-2')[0]!, 'b', { googleMeasuredOn: '2026-10-10T22:45:00.000Z' }));
+    expect(lines.length).toBeLessThanOrEqual(PACK_MAX_LINES);
+    const text = lines.join('\n');
+    expect(lines[0]).toBe('## 3. Alpha Kayaks');
+    for (const part of ['**Business:**', '**People:**', '**Email:**', '**Google:**', '**Booking:**', '**Approved findings, ranked:**', '**Strengths:**', '**Assets:**', '**Risks and unknowns:**']) expect(text).toContain(part);
+    expect(text).toContain('Flag, closed: "NOW CLOSED Re-open September 28th 2026" (https://alpha.co.nz/, checked 2026-10-13)');
+    expect(text).toContain('address as Tony and Lisa. Status: confirmed.');
+    expect(text).toContain('hello@alpha.co.nz. Shown on https://alpha.co.nz/contact, checked 2026-10-13.');
+    expect(text).toContain('4.8 from 265 reviews, measured 2026-10-11.');
+    expect(text).toContain('PRICE CONFLICT, Trip 1: $100 on https://alpha.co.nz/prices but $110 on https://alpha.co.nz/tours. We do not pick one.');
+    expect(text).toContain('[#2, Crawlmouse] A link to your Contact page leads to a missing page (404). Measured: The page answers 404 (not found).');
+    expect(text).toContain('AI check (a strength): named in 5 of 6 answers');
+    expect(text).toContain('Hero photo 1: 2400x1350 px, https://alpha.co.nz/bay.jpg');
+    expect(text).toContain('Video (youtube, embedded): https://www.youtube.com/watch?v=abc, 1 min 34 s, 1080p');
+    expect(text).toContain('Agency: Tidal Studio appears to look after the site');
+    expect(text).not.toContain('C31');
+  });
+
+  it('writes the pack file and one data file for each business', () => {
+    const db = prepared();
+    const dir = mkdtempSync(join(tmpdir(), 'plumbline-pack-'));
+    const r = writePack(db, 'wave-2', 'b', dir);
+    expect(r.file).toBe(join(dir, 'WAVE-2-PACK.md'));
+    expect(readFileSync(r.file, 'utf8')).toContain('## 3. Alpha Kayaks');
+    expect(JSON.parse(readFileSync(join(dir, 'wave-2', 'alpha.json'), 'utf8'))).toMatchObject({ slug: 'alpha', position: 3, email: { address: 'hello@alpha.co.nz' } });
   });
 });
