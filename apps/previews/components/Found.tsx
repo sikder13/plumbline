@@ -9,27 +9,32 @@ export function Found({ data }: { data: PageData }) {
       <section aria-labelledby="found-h">
         <p className="found-kicker">{data.domain}</p>
         <h1 id="found-h">What we found</h1>
-        <p className="found-lead">Each item below was measured on your current site, seen twice at least an hour apart, and checked again on the date shown.</p>
-        <ol className="cards">
-          {data.findings.map((f) => (
-            <li key={f.check} className="card">
-              <h2>{f.title}</h2>
-              <p>{f.sentence}</p>
-              {f.shots.map((s, i) => (
-                <figure key={i}>
-                  {s.image && <img src={s.image.src} width={s.image.width} height={s.image.height} alt={`Screenshot of your current site: ${f.title}`} loading="lazy" decoding="async" />}
-                  {s.seen && <figcaption>{s.seen}</figcaption>}
-                </figure>
+        {/* A page whose findings all came from the second check has no cards, and goes straight on to it. */}
+        {data.findings.length > 0 && (
+          <>
+            <p className="found-lead">Each item below was measured on your current site, seen twice at least an hour apart, and checked again on the date shown.</p>
+            <ol className="cards">
+              {data.findings.map((f) => (
+                <li key={f.check} className="card">
+                  <h2>{f.title}</h2>
+                  <p>{f.sentence}</p>
+                  {f.shots.map((s, i) => (
+                    <figure key={i}>
+                      {s.image && <img src={s.image.src} width={s.image.width} height={s.image.height} alt={`Screenshot of your current site: ${f.title}`} loading="lazy" decoding="async" />}
+                      {s.seen && <figcaption>{s.seen}</figcaption>}
+                    </figure>
+                  ))}
+                  <p className="card-when">
+                    Measured {f.measuredNz}, New Zealand time{f.pageUrl ? <>, on <span className="url">{f.pageUrl.replace(/^https?:\/\//, '')}</span></> : null}
+                  </p>
+                  <p className="card-fix">
+                    <strong>In the new site:</strong> {f.fix}
+                  </p>
+                </li>
               ))}
-              <p className="card-when">
-                Measured {f.measuredNz}, New Zealand time{f.pageUrl ? <>, on <span className="url">{f.pageUrl.replace(/^https?:\/\//, '')}</span></> : null}
-              </p>
-              <p className="card-fix">
-                <strong>In the new site:</strong> {f.fix}
-              </p>
-            </li>
-          ))}
-        </ol>
+            </ol>
+          </>
+        )}
       </section>
 
       {data.secondCheck && (

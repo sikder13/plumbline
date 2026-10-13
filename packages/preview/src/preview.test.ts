@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { chromium } from 'playwright';
 import { describe, expect, it } from 'vitest';
-import { cropInPixels, nzReadable, plainDates, plainImpact, plainSeen, withoutDashes } from './build.ts';
+import { cropInPixels, nzReadable, plainDates, plainImpact, plainSeen, secondCheckOf, withoutDashes } from './build.ts';
 import { bannedIssues, dashIssues, numberIssues, numberSet, scanPage, splitPage, visibleText } from './copy.ts';
 import { holds, kindOf, pageFacts } from './crawlmouse.ts';
 import { quietContext, validMailto, validTel } from './gates.ts';
@@ -155,4 +155,24 @@ describe('a browser opened by a gate', () => {
       server.close();
     }
   }, 60_000);
+});
+
+describe('what a recipe page says of the second crawl', () => {
+  const summary = { site_score: 66.06, grade: 'C+', ai_readiness_score: 92, ai_crawler_access: 'All major AI crawlers are allowed by robots.txt. A strength, not a finding.' };
+
+  it('gives the scores of a summary filed for a wave, and the approved findings in the words they are put in', () => {
+    expect(secondCheckOf(summary, ['The page at /old is still live.'])).toEqual({ score: '66 out of 100 (grade C+)', aiReadiness: '92 out of 100', crawlerAccess: 'All major AI crawlers are allowed by robots.txt.', findings: ['The page at /old is still live.'] });
+  });
+
+  it('carries the approved findings even where no summary is on file, and at most three of them', () => {
+    expect(secondCheckOf(null, ['a.', 'b.', 'c.', 'd.'])).toEqual({ score: null, aiReadiness: null, crawlerAccess: null, findings: ['a.', 'b.', 'c.'] });
+  });
+
+  it('carries no dash, even inside a page title it quotes', () => {
+    expect(secondCheckOf(null, ['The page at /old is still live, under the title "Cellar Door - Wine Sales Only | Alpha Wines".'])?.findings).toEqual(['The page at /old is still live, under the title "Cellar Door, Wine Sales Only | Alpha Wines".']);
+  });
+
+  it('is left off the page when there is neither a summary nor a finding', () => {
+    expect(secondCheckOf(null, [])).toBeNull();
+  });
 });

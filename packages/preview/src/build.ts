@@ -8,7 +8,7 @@ import { CHECK_IDS } from '@plumbline/checks';
 import { latestBatch } from '@plumbline/export';
 import { loadLibrary } from '@plumbline/impact';
 import { businessView, type EvidenceRow, type FindingView } from '@plumbline/report';
-import { ownerOrder, speedRuns, speedSeen, statedSentence } from '@plumbline/wave';
+import { loadCrawlmouse as loadWaveCrawlmouse, ownerOrder, speedRuns, speedSeen, statedSentence } from '@plumbline/wave';
 import { correctedQuestions, correctedSummary } from './ai.ts';
 import { loadCrawlmouse, loadVerified } from './crawlmouse.ts';
 import { contentDir, previewPaths } from './paths.ts';
@@ -189,6 +189,31 @@ export interface BuildOptions {
   now?: Date;
 }
 
+/** The parts of a Crawlmouse summary a page shows, however the summary was filed. */
+export interface SecondCrawl {
+  site_score: number | null;
+  grade: string | null;
+  ai_readiness?: { score: number } | null;
+  ai_readiness_score?: number;
+  ai_crawler_access?: string | null;
+}
+
+/**
+ * What a recipe page says of the second crawl: its scores where a summary is on file, and up to
+ * three approved findings. Null when there is neither, and the page then says nothing of it.
+ */
+export function secondCheckOf(summary: SecondCrawl | null, findings: string[]): SecondCheck | null {
+  if (!summary && !findings.length) return null;
+  const readiness = summary?.ai_readiness?.score ?? summary?.ai_readiness_score ?? null;
+  return {
+    score: summary && summary.site_score !== null && summary.grade ? `${Math.round(summary.site_score)} out of 100 (grade ${summary.grade})` : null,
+    aiReadiness: readiness === null ? null : `${readiness} out of 100`,
+    crawlerAccess: summary?.ai_crawler_access ? summary.ai_crawler_access.replace(/\s*(This is )?a strength, not a finding\.?/i, '').replace(/\s*\(([^)]*)\)/, ': $1').trim() : null,
+    // A page carries no dash, so one inside a title it quotes is set as a comma.
+    findings: findings.slice(0, 3).map((f) => withoutDashes(f)!),
+  };
+}
+
 /** Gathers everything one page shows and writes its images. Nothing is written to the repository. */
 export async function buildPage(db: Db, slug: string, opts: BuildOptions): Promise<BuildResult> {
   const b = db.prepare('SELECT * FROM businesses WHERE slug = ?').get(slug) as Business | undefined;
@@ -256,16 +281,12 @@ export async function buildPage(db: Db, slug: string, opts: BuildOptions): Promi
 
   let secondCheck: SecondCheck | null = null;
   const cm = loadCrawlmouse(slug);
-  if (cm && fromRecipe) {
+  if (fromRecipe) {
     // What Crawlmouse wrote is kept only where it was approved as a finding, and is said in terms of what we read ourselves.
     const rows = db.prepare("SELECT id, check_id, severity, score, title, detail FROM findings WHERE business_id = ? AND batch = ? AND source = 'crawlmouse' AND status = 'approved'").all(b.id, batch) as { id: number; check_id: string; severity: number; score: number; title: string; detail: string }[];
     const kept = ownerOrder(rows.map((r) => ({ id: r.id, checkId: r.check_id, severity: r.severity, score: r.score, title: r.title, detail: JSON.parse(r.detail || '{}') as Record<string, unknown> })), runs);
-    secondCheck = {
-      score: cm.site_score !== null && cm.grade ? `${Math.round(cm.site_score)} out of 100 (grade ${cm.grade})` : null,
-      aiReadiness: cm.ai_readiness ? `${cm.ai_readiness.score} out of 100` : null,
-      crawlerAccess: cm.ai_crawler_access ? cm.ai_crawler_access.replace(/\s*This is a strength, not a finding\.?/i, '').replace(/\s*\(([^)]*)\)/, ': $1').trim() : null,
-      findings: kept.slice(0, 3).map((f) => `${statedSentence(f, runs)}.`),
-    };
+    // The summary of a wave's business is filed with the wave's inputs, not where the first pages kept theirs.
+    secondCheck = secondCheckOf(cm ?? loadWaveCrawlmouse(slug, b.website), kept.map((f) => `${statedSentence(f, runs)}.`));
   } else if (cm) {
     const verified = loadVerified(slug);
     const keep = (verified?.findings ?? []).filter((x) => x.verified).map((x) => x.text);
