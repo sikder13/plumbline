@@ -105,7 +105,7 @@ function meta(checkId: string) {
  */
 export async function recordRunA(db: Db, library: Map<string, ImpactEntry>, site: SiteData, batch: string, findings: CandidateFinding[], evidenceRoot?: string): Promise<RecordResult> {
   const businessId = site.business.id;
-  db.prepare("DELETE FROM findings WHERE business_id = ? AND batch = ? AND status IN ('candidate', 'reproduced')").run(businessId, batch);
+  db.prepare("DELETE FROM findings WHERE business_id = ? AND batch = ? AND source = 'plumbline' AND status IN ('candidate', 'reproduced')").run(businessId, batch);
   const insert = db.prepare(
     `INSERT INTO findings (business_id, batch, check_id, pack, tier, severity, status, reproduced, fingerprint, title, page_url, viewport, visibility_weight, score, detail, first_run_id, last_run_id, first_seen_at)
      VALUES (?, ?, ?, ?, ?, ?, 'candidate', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -135,7 +135,7 @@ export async function recordRunB(db: Db, library: Map<string, ImpactEntry>, site
     throw new Error(`run B started ${gap.toFixed(0)} minutes after run A; it must be at least ${config.reproduce.minGapMinutes}`);
   }
   const businessId = site.business.id;
-  const existing = db.prepare('SELECT id, check_id, fingerprint, status, detail, first_run_id FROM findings WHERE business_id = ? AND batch = ?').all(businessId, batch) as FindingRow[];
+  const existing = db.prepare("SELECT id, check_id, fingerprint, status, detail, first_run_id FROM findings WHERE business_id = ? AND batch = ? AND source = 'plumbline'").all(businessId, batch) as FindingRow[];
   const byKey = new Map(findings.map((f) => [`${f.checkId}|${f.fingerprint}`, f]));
   const result: RecordResult = { candidates: 0, reproduced: 0, notReproduced: 0, newInB: 0, resolved: 0 };
 
@@ -188,7 +188,8 @@ export async function recordRunB(db: Db, library: Map<string, ImpactEntry>, site
  * fresh verification time and fresh evidence. One that no longer fires is marked resolved.
  */
 export async function recordRecheck(db: Db, site: SiteData, batch: string, findings: CandidateFinding[], evidenceRoot?: string): Promise<RecordResult> {
-  const existing = db.prepare("SELECT id, check_id, fingerprint, status, detail, first_run_id FROM findings WHERE business_id = ? AND batch = ? AND status IN ('reproduced', 'approved')").all(site.business.id, batch) as FindingRow[];
+  // Only Plumbline's own findings can be measured again by its checks. Findings from another tool are left as they are.
+  const existing = db.prepare("SELECT id, check_id, fingerprint, status, detail, first_run_id FROM findings WHERE business_id = ? AND batch = ? AND source = 'plumbline' AND status IN ('reproduced', 'approved')").all(site.business.id, batch) as FindingRow[];
   const byKey = new Map(findings.map((f) => [`${f.checkId}|${f.fingerprint}`, f]));
   const result: RecordResult = { candidates: 0, reproduced: 0, notReproduced: 0, newInB: 0, resolved: 0 };
   for (const row of existing) {

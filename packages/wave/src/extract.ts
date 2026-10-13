@@ -145,7 +145,10 @@ function largestOf(srcset: string): string | null {
 }
 
 export interface FoundImage {
+  /** The address of the largest version. */
   url: string;
+  /** The address the page itself used, to fall back on when the largest version is not there. */
+  asFound: string;
   alt: string;
   pageUrl: string;
 }
@@ -159,7 +162,7 @@ export function imageUrlsIn(html: string, pageUrl: string): FoundImage[] {
     const absolute = normalizeUrl(raw.trim(), pageUrl);
     if (!absolute || /\.svg(\?|$)/i.test(absolute)) return;
     const url = fullSize(absolute);
-    if (!out.has(url)) out.set(url, { url, alt: alt.replace(/\s+/g, ' ').trim(), pageUrl });
+    if (!out.has(url)) out.set(url, { url, asFound: absolute, alt: alt.replace(/\s+/g, ' ').trim(), pageUrl });
   };
   $('img, picture source, [style*="background"]').each((_, el) => {
     const e = $(el);

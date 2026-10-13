@@ -4,14 +4,49 @@ import type { Command } from 'commander';
 import pLimit from 'p-limit';
 import { db, paths, utcIso, type Db } from '@plumbline/core';
 import { aiSummary, indexMentions, openAiAsk, perplexityAsk, plan, runPlan } from '@plumbline/ai';
+import { brandDir, captureBrand, saveBrandPack, voiceSamples, type BrandCapture, type BrandColour, type BrandFonts, type BrandImage } from '@plumbline/brand';
 import { limits, loadPrices, record, spent } from '@plumbline/budget';
 import { CHECK_IDS } from '@plumbline/checks';
 import { publishedEmails } from '@plumbline/contacts';
 import { latestBatch } from '@plumbline/export';
 import { loadLibrary } from '@plumbline/impact';
 import { Polite } from '@plumbline/fetch';
+import { allPages, loadSite } from '@plumbline/collect';
 import { Renderer, type PageCapture } from '@plumbline/render';
-import { agencySigns, bookingLinks, factPageUrls, importWave, pageDir, pagePrices, readPage, savedHtml, settleAi, statedActivities, tradingFlags, videosIn, waveDir, waveMembers, type WaveEntry, type WaveMember } from '@plumbline/wave';
+import {
+  Research,
+  agencySigns,
+  bookingLinks,
+  checkResearch,
+  collectPhotos,
+  contactSheet,
+  factPageUrls,
+  fullSize,
+  heroCandidates,
+  imageUrlsIn,
+  importWave,
+  loadCrawlmouse,
+  pageDir,
+  pagePrices,
+  readPage,
+  savedHtml,
+  savedPages,
+  setFacts,
+  settleAi,
+  statedActivities,
+  storeCrawlmouse,
+  storeResearch,
+  tradingFlags,
+  verifyCrawlmouse,
+  videoDetails,
+  videosIn,
+  waveDir,
+  waveMembers,
+  type FoundImage,
+  type FoundVideo,
+  type WaveEntry,
+  type WaveMember,
+} from '@plumbline/wave';
 import { storedHomepage } from './commands.ts';
 import { parseCsv } from './csv.ts';
 
@@ -158,6 +193,127 @@ export async function waveAi(d: Db, o: { name: string; batch?: string; only?: st
   }
 }
 
+/** The pages already held for a business: those read for the wave, and those of its newest audit run. */
+function knownPages(d: Db, businessId: number, slug: string): PageCapture[] {
+  const run = d.prepare("SELECT id FROM runs WHERE business_id = ? AND status = 'done' ORDER BY id DESC LIMIT 1").get(businessId) as { id: number } | undefined;
+  const site = run ? loadSite(run.id) : null;
+  return [...savedPages(slug), ...(site ? allPages(site) : [])];
+}
+
+/** Opens the example pages behind every Crawlmouse sentence again and stores what still holds as findings. */
+export async function waveCrawlmouse(d: Db, o: { name: string; batch?: string; only?: string }): Promise<void> {
+  const list = members(d, o.name, o.only);
+  const renderer = new Renderer(new Polite());
+  await renderer.start();
+  const limit = pLimit(4);
+  try {
+    await Promise.all(
+      list.map((b) =>
+        limit(async () => {
+          const summary = loadCrawlmouse(b.slug);
+          if (!summary) return void console.log(`${b.slug}: no Crawlmouse summary`);
+          const batch = o.batch ?? latestBatch(d, b.id);
+          if (!batch) return void console.log(`${b.slug}: not audited, so nothing to store its findings with`);
+          try {
+            const results = await verifyCrawlmouse(renderer, b.slug, summary, knownPages(d, b.id, b.slug));
+            const checkedAt = utcIso();
+            mkdirSync(waveDir(b.slug), { recursive: true });
+            writeFileSync(join(waveDir(b.slug), 'crawlmouse.json'), JSON.stringify({ checkedAt, summary: { ...summary, findings_plain: undefined }, results }, null, 2));
+            const n = storeCrawlmouse(d, b, batch, results, { auditedAt: summary.audited_at, auditId: summary.audit_id, pagesRead: summary.pages_read, coveragePct: summary.coverage_pct, confidence: summary.confidence, checkedAt });
+            console.log(`${b.slug}: ${n.stored} of ${results.length} Crawlmouse sentences hold${summary.note ? ` (note: ${summary.note})` : ''}`);
+            for (const r of results) console.log(r.confirmed ? `  kept "${r.text}"\n       ${r.measured}` : `  dropped "${r.text}"\n       ${r.reason}`);
+          } catch (e) {
+            console.log(`${b.slug}: failed, ${(e as Error).message.slice(0, 200)}`);
+          }
+        }),
+      ),
+    );
+  } finally {
+    await renderer.stop();
+  }
+}
+
+/** Stores each business's research file, once every quote in it has been found on the saved copy of its page. */
+export function waveFacts(d: Db, o: { name: string; only?: string; check?: boolean }): void {
+  let refused = 0;
+  for (const b of members(d, o.name, o.only)) {
+    const file = join(waveDir(b.slug), 'facts.json');
+    if (!existsSync(file)) {
+      console.log(`${b.slug}: no research file at ${file}`);
+      continue;
+    }
+    const parsed = Research.safeParse(JSON.parse(readFileSync(file, 'utf8')));
+    const pages = savedPages(b.slug);
+    const problems = !parsed.success ? parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`) : parsed.data.slug !== b.slug ? [`the file is for ${parsed.data.slug}`] : checkResearch(parsed.data, pages);
+    if (problems.length || !parsed.success) {
+      refused += 1;
+      console.log(`${b.slug}: not stored, ${problems.length} problem(s)`);
+      for (const p of problems) console.log(`  ${p}`);
+      continue;
+    }
+    if (!o.check) storeResearch(d, b, parsed.data, pages, utcIso());
+    const r = parsed.data;
+    console.log(`${b.slug}: ${o.check ? 'passes the checks' : 'stored'}. ${r.trading.status}; people ${r.people.status}${r.people.address_as ? ` (${r.people.address_as})` : ''}; email ${r.email.published ? 'published' : 'NOT published'}; ${r.location.town}, ${r.location.region}; booking ${r.booking.system ?? 'none'}; ${r.prices.length} prices, ${r.price_conflicts.length} conflicts; agency ${r.agency.name ?? 'none found'}`);
+  }
+  if (refused) process.exitCode = 1;
+}
+
+/** Measures every photo on the pages kept for each business, picks the best for the top of a page, and looks up its videos, logo, colours and fonts. */
+export async function waveAssets(d: Db, o: { name: string; only?: string; max?: number }): Promise<void> {
+  const polite = new Polite();
+  const renderer = new Renderer(polite);
+  await renderer.start();
+  const limit = pLimit(4);
+  try {
+    await Promise.all(
+      members(d, o.name, o.only).map((b) =>
+        limit(async () => {
+          try {
+            const brand: Partial<Record<'mobile' | 'desktop', BrandCapture>> = {};
+            const live: PageCapture[] = [];
+            for (const viewport of ['desktop', 'mobile'] as const) {
+              const cap = await renderer.render({ url: b.website!, viewport, onPage: async (page) => void (brand[viewport] = await captureBrand(page, viewport, brandDir(b.slug))) });
+              if (cap.ok) live.push(cap);
+            }
+            const pages = savedPages(b.slug);
+            if (brand.desktop || brand.mobile) saveBrandPack(d, b.id, brand.desktop ?? null, brand.mobile ?? null, voiceSamples([...live, ...pages.filter((p) => /about|story|team|who-we-are/i.test(p.finalUrl))]));
+            const pack = d.prepare('SELECT logo_path, logo_source_url, colors, fonts, hero_images FROM brand_packs WHERE business_id = ?').get(b.id) as { logo_path: string | null; logo_source_url: string | null; colors: string; fonts: string; hero_images: string } | undefined;
+
+            const found = new Map<string, FoundImage>();
+            const add = (f: FoundImage) => void (found.has(f.url) || found.set(f.url, f));
+            const home = pages.filter((p) => new URL(p.finalUrl).pathname === '/');
+            for (const p of [...home, ...pages.filter((x) => !home.includes(x))]) for (const f of imageUrlsIn(savedHtml(p), p.finalUrl)) add(f);
+            for (const i of JSON.parse(pack?.hero_images ?? '[]') as BrandImage[]) if (/^https?:/.test(i.url)) add({ url: fullSize(i.url), asFound: i.url, alt: i.alt, pageUrl: b.website! });
+            const photos = await collectPhotos(polite, [...found.values()], join(waveDir(b.slug), 'photos'), { max: o.max ?? 80 });
+            const heroes = heroCandidates(photos, 3);
+            const sheet = await contactSheet(heroCandidates(photos, 6), join(waveDir(b.slug), 'hero-check.jpg'));
+
+            const videos = new Map<string, FoundVideo>();
+            for (const p of pages) for (const v of videosIn(savedHtml(p), p.finalUrl)) if (!videos.has(v.url)) videos.set(v.url, v);
+            const details = [];
+            for (const v of [...videos.values()].slice(0, 8)) details.push(await videoDetails(polite, v));
+
+            const at = utcIso();
+            setFacts(d, b.id, 'photo', photos.map((p) => ({ label: p.url, value: { width: p.width, height: p.height, format: p.format, bytes: p.bytes, kind: p.kind, sharpness: p.sharpness, alt: p.alt, file: p.file }, sourceUrl: p.pageUrl, flag: heroes.includes(p) ? `hero ${heroes.indexOf(p) + 1}` : null })), at);
+            setFacts(d, b.id, 'video', details.map((v) => ({ label: v.url, value: { kind: v.kind, how: v.how, title: v.title, seconds: v.seconds, quality: v.quality, note: v.note }, sourceUrl: v.pageUrl })), at);
+            setFacts(d, b.id, 'logo', pack?.logo_path || pack?.logo_source_url ? [{ value: { file: pack.logo_path, from: pack.logo_source_url }, sourceUrl: b.website }] : [], at);
+            setFacts(d, b.id, 'colour', (JSON.parse(pack?.colors ?? '[]') as BrandColour[]).map((c) => ({ label: c.role, value: { hex: c.hex, share: c.share }, sourceUrl: b.website })), at);
+            const fonts = (JSON.parse(pack?.fonts ?? '{}') as { desktop?: BrandFonts | null; mobile?: BrandFonts | null }).desktop ?? (JSON.parse(pack?.fonts ?? '{}') as { mobile?: BrandFonts | null }).mobile;
+            setFacts(d, b.id, 'font', fonts ? [{ value: { headings: fonts.headings, body: fonts.body, buttons: fonts.buttons, webFonts: fonts.webFonts }, sourceUrl: b.website }] : [], at);
+            writeFileSync(join(waveDir(b.slug), 'assets.json'), JSON.stringify({ at, photos, heroes: heroes.map((h) => h.url), videos: details, sheet }, null, 2));
+            const big = photos.filter((p) => p.kind === 'photo' && p.width >= 1800).length;
+            console.log(`${b.slug}: ${photos.length} pictures measured, ${big} photos at least 1800 px wide, ${heroes.length} hero picks${heroes.length ? ` (${heroes.map((h) => `${h.width}x${h.height}`).join(', ')})` : ''}; ${details.length} videos${details.length ? ` (${details.map((v) => `${v.kind}${v.seconds ? ` ${v.seconds}s` : ''}${v.quality ? ` ${v.quality}` : ''}`).join(', ')})` : ''}; logo ${pack?.logo_path ? 'kept' : 'not found'}`);
+          } catch (e) {
+            console.log(`${b.slug}: failed, ${(e as Error).message.slice(0, 200)}`);
+          }
+        }),
+      ),
+    );
+  } finally {
+    await renderer.stop();
+  }
+}
+
 export function registerWave(program: Command): void {
   const wave = program.command('wave').description('Prepare a hand-picked list of businesses: facts with their sources, findings and the pack');
 
@@ -194,4 +350,28 @@ export function registerWave(program: Command): void {
     .option('--pass <n>', '1 asks each question once; 2, at least 60 minutes later, asks the remaining runs', (v) => Number(v))
     .option('--approved-above-ask', 'UD has approved spending between the ask line and the total')
     .action((o: { name: string; batch?: string; only?: string; estimate?: boolean; pass?: number; approvedAboveAsk?: boolean }) => waveAi(db(), o));
+
+  wave
+    .command('crawlmouse')
+    .description('Open the example pages behind each Crawlmouse sentence again and store what still holds as findings')
+    .requiredOption('--name <name>', 'wave name')
+    .option('--batch <name>', 'batch the findings belong to (the newest one by default)')
+    .option('--only <slugs>', 'comma separated slugs')
+    .action((o: { name: string; batch?: string; only?: string }) => waveCrawlmouse(db(), o));
+
+  wave
+    .command('facts')
+    .description("Store each business's research file, after finding every quote in it on the saved copy of its page")
+    .requiredOption('--name <name>', 'wave name')
+    .option('--only <slugs>', 'comma separated slugs')
+    .option('--check', 'check the files and store nothing')
+    .action((o: { name: string; only?: string; check?: boolean }) => waveFacts(db(), o));
+
+  wave
+    .command('assets')
+    .description('Measure every photo, pick the best three for the top of a page, and look up videos, logo, colours and fonts')
+    .requiredOption('--name <name>', 'wave name')
+    .option('--only <slugs>', 'comma separated slugs')
+    .option('--max <n>', 'pictures to fetch per business', (v) => Number(v))
+    .action((o: { name: string; only?: string; max?: number }) => waveAssets(db(), o));
 }

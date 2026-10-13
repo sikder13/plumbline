@@ -263,6 +263,30 @@ describe('findings built from AI answers, recorded without a site visit', () => 
   });
 });
 
+describe('findings from another tool', () => {
+  const other = () => db.prepare("SELECT status FROM findings WHERE source = 'crawlmouse'").get() as { status: string } | undefined;
+  beforeEach(() => {
+    db.prepare(
+      `INSERT INTO findings (business_id, batch, check_id, pack, tier, severity, status, reproduced, fingerprint, title, visibility_weight, score, first_seen_at, source)
+       VALUES (1, 'b', 'CM_missing_page', 'crawlmouse', 'measured', 5, 'reproduced', 1, 'a-link-is-missing', 'A link leads to a missing page.', 0.6, 3, '2026-10-12', 'crawlmouse')`,
+    ).run();
+  });
+
+  it('are left alone by a new run A, which clears only Plumbline findings not yet ruled on', async () => {
+    const a = await troubled(1, '2026-10-10T20:00:00.000Z');
+    await recordRunA(db, library, a, 'b', evaluateSite(a, 'tourism', NOW).findings, evidenceRoot);
+    await recordRunA(db, library, a, 'b', evaluateSite(a, 'tourism', NOW).findings, evidenceRoot);
+    expect(other()).toEqual({ status: 'reproduced' });
+  });
+
+  it('are not marked resolved by a re-check, which cannot measure them', async () => {
+    const site = await troubled(3, '2026-10-12T20:00:00.000Z');
+    const r = await recordRecheck(db, site, 'b', evaluateSite(site, 'tourism', NOW).findings, evidenceRoot);
+    expect(r.resolved).toBe(0);
+    expect(other()).toEqual({ status: 'reproduced' });
+  });
+});
+
 describe('a check added after a batch was audited', () => {
   it('is applied to the stored runs: candidate from run A alone, reproduced when run B shows it too', async () => {
     const a = await troubled(1, '2026-10-10T20:00:00.000Z');
