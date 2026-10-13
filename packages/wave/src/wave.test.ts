@@ -344,6 +344,18 @@ describe('what a page shows when it is opened again', () => {
     expect(ownPages(pages, null)).toEqual([]);
   });
 
+  it('does not take a file for a page: a sitemap, a feed or a document is not one of the pages we read', () => {
+    const pages = [
+      page('https://fixture.co.nz/about', ['x']),
+      page('https://fixture.co.nz/sitemap.xml', ['x']),
+      page('https://fixture.co.nz/files/menu.pdf', ['x']),
+      page('https://fixture.co.nz/feed', ['x'], { headers: { 'content-type': 'application/rss+xml; charset=UTF-8' } }),
+      page('https://fixture.co.nz/tours.html', ['x'], { headers: { 'content-type': 'text/html; charset=utf-8' } }),
+      page('https://fixture.co.nz/tours?page=2', ['x']),
+    ];
+    expect(ownPages(pages, 'https://fixture.co.nz/').map((p) => p.finalUrl)).toEqual(['https://fixture.co.nz/about', 'https://fixture.co.nz/tours.html', 'https://fixture.co.nz/tours?page=2']);
+  });
+
   it('finds which pages link to an address, with the words on the link', () => {
     const home = page('https://fixture.co.nz/', ['Home'], { links: [link('https://fixture.co.nz/book-online', 'Book Online', { inNav: true }), link('https://fixture.co.nz/tours', 'Tours')] });
     const tours = page('https://fixture.co.nz/tours', ['Tours'], { links: [link('http://www.fixture.co.nz/book-online/', 'Reserve your seat'), link('https://fixture.co.nz/book-online', 'hidden', { visible: false })] });

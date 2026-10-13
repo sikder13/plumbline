@@ -57,11 +57,25 @@ export function savedHtml(page: PageCapture): string {
   return file && existsSync(file) ? readFileSync(file, 'utf8') : '';
 }
 
+const NOT_A_PAGE = /\.(xml|rss|atom|txt|json|csv|pdf|docx?|xlsx?|zip|ics|jpe?g|png|gif|webp|avif|svg|ico|css|js|mp4|mov|webm|mp3)$/i;
+
+/** A file the site serves beside its pages: a sitemap, a feed, a document, a picture. It is told by what it was served as, or failing that by its name. */
+function isFile(p: PageCapture): boolean {
+  const served = Object.entries(p.headers ?? {}).find(([name]) => name.toLowerCase() === 'content-type')?.[1];
+  if (served) return !/\b(text\/html|application\/xhtml\+xml)\b/i.test(served);
+  try {
+    return NOT_A_PAGE.test(new URL(p.finalUrl).pathname);
+  } catch {
+    return false;
+  }
+}
+
 /**
  * The pages that are the business's own: on its site or a part of it. Pages kept from other sites,
- * such as a register or a tourism listing, say things about the business but are not its pages.
+ * such as a register or a tourism listing, say things about the business but are not its pages,
+ * and neither is a file its own site serves.
  */
 export function ownPages(pages: PageCapture[], website: string | null): PageCapture[] {
   const own = domainOf(website);
-  return own ? pages.filter((p) => domainOf(p.finalUrl) === own) : [];
+  return own ? pages.filter((p) => domainOf(p.finalUrl) === own && !isFile(p)) : [];
 }
