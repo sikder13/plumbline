@@ -16,7 +16,7 @@ interface Content {
   call: { label: string; tel: string; display: string };
   email: string;
   hero: { place: string; lines: string[]; line: string };
-  intro: { text: string; ratingLabel: string; ratingUnit: string };
+  intro: { text: string; ratingLabel: string; ratingUnit: string; ratingSource: string };
   coast: { heading: string; lead: string } & Pick<Parameters<typeof CoastMap>[0], 'viewBox' | 'paths' | 'spots' | 'credit'>;
   trips: { heading: string; lead: string; items: { image: string; name: string; duration: string; text: string; prices: { who: string; price: string }[]; note?: string }[] };
   us: { heading: string; statement: string; caption: string; people: { name: string; text: string }[] };
@@ -92,7 +92,7 @@ function Demo({ data }: { data: PageData }) {
             <p className={s.rating} data-reveal>
               <b data-count>{data.rating.value}</b>
               <span>
-                {c.intro.ratingLabel} <span data-count>{String(data.rating.count)}</span> {c.intro.ratingUnit}
+                {c.intro.ratingLabel} <span data-count>{String(data.rating.count)}</span> {c.intro.ratingUnit} <small>{c.intro.ratingSource}</small>
               </span>
             </p>
           )}

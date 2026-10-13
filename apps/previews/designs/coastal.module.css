@@ -191,6 +191,12 @@
   font-weight: 700;
 }
 
+.rating small {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+}
+
 /* The coast, held in view while its spots light up. */
 .coast {
   background: var(--sea);

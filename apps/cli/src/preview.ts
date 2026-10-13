@@ -193,13 +193,13 @@ function vercel(args: string[]): void {
   execFileSync('vercel', args, { cwd: previewPaths.out, stdio: 'inherit' });
 }
 
-/** Deploys the built folder from this machine. Nothing is built on the host. */
-export function previewDeploy(): void {
+/** Deploys the built folder from this machine. Nothing is built on the host. With `preview`, it goes to a preview address and the live pages are left alone. */
+export function previewDeploy(opts: { preview?: boolean } = {}): void {
   if (!existsSync(join(previewPaths.site, 'robots.txt'))) throw new Error('nothing is built yet. Run plumb preview build.');
   if (existsSync(draftMarker())) throw new Error('the last build was a draft without CAL_LINK. Set CAL_LINK in .env and build again.');
   if (!existsSync(join(previewPaths.out, '.vercel', 'project.json'))) throw new Error(`previews/out is not linked to a Vercel project. Run "vercel link --project ${VERCEL_PROJECT}" in previews/out once.`);
-  vercel(['build', '--prod', '--yes']);
-  vercel(['deploy', '--prebuilt', '--prod', '--yes']);
+  vercel(['build', ...(opts.preview ? [] : ['--prod']), '--yes']);
+  vercel(['deploy', '--prebuilt', ...(opts.preview ? [] : ['--prod']), '--yes']);
 }
 
 /** Takes one page down: its generated files go, the address is forgotten, and the site is rebuilt and deployed without it. */
@@ -298,7 +298,11 @@ export function registerPreview(program: Command): void {
     .option('--no-lighthouse', 'skip the speed and accessibility scores')
     .action((o: { only?: string; live?: boolean; base?: string; lighthouse?: boolean }) => previewCheck({ only: o.only, live: o.live, base: o.base, noLighthouse: o.lighthouse === false }));
 
-  preview.command('deploy').description('Deploy previews/out/ with vercel build and vercel deploy --prebuilt --prod').action(() => previewDeploy());
+  preview
+    .command('deploy')
+    .description('Deploy previews/out/ with vercel build and vercel deploy --prebuilt --prod')
+    .option('--preview', 'deploy to a preview address and leave the live pages alone')
+    .action((o: { preview?: boolean }) => previewDeploy(o));
 
   preview
     .command('visits')
