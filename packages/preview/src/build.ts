@@ -2,15 +2,17 @@ import { randomInt } from 'node:crypto';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import sharp, { type Sharp } from 'sharp';
-import { config, nzTime, utcIso, type Business, type Db } from '@plumbline/core';
+import { config, nzTime, paths, utcIso, type Business, type Db } from '@plumbline/core';
 import { aiSummary } from '@plumbline/ai';
 import { CHECK_IDS } from '@plumbline/checks';
 import { latestBatch } from '@plumbline/export';
 import { loadLibrary } from '@plumbline/impact';
 import { businessView, type EvidenceRow, type FindingView } from '@plumbline/report';
+import { ownerOrder, speedRuns, speedSeen, statedSentence } from '@plumbline/wave';
 import { correctedQuestions, correctedSummary } from './ai.ts';
 import { loadCrawlmouse, loadVerified } from './crawlmouse.ts';
 import { contentDir, previewPaths } from './paths.ts';
+import { loadRecipe, recipeContent, recipeFile } from './recipe.ts';
 import type { ContentFile, FindingCard, PageData, Picture, SecondCheck, Strength } from './types.ts';
 
 /** The pages are served under this path on the main site. */
@@ -36,7 +38,18 @@ export function forgetToken(db: Db, slug: string): void {
   db.prepare('DELETE FROM kv WHERE key = ?').run(tokenKey(slug));
 }
 
+/** Whether a page is laid out from a recipe by the section library, rather than by a design of its own. */
+export function hasRecipe(slug: string): boolean {
+  return existsSync(recipeFile(slug));
+}
+
+/** Where a page's photographs and film are read from: the folder its wave was researched into, or its own content folder. */
+export function mediaDir(slug: string): string {
+  return hasRecipe(slug) ? join(paths.data, 'wave', slug) : contentDir(slug);
+}
+
 export function loadContent(slug: string): ContentFile {
+  if (hasRecipe(slug)) return recipeContent(loadRecipe(slug));
   const file = join(contentDir(slug), 'content.json');
   if (!existsSync(file)) throw new Error(`${file} does not exist`);
   return JSON.parse(readFileSync(file, 'utf8')) as ContentFile;
@@ -179,8 +192,14 @@ export async function buildPage(db: Db, slug: string, opts: BuildOptions): Promi
 
   for (const f of view.findings.filter((x) => x.status === 'resolved')) dropped.push({ check: f.checkId, title: f.title, reason: 'did not reproduce when re-verified' });
 
+  // A page laid out from a recipe states each finding as it is put to the owner, in the owner's order.
+  const fromRecipe = hasRecipe(slug);
+  const runs = fromRecipe ? speedRuns(db, b.id, batch) : [];
+  const said = (f: FindingView) => (fromRecipe ? statedSentence(f, runs) : f.title);
+
   const cards: FindingCard[] = [];
-  const approved: FindingView[] = view.findings.filter((f) => f.status === 'approved');
+  const held: FindingView[] = view.findings.filter((f) => f.status === 'approved');
+  const approved = fromRecipe ? ownerOrder(held, runs) : held;
   for (const f of approved) {
     if (f.checkId === AI_CHECK && corrected) {
       // The stored finding came from questions about the wrong kind of business. Only the corrected questions count.
@@ -201,10 +220,11 @@ export async function buildPage(db: Db, slug: string, opts: BuildOptions): Promi
     if (hours > config.fresh.maxAgeHours) warnings.push(`${f.checkId}: last verified ${hours.toFixed(1)} hours ago. Run plumb preview recheck before sending.`);
     const rows = f.evidence.slice(0, TWO_SHOTS.has(f.checkId) ? 2 : 1);
     const shots: FindingCard['shots'] = [];
-    for (const [i, e] of rows.entries()) shots.push({ image: await evidenceImage(e, join(assets, 'evidence'), `${BASE_PATH}/${path}/evidence`, `${f.id}-${i + 1}`), seen: plainSeen(e.excerpt) });
-    cards.push({ check: f.checkId, title: plainDates(f.title), sentence: plainImpact(f.impact.impact), fix: f.impact.fix, measuredNz: nzReadable(f.evidence[0]?.captured_at_utc ?? f.lastVerifiedAt), pageUrl: f.pageUrl, shots, score: f.score });
+    const seen = (e: EvidenceRow) => (fromRecipe && f.checkId === 'C20_slow_mobile' ? (speedSeen(runs) ?? plainSeen(e.excerpt)) : plainSeen(e.excerpt));
+    for (const [i, e] of rows.entries()) shots.push({ image: await evidenceImage(e, join(assets, 'evidence'), `${BASE_PATH}/${path}/evidence`, `${f.id}-${i + 1}`), seen: seen(e) });
+    cards.push({ check: f.checkId, title: plainDates(said(f)), sentence: plainImpact(f.impact.impact), fix: f.impact.fix, measuredNz: nzReadable(f.evidence[0]?.captured_at_utc ?? f.lastVerifiedAt), pageUrl: f.pageUrl, shots, score: f.score });
   }
-  cards.sort((x, y) => y.score - x.score);
+  if (!fromRecipe) cards.sort((x, y) => y.score - x.score);
 
   const strengths: Strength[] = [];
   if (b.google_rating && b.google_review_count) strengths.push({ text: `Rated ${b.google_rating.toFixed(1)} from ${b.google_review_count} reviews.`, source: 'Google, October 2026' });
@@ -218,7 +238,17 @@ export async function buildPage(db: Db, slug: string, opts: BuildOptions): Promi
 
   let secondCheck: SecondCheck | null = null;
   const cm = loadCrawlmouse(slug);
-  if (cm) {
+  if (cm && fromRecipe) {
+    // What Crawlmouse wrote is kept only where it was approved as a finding, and is said in terms of what we read ourselves.
+    const rows = db.prepare("SELECT id, check_id, severity, score, title, detail FROM findings WHERE business_id = ? AND batch = ? AND source = 'crawlmouse' AND status = 'approved'").all(b.id, batch) as { id: number; check_id: string; severity: number; score: number; title: string; detail: string }[];
+    const kept = ownerOrder(rows.map((r) => ({ id: r.id, checkId: r.check_id, severity: r.severity, score: r.score, title: r.title, detail: JSON.parse(r.detail || '{}') as Record<string, unknown> })), runs);
+    secondCheck = {
+      score: cm.site_score !== null && cm.grade ? `${Math.round(cm.site_score)} out of 100 (grade ${cm.grade})` : null,
+      aiReadiness: cm.ai_readiness ? `${cm.ai_readiness.score} out of 100` : null,
+      crawlerAccess: cm.ai_crawler_access ? cm.ai_crawler_access.replace(/\s*This is a strength, not a finding\.?/i, '').replace(/\s*\(([^)]*)\)/, ': $1').trim() : null,
+      findings: kept.slice(0, 3).map((f) => `${statedSentence(f, runs)}.`),
+    };
+  } else if (cm) {
     const verified = loadVerified(slug);
     const keep = (verified?.findings ?? []).filter((x) => x.verified).map((x) => x.text);
     for (const x of cm.findings_plain) if (!keep.includes(x.text)) dropped.push({ check: 'Crawlmouse', title: x.text, reason: verified?.findings.find((v) => v.text === x.text)?.reason ?? 'not re-verified yet' });
@@ -231,11 +261,11 @@ export async function buildPage(db: Db, slug: string, opts: BuildOptions): Promi
   }
 
   const images: Record<string, Picture> = {};
-  for (const [key, spec] of Object.entries(content.images)) images[key] = await buildPicture(join(contentDir(slug), spec.file), join(assets, 'img'), `${BASE_PATH}/${path}/img`, key, spec);
+  for (const [key, spec] of Object.entries(content.images)) images[key] = await buildPicture(join(mediaDir(slug), spec.file), join(assets, 'img'), `${BASE_PATH}/${path}/img`, key, spec);
 
   let video: string | null = null;
   if (content.video) {
-    const from = join(contentDir(slug), content.video.file);
+    const from = join(mediaDir(slug), content.video.file);
     if (!existsSync(from)) throw new Error(`video ${from} does not exist`);
     if (statSync(from).size > 2_000_000) throw new Error(`${from} is over 2 MB`);
     mkdirSync(join(assets, 'media'), { recursive: true });

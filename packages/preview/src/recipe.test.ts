@@ -1,0 +1,96 @@
+import { describe, expect, it } from 'vitest';
+import { batchOf, checkRecipe, layoutOf, lookOf, recipeContent, varietyIssues, type Placed } from './recipe.ts';
+import type { Recipe, Section } from './types.ts';
+
+const hero = (variant: 'photo' | 'split' | 'type' | 'frame' = 'photo'): Section => ({ kind: 'hero', variant, place: 'Seal Cove, Example Coast', lines: ['Seals at', 'their own pace'] });
+function recipe(patch: Partial<Recipe> = {}): Recipe {
+  return {
+    brief: { mood: 'wild, close, gentle', headline: 'Seals at their own pace', hero: 'The bay at dusk, full bleed', story: 'An evening at the cove', patterns: ['pinned story', 'tall swipe cards', 'quote on a band'] },
+    palette: { family: 'ocean', paper: '#f6f4ef', ink: '#10222b', soft: '#e4ecec', deep: '#0c2a36', onDeep: '#ffffff', accent: '#e2733a', onAccent: '#1a0d05' },
+    type: 'playfair-nunito',
+    action: { label: 'Book', href: 'https://fareharbor.com/embeds/book/alpha/', variant: 'pill' },
+    call: { tel: 'tel:+6435550142', display: '03 555 0142' },
+    email: 'tours@alpha.co.nz',
+    nav: [{ label: 'Tours', href: '#tours' }],
+    images: { hero: { file: 'photos/003.jpg', alt: 'The bay at dusk' }, a: { file: 'photos/004.jpg', alt: 'A penguin' } },
+    sections: [
+      hero(),
+      { kind: 'story', variant: 'wipe', subject: 'an evening with the colony', heading: 'An evening', steps: [{ image: 'a', label: 'Dusk', text: 'We drive over the hill.' }, { image: 'a', label: 'Dark', text: 'The birds come ashore.' }, { label: 'Home', text: 'Back by ten.' }] },
+      { kind: 'rows', variant: 'tall', id: 'tours', heading: 'Tours', cue: 'Drag', items: [{ image: 'a', name: 'Evening tour', price: '$120', text: 'Two hours.' }] },
+    ],
+    ...patch,
+  };
+}
+
+describe('a page recipe', () => {
+  it('passes when it is whole', () => {
+    expect(checkRecipe(recipe())).toEqual([]);
+  });
+
+  it('is refused when its brief, its headline, its photos or its links do not hold together', () => {
+    const problems = (r: unknown) => checkRecipe(r).join(' | ');
+    expect(problems(recipe({ brief: { ...recipe().brief, mood: 'wild, close' } }))).toContain('the mood is three words');
+    expect(problems(recipe({ brief: { ...recipe().brief, patterns: ['one', 'two'] } }))).toContain('the brief names three layout patterns');
+    expect(problems(recipe({ sections: [{ ...hero(), lines: ['Penguins at their', 'own pace every evening'] } as Section] }))).toContain('the headline is 7 words; five at most');
+    expect(problems(recipe({ sections: [hero(), hero()] }))).toContain('one hero, and it comes first');
+    expect(problems(recipe({ sections: [recipe().sections[1]!, hero()] }))).toContain('one hero, and it comes first');
+    expect(problems(recipe({ images: { a: { file: 'photos/004.jpg', alt: 'A penguin' } } }))).toContain('no image called "hero"');
+    expect(problems(recipe({ sections: [hero(), { kind: 'wipes', variant: 'pair', images: ['a', 'nowhere'] }] }))).toContain('wipes names an image "nowhere" that the recipe does not list');
+    expect(problems(recipe({ nav: [{ label: 'Wines', href: '#wines' }] }))).toContain('the menu links to #wines, which no section carries');
+    expect(problems(recipe({ action: { label: 'Book', href: 'fareharbor.com', variant: 'pill' } }))).toContain('the action');
+    expect(problems(recipe({ call: { tel: 'tel:035550142', display: '03 555 0142' } }))).toContain('the phone number');
+    expect(problems({ ...recipe(), type: 'comic-sans' })).toContain('type');
+    expect(problems(recipe({ sections: [hero(), { kind: 'story', variant: 'wipe', subject: 'x', heading: 'x', steps: [{ label: 'a', text: 'b' }] }] }))).toContain('a pinned story has three to five steps');
+  });
+
+  it('is refused when words would be hard to read on their ground', () => {
+    const pale = { ...recipe().palette, accent: '#f2d48b', onAccent: '#ffffff' };
+    expect(checkRecipe(recipe({ palette: pale })).join(' | ')).toContain('onAccent on accent has a contrast of 1.4; 4.5 is needed');
+    expect(checkRecipe(recipe({ palette: { ...recipe().palette, ink: '#8a9aa0' } })).join(' | ')).toContain('ink on paper');
+  });
+
+  it('becomes a content file for the recipe design, with its sections as the page', () => {
+    const c = recipeContent(recipe({ name: 'Alpha Penguins', video: { file: 'film/hero.mp4' } }));
+    expect(c.design).toBe('recipe');
+    expect(c.name).toBe('Alpha Penguins');
+    expect(c.video).toEqual({ file: 'film/hero.mp4' });
+    expect(Object.keys(c.images)).toEqual(['hero', 'a']);
+    expect((c.demo as Recipe).sections).toHaveLength(3);
+  });
+
+  it('is summed up by its look and by its layout', () => {
+    expect(lookOf(recipe())).toEqual({ hero: 'photo', type: 'playfair-nunito', family: 'ocean' });
+    expect(layoutOf(recipe())).toBe('hero:photo > story:wipe > rows:tall');
+  });
+});
+
+describe('variety across a wave', () => {
+  const placed = (slug: string, patch: Partial<Recipe> = {}, groups: string[] = []): Placed => ({ slug, groups, recipe: recipe(patch) });
+  const other = { type: 'bebas-karla' as const, palette: { ...recipe().palette, family: 'forest' as const } };
+
+  it('refuses two pages with the same hero, type pair and palette family', () => {
+    expect(varietyIssues([placed('alpha'), placed('bravo')], [])).toEqual(['alpha and bravo share a hero (photo), a type pair (playfair-nunito) and a palette family (ocean)']);
+    expect(varietyIssues([placed('alpha'), placed('bravo', { type: 'bebas-karla' })], [])).toEqual([]);
+  });
+
+  it('asks more of two businesses of one kind or one place: they may share one of the three, never two', () => {
+    const issue = 'alpha and bravo are both wineries and must differ at a glance: they share';
+    expect(varietyIssues([placed('alpha', {}, ['wineries']), placed('bravo', { type: 'bebas-karla' }, ['wineries'])], [])).toEqual([`${issue} a hero (photo) and a palette family (ocean)`]);
+    expect(varietyIssues([placed('alpha', {}, ['wineries']), placed('bravo', other, ['wineries'])], [])).toEqual([]);
+    // Businesses in different groups are held only to the first rule.
+    expect(varietyIssues([placed('alpha', {}, ['wineries']), placed('bravo', { type: 'bebas-karla' }, ['Kaikōura'])], [])).toEqual([]);
+  });
+
+  it('refuses a page laid out like a wave 1 page', () => {
+    expect(varietyIssues([placed('alpha')], [{ name: 'Waterline', layout: 'hero:photo > story:wipe > rows:tall' }])).toEqual(['alpha is laid out like the wave 1 page for Waterline (hero:photo > story:wipe > rows:tall)']);
+    expect(varietyIssues([placed('alpha')], [{ name: 'Waterline', layout: 'hero:photo > story:rail > rows:tall' }])).toEqual([]);
+  });
+});
+
+describe('build batches', () => {
+  it('finds the batch a business is built in from the written order', () => {
+    const order = { A: ['alpha', 'bravo'], B: ['charlie'], C: ['delta'] };
+    expect(batchOf(order, 'charlie')).toBe('B');
+    expect(batchOf(order, 'nobody')).toBeNull();
+  });
+});

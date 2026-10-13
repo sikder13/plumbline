@@ -6,8 +6,9 @@ import { db, env, nzTime, type Business, type Db } from '@plumbline/core';
 import { Polite } from '@plumbline/fetch';
 import { limits, spent } from '@plumbline/budget';
 import { latestBatch } from '@plumbline/export';
-import { BASE_PATH, LIMITS, askCorrected, buildPage, checkPage, contentDir, correctedQuestions, correctedSummary, forgetToken, planCorrected, previewPaths, readVisits, removeGenerated, serveSite, summarise, tokenFor, verifyCrawlmouse, type Dropped, type GateReport, type PageData } from '@plumbline/preview';
+import { BASE_PATH, LIMITS, askCorrected, buildPage, recipeSlugs, checkPage, contentDir, correctedQuestions, correctedSummary, forgetToken, planCorrected, previewPaths, readVisits, removeGenerated, serveSite, summarise, tokenFor, verifyCrawlmouse, type Dropped, type GateReport, type PageData } from '@plumbline/preview';
 import { aiSummary } from '@plumbline/ai';
+import { waveMembers } from '@plumbline/wave';
 import { auditBatch } from './audit.ts';
 
 function business(d: Db, slug: string): Business {
@@ -16,11 +17,12 @@ function business(d: Db, slug: string): Business {
   return b;
 }
 
-/** The businesses that have a preview: every folder under previews/content/ with a content file. */
+/** The businesses that have a preview: every folder under previews/content/ with a content file, and every recipe. */
 export function previewSlugs(only?: string): string[] {
   if (only) return only.split(',').map((s) => s.trim()).filter(Boolean);
-  if (!existsSync(previewPaths.content)) return [];
-  return readdirSync(previewPaths.content, { withFileTypes: true }).filter((e) => e.isDirectory() && existsSync(join(contentDir(e.name), 'content.json'))).map((e) => e.name).sort();
+  // A folder under previews/content/ may be a link to another working copy's folder, so each is followed.
+  const designed = existsSync(previewPaths.content) ? readdirSync(previewPaths.content).filter((name) => existsSync(join(contentDir(name), 'content.json'))) : [];
+  return [...new Set([...designed, ...recipeSlugs()])].sort();
 }
 
 interface FindingState {
@@ -117,10 +119,14 @@ function draftMarker(): string {
   return join(previewPaths.out, 'DRAFT');
 }
 
-/** Builds the data, the pages and the folder that is deployed. Everything lands under previews/out/. */
-export async function previewBuild(d: Db, opts: { only?: string; draft?: boolean }): Promise<void> {
+/**
+ * Gathers what each page shows and prepares its photographs, without writing the pages out. This
+ * is the part of a build that belongs to one business, so several can run side by side, and a
+ * page under way can be looked at in `next dev`.
+ */
+export async function previewData(d: Db, opts: { only?: string; draft?: boolean }): Promise<string | undefined> {
   const slugs = previewSlugs(opts.only);
-  if (!slugs.length) throw new Error('no preview businesses found under previews/content/');
+  if (!slugs.length) throw new Error('no preview businesses found under previews/content/ or previews/recipes/');
   const call = env().CAL_LINK;
   if (!call && !opts.draft) throw new Error('CAL_LINK is not set in .env. It holds the link behind "Book a 15 minute call". Use --draft to build without it; a draft cannot be deployed.');
   const dropped: (Dropped & { slug: string })[] = [];
@@ -134,7 +140,16 @@ export async function previewBuild(d: Db, opts: { only?: string; draft?: boolean
     for (const w of r.warnings) console.log(`  warning ${w}`);
   }
   mkdirSync(previewPaths.out, { recursive: true });
-  writeFileSync(join(previewPaths.out, 'dropped.json'), JSON.stringify(dropped, null, 2));
+  // What was left off the pages is kept for every business, not only the ones made again this time.
+  const droppedFile = join(previewPaths.out, 'dropped.json');
+  const before = existsSync(droppedFile) ? (JSON.parse(readFileSync(droppedFile, 'utf8')) as (Dropped & { slug: string })[]) : [];
+  writeFileSync(droppedFile, JSON.stringify([...before.filter((x) => !slugs.includes(x.slug)), ...dropped], null, 2));
+  return call;
+}
+
+/** Builds the data, the pages and the folder that is deployed. Everything lands under previews/out/. */
+export async function previewBuild(d: Db, opts: { only?: string; draft?: boolean }): Promise<void> {
+  const call = await previewData(d, opts);
 
   const app = previewPaths.app;
   execFileSync(process.execPath, [join(app, 'scripts', 'fonts.mjs')], { cwd: app, stdio: 'inherit' });
@@ -283,11 +298,24 @@ export function registerPreview(program: Command): void {
     .action((o: { only?: string }) => previewCrawlmouse(o));
 
   preview
-    .command('build')
-    .description('Build the pages into previews/out/ from the database and previews/content/')
+    .command('build [slug]')
+    .description('Build the pages into previews/out/ from the database, previews/content/ and previews/recipes/. With a slug or a wave, only those pages are made again; the site is always written out whole.')
     .option('--only <slugs>', 'comma separated slugs')
+    .option('--wave <name>', 'the businesses of a wave that have a recipe')
     .option('--draft', 'build without CAL_LINK, for looking at the pages locally')
-    .action((o: { only?: string; draft?: boolean }) => previewBuild(db(), o));
+    .action((slug: string | undefined, o: { only?: string; wave?: string; draft?: boolean }) => {
+      const d = db();
+      const wave = o.wave ? waveMembers(d, o.wave).map((b) => b.slug).filter((s) => recipeSlugs().includes(s)) : null;
+      if (wave && !wave.length) throw new Error(`no business of ${o.wave} has a recipe under previews/recipes/`);
+      return previewBuild(d, { only: slug ?? wave?.join(',') ?? o.only, draft: o.draft });
+    });
+
+  preview
+    .command('data [slug]')
+    .description('Gather what a page shows and prepare its photographs, without writing the pages out. Safe to run for several businesses at once.')
+    .option('--only <slugs>', 'comma separated slugs')
+    .option('--draft', 'work without CAL_LINK')
+    .action(async (slug: string | undefined, o: { only?: string; draft?: boolean }) => void (await previewData(db(), { only: slug ?? o.only, draft: o.draft })));
 
   preview
     .command('check')

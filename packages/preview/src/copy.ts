@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as cheerio from 'cheerio';
+import { paths } from '@plumbline/core';
 import { BANNED_WORDS } from '@plumbline/impact';
 import { contentDir } from './paths.ts';
 
@@ -57,10 +58,20 @@ export function visibleText(html: string): string {
   return $.root().text().replace(/[ \t\u00a0]+/g, ' ').replace(/\s*\n\s*/g, '\n').trim();
 }
 
+/** The pages kept for a business when its wave was researched: each one's source, where it was read. */
+function wavePages(slug: string): string[] {
+  const dir = join(paths.data, 'wave', slug, 'pages');
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir).map((name) => join(dir, name, 'page.html')).filter((f) => existsSync(f));
+}
+
 /** Everything read from the business's own site: the saved pages and the fact sheet built from them. */
 export function ownSiteText(slug: string): string {
   const dir = contentDir(slug);
   const parts: string[] = [];
+  const researched = join(paths.data, 'wave', slug, 'facts.json');
+  if (existsSync(researched)) parts.push(readFileSync(researched, 'utf8'));
+  for (const f of wavePages(slug)) parts.push(visibleText(readFileSync(f, 'utf8')));
   const facts = join(dir, 'facts.json');
   if (existsSync(facts)) parts.push(readFileSync(facts, 'utf8'));
   const html = join(dir, 'html');
@@ -71,8 +82,8 @@ export function ownSiteText(slug: string): string {
 /** The saved pages of the business's own site, as fetched. */
 export function ownSiteHtml(slug: string): string {
   const html = join(contentDir(slug), 'html');
-  if (!existsSync(html)) return '';
-  return readdirSync(html).map((f) => readFileSync(join(html, f), 'utf8')).join('\n');
+  const kept = existsSync(html) ? readdirSync(html).map((f) => join(html, f)) : [];
+  return [...kept, ...wavePages(slug)].map((f) => readFileSync(f, 'utf8')).join('\n');
 }
 
 export interface PageCopy {

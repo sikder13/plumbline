@@ -72,3 +72,162 @@ export interface ContentFile {
   strengths?: Strength[];
   demo: unknown;
 }
+
+/** A page put together from the section library: previews/recipes/<slug>.json. */
+
+export const PALETTE_FAMILIES = ['ocean', 'forest', 'vine', 'clay', 'stone', 'night', 'gold', 'alpine'] as const;
+export type PaletteFamily = (typeof PALETTE_FAMILIES)[number];
+
+/** The colours of one page, taken from the business's own site. The family is what a glance would call it. */
+export interface Palette {
+  family: PaletteFamily;
+  /** The page ground and the words on it. */
+  paper: string;
+  ink: string;
+  /** A tinted ground for a second band. */
+  soft: string;
+  /** The dark band and the words on it. */
+  deep: string;
+  onDeep: string;
+  /** The one colour that marks the action. */
+  accent: string;
+  onAccent: string;
+}
+
+export const TYPE_PAIRS = ['playfair-nunito', 'dmserif-figtree', 'newsreader-opensans', 'bebas-karla', 'montserrat-opensans', 'figtree-newsreader', 'playfairitalic-karla', 'karla-karla', 'dmserifitalic-nunito', 'montserratlight-figtree'] as const;
+export type TypePairId = (typeof TYPE_PAIRS)[number];
+
+export const HERO_VARIANTS = ['photo', 'split', 'type', 'frame'] as const;
+export type HeroVariant = (typeof HERO_VARIANTS)[number];
+
+export interface HeroSection {
+  kind: 'hero';
+  variant: HeroVariant;
+  /** Where the business is, in a few words. */
+  place: string;
+  /** The headline, a line to each entry: their own words, five at most. */
+  lines: string[];
+  sub?: string;
+  /** One small line under the action, such as an award shown on their site. */
+  note?: string;
+  /** Where the headline sits on a full photograph. */
+  align?: 'low' | 'high' | 'centre';
+  /** The shape of the photograph beside a typographic headline. */
+  panel?: 'arch' | 'strip' | 'tall' | 'round';
+  /** What moves behind the headline: their own film, a slow push in on the photograph, or nothing. */
+  ambience?: 'film' | 'drift' | 'still';
+  /** The ground the words sit on, when they do not sit on the photograph. */
+  ground?: 'paper' | 'soft' | 'deep';
+  /** Sets the headline a little larger or smaller, for a long word or a short line. */
+  scale?: number;
+}
+
+export interface StorySection {
+  kind: 'story';
+  variant: 'wipe' | 'stack' | 'rail' | 'words';
+  /** What the story is about, in a word or two: kept for the variety check and the brief. */
+  subject: string;
+  heading: string;
+  steps: { image?: string; label: string; text: string }[];
+}
+
+export interface RowItem {
+  image?: string;
+  name: string;
+  meta?: string;
+  /** Shown only when their own pages agree on it. */
+  price?: string | null;
+  text?: string;
+  href?: string;
+}
+
+export interface RowsSection {
+  kind: 'rows';
+  variant: 'tall' | 'wide' | 'plain' | 'round';
+  id?: string;
+  heading: string;
+  lead?: string;
+  /** The words on each card's link, and the hint that the row can be dragged. */
+  button?: string;
+  cue: string;
+  items: RowItem[];
+}
+
+export interface WipesSection {
+  kind: 'wipes';
+  variant: 'pair' | 'band' | 'trio';
+  images: string[];
+  heading?: string;
+  text?: string;
+}
+
+export interface NumbersSection {
+  kind: 'numbers';
+  variant: 'row' | 'band' | 'list';
+  heading?: string;
+  items: { value: string; label: string; source?: string }[];
+}
+
+export interface WordsSection {
+  kind: 'words';
+  variant: 'quote' | 'letter' | 'columns';
+  id?: string;
+  heading?: string;
+  quote?: string;
+  paragraphs: string[];
+  names?: string;
+  image?: string;
+}
+
+export interface ListSection {
+  kind: 'list';
+  variant: 'ruled' | 'questions' | 'steps';
+  id?: string;
+  heading: string;
+  lead?: string;
+  items: RowItem[];
+}
+
+export interface VisitSection {
+  kind: 'visit';
+  variant: 'card' | 'split' | 'plain';
+  id?: string;
+  heading: string;
+  address: string[];
+  hours?: { label: string; value: string }[];
+  notes?: string[];
+  image?: string;
+}
+
+export type Section = HeroSection | StorySection | RowsSection | WipesSection | NumbersSection | WordsSection | ListSection | VisitSection;
+export type SectionKind = Section['kind'];
+
+/** The five lines of art direction a page is built to. */
+export interface Brief {
+  /** Three words. */
+  mood: string;
+  /** Their own words, five at most. */
+  headline: string;
+  hero: string;
+  story: string;
+  /** The three layout patterns the page leans on. */
+  patterns: string[];
+}
+
+export interface Recipe {
+  brief: Brief;
+  /** The business name as it should read on the page, when the stored name carries extra words. */
+  name?: string;
+  palette: Palette;
+  type: TypePairId;
+  /** The one thing the page asks for, with the address their own site sends a visitor to. */
+  action: { label: string; href: string; variant: 'pill' | 'dock' | 'stack' };
+  call: { tel: string; display: string };
+  email: string;
+  nav: { label: string; href: string }[];
+  images: ContentFile['images'];
+  /** A short loop cut from the business's own film. */
+  video?: { file: string };
+  strengths?: Strength[];
+  sections: Section[];
+}

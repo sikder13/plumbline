@@ -26,7 +26,9 @@ export default async function Page({ params }: { params: Promise<{ page: string 
   if (!design) throw new Error(`${data.slug}: no design called "${data.design}"`);
 
   // The first things a phone needs: the type the page is set in and the photo at the top.
-  for (const font of design.fonts) preload(`${BASE}/fonts/${font}.woff2`, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
+  const fonts = typeof design.fonts === 'function' ? design.fonts(data) : design.fonts;
+  const heroSizes = typeof design.heroSizes === 'function' ? design.heroSizes(data) : design.heroSizes;
+  for (const font of fonts) preload(`${BASE}/fonts/${font}.woff2`, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
   const hero = pic(data, 'hero').sources[0]!;
   const phoneHero = data.images.heroPhone?.sources[0];
 
@@ -34,7 +36,7 @@ export default async function Page({ params }: { params: Promise<{ page: string 
   return (
     <>
       {phoneHero && <link rel="preload" as="image" type={phoneHero.type} imageSrcSet={phoneHero.srcset} imageSizes="100vw" media={PHONE_MEDIA} fetchPriority="high" />}
-      <link rel="preload" as="image" type={hero.type} imageSrcSet={hero.srcset} imageSizes={design.heroSizes} media={phoneHero ? `not all and ${PHONE_MEDIA}` : undefined} fetchPriority="high" />
+      <link rel="preload" as="image" type={hero.type} imageSrcSet={hero.srcset} imageSizes={heroSizes} media={phoneHero ? `not all and ${PHONE_MEDIA}` : undefined} fetchPriority="high" />
       <Shell business={data.name} foundLink={FOUND_LINK} sender={{ name: SENDER, href: SENDER_SITE }} demo={<Demo data={data} />} found={<Found data={data} />} />
       <MotionLayer />
       <Visits token={data.path} />
