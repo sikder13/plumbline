@@ -290,7 +290,7 @@ export async function waveHero(d: Db, o: { name: string; only?: string; business
       continue;
     }
     const sheet = await contactSheet(eligible, join(waveDir(b.slug), 'hero-check.jpg'));
-    console.log(`${b.slug}: ${eligible.length} photo(s) fit for the top of a page${sheet ? `, laid out in ${sheet}` : ''}`);
+    console.log(`${b.slug}: ${eligible.length} photo(s) fit for the top of a page${sheet ? `, laid out in ${sheet} (two to a row, numbered along the rows)` : ''}`);
     for (const [i, p] of eligible.entries()) console.log(`  ${i + 1}. ${p.width}x${p.height}, crispness ${p.sharpness}, on ${p.pageUrl}: ${p.url}`);
   }
 }

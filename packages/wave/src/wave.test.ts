@@ -564,7 +564,7 @@ describe('photos for the top of a page', () => {
       photo({ url: 'c', width: 1700, sharpness: 20 }),
       photo({ url: 'd', kind: 'logo', sharpness: 20 }),
       photo({ url: 'e', width: 2000, height: 3000, sharpness: 20 }),
-      photo({ url: 'f', sharpness: 1.2 }),
+      photo({ url: 'f', sharpness: 0.5 }),
       photo({ url: 'g', sharpness: 7, bytes: 1 }),
       photo({ url: 'h', sharpness: 3, bytes: 2 }),
       photo({ url: 'b-again', sharpness: 9 }),

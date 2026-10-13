@@ -54,7 +54,11 @@ export function photoKind(p: Pick<Photo, 'url' | 'alt' | 'width' | 'height' | 'f
   return 'photo';
 }
 
-export const HERO = { minWidth: 1800, minRatio: 1.2, maxRatio: 3.5, minSharpness: 2 };
+/**
+ * The crispness floor only removes pictures that are plainly soft. Calm water and open sky score
+ * low however sharp they are, so the last word is a person's, from the sheet.
+ */
+export const HERO = { minWidth: 1800, minRatio: 1.2, maxRatio: 3.5, minSharpness: 0.8 };
 
 const onHomepage = (p: Photo) => {
   try {
@@ -138,18 +142,29 @@ export async function collectPhotos(polite: Polite, found: (FoundImage & { asFou
   return out;
 }
 
-/** A sheet of pictures in rows of four, in the order given, for a person to look over and choose from by number. */
+/**
+ * A sheet for a person to choose from by number, two pictures to a row in the order given. Each
+ * picture is shown whole, and beside it a piece from its middle at full size, where softness shows.
+ */
 export async function contactSheet(photos: Photo[], file: string): Promise<string | null> {
   const withFiles = photos.filter((p) => p.file);
   if (!withFiles.length) return null;
   const w = 480;
   const h = 270;
-  const tiles = await Promise.all(withFiles.map((p) => sharp(p.file!).resize(w, h, { fit: 'cover' }).jpeg({ quality: 76 }).toBuffer()));
-  const cols = Math.min(4, tiles.length);
+  const side = h;
+  const tiles = await Promise.all(
+    withFiles.map(async (p) => {
+      const whole = await sharp(p.file!).resize(w, h, { fit: 'cover' }).jpeg({ quality: 76 }).toBuffer();
+      const piece = await sharp(p.file!).extract({ left: Math.max(0, Math.floor((p.width - side) / 2)), top: Math.max(0, Math.floor((p.height - side) / 2)), width: Math.min(side, p.width), height: Math.min(side, p.height) }).jpeg({ quality: 88 }).toBuffer();
+      return { whole, piece };
+    }),
+  );
+  const cell = w + side;
+  const cols = Math.min(2, tiles.length);
   const rows = Math.ceil(tiles.length / cols);
-  await sharp({ create: { width: cols * w, height: rows * h, channels: 3, background: '#222' } })
-    .composite(tiles.map((input, i) => ({ input, left: (i % cols) * w, top: Math.floor(i / cols) * h })))
-    .jpeg({ quality: 80 })
+  await sharp({ create: { width: cols * cell, height: rows * h, channels: 3, background: '#222' } })
+    .composite(tiles.flatMap((t, i) => [{ input: t.whole, left: (i % cols) * cell, top: Math.floor(i / cols) * h }, { input: t.piece, left: (i % cols) * cell + w, top: Math.floor(i / cols) * h }]))
+    .jpeg({ quality: 82 })
     .toFile(file);
   return file;
 }
