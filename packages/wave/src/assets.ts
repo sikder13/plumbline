@@ -7,7 +7,7 @@ import type { FoundImage, FoundVideo } from './extract.ts';
 
 /** Photos and videos a business already has, measured so the best can be chosen for a page built around them. */
 
-export type PhotoKind = 'photo' | 'logo' | 'map' | 'screenshot' | 'icon';
+export type PhotoKind = 'photo' | 'logo' | 'map' | 'screenshot' | 'icon' | 'third party';
 
 export interface Measured {
   width: number;
@@ -40,9 +40,13 @@ const LOGO = /logo|brand|badge|icon|favicon|sprite|qualmark|trip-?advisor|award|
 const MAP = /(^|[^a-z])maps?([^a-z]|$)|staticmap|location-map|route-map/i;
 const SCREENSHOT = /screen[-_ ]?(shot|grab|cap)|mock-?up/i;
 
-/** What a picture is, from its name, its caption and its make-up. Only a photo can go at the top of a page. */
+/** Widgets, review sites, booking systems, maps and video hosts serve pictures onto a page that are not the business's own. */
+const NOT_THEIR_OWN = /(^|\.)(elfsight\.com|tripadvisor\.[a-z.]+|google(usercontent)?\.com|gstatic\.com|googleapis\.com|facebook\.com|fbcdn\.net|cdninstagram\.com|instagram\.com|ytimg\.com|vimeocdn\.com|rezdy\.com|fareharbor\.com|bookme\.co\.nz|qualmark\.co\.nz|newzealand\.com|trustpilot\.com|gravatar\.com|paypal(objects)?\.com|stripe\.com)$/i;
+
+/** What a picture is, from where it is served, its name, its caption and its make-up. Only a photo can go at the top of a page. */
 export function photoKind(p: Pick<Photo, 'url' | 'alt' | 'width' | 'height' | 'format' | 'hasAlpha' | 'entropy'>): PhotoKind {
   const words = `${decodeURIComponent(p.url.split('?')[0]!.split('/').slice(-2).join(' '))} ${p.alt}`;
+  if (NOT_THEIR_OWN.test(hostOf(p.url) ?? '')) return 'third party';
   if (p.width < 400 && p.height < 400) return 'icon';
   if (SCREENSHOT.test(words)) return 'screenshot';
   if (MAP.test(words)) return 'map';
@@ -52,21 +56,35 @@ export function photoKind(p: Pick<Photo, 'url' | 'alt' | 'width' | 'height' | 'f
 
 export const HERO = { minWidth: 1800, minRatio: 1.2, maxRatio: 3.5, minSharpness: 2 };
 
+const onHomepage = (p: Photo) => {
+  try {
+    return new URL(p.pageUrl).pathname.replace(/\/$/, '') === '';
+  } catch {
+    return false;
+  }
+};
+
 /**
- * The photos fit for a full-width opening picture, best first: at least 1800 px wide, wider than
- * tall, crisp, and a photograph rather than a logo, map or screenshot.
+ * Every photo fit for a full-width opening picture: at least 1800 px wide, wider than tall, crisp,
+ * and a photograph rather than a logo, map or screenshot. Those the business shows on its own
+ * homepage come first, then the crispest. Which three are best is for a person to say: a crisp
+ * photo of a sleeping bag is still a photo of a sleeping bag.
  */
-export function heroCandidates(photos: Photo[], count = 3): Photo[] {
+export function heroEligible(photos: Photo[]): Photo[] {
   const seen = new Set<string>();
   return photos
     .filter((p) => p.kind === 'photo' && p.width >= HERO.minWidth && p.width / p.height >= HERO.minRatio && p.width / p.height <= HERO.maxRatio && p.sharpness >= HERO.minSharpness)
-    .sort((a, b) => b.sharpness - a.sharpness || b.width - a.width)
+    .sort((a, b) => Number(onHomepage(b)) - Number(onHomepage(a)) || b.sharpness - a.sharpness || b.width - a.width)
     .filter((p) => {
       // One photo can be on the site under several addresses.
       const key = `${p.width}x${p.height}:${p.bytes}`;
       return seen.has(key) ? false : !!seen.add(key);
-    })
-    .slice(0, count);
+    });
+}
+
+/** The first few of those, taken when no person has chosen. */
+export function heroCandidates(photos: Photo[], count = 3): Photo[] {
+  return heroEligible(photos).slice(0, count);
 }
 
 async function download(polite: Polite, url: string, maxBytes: number, range?: string): Promise<Buffer | null> {
@@ -120,14 +138,14 @@ export async function collectPhotos(polite: Polite, found: (FoundImage & { asFou
   return out;
 }
 
-/** A sheet of the chosen pictures side by side, for a person to look over. */
+/** A sheet of pictures in rows of four, in the order given, for a person to look over and choose from by number. */
 export async function contactSheet(photos: Photo[], file: string): Promise<string | null> {
   const withFiles = photos.filter((p) => p.file);
   if (!withFiles.length) return null;
-  const w = 640;
-  const h = 360;
-  const tiles = await Promise.all(withFiles.map((p) => sharp(p.file!).resize(w, h, { fit: 'cover' }).jpeg({ quality: 78 }).toBuffer()));
-  const cols = Math.min(3, tiles.length);
+  const w = 480;
+  const h = 270;
+  const tiles = await Promise.all(withFiles.map((p) => sharp(p.file!).resize(w, h, { fit: 'cover' }).jpeg({ quality: 76 }).toBuffer()));
+  const cols = Math.min(4, tiles.length);
   const rows = Math.ceil(tiles.length / cols);
   await sharp({ create: { width: cols * w, height: rows * h, channels: 3, background: '#222' } })
     .composite(tiles.map((input, i) => ({ input, left: (i % cols) * w, top: Math.floor(i / cols) * h })))

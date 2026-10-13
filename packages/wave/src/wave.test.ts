@@ -9,7 +9,7 @@ import { CHECK_IDS, type AiSummary } from '@plumbline/checks';
 import { loadLibrary } from '@plumbline/impact';
 import sharp from 'sharp';
 import { settleAi } from './ai.ts';
-import { heroCandidates, measure, mp4Info, photoKind, youtubeInfo, type Photo } from './assets.ts';
+import { heroCandidates, heroEligible, measure, mp4Info, photoKind, youtubeInfo, type Photo } from './assets.ts';
 import { claimsIn, crawlmouseFileFor, judge, linkersOf, pageState, storeCrawlmouse, type ExampleState, type SentenceResult } from './crawlmouse.ts';
 import { factsFor, setFacts, statedActivities } from './facts.ts';
 import { importWave, waveMembers, waves } from './list.ts';
@@ -551,6 +551,10 @@ describe('photos for the top of a page', () => {
     expect(photoKind(photo({ url: 'https://alpha.co.nz/img/tripmap.jpg' }))).toBe('photo');
     expect(photoKind(photo({ url: 'https://alpha.co.nz/img/Screenshot-2024-01-01.png', format: 'png' }))).toBe('screenshot');
     expect(photoKind(photo({ width: 120, height: 120 }))).toBe('icon');
+    // A picture served by a widget or a listing site is not the business's own.
+    expect(photoKind(photo({ url: 'https://elfsight.com/assets/age-verification/wine-overlay.jpg' }))).toBe('third party');
+    expect(photoKind(photo({ url: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/bay.jpg' }))).toBe('third party');
+    expect(photoKind(photo({ url: 'https://static.wixstatic.com/media/abc~mv2.jpg' }))).toBe('photo');
   });
 
   it('picks the three crispest photographs at least 1800 px wide and wider than tall', () => {
@@ -566,6 +570,16 @@ describe('photos for the top of a page', () => {
       photo({ url: 'b-again', sharpness: 9 }),
     ]);
     expect(picks.map((p) => p.url)).toEqual(['b', 'g', 'a']);
+  });
+
+  it('lists every photo fit for the top of a page, those on the homepage first, for a person to choose from', () => {
+    const list = heroEligible([
+      photo({ url: 'gear', pageUrl: 'https://alpha.co.nz/checklist', sharpness: 30, bytes: 1 }),
+      photo({ url: 'bay', pageUrl: 'https://alpha.co.nz/', sharpness: 4, bytes: 2 }),
+      photo({ url: 'boat', pageUrl: 'https://www.alpha.co.nz', sharpness: 6, bytes: 3 }),
+      photo({ url: 'small', width: 1200, bytes: 4 }),
+    ]);
+    expect(list.map((p) => p.url)).toEqual(['boat', 'bay', 'gear']);
   });
 
   it('measures a picture: its size in pixels, its format and how crisp it is', async () => {

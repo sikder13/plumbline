@@ -23,6 +23,7 @@ import {
   factPageUrls,
   fullSize,
   heroCandidates,
+  heroEligible,
   imageUrlsIn,
   importWave,
   loadCrawlmouse,
@@ -45,6 +46,7 @@ import {
   writePack,
   type FoundImage,
   type FoundVideo,
+  type Photo,
   type WaveEntry,
   type WaveMember,
 } from '@plumbline/wave';
@@ -259,6 +261,40 @@ export function waveFacts(d: Db, o: { name: string; only?: string; check?: boole
   if (refused) process.exitCode = 1;
 }
 
+/** How many photos the sheet a person chooses from holds. */
+const SHEET = 12;
+
+function storePhotos(d: Db, businessId: number, photos: Photo[], heroes: Photo[], at: string): void {
+  setFacts(d, businessId, 'photo', photos.map((p) => ({ label: p.url, value: { width: p.width, height: p.height, format: p.format, bytes: p.bytes, kind: p.kind, sharpness: p.sharpness, alt: p.alt, file: p.file }, sourceUrl: p.pageUrl, flag: heroes.includes(p) ? `hero ${heroes.indexOf(p) + 1}` : null })), at);
+}
+
+/**
+ * The three photos for the top of a page are a person's choice. Without --pick this lays the
+ * photos fit for it out on a sheet, numbered from 1 along the rows. With --pick it marks the
+ * chosen ones, best first, in place of the ones taken automatically.
+ */
+export async function waveHero(d: Db, o: { name: string; only?: string; business?: string; pick?: string }): Promise<void> {
+  for (const b of members(d, o.name, o.business ?? o.only)) {
+    const file = join(waveDir(b.slug), 'assets.json');
+    if (!existsSync(file)) {
+      console.log(`${b.slug}: no photos measured yet. Run plumb wave assets first.`);
+      continue;
+    }
+    const assets = JSON.parse(readFileSync(file, 'utf8')) as { at: string; photos: Photo[]; heroes: string[] };
+    const eligible = heroEligible(assets.photos).slice(0, SHEET);
+    if (o.pick !== undefined && o.business) {
+      const picked = o.pick.split(',').map((n) => eligible[Number(n) - 1]).filter((p): p is Photo => !!p);
+      storePhotos(d, b.id, assets.photos, picked, assets.at);
+      writeFileSync(file, JSON.stringify({ ...assets, heroes: picked.map((p) => p.url), chosenByHand: true }, null, 2));
+      console.log(`${b.slug}: ${picked.length} hero photo(s) marked: ${picked.map((p) => `${p.width}x${p.height} ${p.url}`).join(' ; ') || 'none'}`);
+      continue;
+    }
+    const sheet = await contactSheet(eligible, join(waveDir(b.slug), 'hero-check.jpg'));
+    console.log(`${b.slug}: ${eligible.length} photo(s) fit for the top of a page${sheet ? `, laid out in ${sheet}` : ''}`);
+    for (const [i, p] of eligible.entries()) console.log(`  ${i + 1}. ${p.width}x${p.height}, crispness ${p.sharpness}, on ${p.pageUrl}: ${p.url}`);
+  }
+}
+
 /** Measures every photo on the pages kept for each business, picks the best for the top of a page, and looks up its videos, logo, colours and fonts. */
 export async function waveAssets(d: Db, o: { name: string; only?: string; max?: number }): Promise<void> {
   const polite = new Polite();
@@ -287,7 +323,7 @@ export async function waveAssets(d: Db, o: { name: string; only?: string; max?: 
             for (const i of JSON.parse(pack?.hero_images ?? '[]') as BrandImage[]) if (/^https?:/.test(i.url)) add({ url: fullSize(i.url), asFound: i.url, alt: i.alt, pageUrl: b.website! });
             const photos = await collectPhotos(polite, [...found.values()], join(waveDir(b.slug), 'photos'), { max: o.max ?? 80 });
             const heroes = heroCandidates(photos, 3);
-            const sheet = await contactSheet(heroCandidates(photos, 6), join(waveDir(b.slug), 'hero-check.jpg'));
+            const sheet = await contactSheet(heroEligible(photos).slice(0, SHEET), join(waveDir(b.slug), 'hero-check.jpg'));
 
             const videos = new Map<string, FoundVideo>();
             for (const p of pages) for (const v of videosIn(savedHtml(p), p.finalUrl)) if (!videos.has(v.url)) videos.set(v.url, v);
@@ -295,7 +331,7 @@ export async function waveAssets(d: Db, o: { name: string; only?: string; max?: 
             for (const v of [...videos.values()].slice(0, 8)) details.push(await videoDetails(polite, v));
 
             const at = utcIso();
-            setFacts(d, b.id, 'photo', photos.map((p) => ({ label: p.url, value: { width: p.width, height: p.height, format: p.format, bytes: p.bytes, kind: p.kind, sharpness: p.sharpness, alt: p.alt, file: p.file }, sourceUrl: p.pageUrl, flag: heroes.includes(p) ? `hero ${heroes.indexOf(p) + 1}` : null })), at);
+            storePhotos(d, b.id, photos, heroes, at);
             setFacts(d, b.id, 'video', details.map((v) => ({ label: v.url, value: { kind: v.kind, how: v.how, title: v.title, seconds: v.seconds, quality: v.quality, note: v.note }, sourceUrl: v.pageUrl })), at);
             setFacts(d, b.id, 'logo', pack?.logo_path || pack?.logo_source_url ? [{ value: { file: pack.logo_path, from: pack.logo_source_url }, sourceUrl: b.website }] : [], at);
             setFacts(d, b.id, 'colour', (JSON.parse(pack?.colors ?? '[]') as BrandColour[]).map((c) => ({ label: c.role, value: { hex: c.hex, share: c.share }, sourceUrl: b.website })), at);
@@ -403,4 +439,13 @@ export function registerWave(program: Command): void {
     .option('--batch <name>', 'batch the findings belong to (the newest one by default)')
     .option('--file <path>', 'the wave list, for the LinkedIn addresses filled in by hand')
     .action((o: { name: string; batch?: string; file?: string }) => wavePack(db(), o));
+
+  wave
+    .command('hero')
+    .description('Lay out the photos fit for the top of a page on a numbered sheet, or mark the three a person has chosen')
+    .requiredOption('--name <name>', 'wave name')
+    .option('--only <slugs>', 'comma separated slugs')
+    .option('--business <slug>', 'one business, with --pick')
+    .option('--pick <numbers>', 'the chosen photos by their number on the sheet, best first, such as 4,1,7. Empty for none.')
+    .action((o: { name: string; only?: string; business?: string; pick?: string }) => waveHero(db(), o));
 }
