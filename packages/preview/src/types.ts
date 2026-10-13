@@ -49,8 +49,12 @@ export interface PageData {
   /** Design specific content, taken as it is from the content file. */
   demo: unknown;
   images: Record<string, Picture>;
+  /** A short silent loop of the business's own footage for the top of the page, where it has any. */
+  video: string | null;
   findings: FindingCard[];
   strengths: Strength[];
+  /** The stored Google rating, for a design that shows it. */
+  rating: { value: string; count: number } | null;
   secondCheck: SecondCheck | null;
   reply: { email: string; subject: string; call: string };
   builtAtNz: string;
@@ -62,6 +66,8 @@ export interface ContentFile {
   /** The business name as it should read on the page, when the stored name carries extra words. */
   name?: string;
   images: Record<string, { file: string; alt: string; widths?: number[]; position?: string; crop?: { left: number; top: number; width: number; height: number } }>;
+  /** A short loop cut from the business's own film, under previews/content/<slug>/. */
+  video?: { file: string };
   /** Awards and certifications shown on the business's own site, each with the page it is shown on. */
   strengths?: Strength[];
   demo: unknown;

@@ -39,10 +39,8 @@ export const REMOVAL = 'This private demo is removed after 30 days, or sooner on
 
 export const SENDER_SITE = 'https://nahltech.com';
 
-/** The words before our name in the bar at the top. Our name follows them as a link to our own site. */
-export function barLead(business: string): string {
-  return `Design demo prepared for ${business} by`;
-}
+/** The link in the strip at the top that opens the second tab. */
+export const FOUND_LINK = 'See what we found';
 
 export function demoNote(domain: string): string {
   return `Demo built from content on ${domain}. Not the official site.`;

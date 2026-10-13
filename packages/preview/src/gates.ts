@@ -84,7 +84,8 @@ export interface GateReport {
   failures: string[];
 }
 
-export const LIMITS = { performance: 90, accessibility: 95, lcpMs: 2500 };
+/** Motion adds script, so performance is held to 85, with layout shift and blocking time held as well. */
+export const LIMITS = { performance: 85, accessibility: 95, lcpMs: 2500, cls: 0.05, tbtMs: 200 };
 const WIDTHS = [360, 390, 430];
 const TABS = [
   { name: 'demo', hash: '' },
@@ -190,6 +191,8 @@ export async function checkPage(data: PageData, opts: CheckOptions): Promise<Gat
     if (lighthouse.performance === null || lighthouse.performance < LIMITS.performance) failures.push(`performance ${lighthouse.performance ?? 'not measured'} is under ${LIMITS.performance}`);
     if (lighthouse.accessibility === null || lighthouse.accessibility < LIMITS.accessibility) failures.push(`accessibility ${lighthouse.accessibility ?? 'not measured'} is under ${LIMITS.accessibility}`);
     if (lighthouse.lcpMs === null || lighthouse.lcpMs >= LIMITS.lcpMs) failures.push(`largest contentful paint ${lighthouse.lcpMs === null ? 'not measured' : `${(lighthouse.lcpMs / 1000).toFixed(2)} s`} is not under ${LIMITS.lcpMs / 1000} s`);
+    if (lighthouse.cls === null || lighthouse.cls >= LIMITS.cls) failures.push(`layout shift ${lighthouse.cls === null ? 'not measured' : lighthouse.cls.toFixed(3)} is not under ${LIMITS.cls}`);
+    if (lighthouse.tbtMs === null || lighthouse.tbtMs >= LIMITS.tbtMs) failures.push(`total blocking time ${lighthouse.tbtMs === null ? 'not measured' : `${Math.round(lighthouse.tbtMs)} ms`} is not under ${LIMITS.tbtMs} ms`);
   }
 
   const browser = await chromium.launch();
@@ -244,7 +247,7 @@ export async function checkPage(data: PageData, opts: CheckOptions): Promise<Gat
     if (!links.some((l) => l.kind === 'tel')) failures.push('no tap to call link on the page');
     if (!links.some((l) => l.kind === 'mailto')) failures.push('no email link on the page');
 
-    const copy = scanPage(splitPage(html), { ownSite: ownSiteText(data.slug), measured: JSON.stringify({ findings: data.findings, strengths: data.strengths, secondCheck: data.secondCheck }), offer: opts.offerText });
+    const copy = scanPage(splitPage(html), { ownSite: ownSiteText(data.slug), measured: JSON.stringify({ findings: data.findings, strengths: data.strengths, secondCheck: data.secondCheck, rating: data.rating }), offer: opts.offerText });
     for (const c of copy) failures.push(`copy ${c.kind} in ${c.where}: "${c.text}" in "${c.context}"`);
     return { slug: data.slug, url, lighthouse, axe, overflow, links, copy, screenshots, failures };
   } finally {

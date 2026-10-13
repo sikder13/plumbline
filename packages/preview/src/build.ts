@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import sharp, { type Sharp } from 'sharp';
 import { config, nzTime, utcIso, type Business, type Db } from '@plumbline/core';
@@ -52,14 +52,22 @@ function hex(n: number): string {
 export async function buildPicture(source: string, outDir: string, urlBase: string, key: string, spec: ContentFile['images'][string]): Promise<Picture> {
   if (!existsSync(source)) throw new Error(`image ${source} does not exist`);
   mkdirSync(outDir, { recursive: true });
+  // A crop given in fractions (all values at most 1) is measured against the photo, so it survives a re-download at another size.
+  const whole = await sharp(source).rotate().toBuffer({ resolveWithObject: true });
+  const c = spec.crop;
+  const fractional = c && c.left <= 1 && c.top <= 1 && c.width <= 1 && c.height <= 1;
+  const crop = c && fractional ? { left: Math.round(c.left * whole.info.width), top: Math.round(c.top * whole.info.height), width: Math.round(c.width * whole.info.width), height: Math.round(c.height * whole.info.height) } : c;
   const base = () => {
     const img = sharp(source).rotate();
-    return spec.crop ? img.extract(spec.crop) : img;
+    return crop ? img.extract(crop) : img;
   };
   const meta = await base().toBuffer({ resolveWithObject: true });
   const full = { width: meta.info.width, height: meta.info.height };
   const widths = [...new Set((spec.widths ?? DEFAULT_WIDTHS).map((w) => Math.min(w, full.width)))].sort((a, b) => a - b);
-  const sourceTime = statSync(source).mtimeMs;
+  // What the stored versions were made from. A key that now points at another photo, or another crop of it, is made again.
+  const made = `${source}|${JSON.stringify(crop ?? null)}|${statSync(source).mtimeMs}`;
+  const madeFile = join(outDir, `${key}.made`);
+  const current = existsSync(madeFile) && readFileSync(madeFile, 'utf8') === made;
   const formats = [
     { ext: 'avif', type: 'image/avif', write: (img: Sharp) => img.avif({ quality: 48, effort: 5 }) },
     { ext: 'webp', type: 'image/webp', write: (img: Sharp) => img.webp({ quality: 70, effort: 5 }) },
@@ -70,11 +78,12 @@ export async function buildPicture(source: string, outDir: string, urlBase: stri
     for (const w of widths) {
       const name = `${key}-${w}.${f.ext}`;
       const file = join(outDir, name);
-      if (!existsSync(file) || statSync(file).mtimeMs < sourceTime) await f.write(base().resize({ width: w, withoutEnlargement: true })).toFile(file);
+      if (!current || !existsSync(file)) await f.write(base().resize({ width: w, withoutEnlargement: true })).toFile(file);
       parts.push(`${urlBase}/${name} ${w}w`);
     }
     sources.push({ type: f.type, srcset: parts.join(', ') });
   }
+  writeFileSync(madeFile, made);
   const { channels } = await sharp(meta.data).stats();
   const mid = widths[Math.min(1, widths.length - 1)]!;
   return {
@@ -224,6 +233,16 @@ export async function buildPage(db: Db, slug: string, opts: BuildOptions): Promi
   const images: Record<string, Picture> = {};
   for (const [key, spec] of Object.entries(content.images)) images[key] = await buildPicture(join(contentDir(slug), spec.file), join(assets, 'img'), `${BASE_PATH}/${path}/img`, key, spec);
 
+  let video: string | null = null;
+  if (content.video) {
+    const from = join(contentDir(slug), content.video.file);
+    if (!existsSync(from)) throw new Error(`video ${from} does not exist`);
+    if (statSync(from).size > 2_000_000) throw new Error(`${from} is over 2 MB`);
+    mkdirSync(join(assets, 'media'), { recursive: true });
+    copyFileSync(from, join(assets, 'media', 'hero.mp4'));
+    video = `${BASE_PATH}/${path}/media/hero.mp4`;
+  }
+
   const data: PageData = {
     slug,
     token,
@@ -233,8 +252,10 @@ export async function buildPage(db: Db, slug: string, opts: BuildOptions): Promi
     design: content.design,
     demo: content.demo,
     images,
+    video,
     findings: cards,
     strengths,
+    rating: b.google_rating && b.google_review_count ? { value: b.google_rating.toFixed(1), count: b.google_review_count } : null,
     secondCheck,
     reply: { email: opts.replyEmail, subject: `${name} website`, call: opts.callLink },
     builtAtNz: nzTime(now),

@@ -1,32 +1,32 @@
 .root {
   --forest: #042f22;
   --teal: #2b6973;
-  --sticky-bg: #fff;
-  --sticky-main-bg: var(--forest);
-  --sticky-call-ink: var(--forest);
-  --sticky-radius: 999px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --drift: cubic-bezier(0.45, 0, 0.15, 1);
+  --float-bg: rgba(4, 47, 34, 0.9);
+  --float-call-ink: var(--forest);
+  --float-font: 'Figtree', system-ui, sans-serif;
   font-family: 'Figtree', system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
   color: var(--forest);
   background: #fff;
-  font-size: 17px;
-  line-height: 1.55;
 }
 
 .root h1,
-.root h2,
-.root h3 {
+.root h2 {
   margin: 0;
   font-weight: 600;
-  letter-spacing: -0.02em;
-  line-height: 1.08;
+  letter-spacing: -0.025em;
+  line-height: 1.02;
 }
 
 .root h2 {
-  font-size: clamp(30px, 5vw, 46px);
+  font-size: clamp(40px, 6vw, 64px);
 }
 
 .root p {
-  margin: 0 0 1em;
+  margin: 0 0 16px;
 }
 
 .root a:focus-visible,
@@ -35,71 +35,17 @@
   outline-offset: 3px;
 }
 
-.wrap {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-.narrow {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: 0 20px;
-}
-
-/* Header sits over the photo. */
-.top {
-  position: absolute;
-  inset: var(--bar-h) 0 auto 0;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 16px 20px;
-  color: #fff;
-}
-
-.brand {
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.01em;
-  color: #fff;
-  text-decoration: none;
-}
-
+/* A frosted bar across the top on large screens. */
 .nav {
   display: none;
-  gap: 28px;
 }
 
-.nav a,
-.topCall {
-  color: #fff;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.nav a:hover,
-.topCall:hover {
-  text-decoration: underline;
-  text-underline-offset: 5px;
-}
-
-.topCall {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 0 4px;
-  font-weight: 600;
-}
-
-/* Hero: the photo fills the screen and drifts slowly. The trips sit on frosted glass. */
+/* Hero: the photo fills the screen. The headline sits high, the two priced trips rest on glass at the foot. */
 .hero {
   position: relative;
-  min-height: min(calc(100svh - var(--bar-h) - var(--sticky-h)), 860px);
+  min-height: calc(100svh - var(--bar-h));
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
   overflow: hidden;
   background: var(--forest);
   color: #fff;
@@ -110,9 +56,14 @@
   inset: 0;
 }
 
+.heroPhoto picture,
 .heroPhoto img {
+  display: block;
   width: 100%;
   height: 100%;
+}
+
+.heroPhoto img {
   object-fit: cover;
 }
 
@@ -120,82 +71,108 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(4, 47, 34, 0.5) 0%, rgba(4, 47, 34, 0.08) 30%, rgba(4, 47, 34, 0.12) 50%, rgba(4, 47, 34, 0.72) 100%);
+  background: linear-gradient(180deg, rgba(4, 47, 34, 0.86) 0%, rgba(4, 47, 34, 0.62) 26%, rgba(4, 47, 34, 0) 50%, rgba(4, 47, 34, 0) 62%, rgba(4, 47, 34, 0.7) 100%);
 }
 
-.heroInner {
+.top {
   position: relative;
   z-index: 2;
-  width: 100%;
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 96px 20px 28px;
-}
-
-.place {
-  margin: 0 0 10px !important;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.hero h1 {
-  max-width: 11ch;
-  font-size: clamp(42px, 10.5vw, 96px);
-  line-height: 0.98;
-  text-wrap: balance;
-}
-
-.sub {
-  max-width: 34ch;
-  margin: 16px 0 22px !important;
-  font-size: 18px;
-  line-height: 1.4;
-}
-
-.glass {
-  display: grid;
-  gap: 12px;
-  max-width: 560px;
-  padding: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.38);
-  border-radius: 22px;
-  background: rgba(4, 47, 34, 0.42);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
-  backdrop-filter: blur(16px) saturate(1.2);
-}
-
-.chips {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.chips a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  min-height: 46px;
-  padding: 0 14px;
-  border: 1px solid rgba(255, 255, 255, 0.34);
-  border-radius: 999px;
+  gap: 16px;
+  padding: 16px 24px 0;
+}
+
+.brand {
+  margin: 0;
+  font-weight: 700;
+  font-size: 17px;
+  color: #fff;
+  text-decoration: none;
+}
+
+.topCall {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.heroHead {
+  position: relative;
+  z-index: 2;
+  padding: 24px 24px 0;
+}
+
+.place {
+  margin: 0 0 8px !important;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.hero h1 {
+  font-size: clamp(46px, 12.4vw, 112px);
+  line-height: 0.98;
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+
+.line > span {
+  display: block;
+}
+
+.sub {
+  max-width: 26ch;
+  margin: 16px 0 0 !important;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.glass {
+  position: relative;
+  z-index: 2;
+  margin: auto 16px 16px;
+  padding: 8px;
+  border-radius: 24px;
+  background: rgba(4, 47, 34, 0.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  backdrop-filter: blur(20px) saturate(1.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+.glass ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.glass li a {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
   color: #fff;
   text-decoration: none;
   font-weight: 500;
-  transition: background 0.2s ease;
 }
 
-.chips a:hover {
-  background: rgba(255, 255, 255, 0.16);
+.glass li + li a {
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
 }
 
-.chips b {
+.glass b {
+  font-size: 22px;
   font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .book {
@@ -203,199 +180,425 @@
   align-items: center;
   justify-content: center;
   min-height: 52px;
-  border-radius: 999px;
+  margin-top: 8px;
+  border-radius: 16px;
   background: #fff;
   color: var(--forest);
   font-weight: 700;
-  font-size: 17px;
   text-decoration: none;
-  transition: transform 0.2s ease;
 }
 
-.book:hover {
-  transform: translateY(-1px);
+/* A morning on the water: the frame holds while three photographs open, each through a widening ripple. */
+.route {
+  position: relative;
+  height: calc(var(--steps) * 75svh + 100svh);
 }
 
-/* Why: a statement beside open water. */
-.why {
-  display: grid;
-  background: var(--sand);
+.route [data-frame] {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--forest);
+  color: #fff;
 }
 
-.whyText {
-  padding: 56px 20px 40px;
-  max-width: 620px;
+.routePhoto {
+  position: absolute;
+  inset: 0;
+  clip-path: circle(0% at 50% 64%);
+  transition: clip-path 1.3s var(--drift);
 }
 
-.question {
-  margin: 14px 0 18px !important;
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--teal);
+.routePhoto[data-step='0'],
+.routePhoto[data-state='on'],
+.routePhoto[data-state='done'] {
+  clip-path: circle(125% at 50% 64%);
 }
 
-.points {
-  list-style: none;
-  margin: 22px 0 0;
-  padding: 0;
-  border-top: 1px solid rgba(4, 47, 34, 0.25);
-}
-
-.points li {
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(4, 47, 34, 0.25);
-  font-weight: 600;
-}
-
-.whyPhoto img {
+.routePhoto picture,
+.routePhoto img {
+  display: block;
   width: 100%;
   height: 100%;
-  min-height: 260px;
+}
+
+.routePhoto img {
   object-fit: cover;
+  transform: scale(1.08);
+  transition: transform 2.4s var(--drift);
 }
 
-/* Trips: long rows, like a tide table. */
+.routePhoto[data-state='on'] img {
+  transform: scale(1);
+}
+
+.routePhoto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(4, 47, 34, 0.62) 0%, rgba(4, 47, 34, 0) 30%, rgba(4, 47, 34, 0) 46%, rgba(4, 47, 34, 0.88) 100%);
+}
+
+.routeHead {
+  position: absolute;
+  top: 56px;
+  left: 24px;
+  right: 24px;
+  max-width: 10ch;
+}
+
+.routeFoot {
+  position: absolute;
+  inset: auto 24px 104px 24px;
+}
+
+.captions {
+  position: relative;
+  min-height: 96px;
+}
+
+.captions p {
+  position: absolute;
+  inset: auto 0 0 0;
+  max-width: 24ch;
+  margin: 0;
+  font-size: clamp(22px, 2.6vw, 34px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  opacity: 0;
+  transform: translateX(24px);
+  transition: opacity 0.5s var(--ease), transform 0.9s var(--drift);
+}
+
+.captions p[data-state='on'] {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.25s;
+}
+
+.captions p[data-state='done'] {
+  transform: translateX(-24px);
+}
+
+/* The horizon: three stops along a line, and a marker that travels it with the scroll. */
+.horizon {
+  position: relative;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  margin: 24px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.horizon li {
+  opacity: 0.6;
+  transition: opacity 0.5s var(--ease);
+}
+
+.horizon li[data-state='on'],
+.horizon li[data-state='done'] {
+  opacity: 1;
+}
+
+.horizon .marker {
+  position: absolute;
+  top: -7px;
+  left: calc(var(--p) * (100% - 13px));
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.25);
+  opacity: 1;
+}
+
+/* Trips: tall photographs that drift past. */
 .trips {
-  padding: 64px 0;
+  padding: 72px 0;
+  scroll-margin-top: 8px;
 }
 
-.lead {
-  margin: 12px 0 28px !important;
-  max-width: 46ch;
+.head {
+  padding: 0 24px 32px;
+}
+
+.head p {
+  margin: 12px 0 0;
   color: var(--teal);
   font-weight: 500;
 }
 
-.tripList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid rgba(4, 47, 34, 0.2);
+.side [data-side-wrap] {
+  position: relative;
 }
 
-.trip {
-  display: grid;
-  gap: 16px;
-  padding: 24px 0;
-  border-bottom: 1px solid rgba(4, 47, 34, 0.2);
-  scroll-margin-top: calc(var(--bar-h) + 12px);
-}
-
-.tripPhoto img {
-  width: 100%;
-  aspect-ratio: 16 / 10;
-  object-fit: cover;
-  border-radius: 16px;
-}
-
-.trip h3 {
-  font-size: 24px;
-  line-height: 1.15;
-}
-
-.duration {
-  margin: 6px 0 10px !important;
-  color: var(--teal);
-  font-weight: 600;
-}
-
-.tripBody p:last-child {
-  margin-bottom: 0;
-}
-
-.tripEnd {
+.side [data-side-track] {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: 16px;
+  padding: 0 24px 8px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 24px;
+  scrollbar-width: none;
+}
+
+.side [data-side-track]::-webkit-scrollbar {
+  display: none;
+}
+
+.side [data-side-cue] {
+  display: none;
+}
+
+.card {
+  position: relative;
+  flex: 0 0 76vw;
+  max-width: 340px;
+  aspect-ratio: 3 / 4.4;
+  scroll-snap-align: start;
+  overflow: hidden;
+  border-radius: 24px;
+  background: var(--forest);
+  color: #fff;
+  scroll-margin-top: 24px;
+  transition: transform 0.8s var(--ease), box-shadow 0.8s var(--ease);
+}
+
+.card details,
+.card summary {
+  display: block;
+  height: 100%;
+}
+
+.card summary {
+  position: relative;
+  cursor: pointer;
+  list-style: none;
+}
+
+.card summary::-webkit-details-marker {
+  display: none;
+}
+
+.cardPhoto,
+.cardPhoto picture,
+.cardPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cardPhoto img {
+  object-fit: cover;
+  transition: transform 1.2s var(--ease);
+}
+
+.face {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: grid;
+  gap: 4px;
+  padding: 96px 20px 20px;
+  background: linear-gradient(180deg, rgba(4, 47, 34, 0) 0%, rgba(4, 47, 34, 0.78) 46%, rgba(4, 47, 34, 0.94) 100%);
+}
+
+.name {
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+}
+
+.when {
+  font-size: 15px;
 }
 
 .price {
-  margin: 0 !important;
+  margin-top: 4px;
   font-size: 15px;
-  color: var(--teal);
 }
 
 .price b {
-  display: block;
-  font-size: 34px;
+  font-size: 44px;
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+}
+
+.open {
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.card details[open] .open {
+  display: none;
+}
+
+.sheet {
+  position: absolute;
+  inset: auto 8px 8px 8px;
+  padding: 20px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   color: var(--forest);
 }
 
-.tripBook {
-  display: inline-flex;
+.card details[open] .sheet {
+  animation: sheet-up 0.6s var(--ease) both;
+}
+
+.sheet p {
+  margin: 0 0 16px;
+  font-size: 16px;
+}
+
+.sheet a {
+  display: flex;
   align-items: center;
   justify-content: center;
   min-height: 48px;
-  padding: 0 22px;
-  margin-left: auto;
-  border-radius: 999px;
+  border-radius: 12px;
   background: var(--forest);
   color: #fff;
   font-weight: 700;
   text-decoration: none;
-  transition: background 0.2s ease;
 }
 
-.tripBook:hover {
-  background: var(--teal);
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
 }
 
-/* Family: a wide photo with a card resting on its lower edge. */
-.family {
+/* Why: three lines on open water. */
+.why {
   position: relative;
-  background: var(--forest);
+  overflow: hidden;
+  min-height: 560px;
+  display: flex;
+  align-items: flex-end;
+  background: #0b3a55;
   color: #fff;
-  padding-bottom: 48px;
+}
+
+.whyPhoto {
+  position: absolute;
+  inset: 0;
+}
+
+.whyPhoto picture,
+.whyPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.whyPhoto img {
+  object-fit: cover;
+  object-position: 40% 50%;
+}
+
+.whyPhoto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(3, 30, 48, 0) 0%, rgba(3, 30, 48, 0.3) 40%, rgba(3, 30, 48, 0.82) 100%);
+}
+
+.whyText {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 160px 24px 72px;
+}
+
+.whyText ul {
+  list-style: none;
+  margin: 32px 0 0;
+  padding: 0;
+}
+
+.whyText li {
+  max-width: 22ch;
+  padding: 16px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
+  font-size: clamp(22px, 2.6vw, 34px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+/* Family: a wide photo with a card resting over its lower edge. */
+.family {
+  background: var(--sand);
+  padding-bottom: 72px;
+}
+
+.familyPhoto {
+  overflow: hidden;
+}
+
+.familyPhoto picture,
+.familyPhoto img {
+  display: block;
+  width: 100%;
 }
 
 .familyPhoto img {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  max-height: 520px;
+  aspect-ratio: 4 / 3;
   object-fit: cover;
+  object-position: 58% 50%;
 }
 
 .familyCard {
   position: relative;
-  margin: -40px 20px 0;
-  padding: 28px 22px;
-  border-radius: 22px;
-  background: var(--teal);
+  margin: -72px 16px 0;
+  padding: 32px 24px;
+  border-radius: 24px;
+  background: var(--forest);
+  color: #fff;
 }
 
-.kicker {
-  margin: 0 0 10px !important;
-  font-size: 14px;
+.familyCard h2 {
+  font-size: 17px;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
-.quote {
-  margin: 16px 0 !important;
-  font-size: clamp(22px, 3.4vw, 30px);
-  line-height: 1.25;
+.familyCard blockquote {
+  margin: 16px 0 24px;
+  font-size: clamp(28px, 3.6vw, 44px);
   font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .names {
-  margin: 20px 0 0 !important;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.4);
+  margin: 24px 0 0 !important;
   font-weight: 600;
 }
 
 /* Questions. */
 .faq {
-  padding: 64px 0;
-  background: #fff;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 72px 24px;
 }
 
 .faq h2 {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .faq details {
@@ -407,7 +610,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  min-height: 60px;
+  min-height: 64px;
   font-size: 19px;
   font-weight: 600;
   cursor: pointer;
@@ -430,63 +633,13 @@
 }
 
 .faq details p {
-  margin: 0 0 20px;
-  max-width: 60ch;
-}
-
-/* Where to find us. */
-.find {
-  display: grid;
-  background: var(--sand);
-}
-
-.findText {
-  padding: 56px 20px 32px;
-}
-
-.find address {
-  margin: 18px 0;
-  font-style: normal;
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 1.35;
-}
-
-.find address span {
-  display: block;
-}
-
-.find ul {
   margin: 0 0 24px;
-  padding-left: 20px;
+  max-width: 56ch;
 }
 
-.findActions {
-  display: grid;
-  gap: 12px;
-  justify-items: start;
-}
-
-.callBig {
-  display: inline-flex;
-  align-items: center;
-  min-height: 52px;
-  padding: 0 26px;
-  border-radius: 999px;
-  background: var(--forest);
-  color: #fff;
-  font-weight: 700;
-  font-size: 18px;
-  text-decoration: none;
-}
-
-.mail {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  color: var(--forest);
-  font-weight: 600;
-  overflow-wrap: anywhere;
+/* Where to find us: a low band of map, then the address. */
+.find {
+  background: var(--sand);
 }
 
 .map {
@@ -496,17 +649,25 @@
 .mapFrame {
   position: relative;
   overflow: hidden;
+  height: 200px;
+}
+
+.mapFrame picture,
+.mapFrame img {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .mapFrame img {
-  width: 100%;
-  height: 100%;
-  min-height: 280px;
   object-fit: cover;
+  object-position: 50% 54%;
 }
 
 .pin {
   position: absolute;
+  left: 50% !important;
+  top: 50% !important;
   transform: translate(-50%, -100%);
   display: grid;
   justify-items: center;
@@ -515,7 +676,7 @@
 
 .pin b {
   order: -1;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 999px;
   background: var(--forest);
   color: #fff;
@@ -529,112 +690,284 @@
   border: 3px solid #fff;
   border-radius: 50%;
   background: var(--forest);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 .map figcaption {
-  padding: 8px 20px;
+  padding: 8px 24px 0;
   font-size: 13px;
   color: #33534a;
 }
 
+.findText {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 24px 72px;
+}
+
+.find address {
+  margin: 24px 0 8px;
+  font-style: normal;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.find address span {
+  display: block;
+}
+
+.reach {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 24px;
+  margin: 16px 0 0 !important;
+}
+
+.reach a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--forest);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
 .foot {
-  padding: 36px 20px 40px;
+  padding: 40px 24px 104px;
   background: var(--forest);
   color: #fff;
 }
 
-.footBrand {
-  margin: 0 0 6px !important;
-  font-weight: 700;
-  font-size: 18px;
+.foot .brand {
+  margin-bottom: 8px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 32px 48px -28px rgba(4, 47, 34, 0.6);
+  }
+  .card:hover .cardPhoto img {
+    transform: scale(1.06);
+  }
+}
+
+@media (max-width: 899px) {
+  .card:active {
+    transform: scale(0.985);
+  }
 }
 
 @media (min-width: 900px) {
   .nav {
+    position: fixed;
+    top: calc(var(--bar-h) + 14px);
+    left: 24px;
+    right: 24px;
+    z-index: 40;
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    padding: 8px 8px 8px 24px;
+    border-radius: 20px;
+    background: rgba(4, 47, 34, 0.4);
+    -webkit-backdrop-filter: blur(22px) saturate(1.4);
+    backdrop-filter: blur(22px) saturate(1.4);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2);
+    color: #fff;
+    transition: top 0.5s var(--ease);
+  }
+  :global([data-strip-away]) .nav {
+    top: 14px;
+  }
+  .navName {
+    color: #fff;
+    font-weight: 700;
+    font-size: 17px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .navLinks {
+    display: flex;
+    gap: 32px;
+  }
+  .navLinks a {
+    color: #fff;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .navBook {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 22px;
+    border-radius: 14px;
+    background: #fff;
+    color: var(--forest);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
   }
   .top {
-    padding: 22px 40px;
+    display: none;
   }
-  .heroInner {
-    padding: 140px 40px 48px;
+  .heroHead {
+    padding: 128px 48px 0;
+  }
+  .hero h1 {
+    font-size: clamp(64px, 6.4vw, 104px);
+  }
+  .heroPhoto::after {
+    background: linear-gradient(90deg, rgba(4, 47, 34, 0.82) 0%, rgba(4, 47, 34, 0.5) 30%, rgba(4, 47, 34, 0) 58%), linear-gradient(180deg, rgba(4, 47, 34, 0) 60%, rgba(4, 47, 34, 0.6) 100%);
   }
   .sub {
     font-size: 21px;
   }
   .glass {
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    max-width: 720px;
-    padding: 12px;
-    border-radius: 999px;
+    margin: auto auto 48px 48px;
+    width: 400px;
   }
-  .chips {
-    grid-template-columns: repeat(4, auto);
+  .routeHead {
+    top: 120px;
+    left: 48px;
   }
-  .book {
-    padding: 0 30px;
+  .routeFoot {
+    inset: auto 48px 64px 48px;
   }
-  .why {
-    grid-template-columns: 1fr 1.1fr;
+  .captions {
+    min-height: 120px;
   }
-  .whyText {
-    padding: 96px 56px 96px max(40px, calc((100vw - 1120px) / 2));
+  .trips,
+  .faq {
+    padding-top: 120px;
+    padding-bottom: 120px;
+  }
+  .head {
+    display: flex;
+    align-items: baseline;
+    gap: 32px;
+    padding: 0 48px 40px;
+  }
+  .side [data-side-track] {
+    gap: 20px;
+    padding: 16px 48px 48px;
+    scroll-padding-left: 48px;
+    cursor: grab;
+    user-select: none;
+  }
+  .side [data-side-track][data-dragging] {
+    cursor: grabbing;
+    scroll-snap-type: none;
+  }
+  .card {
+    flex: 0 0 400px;
     max-width: none;
   }
-  .trips {
-    padding: 104px 0;
+  .side [data-side-cue] {
+    position: absolute;
+    right: 40px;
+    top: 44%;
+    display: grid;
+    place-items: center;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.8);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(4, 47, 34, 0.14);
+    font-weight: 700;
+    font-size: 15px;
+    pointer-events: none;
+    transition: opacity 0.6s var(--ease), transform 0.8s var(--ease);
   }
-  .trip {
-    grid-template-columns: 260px 1fr 190px;
-    align-items: center;
-    gap: 36px;
-    padding: 30px 0;
+  .side[data-dragged] [data-side-cue] {
+    opacity: 0;
+    transform: scale(0.8);
   }
-  .tripEnd {
-    flex-direction: column;
-    align-items: flex-end;
+  .why {
+    min-height: 720px;
   }
-  .price {
-    text-align: right;
+  .whyText {
+    padding: 200px 48px 120px;
   }
   .family {
-    padding-bottom: 96px;
+    padding-bottom: 120px;
+  }
+  .familyPhoto img {
+    aspect-ratio: 16 / 7;
   }
   .familyCard {
-    max-width: 620px;
-    margin: -160px 0 0 max(40px, calc((100vw - 1120px) / 2));
-    padding: 44px;
-  }
-  .faq {
-    padding: 104px 0;
+    max-width: 560px;
+    margin: -200px 0 0 max(48px, calc((100vw - 1200px) / 2 + 48px));
+    padding: 48px;
   }
   .find {
-    grid-template-columns: 1fr 1.2fr;
-  }
-  .findText {
-    padding: 96px 56px 96px max(40px, calc((100vw - 1120px) / 2));
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    align-items: stretch;
   }
   .mapFrame {
     height: 100%;
+    min-height: 420px;
   }
   .map {
     display: grid;
     grid-template-rows: 1fr auto;
   }
+  .map figcaption {
+    padding-bottom: 8px;
+  }
+  .findText {
+    align-self: center;
+    margin: 0;
+    padding: 72px 56px;
+  }
 }
 
+/* The opening: the picture settles and then keeps drifting in, the headline rises, the card arrives. */
 @media (prefers-reduced-motion: no-preference) {
-  .heroPhoto img {
-    animation: drift 40s ease-in-out infinite alternate;
+  .heroPhoto {
+    animation: settle 1.6s var(--ease) both;
   }
-  @keyframes drift {
+  .heroPhoto picture {
+    animation: push-in 22s ease-in-out 1.6s infinite alternate;
+  }
+  .line > span {
+    animation: rise 1s var(--ease) both;
+    animation-delay: calc(var(--i) * 60ms + 150ms);
+  }
+  .place,
+  .sub,
+  .glass,
+  .top {
+    animation: arrive 0.7s var(--ease) both;
+    animation-delay: 0.6s;
+  }
+  .glass {
+    animation-delay: 0.72s;
+  }
+  @keyframes settle {
     from {
-      transform: scale(1.04) translate3d(-1%, 0, 0);
+      transform: scale(1.08);
     }
+  }
+  @keyframes push-in {
     to {
-      transform: scale(1.1) translate3d(1.5%, -1%, 0);
+      transform: scale(1.07) translate3d(-1%, 0, 0);
+    }
+  }
+  @keyframes rise {
+    from {
+      transform: translateY(105%);
+    }
+  }
+  @keyframes arrive {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
     }
   }
 }

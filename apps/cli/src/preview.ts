@@ -146,7 +146,7 @@ export async function previewBuild(d: Db, opts: { only?: string; draft?: boolean
   cpSync(join(app, 'out'), served, { recursive: true });
   const assets = join(previewPaths.out, 'assets');
   for (const page of readdirSync(previewPaths.data).map((f) => JSON.parse(readFileSync(join(previewPaths.data, f), 'utf8')) as PageData)) {
-    if (existsSync(join(assets, page.path))) cpSync(join(assets, page.path), join(served, page.path), { recursive: true });
+    if (existsSync(join(assets, page.path))) cpSync(join(assets, page.path), join(served, page.path), { recursive: true, filter: (from) => !from.endsWith('.made') });
     const html = join(served, page.path, 'index.html');
     writeFileSync(html, scriptsAfterPaint(readFileSync(html, 'utf8')));
   }
@@ -175,7 +175,7 @@ export async function previewCheck(opts: { only?: string; live?: boolean; base?:
       const r = await checkPage(page, { base, offerText, skipLighthouse: opts.noLighthouse, log: console.log });
       reports.push(r);
       const lh = r.lighthouse;
-      if (!opts.noLighthouse) console.log(`  median: performance ${lh.performance} (needs ${LIMITS.performance}), accessibility ${lh.accessibility} (needs ${LIMITS.accessibility}), LCP ${lh.lcpMs === null ? 'n/a' : `${(lh.lcpMs / 1000).toFixed(2)} s`} (needs under ${LIMITS.lcpMs / 1000} s)`);
+      if (!opts.noLighthouse) console.log(`  median: performance ${lh.performance} (needs ${LIMITS.performance}), accessibility ${lh.accessibility} (needs ${LIMITS.accessibility}), LCP ${lh.lcpMs === null ? 'n/a' : `${(lh.lcpMs / 1000).toFixed(2)} s`} (under ${LIMITS.lcpMs / 1000} s), CLS ${lh.cls === null ? 'n/a' : lh.cls.toFixed(3)} (under ${LIMITS.cls}), TBT ${lh.tbtMs === null ? 'n/a' : `${Math.round(lh.tbtMs)} ms`} (under ${LIMITS.tbtMs} ms)`);
       console.log(`  links: ${r.links.filter((l) => l.ok).length} of ${r.links.length} pass; booking ${[...new Set(r.links.filter((l) => l.kind === 'booking').map((l) => l.href))].length}, tel ${r.links.filter((l) => l.kind === 'tel').length}, mailto ${r.links.filter((l) => l.kind === 'mailto').length}`);
       console.log(r.failures.length ? `  FAILED ${r.failures.length}:` : '  all gates pass');
       for (const f of r.failures) console.log(`    ${f}`);
@@ -193,13 +193,13 @@ function vercel(args: string[]): void {
   execFileSync('vercel', args, { cwd: previewPaths.out, stdio: 'inherit' });
 }
 
-/** Deploys the built folder from this machine. Nothing is built on the host. */
-export function previewDeploy(): void {
+/** Deploys the built folder from this machine. Nothing is built on the host. With `preview`, it goes to a preview address and the live pages are left alone. */
+export function previewDeploy(opts: { preview?: boolean } = {}): void {
   if (!existsSync(join(previewPaths.site, 'robots.txt'))) throw new Error('nothing is built yet. Run plumb preview build.');
   if (existsSync(draftMarker())) throw new Error('the last build was a draft without CAL_LINK. Set CAL_LINK in .env and build again.');
   if (!existsSync(join(previewPaths.out, '.vercel', 'project.json'))) throw new Error(`previews/out is not linked to a Vercel project. Run "vercel link --project ${VERCEL_PROJECT}" in previews/out once.`);
-  vercel(['build', '--prod', '--yes']);
-  vercel(['deploy', '--prebuilt', '--prod', '--yes']);
+  vercel(['build', ...(opts.preview ? [] : ['--prod']), '--yes']);
+  vercel(['deploy', '--prebuilt', ...(opts.preview ? [] : ['--prod']), '--yes']);
 }
 
 /** Takes one page down: its generated files go, the address is forgotten, and the site is rebuilt and deployed without it. */
@@ -298,7 +298,11 @@ export function registerPreview(program: Command): void {
     .option('--no-lighthouse', 'skip the speed and accessibility scores')
     .action((o: { only?: string; live?: boolean; base?: string; lighthouse?: boolean }) => previewCheck({ only: o.only, live: o.live, base: o.base, noLighthouse: o.lighthouse === false }));
 
-  preview.command('deploy').description('Deploy previews/out/ with vercel build and vercel deploy --prebuilt --prod').action(() => previewDeploy());
+  preview
+    .command('deploy')
+    .description('Deploy previews/out/ with vercel build and vercel deploy --prebuilt --prod')
+    .option('--preview', 'deploy to a preview address and leave the live pages alone')
+    .action((o: { preview?: boolean }) => previewDeploy(o));
 
   preview
     .command('visits')

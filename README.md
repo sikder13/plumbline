@@ -75,7 +75,7 @@ A preview page is one private page per business: a redesigned homepage built fro
 | `preview crawlmouse` | Re-opens the example pages behind each Crawlmouse sentence and keeps only the sentences that still hold. |
 | `preview build` | Builds every page into `previews/out/`. Needs `CAL_LINK` in `.env`; `--draft` builds without it for looking at locally. |
 | `preview check` | Runs the quality gates and saves screenshots to `previews/review/`. `--live` checks the pages at their real address. |
-| `preview deploy` | `vercel build`, then `vercel deploy --prebuilt --prod`, from `previews/out/`. |
+| `preview deploy` | `vercel build`, then `vercel deploy --prebuilt --prod`, from `previews/out/`. With `--preview` it goes to a preview address and the live pages are left alone. |
 | `preview visits` | Shows who has opened their page: first and last view, view count, findings tab, reply or call. |
 | `preview remove <slug>` | Takes one page down and deploys the site without it. |
 
@@ -85,9 +85,13 @@ What goes where:
 - `previews/content/<slug>/` holds what was read from the business's own site: `content.json` (the words and prices on the page, and which design it uses), `facts.json` and `html/` (the saved pages every number is traced to), `raw/` (their photos) and, for a business whose stored AI questions asked about the wrong trade, `questions.json`.
 - `previews/out/` is the generated site and `previews/review/` the screenshots and gate reports. Nothing under `previews/` is committed.
 
-The gates, per page: Lighthouse on a phone as the median of three runs (performance 90 or more, accessibility 95 or more, largest contentful paint under 2.5 s); no serious or critical axe issue; no sideways scroll at 360, 390 and 430 px; every link tested; no dash, no banned word, and every number traced to a stored measurement, to the business's own saved pages, or to our offer.
+The gates, per page: Lighthouse on a phone as the median of three runs (performance 85 or more, accessibility 95 or more, largest contentful paint under 2.5 s, layout shift under 0.05, total blocking time under 200 ms); no serious or critical axe issue; no sideways scroll at 360, 390 and 430 px; every link tested; no dash, no banned word, and every number traced to a stored measurement, to the business's own saved pages, or to our offer.
 
 On a finding card the library's impact sentence is shown without any sentence that leans on an outside figure, and the stored title and evidence carry the measured facts. A stored "not named by AI" finding is replaced by the corrected questions where a business has them, and is shown only if those still return no mention.
+
+The pages move. A design's opening (the picture settling, the headline rising line by line) is plain CSS, so it runs with the first paint. Everything else is a motion layer that is fetched after the page has painted: content and photographs arriving as they are scrolled to, numbers counting up once, buttons that give under a press, one section per page that holds still while the visitor scrolls through a sequence, and on large screens smooth scrolling and photographs that travel a little slower than the page. With reduced motion asked for, every state simply appears.
+
+Fonts are prepared by `apps/previews/scripts/fonts.mjs`: a face a design sets at one weight is cut down to that weight, and Māori macrons come from a small file holding just those letters, so one word like Kāpiti does not pull in a family's whole extended set.
 
 Each page reports a visit to `https://nahltech.com/api/demo-visit` only after it has been on screen for three seconds, which a link scanner never reaches. It sends the page token and one of `view`, `tab_findings` or `cta_click`, and nothing else. A visitor with Do Not Track or Global Privacy Control set is not counted.
 
@@ -197,6 +201,9 @@ Checked against the registry on 10 October 2026 and pinned exactly.
 | typescript-eslint | 8.71.1 |
 | tsx | 4.23.15 |
 | @fontsource and @fontsource-variable font packages | 5.3.0 |
+| motion | 14.1.0 |
+| lenis | 1.3.26 |
+| subset-font | 2.9.0 |
 
 Notes on the choices:
 
