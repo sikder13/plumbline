@@ -24,6 +24,9 @@ interface CrawlmouseDetail {
   crawlmouse?: { auditedAt?: string | null; pagesRead?: number | null; coveragePct?: number | null; confidence?: string | null };
 }
 
+/** A page linked from the menu is linked from every page. A few are enough to show where. */
+const LINKERS_SHOWN = 3;
+
 function Crawlmouse({ f }: { f: Finding }) {
   const d = JSON.parse(f.detail || '{}') as CrawlmouseDetail;
   const c = d.crawlmouse ?? {};
@@ -44,15 +47,16 @@ function Crawlmouse({ f }: { f: Finding }) {
                 {e.url}
               </a>{' '}
               answers {e.status ?? 'nothing'}
-              {(e.linkedFrom ?? []).map((l, j) => (
+              {(e.linkedFrom ?? []).slice(0, LINKERS_SHOWN).map((l, j) => (
                 <span key={j}>
                   {j ? '; ' : '. Linked from '}
                   <a href={l.pageUrl} target="_blank" rel="noreferrer noopener">
                     {l.pageUrl}
                   </a>{' '}
-                  ({l.where === 'page' ? 'link' : `${l.where} link`} &ldquo;{l.text}&rdquo;)
+                  ({l.where === 'page' ? 'link' : `${l.where} link`} {l.text ? <>&ldquo;{l.text}&rdquo;</> : 'with no words on it'})
                 </span>
               ))}
+              {(e.linkedFrom ?? []).length > LINKERS_SHOWN ? ` and ${(e.linkedFrom ?? []).length - LINKERS_SHOWN} more` : ''}
             </li>
           ))}
         </ul>
@@ -160,12 +164,17 @@ function Card({ f, place }: { f: Finding; place?: Place }) {
 }
 
 function FactsTable({ businessId }: { businessId: number }) {
-  const list = facts(businessId);
+  const all = facts(businessId);
+  // Every photo measured is stored. Only the ones chosen for the top of a page are listed here.
+  const list = all.filter((x) => x.topic !== 'photo' || x.flag);
+  const photos = all.length - list.length;
   if (!list.length) return null;
   const show = (v: unknown) => (typeof v === 'string' ? v : JSON.stringify(v));
   return (
     <details style={{ margin: '10px 0' }}>
-      <summary className="small">Facts stored for this business ({list.length}), each with its source and the day it was checked</summary>
+      <summary className="small">
+        Facts stored for this business ({list.length}), each with its source and the day it was checked{photos ? `. ${photos} more photos were measured and not chosen.` : ''}
+      </summary>
       <table style={{ marginTop: 8 }}>
         <thead>
           <tr>
