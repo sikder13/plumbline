@@ -1,7 +1,7 @@
 import pLimit from 'p-limit';
 import { domainOf, env, foldName, requireEnv, utcDay, utcIso, type Business, type Db } from '@plumbline/core';
 import { BudgetStop, guard, loadPrices, record, tokenCost, type GuardOptions, type Prices } from '@plumbline/budget';
-import { questionsFor, type AiQuestion, type AiSummary } from '@plumbline/checks';
+import { ownActivities, questionsFor, type AiQuestion, type AiSummary, type HomepageWords } from '@plumbline/checks';
 
 export type ProviderName = 'openai' | 'perplexity';
 
@@ -177,7 +177,22 @@ export interface AiPlan {
   perCall: Record<ProviderName, number>;
 }
 
+/** A business that gets no activity question, or fewer than were stated for it, and why. */
+export interface Unasked {
+  businessId: number;
+  slug: string;
+  reason: string;
+}
+
+export interface BatchPlan extends AiPlan {
+  unasked: Unasked[];
+}
+
 export interface PlanOptions {
+  /** What the business's homepage says, from its newest stored capture, or null when none has been read. */
+  homepage: (b: Business) => HomepageWords | null;
+  /** Activities a person has written down for the business, main one first. */
+  stated?: (b: Business) => string[];
   runs?: number;
   brandQuestions?: number;
   providers?: ProviderName[];
@@ -204,16 +219,25 @@ export function perCallEstimate(db: Db, prices: Prices): Record<ProviderName, nu
   return { openai: o.n >= 5 && o.a ? o.a * 1.15 : openaiDefault, perplexity: p.n >= 5 && p.a ? p.a * 1.15 : pplxDefault };
 }
 
-export function plan(db: Db, opts: PlanOptions): AiPlan {
+export function plan(db: Db, opts: PlanOptions): BatchPlan {
   const runs = opts.runs ?? 3;
   const providers = opts.providers ?? ['openai', 'perplexity'];
   const day = opts.day ?? utcDay();
   const byKey = new Map<string, PlanItem>();
+  const unasked: Unasked[] = [];
+  const clear = db.prepare('DELETE FROM ai_question_links WHERE batch = ? AND business_id = ?');
   const link = db.prepare('INSERT OR REPLACE INTO ai_question_links (business_id, batch, question_key, kind) VALUES (?, ?, ?, ?)');
   db.transaction(() => {
-    db.prepare('DELETE FROM ai_question_links WHERE batch = ?').run(opts.batch);
     for (const b of opts.businesses) {
-      for (const q of questionsFor(b, opts.brandQuestions ?? 2)) {
+      // Only the businesses asked about are touched, so a run for a few leaves the rest of the batch as it was.
+      clear.run(opts.batch, b.id);
+      const home = opts.homepage(b);
+      const stated = opts.stated?.(b) ?? [];
+      const questions = questionsFor(b, home, { stated, brandQuestions: opts.brandQuestions ?? 2 });
+      const refused = home ? ownActivities(home, stated).unconfirmed : [];
+      const why = !home ? 'no homepage has been read' : refused.length ? `the homepage does not show: ${refused.join(', ')}` : !b.town && !b.region ? 'no town is stored' : questions.some((q) => q.kind === 'activity') ? null : 'the homepage shows no activity';
+      if (why) unasked.push({ businessId: b.id, slug: b.slug, reason: why });
+      for (const q of questions) {
         const item = byKey.get(q.key) ?? { question: q, businessIds: [] };
         item.businessIds.push(b.id);
         byKey.set(q.key, item);
@@ -250,6 +274,7 @@ export function plan(db: Db, opts: PlanOptions): AiPlan {
     estimateUsd,
     totalUsd: estimateUsd.openai + estimateUsd.perplexity,
     perCall,
+    unasked,
   };
 }
 

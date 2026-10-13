@@ -5,7 +5,7 @@ import { env, paths, type Business, type Db } from '@plumbline/core';
 import { aiSummary, indexMentions, openAiAsk, perplexityAsk, plan, runPlan, type AiPlan } from '@plumbline/ai';
 import { brandDir, captureBrand, saveBrandPack, voiceSamples, type BrandCapture } from '@plumbline/brand';
 import { limits, loadPrices, spendByProvider, spent } from '@plumbline/budget';
-import { CHECK_IDS, applyCheckToStoredRuns } from '@plumbline/checks';
+import { CHECK_IDS, applyCheckToStoredRuns, homepageWords, type HomepageWords } from '@plumbline/checks';
 import { loadSite } from '@plumbline/collect';
 import { loadLibrary } from '@plumbline/impact';
 import { contactReady, findContacts, openAiPeopleModel } from '@plumbline/contacts';
@@ -98,11 +98,22 @@ export function readyBusinesses(db: Db): Business[] {
   return (db.prepare("SELECT * FROM businesses WHERE status IN ('qualified', 'audited') AND website IS NOT NULL ORDER BY id").all() as Business[]).filter((b) => contactReady(db, b.id));
 }
 
+/** What a business's homepage says, from the newest run that read it. */
+export function storedHomepage(db: Db, businessId: number): HomepageWords | null {
+  const runs = db.prepare("SELECT id FROM runs WHERE business_id = ? AND status = 'done' ORDER BY id DESC LIMIT 5").all(businessId) as { id: number }[];
+  for (const r of runs) {
+    const home = loadSite(r.id)?.homepage;
+    const page = home?.desktop?.ok ? home.desktop : home?.mobile?.ok ? home.mobile : null;
+    if (page) return homepageWords(page);
+  }
+  return null;
+}
+
 export function describePlan(p: AiPlan): string {
   const lim = limits();
   return [
     `Businesses covered: ${p.businesses} (only those that passed contacts and the consent check)`,
-    `Questions: ${p.shared} shared by place and activity, ${p.brand} about single businesses`,
+    `Questions: ${p.shared} shared by town and activity, ${p.brand} about single businesses`,
     `Answers wanted: ${p.callsPerProvider} per provider, 3 runs per question; ${p.cached} already stored and reused`,
     `To ask now: ${p.toRun.filter((t) => t.provider === 'openai').length} OpenAI at about $${p.perCall.openai.toFixed(4)} each = $${p.estimateUsd.openai.toFixed(2)}`,
     `            ${p.toRun.filter((t) => t.provider === 'perplexity').length} Perplexity at about $${p.perCall.perplexity.toFixed(4)} each = $${p.estimateUsd.perplexity.toFixed(2)}`,
@@ -115,10 +126,11 @@ export async function aiCommand(db: Db, opts: { batch: string; estimate?: boolea
   const members = new Set(batchMembers(db, opts.batch).map((b) => b.id));
   const businesses = readyBusinesses(db).filter((b) => members.size === 0 || members.has(b.id));
   const providers = opts.provider ? ([opts.provider] as ('openai' | 'perplexity')[]) : undefined;
-  const p = plan(db, { businesses, batch: opts.batch, brandQuestions: opts.brand ?? 2, providers, pass: opts.pass === 1 || opts.pass === 2 ? opts.pass : undefined });
+  const p = plan(db, { homepage: (b) => storedHomepage(db, b.id), businesses, batch: opts.batch, brandQuestions: opts.brand ?? 2, providers, pass: opts.pass === 1 || opts.pass === 2 ? opts.pass : undefined });
   if (opts.limit !== undefined) p.toRun = p.toRun.slice(0, opts.limit);
   const already = spent(db);
   console.log(describePlan(p));
+  for (const u of p.unasked) console.log(`  ${u.slug}: ${u.reason}`);
   console.log(`Spent so far: $${already.toFixed(2)}. After this run: about $${(already + p.totalUsd).toFixed(2)}.`);
   if (opts.estimate) return;
   if (!p.toRun.length) {

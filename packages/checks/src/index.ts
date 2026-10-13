@@ -3,6 +3,7 @@ export * from './types.ts';
 export * from './registry.ts';
 export * from './engine.ts';
 export * from './packs/tourism/exclusions.ts';
+export * from './packs/tourism/activities.ts';
 export * from './packs/tourism/questions.ts';
 export { showsReviews } from './packs/core/source-checks.ts';
 export { bookingSystemsOnSite, otherBookingRoutes } from './packs/tourism/checks.ts';
