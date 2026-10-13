@@ -154,9 +154,20 @@ export function plainSeen(excerpt: string | null): string | null {
   return s || null;
 }
 
-/** Words quoted from a site, with any dash set off by spaces turned into a comma. A page may carry no such dash, even inside a quotation. */
+const DASH = '[-‐‒–—―−]';
+const MONEY = String.raw`(?:[A-Z]{2})?\$\s?\d[\d,]*(?:\.\d+)?(?:pp)?`;
+const CLOCK = String.raw`\d{1,2}(?:[:.]\d{2})?\s?[ap]m`;
+/** A dash between two prices, or between two times of day, marks a range. A price run straight into a number by a dash does too. */
+const RANGES = [new RegExp(`(${MONEY})\\s*${DASH}\\s*(?=${MONEY})`, 'g'), new RegExp(`(${MONEY})${DASH}(?=\\d)`, 'g'), new RegExp(`(${CLOCK})\\s*${DASH}\\s*(?=${CLOCK})`, 'gi')];
+
+/**
+ * Words quoted from a site, without the dashes a page may not carry, even inside a quotation. A
+ * range of prices or of hours is written with "to", so that it still reads as a range. Any other
+ * dash set off by spaces becomes a comma.
+ */
 export function withoutDashes(text: string | null): string | null {
-  return text === null ? null : text.replace(/\s+[-‐‒–—―−]\s+/g, ', ');
+  if (text === null) return null;
+  return RANGES.reduce((s, range) => s.replace(range, '$1 to '), text).replace(new RegExp(`\\s+${DASH}\\s+`, 'g'), ', ');
 }
 
 async function evidenceImage(e: EvidenceRow, outDir: string, urlBase: string, name: string): Promise<{ src: string; width: number; height: number } | null> {

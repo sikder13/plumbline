@@ -32,9 +32,27 @@ describe('finding text for a page', () => {
 describe('words quoted from a site on a recipe page', () => {
   it('lose a dash set off by spaces, which the copy rules do not allow anywhere on a page', () => {
     expect(withoutDashes('2023 © Copyright - Alpha Penguins. All rights reserved.')).toBe('2023 © Copyright, Alpha Penguins. All rights reserved.');
-    expect(withoutDashes('Open 9am – 5pm — every day')).toBe('Open 9am, 5pm, every day');
+    expect(withoutDashes('Open daily — bookings essential')).toBe('Open daily, bookings essential');
     expect(withoutDashes('A family-run business')).toBe('A family-run business');
     expect(withoutDashes(null)).toBeNull();
+  });
+
+  it('keep a range of prices as a range, written with "to" and never as a list of two prices', () => {
+    expect(withoutDashes('Tastings $45 - $60 per person')).toBe('Tastings $45 to $60 per person');
+    expect(withoutDashes('From NZ$1,250 – NZ$1,650, twin share')).toBe('From NZ$1,250 to NZ$1,650, twin share');
+    expect(withoutDashes('Adult $12.50—$14.00')).toBe('Adult $12.50 to $14.00');
+    expect(withoutDashes('Platters $25-40')).toBe('Platters $25 to 40');
+    expect(withoutDashes('$45pp - $60pp')).toBe('$45pp to $60pp');
+  });
+
+  it('keep opening hours as a range too', () => {
+    expect(withoutDashes('Open 9am – 5pm — every day')).toBe('Open 9am to 5pm, every day');
+    expect(withoutDashes('Cellar door 10:30am-4.30pm')).toBe('Cellar door 10:30am to 4.30pm');
+  });
+
+  it('do not take a price followed by something else for a range', () => {
+    expect(withoutDashes('Kayak hire $45 - 2 hours on the water')).toBe('Kayak hire $45, 2 hours on the water');
+    expect(withoutDashes('Call 03 123 4567 - 021 123 456')).toBe('Call 03 123 4567, 021 123 456');
   });
 });
 
