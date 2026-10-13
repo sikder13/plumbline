@@ -805,6 +805,13 @@ describe('the pack for a wave', () => {
     expect(packBusiness(db, waveMembers(db, 'wave-2')[0]!, 'b').findings.map((f) => f.measured)).toEqual([p.findings[0]!.measured, 'Mobile performance score 31, main content after 8.2 s']);
     expect(p.findings[0]).toMatchObject({ measured: 'The page answers 404 (not found). The link "Contact Us" on https://alpha.co.nz/faq leads to it.', evidence: ['/data/evidence/alpha/crawlmouse-1.webp'] });
     expect(p.findings[1]!.measured).toBe('Mobile performance score 31, main content after 8.2 s');
+    // Each finding is also given in the words it is put to the owner in, with what the independent check said to mind.
+    expect(p.findings.map((f) => f.said)).toEqual(['A link to your Contact page leads to a missing page (404).', 'Mobile performance score 31, main content after 8.2 s']);
+    const linked = JSON.stringify({ measured: 'The page answers 404 (not found).', examples: [{ url: 'https://alpha.co.nz/contact-us', linkedFrom: [{ pageUrl: 'https://alpha.co.nz/faq', text: 'Contact Us' }] }] });
+    db.prepare("UPDATE findings SET detail = ? WHERE check_id = 'CM_missing_page'").run(linked);
+    const noted = packBusiness(db, waveMembers(db, 'wave-2')[0]!, 'b', { notes: { [p.findings[0]!.id]: 'Name the link, not the page.' } });
+    expect(noted.findings[0]).toMatchObject({ said: 'The link "Contact Us" on /faq leads to a missing page (404)', note: 'Name the link, not the page.' });
+    expect(packLines(noted).join('\n')).toContain('] The link "Contact Us" on /faq leads to a missing page (404). Measured: The page answers 404 (not found). Mind: Name the link, not the page. Evidence:');
     expect(p.people).toMatchObject({ status: 'confirmed', addressAs: 'Tony and Lisa', linkedin: 'https://www.linkedin.com/in/tony' });
     expect(p.people.owners[0]!.sources.map((s) => s.url)).toEqual(['https://alpha.co.nz/about', 'https://opencorporates.com/companies/nz/1']);
     expect(p.assets.photos.filter((x) => x.hero).map((x) => `${x.width}x${x.height}`)).toEqual(['2400x1350']);

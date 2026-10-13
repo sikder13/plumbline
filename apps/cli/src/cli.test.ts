@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { memoryDb, type Business } from '@plumbline/core';
+import { verdictStands } from './approve.ts';
 import { calibrate, calibrationReport } from './calibrate.ts';
 import { importResearchContacts } from './commands.ts';
 import { parseCsv, toCsv } from './csv.ts';
@@ -150,5 +151,19 @@ describe('a wave list', () => {
       { slug: 'third-tours', position: 2, status: 'dropped' },
       { slug: 'second-charters', position: 21, status: 'reserve' },
     ]);
+  });
+});
+
+describe('a kept verdict of the independent check', () => {
+  it('holds for the sentence it was given on, and a flag against the finding holds however it is reworded', () => {
+    const ok = { verdict: 'ok' as const, reason: '', sentence: 'Mobile speed score 31 out of 100' };
+    expect(verdictStands(ok, 'Mobile speed score 31 out of 100')).toBe(true);
+    expect(verdictStands(ok, 'Mobile speed score 40 out of 100')).toBe(false);
+    const flag = { verdict: 'flag' as const, reason: 'the menu item opens a dropdown', sentence: '1 menu item leads nowhere' };
+    expect(verdictStands(flag, 'One menu item leads nowhere')).toBe(true);
+    expect(verdictStands({ ...flag, scope: 'sentence' }, 'One menu item leads nowhere')).toBe(false);
+    expect(verdictStands({ ...flag, scope: 'sentence' }, '1 menu item leads nowhere')).toBe(true);
+    // A verdict kept without its sentence speaks for the finding as a whole.
+    expect(verdictStands({ verdict: 'ok', reason: '' }, 'anything')).toBe(true);
   });
 });

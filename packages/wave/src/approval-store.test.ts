@@ -23,7 +23,7 @@ function add(db: Db, checkId: string, status = 'reproduced', reproduced = 1): nu
 
 const statusOf = (db: Db, id: number) => (db.prepare('SELECT status FROM findings WHERE id = ?').get(id) as { status: string }).status;
 const noteOf = (db: Db, id: number) => (db.prepare('SELECT note FROM reviews WHERE finding_id = ? ORDER BY id DESC LIMIT 1').get(id) as { note: string } | undefined)?.note;
-const decision = (findingId: number, d: Decision['decision'], rule = 'F3 top three'): Decision => ({ findingId, slug: 'alpha', checkId: 'C', title: 't', decision: d, rule, tier: 'speed', reason: 'ranked 1 of 3' });
+const decision = (findingId: number, d: Decision['decision'], rule = 'F3 top three'): Decision => ({ findingId, slug: 'alpha', checkId: 'C', title: 't', sentence: 't', decision: d, rule, tier: 'speed', reason: 'ranked 1 of 3' });
 
 describe('the suppression list', () => {
   it('reads slugs and addresses, one to a line or separated by commas, whatever their case, and skips a heading', () => {

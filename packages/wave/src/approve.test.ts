@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decideFindings, isWeak, medianSpeed, needsThirdSpeedRun, rejectionFor, tierOf, type ApprovalContext, type ApprovalFinding } from './approve.ts';
+import { decideFindings, isWeak, needsThirdSpeedRun, ownerOrder, rejectionFor, tierOf, type ApprovalContext, type ApprovalFinding } from './approve.ts';
 
 const NOW = new Date('2026-10-13T08:00:00Z');
 let next = 0;
@@ -56,7 +56,7 @@ describe('Filter 1: reasons to reject a finding', () => {
   it('rejects what rests on an inference: a judgment, a first screen that was an age gate, a count we could not bear out', () => {
     expect(rule(finding('C60_conflicting_facts', { tier: 'judgment' }))).toBe('F1.4 inference, not measurement');
     const gate = context({ ageGate: true });
-    for (const check of ['C13_no_action_above_fold', 'C14_no_price_visible', 'C36_thin_homepage']) expect(rule(finding(check), gate), check).toBe('F1.4 inference, not measurement');
+    for (const check of ['C13_no_action_above_fold', 'C14_no_price_visible', 'C36_thin_homepage', 'C50_accessibility_failures']) expect(rule(finding(check), gate), check).toBe('F1.4 inference, not measurement');
     expect(rule(finding('C20_slow_mobile'), gate)).toBeNull();
     expect(rule(finding('CM_no_meta_description', { detail: { measured: 'No meta description on the example page. The 13 other pages we read all have one.' } }))).toBe('F1.4 inference, not measurement');
     expect(rule(finding('CM_no_meta_description', { detail: { measured: 'No meta description on the example page, nor on 9 of the 11 other pages we read.' } }))).toBeNull();
@@ -94,7 +94,6 @@ describe('Filter 1: reasons to reject a finding', () => {
     expect(rule(finding('C20_slow_mobile'), context({ speedRuns: split }))).toBe('F1.7 unstable speed');
     // A third run that agrees with one of the two gives a median that stands.
     const settled = [...split, { performance: 33, lcpMs: 7900 }];
-    expect(medianSpeed(settled)).toEqual({ performance: 33, lcpMs: 7900 });
     expect(rule(finding('C20_slow_mobile'), context({ speedRuns: settled }))).toBeNull();
     const wild = [{ performance: 20, lcpMs: 12000 }, { performance: 45, lcpMs: 6000 }, { performance: 90, lcpMs: 1500 }];
     expect(rule(finding('C20_slow_mobile'), context({ speedRuns: wild }))).toBe('F1.7 unstable speed');
@@ -181,6 +180,18 @@ describe('Filter 3: what is approved', () => {
     const list = [finding('C10_broken_contact_links'), finding('C11_dead_navigation'), finding('C13_no_action_above_fold'), finding('C41_outdated_platform')];
     expect(picks(list)).toEqual(['C10_broken_contact_links', 'C11_dead_navigation', 'C13_no_action_above_fold']);
     expect(picks(list, context({ flagged: new Map([[list[1]!.id, 'the items open a dropdown']]) }))).toEqual(['C10_broken_contact_links', 'C13_no_action_above_fold', 'C41_outdated_platform']);
+  });
+
+  it('gives each decision the sentence that is put to the owner', () => {
+    const runs = [{ performance: 46, lcpMs: 6568 }, { performance: 40, lcpMs: 6098 }, { performance: 31, lcpMs: 8572 }];
+    const [d] = decideFindings([finding('C20_slow_mobile', { title: 'Mobile speed score 31 out of 100, main content after 8.6 s' })], context({ speedRuns: runs }));
+    expect(d!.sentence).toBe('Mobile speed score 40 out of 100, main content after 6.6 s');
+    expect(d!.title).toBe('Mobile speed score 31 out of 100, main content after 8.6 s');
+  });
+
+  it('puts approved findings in the order they are put to the owner', () => {
+    const list = [finding('C37_not_named_by_ai'), finding('C20_slow_mobile'), finding('C41_outdated_platform'), finding('C10_broken_contact_links')];
+    expect(ownerOrder(list, context().speedRuns).map((f) => f.checkId)).toEqual(['C10_broken_contact_links', 'C20_slow_mobile', 'C41_outdated_platform', 'C37_not_named_by_ai']);
   });
 
   it('marks a business weak when fewer than two findings are approved', () => {

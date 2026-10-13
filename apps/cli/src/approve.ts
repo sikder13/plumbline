@@ -17,6 +17,8 @@ import {
   readSuppression,
   savedHtml,
   savedPages,
+  speedRuns,
+  statedSentence,
   storeDecisions,
   type ApprovalContext,
   type Decision,
@@ -33,8 +35,6 @@ export function contextFor(d: Db, b: WaveMember, batch: string, flagged: Map<num
   const homes = site ? [site.homepage.mobile, site.homepage.desktop].filter((p): p is PageCapture => !!p && p.ok) : [];
   const facts = factsFor(d, b.id);
   const booking = facts.find((f) => f.topic === 'booking')?.value as { system: string | null; link: string | null } | undefined;
-  const speed = d.prepare(`SELECT value FROM observations WHERE business_id = ? AND collector = 'lighthouse' AND run_id IN (${runs.map(() => '?').join(',') || 'NULL'}) ORDER BY run_id`).all(b.id, ...runs.map((r) => r.id)) as { value: string }[];
-  const speedRuns = speed.map((s) => (JSON.parse(s.value) as { mobile?: { median?: { performance: number; lcpMs: number } } | null }).mobile?.median).filter((m): m is { performance: number; lcpMs: number } => !!m && Number.isFinite(m.performance));
   const agencies = facts.filter((f) => f.topic === 'agency').flatMap((f) => (f.label === 'summary' ? [String((f.value as { name: string | null }).name ?? '')] : [f.label]));
   return {
     slug: b.slug,
@@ -43,7 +43,7 @@ export function contextFor(d: Db, b: WaveMember, batch: string, flagged: Map<num
     contactRoutes: contactRoutesOn(homes, savedHtml),
     agencyNames: [...new Set(agencies.flatMap((n) => n.split(/ and |,|\(/).map((x) => x.trim())).filter((n) => n.length >= 4))],
     ageGate: opensBehindAgeGate(homes),
-    speedRuns: speedRuns.slice(-3),
+    speedRuns: speedRuns(d, b.id, batch).slice(-3),
     flagged,
   };
 }
@@ -59,6 +59,19 @@ export function businessSuppressed(d: Db, b: { id: number; slug: string }, list:
   const emails = (d.prepare('SELECT email FROM contacts WHERE business_id = ? AND email IS NOT NULL').all(b.id) as { email: string }[]).map((e) => e.email);
   const published = factsFor(d, b.id, 'email')[0]?.label;
   return isSuppressed(list, b.slug, published ? [...emails, published] : emails);
+}
+
+/** A reviewer's verdict as it is kept: with the sentence it was given on, and whether a flag is about the wording alone. */
+export type StoredVerdicts = Record<string, { verdict: 'ok' | 'flag'; reason: string; sentence?: string; scope?: 'finding' | 'sentence'; note?: string }>;
+
+/**
+ * Whether a kept verdict still speaks for a finding. A pass holds only for the sentence that was
+ * passed. A flag against the finding itself holds however it is reworded, and a flag against the
+ * wording alone lapses once the wording has changed.
+ */
+export function verdictStands(v: StoredVerdicts[string], sentence: string): boolean {
+  if (v.sentence === undefined || v.sentence === sentence) return true;
+  return v.verdict === 'flag' && v.scope !== 'sentence';
 }
 
 export interface ApproveResult {
@@ -81,8 +94,7 @@ export function approveWave(d: Db, wave: string, members: WaveMember[], batch: s
   const dir = join(paths.data, 'wave');
   mkdirSync(dir, { recursive: true });
   const verdictFile = join(dir, `${wave}-review-verdicts.json`);
-  const verdicts: Verdicts = existsSync(verdictFile) ? (JSON.parse(readFileSync(verdictFile, 'utf8')) as Verdicts) : {};
-  const flagged = new Map(Object.entries(verdicts).filter(([, v]) => v.verdict === 'flag').map(([id, v]) => [Number(id), v.reason]));
+  const verdicts: StoredVerdicts = existsSync(verdictFile) ? (JSON.parse(readFileSync(verdictFile, 'utf8')) as StoredVerdicts) : {};
   const { list } = suppressionList();
   const out: ApproveResult = { decisions: [], weak: [], needSpeedRun: [], suppressed: [], toReview: 0, stored: opts.apply ? { approved: 0, rejected: 0, waiting: 0 } : null, csv: join(dir, `${wave}-approvals.csv`), packet: join(dir, `${wave}-review-packet.json`) };
   const packet: unknown[] = [];
@@ -92,28 +104,35 @@ export function approveWave(d: Db, wave: string, members: WaveMember[], batch: s
       out.suppressed.push(b.slug);
       continue;
     }
-    const ctx = contextFor(d, b, batch, flagged, now);
     const { findings, byPerson } = findingsToDecide(d, b.id, batch);
+    const ctx = contextFor(d, b, batch, new Map(), now);
+    // A verdict speaks of a finding in the words it was shown in. Said differently, the finding is looked at again.
+    const standing: Verdicts = {};
+    for (const f of findings) {
+      const v = verdicts[String(f.id)];
+      if (v && verdictStands(v, statedSentence(f, ctx.speedRuns))) standing[String(f.id)] = v;
+    }
+    ctx.flagged = new Map(Object.entries(standing).filter(([, v]) => v.verdict === 'flag').map(([id, v]) => [Number(id), v.reason]));
     if (findings.some((f) => f.checkId === 'C20_slow_mobile') && needsThirdSpeedRun(ctx.speedRuns)) out.needSpeedRun.push(b.slug);
     const made = decideFindings(findings, ctx, { always: (f) => f.checkId === 'C37_not_named_by_ai' });
-    for (const p of byPerson) out.decisions.push({ findingId: p.findingId, slug: b.slug, checkId: p.checkId, title: p.title, decision: 'reject', rule: 'UD decision', tier: 'other', reason: p.note, reviewer: '' });
+    for (const p of byPerson) out.decisions.push({ findingId: p.findingId, slug: b.slug, checkId: p.checkId, title: p.title, sentence: p.title, decision: 'reject', rule: 'UD decision', tier: 'other', reason: p.note, reviewer: '' });
     for (const m of made) {
-      const v = verdicts[String(m.findingId)];
+      const v = standing[String(m.findingId)];
       out.decisions.push({ ...m, reviewer: v ? `${v.verdict}${v.reason ? `: ${v.reason}` : ''}` : m.decision === 'approve' ? 'not yet checked' : '' });
       if (m.decision !== 'approve' || v) continue;
       const f = findings.find((x) => x.id === m.findingId)!;
-      packet.push({ findingId: f.id, slug: b.slug, business: b.name, website: b.website, check: f.checkId, source: f.source, sentence: f.title, tier: m.tier, measured: f.detail, evidence: f.evidence, knownWaysToBook: ctx.bookingRoutes, knownWaysToGetInTouch: ctx.contactRoutes, homepageOpensBehindAgeGate: ctx.ageGate, speedRuns: ctx.speedRuns });
+      packet.push({ findingId: f.id, slug: b.slug, business: b.name, website: b.website, check: f.checkId, source: f.source, sentence: m.sentence, tier: m.tier, measured: f.detail, evidence: f.evidence, knownWaysToBook: ctx.bookingRoutes, knownWaysToGetInTouch: ctx.contactRoutes, homepageOpensBehindAgeGate: ctx.ageGate, speedRuns: ctx.speedRuns });
     }
     if (isWeak(made)) out.weak.push(b.slug);
     if (out.stored) {
-      const s = storeDecisions(d, made, verdicts);
+      const s = storeDecisions(d, made, standing);
       out.stored = { approved: out.stored.approved + s.approved, rejected: out.stored.rejected + s.rejected, waiting: out.stored.waiting + s.waiting };
     }
   }
 
   out.toReview = packet.length;
   const columns = ['finding_id', 'slug', 'decision', 'rule', 'tier', 'check', 'finding', 'reason', 'independent_check'];
-  writeFileSync(out.csv, toCsv(out.decisions.map((x) => ({ finding_id: x.findingId, slug: x.slug, decision: x.decision, rule: x.rule, tier: x.tier, check: x.checkId, finding: x.title, reason: x.reason, independent_check: x.reviewer })), columns));
+  writeFileSync(out.csv, toCsv(out.decisions.map((x) => ({ finding_id: x.findingId, slug: x.slug, decision: x.decision, rule: x.rule, tier: x.tier, check: x.checkId, finding: x.sentence, reason: x.reason, independent_check: x.reviewer })), columns));
   writeFileSync(out.packet, JSON.stringify(packet, null, 2));
   return out;
 }

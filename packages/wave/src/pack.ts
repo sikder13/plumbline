@@ -4,7 +4,9 @@ import { nzTime, type Db } from '@plumbline/core';
 import { CHECKS } from '@plumbline/checks/ids';
 import { factsFor, type Fact } from './facts.ts';
 import { waveMembers, type WaveMember } from './list.ts';
+import { ownerOrder } from './approve.ts';
 import { CRAWLMOUSE_TITLES, rankFindings, type OwnerGroup } from './rank.ts';
+import { speedRuns, statedSentence } from './stated.ts';
 
 /** Everything held about one business of a wave that a person needs before writing to its owner. */
 export interface PackBusiness {
@@ -24,7 +26,7 @@ export interface PackBusiness {
   booking: { system: string | null; link: string | null; sourceUrl: string | null; note: string | null } | null;
   prices: { item: string; text: string; sourceUrl: string | null; conflict: boolean }[];
   priceConflicts: { item: string; values: { text: string; sourceUrl: string | null }[] }[];
-  findings: { id: number; source: 'Plumbline' | 'Crawlmouse'; check: string; sentence: string; measured: string; group: OwnerGroup; evidence: string[]; verifiedOn: string | null }[];
+  findings: { id: number; source: 'Plumbline' | 'Crawlmouse'; check: string; sentence: string; measured: string; said: string; note: string | null; group: OwnerGroup; evidence: string[]; verifiedOn: string | null }[];
   strengths: { ai: { question: string; answers: number; namedIn: number; strength: boolean; askedOn: string }[]; other: { kind: string; text: string; sourceUrl: string | null }[] };
   assets: {
     photos: { url: string; width: number; height: number; kind: string; file: string | null; pageUrl: string | null; hero: number | null }[];
@@ -43,6 +45,8 @@ export interface PackExtras {
   linkedinNotes?: string | null;
   /** The day the stored Google ratings were measured. */
   googleMeasuredOn?: string | null;
+  /** What the independent check said to mind when wording a finding, by finding id. */
+  notes?: Record<number, string>;
 }
 
 const day = (iso: string | null | undefined) => (iso ? nzTime(iso).slice(0, 10) : 'date not recorded');
@@ -72,8 +76,11 @@ export function packBusiness(db: Db, b: WaveMember, batch: string, extras: PackE
   const rows = db.prepare("SELECT id, check_id, source, status, severity, score, title, detail, last_verified_at FROM findings WHERE business_id = ? AND batch = ? AND status = 'approved'").all(b.id, batch) as { id: number; check_id: string; source: string; status: string; severity: number; score: number; title: string; detail: string; last_verified_at: string | null }[];
   const evidence = db.prepare('SELECT path FROM evidence WHERE finding_id = ? AND path IS NOT NULL ORDER BY id');
   // Of the approved findings, those put forward: one for each check, the first three to five in the owner's order.
-  const findings = rankFindings(rows)
-    .filter((r) => r.kept)
+  const runs = speedRuns(db, b.id, batch);
+  const put = rankFindings(rows).filter((r) => r.kept);
+  const order = ownerOrder(put.map((r) => ({ id: r.finding.id, checkId: r.finding.check_id, severity: r.finding.severity, score: r.finding.score, detail: JSON.parse(r.finding.detail || '{}') as Record<string, unknown> })), runs).map((f) => f.id);
+  const findings = put
+    .sort((x, y) => order.indexOf(x.finding.id) - order.indexOf(y.finding.id))
     .map((r) => {
       const f = r.finding;
       const crawlmouse = f.source === 'crawlmouse';
@@ -85,6 +92,9 @@ export function packBusiness(db: Db, b: WaveMember, batch: string, extras: PackE
         // Plumbline's sentence is the name of its check. Crawlmouse's is the sentence it wrote.
         sentence: crawlmouse ? f.title : title,
         measured: crawlmouse ? ((JSON.parse(f.detail || '{}') as { measured?: string }).measured ?? '') : f.title,
+        // The words it is put to the owner in: speed as the median of three runs, counts from our own reading.
+        said: statedSentence({ checkId: f.check_id, title: f.title, detail: JSON.parse(f.detail || '{}') as Record<string, unknown> }, runs),
+        note: extras.notes?.[f.id] ?? null,
         group: r.group,
         evidence: (evidence.all(f.id) as { path: string }[]).map((e) => e.path),
         verifiedOn: f.last_verified_at,
@@ -161,7 +171,7 @@ export function packSection(p: PackBusiness): string[] {
   for (const x of p.prices.slice(0, 6)) out.push(`  - Price, ${short(x.item, 120)}: ${short(x.text, 40)}${x.conflict ? ' (conflicts, see below)' : ''} (${x.sourceUrl})`);
   for (const c of p.priceConflicts.slice(0, 2)) out.push(`  - PRICE CONFLICT, ${short(c.item, 120)}: ${c.values.slice(0, 3).map((v) => `${short(v.text, 40)} on ${v.sourceUrl}`).join(' but ')}. We do not pick one.`);
   out.push(`- **Approved findings, ranked:**${p.findings.length ? '' : ' none approved.'}`);
-  for (const [i, f] of p.findings.slice(0, 5).entries()) out.push(`  ${i + 1}. [#${f.id}, ${f.source}] ${short(f.sentence, 240).replace(/\.$/, '')}. Measured: ${short(f.measured, 260)} Evidence: ${f.evidence[0] ?? 'the stored answers (no screenshot)'}. Verified ${day(f.verifiedOn)}.`);
+  for (const [i, f] of p.findings.slice(0, 5).entries()) out.push(`  ${i + 1}. [#${f.id}, ${f.source}] ${short(f.said, 240).replace(/\.$/, '')}. Measured: ${short(f.measured, 260).replace(/\.?$/, '.')}${f.note ? ` Mind: ${short(f.note, 300).replace(/\.?$/, '.')}` : ''} Evidence: ${f.evidence[0] ?? 'the stored answers (no screenshot)'}. Verified ${day(f.verifiedOn)}.`);
   out.push('- **Strengths:**');
   for (const a of p.strengths.ai.slice(0, 2)) out.push(`  - AI check${a.strength ? ' (a strength)' : ''}: named in ${a.namedIn} of ${a.answers} answers to "${short(a.question, 200)}" (asked ${day(a.askedOn)})`);
   if (!p.strengths.ai.length) out.push('  - AI check: no question has been asked and settled for this business.');

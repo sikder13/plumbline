@@ -4,6 +4,8 @@
  * the first few are approved. Every decision carries the rule that made it.
  */
 
+import { statedSentence, steadySpeed, type SpeedRun } from './stated.ts';
+
 export interface ApprovalFinding {
   id: number;
   checkId: string;
@@ -32,7 +34,7 @@ export interface ApprovalContext {
   /** The homepage opens behind an age gate, so what was measured on its first screen is the gate. */
   ageGate: boolean;
   /** Phone speed on each run, oldest first: the median of that run's measurements. */
-  speedRuns: { performance: number; lcpMs: number }[];
+  speedRuns: SpeedRun[];
   /** Findings an independent reviewer flagged, by id, with the reason given. */
   flagged: Map<number, string>;
 }
@@ -45,8 +47,8 @@ export interface Rejection {
 const HOURS = 3_600_000;
 const BOOKING_CLAIMS = new Set(['T01_no_online_booking', 'T03_platform_dependency']);
 const CONTACT_CLAIMS = new Set(['C15_contact_details_missing']);
-/** Checks that read the first screen or the amount of text on the homepage. Behind an age gate they read the gate. */
-const READS_FIRST_SCREEN = new Set(['C13_no_action_above_fold', 'C14_no_price_visible', 'C15_contact_details_missing', 'C36_thin_homepage']);
+/** Checks that read the first screen, the words or the controls of the homepage. Behind an age gate they read the gate, or the gate among the rest. */
+const READS_FIRST_SCREEN = new Set(['C13_no_action_above_fold', 'C14_no_price_visible', 'C15_contact_details_missing', 'C36_thin_homepage', 'C50_accessibility_failures']);
 const AGENCY_WORDS = /\b(agency|web ?designer|web ?developer|website by|site by|designed by|built by|developed by)\b/i;
 /** An unlinked page matters to the owner only when it is one visitors need in order to buy. */
 const NEEDED_PAGE = /\b(book|booking|bookings|reservations?|tours?|trips?|packages?|products?|shop|tastings?|hire|rentals?)\b/i;
@@ -73,18 +75,11 @@ function bornOut(f: ApprovalFinding): boolean {
 /** Two runs disagree when either the score or the time to main content differs by more than this share. */
 export const SPEED_TOLERANCE = 0.3;
 const apart = (a: number, b: number) => Math.abs(a - b) / Math.max(a, b, 1) > SPEED_TOLERANCE;
-const disagree = (a: ApprovalContext['speedRuns'][number], b: ApprovalContext['speedRuns'][number]) => apart(a.performance, b.performance) || apart(a.lcpMs, b.lcpMs);
+const disagree = (a: SpeedRun, b: SpeedRun) => apart(a.performance, b.performance) || apart(a.lcpMs, b.lcpMs);
 
 /** Whether the last two speed runs disagree, so that a third is needed before the finding can be judged. */
-export function needsThirdSpeedRun(runs: ApprovalContext['speedRuns']): boolean {
+export function needsThirdSpeedRun(runs: SpeedRun[]): boolean {
   return runs.length === 2 && disagree(runs[0]!, runs[1]!);
-}
-
-/** The run in the middle of the last three, by score. */
-export function medianSpeed(runs: ApprovalContext['speedRuns']): ApprovalContext['speedRuns'][number] | null {
-  const last = runs.slice(-3);
-  if (!last.length) return null;
-  return [...last].sort((a, b) => a.performance - b.performance)[Math.floor(last.length / 2)]!;
 }
 
 /** Filter 1: the first reason to reject a finding, or null when it survives. */
@@ -105,7 +100,7 @@ export function rejectionFor(f: ApprovalFinding, ctx: ApprovalContext): Rejectio
   if (named || AGENCY_WORDS.test(f.title)) return { rule: 'F1.3 names or blames an agency', reason: named ? `mentions ${named}` : 'the finding speaks of whoever built the site' };
 
   if (f.tier === 'judgment') return { rule: 'F1.4 inference, not measurement', reason: 'a person has to judge it' };
-  if (ctx.ageGate && READS_FIRST_SCREEN.has(f.checkId)) return { rule: 'F1.4 inference, not measurement', reason: 'the homepage opens behind an age gate, so the first screen measured was the gate' };
+  if (ctx.ageGate && READS_FIRST_SCREEN.has(f.checkId)) return { rule: 'F1.4 inference, not measurement', reason: 'the homepage opens behind an age gate, so what was measured was the gate, or the gate with the page' };
   if (f.source === 'crawlmouse') {
     if (typeof f.detail.caution === 'string' && f.detail.caution.trim()) return { rule: 'F1.4 inference, not measurement', reason: `its source says to check first: ${f.detail.caution.trim()}` };
     if (!bornOut(f)) return { rule: 'F1.4 inference, not measurement', reason: 'the count in the sentence is not borne out by the pages we read ourselves' };
@@ -126,9 +121,8 @@ export function rejectionFor(f: ApprovalFinding, ctx: ApprovalContext): Rejectio
     if (runs.length < 2) return { rule: 'F1.7 unstable speed', reason: 'fewer than two speed runs to compare' };
     if (needsThirdSpeedRun(runs)) return { rule: 'F1.7 unstable speed', reason: 'two runs disagree by more than 30% and no third run has been made' };
     if (runs.length === 3) {
-      const mid = medianSpeed(runs)!;
-      // With three runs the median stands when at least one other run agrees with it.
-      if (!runs.some((r) => r !== mid && !disagree(r, mid))) return { rule: 'F1.7 unstable speed', reason: 'three runs and no two of them agree within 30%' };
+      // With three runs the median stands when at least two of them agree with each other.
+      if (disagree(runs[0]!, runs[1]!) && disagree(runs[1]!, runs[2]!) && disagree(runs[0]!, runs[2]!)) return { rule: 'F1.7 unstable speed', reason: 'three runs and no two of them agree within 30%' };
     }
   }
   return null;
@@ -180,13 +174,25 @@ export const SPEED_BAR = { lcpMs: 4000, performance: 50 };
 
 export function tierOf(f: ApprovalFinding, ctx: ApprovalContext): { tier: OwnerTier; place: number } {
   if (f.checkId === 'C20_slow_mobile') {
-    const m = medianSpeed(ctx.speedRuns) ?? { performance: Number(f.detail.performance ?? 100), lcpMs: Number(f.detail.lcpMs ?? 0) };
+    const m = steadySpeed(ctx.speedRuns) ?? { performance: Number(f.detail.performance ?? 100), lcpMs: Number(f.detail.lcpMs ?? 0) };
     return m.lcpMs > SPEED_BAR.lcpMs || m.performance < SPEED_BAR.performance ? { tier: 'speed', place: 1 } : { tier: 'other', place: 1 };
   }
   // A price missing from the homepage but shown on another page costs far less than no price anywhere.
   if (f.checkId === 'C14_no_price_visible' && ((f.detail.pricesFoundOn as unknown[] | undefined) ?? []).length) return { tier: 'other', place: 2 };
   const p = PLACE[f.checkId];
   return p ? { tier: p[0], place: p[1] } : { tier: 'other', place: 50 };
+}
+
+const byTier = (a: { tier: OwnerTier; place: number; f: ApprovalFinding }, b: { tier: OwnerTier; place: number; f: ApprovalFinding }) =>
+  TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) || a.place - b.place || b.f.severity - a.f.severity || b.f.score - a.f.score || a.f.id - b.f.id;
+
+/** Findings in the order they are put to the owner: by tier, then by how directly each costs a booking. */
+export function ownerOrder<T extends Pick<ApprovalFinding, 'id' | 'checkId' | 'severity' | 'score' | 'detail'>>(findings: T[], speedRuns: SpeedRun[]): T[] {
+  const ctx = { speedRuns } as ApprovalContext;
+  return findings
+    .map((f) => ({ f: f as unknown as ApprovalFinding, ...tierOf(f as unknown as ApprovalFinding, ctx) }))
+    .sort(byTier)
+    .map((r) => r.f as unknown as T);
 }
 
 /** Findings that come from one cause. Of each group the clearer one is kept. */
@@ -204,6 +210,8 @@ export interface Decision {
   slug: string;
   checkId: string;
   title: string;
+  /** The finding in the words it is put to the owner in. */
+  sentence: string;
   decision: 'approve' | 'reject';
   rule: string;
   tier: OwnerTier;
@@ -221,7 +229,7 @@ export interface ApprovalOptions {
  */
 export function decideFindings(findings: ApprovalFinding[], ctx: ApprovalContext, opts: ApprovalOptions = {}): Decision[] {
   const out: Decision[] = [];
-  const say = (f: ApprovalFinding, decision: Decision['decision'], rule: string, reason: string) => out.push({ findingId: f.id, slug: ctx.slug, checkId: f.checkId, title: f.title, decision, rule, tier: tierOf(f, ctx).tier, reason });
+  const say = (f: ApprovalFinding, decision: Decision['decision'], rule: string, reason: string) => out.push({ findingId: f.id, slug: ctx.slug, checkId: f.checkId, title: f.title, sentence: statedSentence(f, ctx.speedRuns), decision, rule, tier: tierOf(f, ctx).tier, reason });
 
   const survivors: ApprovalFinding[] = [];
   for (const f of findings) {
@@ -232,7 +240,7 @@ export function decideFindings(findings: ApprovalFinding[], ctx: ApprovalContext
 
   const ranked = survivors
     .map((f) => ({ f, ...tierOf(f, ctx) }))
-    .sort((a, b) => TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) || a.place - b.place || b.f.severity - a.f.severity || b.f.score - a.f.score || a.f.id - b.f.id);
+    .sort(byTier);
 
   // Filter 1.8: one finding for each cause. A broken address reported twice is kept where the link to it is shown.
   const kept: typeof ranked = [];
