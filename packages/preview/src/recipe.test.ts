@@ -1,5 +1,8 @@
+import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { batchOf, checkRecipe, layoutOf, lookOf, pagesToPublish, recipeContent, varietyIssues, type Placed } from './recipe.ts';
+import { batchOf, checkRecipe, layoutOf, liveBatches, lookOf, pagesToPublish, recipeContent, recipeSlugs, recordLiveBatches, retireRecipe, varietyIssues, type Placed } from './recipe.ts';
 import type { Recipe, Section } from './types.ts';
 
 const hero = (variant: 'photo' | 'split' | 'type' | 'frame' = 'photo'): Section => ({ kind: 'hero', variant, place: 'Seal Cove, Example Coast', lines: ['Seals at', 'their own pace'] });
@@ -102,5 +105,30 @@ describe('build batches', () => {
     const order = { A: ['alpha', 'bravo'], B: ['charlie'], C: ['delta'] };
     expect(batchOf(order, 'charlie')).toBe('B');
     expect(batchOf(order, 'nobody')).toBeNull();
+  });
+});
+
+describe('the batches that are live', () => {
+  it('are written down by a build that names them, and read back by a build that does not', () => {
+    const file = join(mkdtempSync(join(tmpdir(), 'plumbline-live-')), 'live-batches.json');
+    expect(liveBatches(file)).toBeNull();
+    recordLiveBatches(['A', 'B'], file);
+    expect(liveBatches(file)).toEqual(['A', 'B']);
+  });
+
+  it('carry no recipe page whose batch has not been named', () => {
+    expect(pagesToPublish(['alpha', 'bravo', 'charlie'], ['alpha'], { A: ['bravo'], B: ['charlie'] }, [])).toEqual(['alpha']);
+  });
+});
+
+describe('a recipe set aside when its page is taken down', () => {
+  it('is no longer built, and is kept', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'plumbline-recipes-'));
+    writeFileSync(join(dir, 'alpha.json'), '{}');
+    writeFileSync(join(dir, 'bravo.json'), '{}');
+    expect(retireRecipe('alpha', dir)).toBe(true);
+    expect(recipeSlugs(dir)).toEqual(['bravo']);
+    expect(existsSync(join(dir, 'removed', 'alpha.json'))).toBe(true);
+    expect(retireRecipe('alpha', dir)).toBe(false);
   });
 });

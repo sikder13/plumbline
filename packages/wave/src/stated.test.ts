@@ -43,8 +43,11 @@ describe('the sentence put to an owner', () => {
       '9 of the 12 pages we read have no main heading, and 11 of the 12 have no structured data',
     );
     expect(statedSentence(f('CM_no_meta_description', 'Half the pages have no meta description.', { measured: 'No meta description on the 2 example pages, nor on 1 of the 4 other pages we read.' }), [])).toBe('3 of the 6 pages we read have no meta description');
-    // With nothing of ours to count, the sentence stays as it was.
-    expect(statedSentence(f('CM_no_meta_description', 'Half the pages have no meta description.', { measured: 'No meta description on the example page.' }), [])).toBe('Half the pages have no meta description.');
+    // Where we read no other page, the sentence speaks of the pages we did read and gives no count of theirs.
+    expect(statedSentence(f('CM_no_meta_description', '72 of 102 pages have no meta description.', { measured: 'No meta description on the example page.' }), [])).toBe('The one page we read has no meta description');
+    expect(statedSentence(f('CM_no_main_heading', 'Half the pages have no main heading.', { measured: 'No main heading on the 3 example pages.' }), [])).toBe('The 3 pages we read have no main heading');
+    // With nothing of ours to go on at all, the sentence stays as it was.
+    expect(statedSentence(f('CM_no_meta_description', 'Half the pages have no meta description.', { measured: '' }), [])).toBe('Half the pages have no meta description.');
   });
 
   it('names an unlinked page and a leftover page by its address', () => {
@@ -61,5 +64,10 @@ describe('the sentence put to an owner', () => {
 
   it('leaves every other finding in its own words', () => {
     expect(statedSentence(f('C41_outdated_platform', 'PHP 7.1.33 is past its end of life (2019-12-01)'), [])).toBe('PHP 7.1.33 is past its end of life (2019-12-01)');
+  });
+
+  it('keeps the query of an address, which may be all that tells two pages apart', () => {
+    expect(statedSentence(f('CM_leftover_page', 'A sample page is still live.', { examples: [{ url: 'https://x.co.nz/?p=1', title: 'Hello world' }] }), [])).toBe('The page at /?p=1 is still live, under the title "Hello world"');
+    expect(statedSentence(f('CM_missing_page', 'A link leads to a missing page.', { examples: [{ url: 'https://x.co.nz/info', linkedFrom: [{ pageUrl: 'https://x.co.nz/?page_id=7', text: 'Info' }] }] }), [])).toBe('The link "Info" on /?page_id=7 leads to a missing page (404)');
   });
 });

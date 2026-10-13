@@ -70,6 +70,18 @@ export function businessSuppressed(d: Db, b: { id: number; slug: string }, list:
   return null;
 }
 
+/** Sorts a list of businesses into those that may be built for and written to, and those that may not, each with the reason. */
+export function clearToContact<T extends { id: number; slug: string }>(d: Db, members: T[], list: Set<string>): { clear: T[]; held: { slug: string; why: string }[] } {
+  const clear: T[] = [];
+  const held: { slug: string; why: string }[] = [];
+  for (const b of members) {
+    const why = businessSuppressed(d, b, list);
+    if (why) held.push({ slug: b.slug, why });
+    else clear.push(b);
+  }
+  return { clear, held };
+}
+
 /** A reviewer's verdict as it is kept: with the sentence it was given on, and whether a flag is about the wording alone. */
 export type StoredVerdicts = Record<string, { verdict: 'ok' | 'flag'; reason: string; sentence?: string; scope?: 'finding' | 'sentence'; note?: string }>;
 

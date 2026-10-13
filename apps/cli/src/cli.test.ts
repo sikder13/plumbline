@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { memoryDb, type Business } from '@plumbline/core';
-import { businessSuppressed, verdictStands } from './approve.ts';
+import { businessSuppressed, clearToContact, verdictStands } from './approve.ts';
 import { calibrate, calibrationReport } from './calibrate.ts';
 import { importResearchContacts } from './commands.ts';
 import { parseCsv, toCsv } from './csv.ts';
@@ -189,5 +189,11 @@ describe('a business that must not be built for or written to', () => {
     expect(businessSuppressed(db, { id: 2, slug: 'bravo' }, list)).toBe('excluded');
     expect(businessSuppressed(db, { id: 3, slug: 'charlie' }, list)).toBe('their site refuses unsolicited messages: "No unsolicited marketing please."');
     expect(businessSuppressed(db, { id: 4, slug: 'delta' }, list)).toBe('on the suppression list');
+  });
+
+  it('is sorted out of any list of pages to publish or drafts to mark, with the reason', () => {
+    const db = seeded();
+    const all = [{ id: 1, slug: 'alpha' }, { id: 2, slug: 'bravo' }, { id: 4, slug: 'delta' }];
+    expect(clearToContact(db, all, new Set(['info@delta.co.nz']))).toEqual({ clear: [{ id: 1, slug: 'alpha' }], held: [{ slug: 'bravo', why: 'excluded' }, { slug: 'delta', why: 'on the suppression list' }] });
   });
 });

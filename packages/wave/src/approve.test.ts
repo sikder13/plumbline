@@ -199,3 +199,22 @@ describe('Filter 3: what is approved', () => {
     expect(isWeak(decideFindings([finding('C10_broken_contact_links'), finding('C41_outdated_platform')], context()))).toBe(false);
   });
 });
+
+describe('a flag from the independent check', () => {
+  it('rejects the finding even when no reason came with it', () => {
+    const f = finding('C10_broken_contact_links');
+    expect(rejectionFor(f, context({ flagged: new Map([[f.id, '']]) }))).toEqual({ rule: 'F4 independent check', reason: 'flagged, with no reason given' });
+  });
+});
+
+describe('two findings about broken addresses', () => {
+  const picks = (list: ApprovalFinding[]) => decideFindings(list, context()).filter((d) => d.decision === 'approve').map((d) => d.checkId);
+
+  it('are one cause only when the broken address is the same, not when both links sit on the same page', () => {
+    const missing = finding('CM_missing_page', { detail: { examples: [{ url: 'https://alpha.co.nz/booking', linkedFrom: [{ pageUrl: 'https://alpha.co.nz/' }] }] } });
+    const elsewhere = finding('C12_broken_internal_links', { detail: { links: [{ url: 'https://alpha.co.nz/old-tours', status: 404, foundOn: 'https://alpha.co.nz/' }] } });
+    expect(picks([missing, elsewhere])).toEqual(['CM_missing_page', 'C12_broken_internal_links']);
+    const same = finding('C12_broken_internal_links', { detail: { links: [{ url: 'https://www.alpha.co.nz/booking/', status: 404, foundOn: 'https://alpha.co.nz/' }] } });
+    expect(picks([missing, same])).toEqual(['CM_missing_page']);
+  });
+});

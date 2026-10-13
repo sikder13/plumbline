@@ -84,8 +84,7 @@ export function needsThirdSpeedRun(runs: SpeedRun[]): boolean {
 
 /** Filter 1: the first reason to reject a finding, or null when it survives. */
 export function rejectionFor(f: ApprovalFinding, ctx: ApprovalContext): Rejection | null {
-  const flag = ctx.flagged.get(f.id);
-  if (flag) return { rule: 'F4 independent check', reason: flag };
+  if (ctx.flagged.has(f.id)) return { rule: 'F4 independent check', reason: ctx.flagged.get(f.id)?.trim() || 'flagged, with no reason given' };
 
   if (f.status !== 'reproduced' && f.status !== 'approved') return { rule: 'F1.1 did not reproduce', reason: `status is ${f.status}` };
   if (!f.lastVerifiedAt || ctx.now.getTime() - new Date(f.lastVerifiedAt).getTime() > 24 * HOURS) return { rule: 'F1.1 did not reproduce', reason: 'not re-checked within the last 24 hours' };
@@ -203,7 +202,21 @@ function rootCause(f: ApprovalFinding): string {
 }
 
 const bare = (url: string) => url.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, '').toLowerCase();
-const addressesIn = (f: ApprovalFinding) => new Set((JSON.stringify(f.detail).match(/https?:\/\/[^\s"'<>\\]+/g) ?? []).map(bare));
+/** Where a link was found, and what was written about it, is not the address that is broken. */
+const NOT_THE_ADDRESS = new Set(['foundOn', 'pageUrl', 'linkedFrom', 'measured', 'sentence']);
+
+/** The addresses a finding says are broken. */
+function brokenAddresses(value: unknown, out: Set<string> = new Set()): Set<string> {
+  if (typeof value === 'string') {
+    if (/^https?:\/\//i.test(value)) out.add(bare(value));
+  } else if (Array.isArray(value)) {
+    for (const v of value) brokenAddresses(v, out);
+  } else if (value && typeof value === 'object') {
+    for (const [key, v] of Object.entries(value)) if (!NOT_THE_ADDRESS.has(key)) brokenAddresses(v, out);
+  }
+  return out;
+}
+const addressesIn = (f: ApprovalFinding) => brokenAddresses(f.detail);
 
 export interface Decision {
   findingId: number;

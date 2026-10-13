@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import type { Db } from '@plumbline/core';
-import { decide } from '@plumbline/checks/review';
+import { decide, refreshTop3 } from '@plumbline/checks/review';
 import type { ApprovalFinding, Decision } from './approve.ts';
 
 /** The suppression list: slugs and email addresses that must not be built for or written to. */
@@ -8,7 +8,8 @@ export function readSuppression(text: string): Set<string> {
   return new Set(
     text
       .split(/[\r\n,;]+/)
-      .map((x) => x.trim().toLowerCase())
+      // A list saved from a spreadsheet has its cells in quotes.
+      .map((x) => x.trim().replace(/^"(.*)"$/, '$1').trim().toLowerCase())
       .filter((x) => x && !/^(slug|email|address|reason)$/.test(x)),
   );
 }
@@ -81,22 +82,34 @@ export type Verdicts = Record<string, { verdict: 'ok' | 'flag'; reason: string }
 
 /**
  * Stores what the rules decided. A rejection is stored at once. An approval is stored only when
- * the independent check has passed the finding, and waits otherwise. A finding that has gone
- * from the site, or never reproduced, keeps its own status.
+ * the independent check has passed the finding, and waits otherwise. An approval the rules gave
+ * earlier is taken back when the pass behind it no longer stands, as when the finding now reads
+ * differently. A finding that has gone from the site, or never reproduced, keeps its own status.
  */
 export function storeDecisions(db: Db, decisions: Decision[], verdicts: Verdicts): { approved: number; rejected: number; waiting: number } {
   const out = { approved: 0, rejected: 0, waiting: 0 };
-  const status = db.prepare('SELECT status FROM findings WHERE id = ?');
+  const status = db.prepare('SELECT status, business_id, batch FROM findings WHERE id = ?');
+  const lastNote = db.prepare('SELECT note FROM reviews WHERE finding_id = ? ORDER BY id DESC LIMIT 1');
   for (const d of decisions) {
-    const current = (status.get(d.findingId) as { status: string } | undefined)?.status;
-    if (!current) continue;
+    const row = status.get(d.findingId) as { status: string; business_id: number; batch: string } | undefined;
+    const current = row?.status;
+    if (!row || !current) continue;
+    const passed = verdicts[String(d.findingId)]?.verdict === 'ok';
     if (d.decision === 'reject') {
       if (current === 'reproduced' || current === 'approved') {
         decide(db, d.findingId, 'reject', `${BY_RULE}${d.rule}. ${d.reason}`);
         out.rejected += 1;
       }
-    } else if (current !== 'approved') {
-      if (verdicts[String(d.findingId)]?.verdict === 'ok') {
+    } else if (current === 'approved') {
+      // What a person approved stands. What the rules approved stands only for the sentence that was passed.
+      const byRule = ((lastNote.get(d.findingId) as { note: string | null } | undefined)?.note ?? '').startsWith(BY_RULE);
+      if (!passed && byRule) {
+        db.prepare("UPDATE findings SET status = 'reproduced' WHERE id = ?").run(d.findingId);
+        refreshTop3(db, row.business_id, row.batch);
+        out.waiting += 1;
+      }
+    } else {
+      if (passed) {
         if (current === 'rejected') db.prepare("UPDATE findings SET status = 'reproduced' WHERE id = ? AND reproduced = 1").run(d.findingId);
         decide(db, d.findingId, 'approve', `${BY_RULE}${d.rule}. ${d.reason}. Passed the independent check.`);
         out.approved += 1;

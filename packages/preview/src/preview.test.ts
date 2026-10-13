@@ -1,8 +1,11 @@
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { chromium } from 'playwright';
 import { describe, expect, it } from 'vitest';
 import { cropInPixels, nzReadable, plainDates, plainImpact, plainSeen, withoutDashes } from './build.ts';
 import { bannedIssues, dashIssues, numberIssues, numberSet, scanPage, splitPage, visibleText } from './copy.ts';
 import { holds, kindOf, pageFacts } from './crawlmouse.ts';
-import { validMailto, validTel } from './gates.ts';
+import { quietContext, validMailto, validTel } from './gates.ts';
 import { summarise } from './visits.ts';
 
 describe('finding text for a page', () => {
@@ -126,4 +129,30 @@ describe('visits', () => {
       { token: 'b-def456', firstView: null, lastView: null, views: 0, findingsTab: false, replyOrCall: false },
     ]);
   });
+});
+
+describe('a browser opened by a gate', () => {
+  it('answers the visit report itself, so a check is never counted as a visit', async () => {
+    let reports = 0;
+    const server = createServer((req, res) => {
+      if (req.url === '/api/demo-visit') {
+        reports += 1;
+        res.writeHead(204).end();
+        return;
+      }
+      res.writeHead(200, { 'content-type': 'text/html' }).end('<!doctype html><title>waiting</title><script>fetch("/api/demo-visit",{method:"POST",body:"{}"}).then(function(){document.title="sent"})</script>');
+    });
+    await new Promise<void>((done) => server.listen(0, '127.0.0.1', done));
+    const browser = await chromium.launch();
+    try {
+      const ctx = await quietContext(browser, { viewport: { width: 390, height: 844 } });
+      const page = await ctx.newPage();
+      await page.goto(`http://127.0.0.1:${(server.address() as AddressInfo).port}/`);
+      await page.waitForFunction(() => document.title === 'sent');
+      expect(reports).toBe(0);
+    } finally {
+      await browser.close();
+      server.close();
+    }
+  }, 60_000);
 });

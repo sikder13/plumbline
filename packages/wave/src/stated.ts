@@ -34,7 +34,9 @@ export function speedSeen(runs: SpeedRun[]): string | null {
 function place(url: string): string {
   try {
     const u = new URL(url);
-    return u.pathname === '/' ? 'the homepage' : u.pathname;
+    // The query is kept: on some sites it is all that tells one page from another.
+    const path = `${u.pathname}${u.search}`;
+    return path === '/' ? 'the homepage' : path;
   } catch {
     return url;
   }
@@ -85,8 +87,14 @@ export function statedSentence(f: { checkId: string; title: string; detail: Reco
     return e ? `The page at ${place(e.url)} is still live${e.title ? `, under the title "${e.title}"` : ''}` : f.title;
   }
   if (/^CM_no_/.test(f.checkId)) {
-    const counts = [...measured.matchAll(ABSENT)].filter((m) => m[4]).map((m) => ({ what: m[1]!, without: Number(m[2] ?? 1) + Number(m[3]), of: Number(m[2] ?? 1) + Number(m[4]) }));
-    if (!counts.length) return f.title;
+    const seen = [...measured.matchAll(ABSENT)];
+    const counts = seen.filter((m) => m[4]).map((m) => ({ what: m[1]!, without: Number(m[2] ?? 1) + Number(m[3]), of: Number(m[2] ?? 1) + Number(m[4]) }));
+    if (!counts.length) {
+      // Where no other page was read, only the pages we did read are spoken of, and no count of anyone else's.
+      if (!seen.length) return f.title;
+      const read = Number(seen[0]![2] ?? 1);
+      return `${read === 1 ? 'The one page we read has' : `The ${read} pages we read have`} no ${seen.map((m) => m[1]!).join(' and no ')}`;
+    }
     const [first, ...rest] = counts;
     return [`${first!.without} of the ${first!.of} pages we read have no ${first!.what}`, ...rest.map((c) => `${c.without} of the ${c.of} have no ${c.what}`)].join(', and ');
   }

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { z } from 'zod';
 import { previewPaths } from './paths.ts';
@@ -93,10 +93,23 @@ export function recipeFile(slug: string): string {
 }
 
 /** The businesses that have a recipe. */
-export function recipeSlugs(): string[] {
-  const dir = join(previewPaths.root, 'recipes');
+const recipesDir = () => join(previewPaths.root, 'recipes');
+
+export function recipeSlugs(dir: string = recipesDir()): string[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5)).sort();
+}
+
+/**
+ * Sets a recipe aside when its page is taken down, so the page is not built again. The recipe is
+ * kept, under removed/, in case the page comes back.
+ */
+export function retireRecipe(slug: string, dir: string = recipesDir()): boolean {
+  const file = join(dir, `${slug}.json`);
+  if (!existsSync(file)) return false;
+  mkdirSync(join(dir, 'removed'), { recursive: true });
+  renameSync(file, join(dir, 'removed', `${slug}.json`));
+  return true;
 }
 
 /** Reads a recipe and refuses one that does not hold together. */
@@ -189,6 +202,21 @@ export function pagesToPublish(built: string[], designed: string[], order: Batch
     for (const slug of order[b]) wanted.add(slug);
   }
   return built.filter((slug) => wanted.has(slug)).sort();
+}
+
+const liveFile = () => join(previewPaths.root, 'live-batches.json');
+
+/**
+ * The batches whose recipe pages are live, or null when none has been written down. A build that
+ * names its batches writes them down, and a build that names none publishes the same ones again,
+ * so a page that has not passed is never put out by a build made for another reason.
+ */
+export function liveBatches(file: string = liveFile()): string[] | null {
+  return existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as string[]) : null;
+}
+
+export function recordLiveBatches(batches: string[], file: string = liveFile()): void {
+  writeFileSync(file, `${JSON.stringify(batches)}\n`);
 }
 
 export function batchOf(order: Batches, slug: string): string | null {

@@ -1,5 +1,6 @@
 // One Lighthouse run of a preview page in its own process, measuring performance and accessibility
-// under Lighthouse's standard phone settings. Prints one line of JSON.
+// under Lighthouse's standard phone settings. The page's visit report is blocked, so a measurement
+// is never counted as a visit. Prints one line of JSON.
 import * as chromeLauncher from 'chrome-launcher';
 import lighthouse from 'lighthouse';
 
@@ -9,7 +10,7 @@ let chrome;
 let out;
 try {
   chrome = await chromeLauncher.launch({ chromePath, chromeFlags: ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-dev-shm-usage'], logLevel: 'silent' });
-  const result = await lighthouse(url, { port: chrome.port, output: 'json', logLevel: 'silent', onlyCategories: ['performance', 'accessibility'], maxWaitForLoad: 45000 });
+  const result = await lighthouse(url, { port: chrome.port, output: 'json', logLevel: 'silent', onlyCategories: ['performance', 'accessibility'], maxWaitForLoad: 45000, blockedUrlPatterns: ['*/api/demo-visit*'] });
   const lhr = result && result.lhr;
   if (!lhr) out = { error: 'no result' };
   else if (lhr.runtimeError && lhr.runtimeError.message) out = { error: String(lhr.runtimeError.message).slice(0, 200) };

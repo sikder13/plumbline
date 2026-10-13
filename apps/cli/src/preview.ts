@@ -6,11 +6,11 @@ import { db, env, nzTime, paths, type Business, type Db } from '@plumbline/core'
 import { Polite } from '@plumbline/fetch';
 import { limits, spent } from '@plumbline/budget';
 import { latestBatch } from '@plumbline/export';
-import { BASE_PATH, LIMITS, WAVE1_LAYOUTS, draftAfterRecheck, fillDraft, fixedBlocks, numbersIn, parseDraft, scanEmail, withStatus, askCorrected, buildPage, layoutOf, loadPlan, loadRecipe, lookOf, pagesToPublish, recipeSlugs, varietyIssues, checkPage, contentDir, correctedQuestions, correctedSummary, forgetToken, planCorrected, previewPaths, readVisits, removeGenerated, serveSite, summarise, tokenFor, verifyCrawlmouse, type Dropped, type GateReport, type PageData } from '@plumbline/preview';
+import { BASE_PATH, LIMITS, RECHECK_EDIT, WAVE1_LAYOUTS, draftAfterRecheck, liveBatches, recordLiveBatches, retireRecipe, fillDraft, fixedBlocks, numbersIn, parseDraft, scanEmail, withStatus, askCorrected, buildPage, layoutOf, loadPlan, loadRecipe, lookOf, pagesToPublish, recipeSlugs, varietyIssues, checkPage, contentDir, correctedQuestions, correctedSummary, forgetToken, planCorrected, previewPaths, readVisits, removeGenerated, serveSite, summarise, tokenFor, verifyCrawlmouse, type Dropped, type GateReport, type PageData } from '@plumbline/preview';
 import { aiSummary } from '@plumbline/ai';
 import { speedRuns, statedSentence, waveMembers } from '@plumbline/wave';
 import { waveBatch, waveCrawlmouse } from './wave.ts';
-import { businessSuppressed, suppressionList } from './approve.ts';
+import { businessSuppressed, clearToContact, suppressionList } from './approve.ts';
 import { auditBatch } from './audit.ts';
 
 function business(d: Db, slug: string): Business {
@@ -98,8 +98,15 @@ export async function previewRecheckBatch(d: Db, o: { wave: string; batch: strin
   const slugs = loadPlan().batches[o.batch];
   if (!slugs?.length) throw new Error(`previews/batches.json names no batch ${o.batch}`);
   const all = waveMembers(d, o.wave);
-  const members = all.filter((b) => slugs.includes(b.slug));
   const findingsBatch = waveBatch(d, all);
+  // A business that must not be written to is not looked at again, and its draft is held.
+  const { clear: members, held } = clearToContact(d, all.filter((b) => slugs.includes(b.slug)), suppressionList().list);
+  for (const h of held) {
+    const file = join(emailsDir(findingsBatch, o.wave), `${h.slug}.md`);
+    if (existsSync(file)) writeFileSync(file, withStatus(readFileSync(file, 'utf8'), `HOLD (do not send: ${h.why})`));
+    console.log(`${h.slug}: held, ${h.why}`);
+  }
+  if (!members.length) return;
   const s = await auditBatch(d, { aiSummary, batch: findingsBatch, kind: 'recheck', only: members.map((b) => b.slug), concurrency: o.concurrency });
   console.log(`recheck ${findingsBatch}: ${s.done} done, ${s.blocked} blocked, ${s.failed} failed. Still true ${s.reproduced}, no longer true ${s.resolved}.`);
   await waveCrawlmouse(d, { name: o.wave, batch: findingsBatch, only: members.map((b) => b.slug).join(',') });
@@ -113,7 +120,8 @@ export async function previewRecheckBatch(d: Db, o: { wave: string; batch: strin
     const text = readFileSync(file, 'utf8');
     const draft = parseDraft(text);
     const r = draftAfterRecheck(draft, findingsNow(d, b.id, findingsBatch), now);
-    const line = r.status === 'ready' ? `ready, rechecked ${nzTime(now)}. Send within 24 hours.` : r.status === 'needs edit' ? `needs edit: ${r.notes.join('; ')}` : `${draft.statusLine.split(' | ')[0]}${r.notes.length ? ` | ${r.notes.join('; ')}` : ''}`;
+    // A hold, and a status a person wrote, are kept, with what the recheck found set beside them.
+    const line = r.status === 'ready' ? `ready, rechecked ${nzTime(now)}. Send within 24 hours.` : r.status === 'needs edit' ? `${RECHECK_EDIT}: ${r.notes.join('; ')}` : `${draft.statusLine.split(' | ')[0]}${r.notes.length ? ` | ${r.notes.join('; ')}` : ''}`;
     writeFileSync(file, withStatus(text, line));
     console.log(`${b.slug}: ${line}`);
   }
@@ -146,9 +154,16 @@ export function previewEmails(d: Db, o: { wave: string; batch?: string; fill?: b
   const blocks = fixedBlocks(readFileSync(sheet, 'utf8'));
   if (o.fill && !Object.keys(blocks).length) console.log(`Nothing to fill in: ${sheet} still holds its notes.`);
   const only = o.batch ? (loadPlan().batches[o.batch] ?? []) : null;
+  const wanted = all.filter((x) => !only || only.includes(x.slug));
+  const held = new Map(clearToContact(d, wanted, suppressionList().list).held.map((h) => [h.slug, h.why]));
   let broken = 0;
-  for (const b of all.filter((x) => !only || only.includes(x.slug))) {
+  for (const b of wanted) {
     const file = join(emailsDir(findingsBatch, o.wave), `${b.slug}.md`);
+    if (held.has(b.slug)) {
+      console.log(`${b.slug}: no email may go to this business, ${held.get(b.slug)}${existsSync(file) ? `. Its draft at ${file} must not be sent` : ''}`);
+      broken += 1;
+      continue;
+    }
     if (!existsSync(file)) {
       console.log(`${b.slug}: no draft`);
       continue;
@@ -158,7 +173,9 @@ export function previewEmails(d: Db, o: { wave: string; batch?: string; fill?: b
     // A number may be stated when the pack holds it or a finding the draft uses carries it.
     const pack = join(paths.reports, findingsBatch, o.wave, `${b.slug}.json`);
     const sources = `${existsSync(pack) ? readFileSync(pack, 'utf8') : ''}\n${draft.findings.map((f) => f.sentence).join('\n')}\n${Object.values(blocks).join('\n')}`;
-    const issues = scanEmail(draft, new Set(numbersIn(sources).map((n) => n.token)));
+    const token = tokenFor(d, b.slug);
+    const issues = scanEmail(draft, new Set(numbersIn(sources).map((n) => n.token)), { demoLink: token ? `${SITE_ADDRESS}${BASE_PATH}/${b.slug}-${token}` : undefined, shared: Object.values(blocks).join('\n') });
+    if (!token) issues.push({ kind: 'link', text: 'this business has no page, so there is no link to check the draft against' });
     broken += issues.length ? 1 : 0;
     console.log(`${b.slug}: ${draft.statusLine || 'no status'} | to ${draft.to} | "${draft.subject}"${issues.length ? '' : ' | clean'}`);
     for (const i of issues) console.log(`  ${i.kind}: ${i.text}`);
@@ -251,12 +268,20 @@ export async function previewData(d: Db, opts: { only?: string; draft?: boolean 
  * recipe pages of those batches only, so a page still being worked on is never deployed.
  */
 export async function previewBuild(d: Db, opts: { only?: string; draft?: boolean; batches?: string[] }): Promise<void> {
+  // A recipe page goes out only when its batch has been named, in this build or an earlier one.
+  const batches = opts.batches ?? liveBatches();
+  if (!batches && recipeSlugs().length) throw new Error('no batch has been published yet. Name the batches whose pages go out with --batches (comma separated, as in previews/batches.json).');
   const call = await previewData(d, opts);
+  if (opts.batches) recordLiveBatches(opts.batches);
 
   // The pages that go into the site are staged in a folder of their own, which is what the build reads.
   const built = readdirSync(previewPaths.data).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5));
   const designed = built.filter((slug) => existsSync(join(contentDir(slug), 'content.json')));
-  const publish = opts.batches ? pagesToPublish(built, designed, loadPlan().batches, opts.batches) : built;
+  const order = existsSync(join(previewPaths.root, 'batches.json')) ? loadPlan().batches : {};
+  // A business suppressed since its page was made is left out, whichever pages are being made again this time.
+  const { clear, held } = clearToContact(d, pagesToPublish(built, designed, order, batches ?? []).map((slug) => business(d, slug)), suppressionList().list);
+  for (const h of held) console.log(`${h.slug}: not published, ${h.why}`);
+  const publish = clear.map((b) => b.slug);
   const staged = join(previewPaths.out, 'staged');
   rmSync(staged, { recursive: true, force: true });
   mkdirSync(staged, { recursive: true });
@@ -344,8 +369,8 @@ export async function previewRemove(d: Db, slug: string, opts: { deploy?: boolea
   forgetToken(d, slug);
   const content = join(contentDir(slug), 'content.json');
   if (existsSync(content)) rmSync(content);
-  console.log(`Removed ${slug}${token ? ` (was /${slug}-${token}/)` : ''}. Its content file is deleted so it is not rebuilt; photos and saved pages under ${contentDir(slug)} are kept until "plumb purge".`);
-  
+  const recipe = retireRecipe(slug);
+  console.log(`Removed ${slug}${token ? ` (was /${slug}-${token}/)` : ''}. ${recipe ? 'Its recipe is set aside under previews/recipes/removed/ so it is not rebuilt' : 'Its content file is deleted so it is not rebuilt'}; photos and saved pages are kept until "plumb purge".`);
   if (opts.deploy === false) return void console.log('Not deployed. The page stays live until the next "plumb preview build" and "plumb preview deploy".');
   if (previewSlugs().length) await previewBuild(d, {});
   else {
@@ -436,7 +461,7 @@ export function registerPreview(program: Command): void {
     .description('Build the pages into previews/out/ from the database, previews/content/ and previews/recipes/. With a slug or a wave, only those pages are made again; the site is always written out whole.')
     .option('--only <slugs>', 'comma separated slugs')
     .option('--wave <name>', 'the businesses of a wave that have a recipe')
-    .option('--batches <letters>', 'write the site out with the designed pages and the recipe pages of these batches only (comma separated, as in previews/batches.json)')
+    .option('--batches <letters>', 'the batches whose recipe pages go out (comma separated, as in previews/batches.json). They are remembered: a later build that names none publishes the same ones')
     .option('--draft', 'build without CAL_LINK, for looking at the pages locally')
     .action((slug: string | undefined, o: { only?: string; wave?: string; batches?: string; draft?: boolean }) => {
       const d = db();

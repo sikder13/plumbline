@@ -12,6 +12,8 @@ export interface Draft {
   statusLine: string;
   batch: string | null;
   findings: { line: number; id: number; sentence: string }[];
+  /** Lines under "Findings used" that do not read as a finding. */
+  unread: string[];
   to: string;
   subject: string;
   body: string;
@@ -23,8 +25,9 @@ export function parseDraft(text: string): Draft {
   const field = (name: string, from: string) => new RegExp(`^${name}:[ \\t]*(.*)$`, 'm').exec(from)?.[1]?.trim() ?? '';
   const statusLine = field('Status', head);
   const findings = [...head.matchAll(/^(\d+)\.\s+#(\d+)\s+\|\s+(.*)$/gm)].map((m) => ({ line: Number(m[1]), id: Number(m[2]), sentence: m[3]!.trim() }));
+  const unread = (head.split(/^Findings used:.*$/m)[1] ?? '').split('\n').map((l) => l.trim()).filter((l) => l && !/^\d+\.\s+#\d+\s+\|\s+/.test(l));
   const body = mail.replace(/^To:.*\n/m, '').replace(/^Subject:.*\n/m, '').replace(/^\s*\n/, '');
-  return { status: /^needs edit/i.test(statusLine) ? 'needs edit' : /^hold/i.test(statusLine) ? 'HOLD' : statusLine.split(/[,:(]/)[0]!.trim(), statusLine, batch: field('Batch', head) || null, findings, to: field('To', mail), subject: field('Subject', mail), body };
+  return { status: /^needs edit/i.test(statusLine) ? 'needs edit' : /^hold/i.test(statusLine) ? 'HOLD' : statusLine.split(/[,:(]/)[0]!.trim(), statusLine, batch: field('Batch', head) || null, findings, unread, to: field('To', mail), subject: field('Subject', mail), body };
 }
 
 export function withStatus(text: string, status: string): string {
@@ -40,13 +43,18 @@ export interface FindingNow {
 
 const DAY = 24 * 3_600_000;
 
+/** How the recheck writes the status of a draft it wants edited, so that it can tell its own mark from a person's. */
+export const RECHECK_EDIT = 'needs edit (recheck)';
+
 /**
  * Where a draft stands once its findings have been checked again. Any numbered line whose finding
- * no longer reproduces, reads differently now, or was not checked in the last 24 hours is named. A
- * draft held as weak stays held.
+ * no longer reproduces, reads differently now, or was not checked in the last 24 hours is named,
+ * and so is a list of findings that cannot be read. A draft held as weak stays held, and a status
+ * a person wrote (sent, or an edit they asked for) is kept as it is.
  */
-export function draftAfterRecheck(draft: Draft, now: Map<number, FindingNow>, at: Date): { status: 'ready' | 'needs edit' | 'HOLD'; notes: string[] } {
-  const notes: string[] = [];
+export function draftAfterRecheck(draft: Draft, now: Map<number, FindingNow>, at: Date): { status: 'ready' | 'needs edit' | 'HOLD' | 'kept'; notes: string[] } {
+  const notes: string[] = draft.unread.map((l) => `"${l}" under "Findings used" could not be read`);
+  if (!draft.findings.length && !draft.unread.length) notes.push('no finding is listed under "Findings used"');
   for (const f of draft.findings) {
     const current = now.get(f.id);
     if (!current) notes.push(`line ${f.line}: finding #${f.id} is not on file`);
@@ -55,6 +63,8 @@ export function draftAfterRecheck(draft: Draft, now: Map<number, FindingNow>, at
     else if (current.sentence !== f.sentence) notes.push(`line ${f.line}: finding #${f.id} now reads "${current.sentence}"`);
   }
   if (draft.status === 'HOLD') return { status: 'HOLD', notes };
+  const ours = draft.status === 'ready' || draft.statusLine.toLowerCase().startsWith(RECHECK_EDIT);
+  if (!ours) return { status: 'kept', notes };
   return { status: notes.length ? 'needs edit' : 'ready', notes };
 }
 
@@ -88,7 +98,7 @@ export function fillDraft(text: string, blocks: Record<string, string>): string 
 }
 
 export interface EmailIssue {
-  kind: 'length' | 'dash' | 'hyphen' | 'exclamation' | 'banned' | 'subject' | 'number' | 'link' | 'fixed';
+  kind: 'length' | 'dash' | 'hyphen' | 'exclamation' | 'banned' | 'subject' | 'number' | 'link' | 'fixed' | 'findings';
   text: string;
 }
 
@@ -98,18 +108,33 @@ export const EMAIL_WORDS = { min: 120, max: 170 };
 /**
  * The writing rules for an email, checked. The body runs 120 to 170 words. No dash, and no hyphen
  * inside a sentence. No exclamation mark and no hype. The subject is under 60 characters and asks
- * nothing. The demo link stands on a line of its own without a trailing slash. And every number in
- * the body is one we hold a source for.
+ * nothing. The demo link stands on a line of its own without a trailing slash, and when the
+ * business's own page is given, that is the link it must be: any other address has to be one the
+ * shared wording holds. Every number in the subject and the body is one we hold a source for. And
+ * the email numbers as many lines as the draft lists findings.
  */
-export function scanEmail(draft: Draft, known: Set<string>): EmailIssue[] {
+export function scanEmail(draft: Draft, known: Set<string>, opts: { demoLink?: string; shared?: string } = {}): EmailIssue[] {
   const out: EmailIssue[] = [];
-  const waiting = [...draft.body.matchAll(MARK)].map((m) => m[1]!);
+  const marks = [...draft.body.matchAll(MARK)];
+  const waiting = marks.map((m) => m[1]!);
   if (waiting.length) out.push({ kind: 'fixed', text: `the shared wording is not filled in yet: ${[...new Set(waiting)].join(', ')}` });
   // A mark stands for wording that is not judged here, and the link inside one is laid out by the fill.
   const lines = draft.body.replace(MARK, '').split('\n');
-  const links = waiting.includes('DEMO LINES') ? ['https://held.example/in-the-mark'] : lines.filter((l) => /https?:\/\//.test(l));
-  for (const l of links) if (!/^https:\/\/\S+[^/\s]$/.test(l.trim())) out.push({ kind: 'link', text: l.trim() });
+  const marked = marks.find((m) => m[1] === 'DEMO LINES');
+  const links = (marked ? [marked[2] ?? ''] : lines.filter((l) => /https?:\/\//.test(l))).map((l) => l.trim());
+  for (const l of links) if (!/^https:\/\/\S+[^/\s]$/.test(l)) out.push({ kind: 'link', text: l || 'the mark holds no link' });
   if (!links.length) out.push({ kind: 'link', text: 'no demo link' });
+  if (opts.demoLink && marked) {
+    if (links[0] !== opts.demoLink) out.push({ kind: 'link', text: `the mark holds ${links[0]}, and this business's page is ${opts.demoLink}` });
+  } else if (opts.demoLink) {
+    const ours = new Set((opts.shared ?? '').split('\n').map((l) => l.trim()));
+    for (const l of links) if (l !== opts.demoLink && !ours.has(l)) out.push({ kind: 'link', text: `${l} is not this business's page` });
+    if (!links.includes(opts.demoLink)) out.push({ kind: 'link', text: `the page ${opts.demoLink} is not in the email` });
+  }
+  for (const l of draft.unread) out.push({ kind: 'findings', text: `"${l}" under "Findings used" could not be read` });
+  const numbered = lines.filter((l) => /^\s*\d+\.\s+/.test(l)).length;
+  const count = (n: number, what: string) => `${n} ${what}${n === 1 ? '' : 's'}`;
+  if (numbered !== draft.findings.length) out.push({ kind: 'findings', text: `the email numbers ${count(numbered, 'line')} and lists ${count(draft.findings.length, 'finding')}` });
   // What is read as copy: the body without the link lines and without the numbers that only order the list.
   const copy = lines.filter((l) => !/https?:\/\//.test(l)).map((l) => l.replace(/^\s*\d+\.\s+/, '')).join('\n');
   const words = copy.split(/\s+/).filter((w) => /[A-Za-z0-9]/.test(w)).length;
@@ -122,6 +147,6 @@ export function scanEmail(draft: Draft, known: Set<string>): EmailIssue[] {
   if (draft.subject.length >= 60) out.push({ kind: 'subject', text: `${draft.subject.length} characters; under 60 are wanted` });
   if (draft.subject.includes('?')) out.push({ kind: 'subject', text: 'a question mark' });
   if (!draft.subject) out.push({ kind: 'subject', text: 'no subject' });
-  for (const n of numbersIn(copy)) if (!known.has(n.token)) out.push({ kind: 'number', text: n.token });
+  for (const n of numbersIn(`${draft.subject}\n${copy}`)) if (!known.has(n.token)) out.push({ kind: 'number', text: n.token });
   return out;
 }

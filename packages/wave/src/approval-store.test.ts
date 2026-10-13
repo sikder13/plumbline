@@ -91,3 +91,36 @@ describe('storing the decisions', () => {
     expect([statusOf(db, was), statusOf(db, gone), statusOf(db, never)]).toEqual(['rejected', 'resolved', 'candidate']);
   });
 });
+
+describe('a suppression list kept in a spreadsheet', () => {
+  it('is read when its cells are quoted', () => {
+    const list = readSuppression('"slug","email","reason"\n"alpha-tours","Owner@Alpha.co.nz","asked not to be written to"\n');
+    expect(isSuppressed(list, 'alpha-tours', [])).toBe(true);
+    expect(isSuppressed(list, 'bravo-wines', ['owner@alpha.co.nz'])).toBe(true);
+    expect(isSuppressed(list, 'charlie', ['info@charlie.nz'])).toBe(false);
+  });
+});
+
+describe('an approval whose pass no longer stands', () => {
+  it('is taken back until the independent check has seen the finding as it now reads', () => {
+    const db = seeded();
+    const id = add(db, 'C20_slow_mobile');
+    storeDecisions(db, [decision(id, 'approve')], { [id]: { verdict: 'ok', reason: '' } });
+    expect(statusOf(db, id)).toBe('approved');
+    // The same finding, decided again with no verdict standing for its sentence.
+    const out = storeDecisions(db, [decision(id, 'approve')], {});
+    expect(statusOf(db, id)).toBe('reproduced');
+    expect(out).toEqual({ approved: 0, rejected: 0, waiting: 1 });
+    // Passed again, it is approved again.
+    expect(storeDecisions(db, [decision(id, 'approve')], { [id]: { verdict: 'ok', reason: '' } }).approved).toBe(1);
+    expect(statusOf(db, id)).toBe('approved');
+  });
+
+  it('is left alone when a person gave it', () => {
+    const db = seeded();
+    const id = add(db, 'C10_broken_contact_links');
+    decide(db, id, 'approve', 'looked at it myself');
+    expect(storeDecisions(db, [decision(id, 'approve')], {})).toEqual({ approved: 0, rejected: 0, waiting: 0 });
+    expect(statusOf(db, id)).toBe('approved');
+  });
+});
