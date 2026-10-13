@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import type { PageData } from '@/lib/data';
+import type { PageData, Picture } from '@/lib/data';
 import type { Recipe } from '@plumbline/preview/types';
 import s from './sections.module.css';
 
@@ -55,3 +55,14 @@ export function Price({ value, className }: { value: string; className?: string 
 }
 
 export const two = (n: number) => String(n).padStart(2, '0');
+
+/**
+ * The width a photograph is really drawn at on a phone when it fills a slot of another shape. A
+ * wide photograph covering a tall slot is drawn much wider than the slot, and a browser told only
+ * the slot's width would fetch a file too small and stretch it. `vw` is the slot's width on a
+ * phone and `shape` its width over its height there.
+ */
+export function coverSizes(p: Picture, phone: { vw: number; shape: number }, desktop: string): string {
+  const grow = Math.max(1, p.width / p.height / phone.shape);
+  return `(min-width: 900px) ${desktop}, ${Math.ceil(phone.vw * grow)}vw`;
+}

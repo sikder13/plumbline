@@ -7,11 +7,11 @@ import { HERO_VARIANTS, PALETTE_FAMILIES, TYPE_PAIRS, type ContentFile, type Rec
 const colour = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'a colour is written as #rrggbb');
 const text = z.string().trim().min(1);
 const item = z.object({ image: text.optional(), name: text, meta: text.optional(), price: text.nullable().optional(), text: text.optional(), href: text.optional() });
-const image = z.object({ file: text, alt: z.string(), widths: z.array(z.number()).optional(), position: text.optional(), crop: z.object({ left: z.number(), top: z.number(), width: z.number(), height: z.number() }).optional() });
+const image = z.object({ file: text, alt: z.string(), widths: z.array(z.number()).optional(), position: text.optional(), quality: z.number().min(20).max(60).optional(), crop: z.object({ left: z.number(), top: z.number(), width: z.number(), height: z.number() }).optional() });
 
 const section = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('hero'), variant: z.enum(HERO_VARIANTS), place: text, lines: z.array(text).min(1).max(4), sub: text.optional(), note: text.optional(), align: z.enum(['low', 'high', 'centre']).optional(), panel: z.enum(['arch', 'strip', 'tall', 'round']).optional(), ambience: z.enum(['film', 'drift', 'still']).optional(), ground: z.enum(['paper', 'soft', 'deep']).optional(), scale: z.number().min(0.6).max(1.3).optional() }),
-  z.object({ kind: z.literal('story'), variant: z.enum(['wipe', 'stack', 'rail', 'words']), subject: text, heading: text, steps: z.array(z.object({ image: text.optional(), label: text, text })).min(3, 'a pinned story has three to five steps').max(5, 'a pinned story has three to five steps') }),
+  z.object({ kind: z.literal('hero'), variant: z.enum(HERO_VARIANTS), place: text, lines: z.array(text).min(1).max(4), sub: text.optional(), note: text.optional(), align: z.enum(['low', 'high', 'centre']).optional(), panel: z.enum(['arch', 'strip', 'tall', 'round']).optional(), ambience: z.enum(['film', 'drift', 'still']).optional(), ground: z.enum(['paper', 'soft', 'deep']).optional(), scale: z.number().min(0.6).max(1.3).optional(), scaleWide: z.number().min(0.6).max(1.3).optional(), treat: z.enum(['duotone']).optional() }),
+  z.object({ kind: z.literal('story'), variant: z.enum(['wipe', 'stack', 'rail', 'words']), id: text.optional(), subject: text, heading: text, steps: z.array(z.object({ image: text.optional(), label: text, text })).min(3, 'a pinned story has three to five steps').max(5, 'a pinned story has three to five steps') }),
   z.object({ kind: z.literal('rows'), variant: z.enum(['tall', 'wide', 'plain', 'round']), id: text.optional(), heading: text, lead: text.optional(), button: text.optional(), cue: text, items: z.array(item).min(1) }),
   z.object({ kind: z.literal('wipes'), variant: z.enum(['pair', 'band', 'trio']), images: z.array(text).min(1).max(3), heading: text.optional(), text: text.optional() }),
   z.object({ kind: z.literal('numbers'), variant: z.enum(['row', 'band', 'list']), heading: text.optional(), items: z.array(z.object({ value: text, label: text, source: text.optional() })).min(1).max(4) }),
@@ -175,6 +175,20 @@ export function loadPlan(): WavePlan {
   const file = join(previewPaths.root, 'batches.json');
   if (!existsSync(file)) throw new Error(`${file} does not exist. It holds the build order and the groups for the variety check.`);
   return JSON.parse(readFileSync(file, 'utf8')) as WavePlan;
+}
+
+/**
+ * The pages a deploy carries: every built page that has a design of its own, and the built recipe
+ * pages of the batches named. A recipe page of a later batch may be built already, to be looked
+ * at, and is left out until its batch passes.
+ */
+export function pagesToPublish(built: string[], designed: string[], order: Batches, batches: string[]): string[] {
+  const wanted = new Set(designed);
+  for (const b of batches) {
+    if (!order[b]) throw new Error(`previews/batches.json names no batch ${b}`);
+    for (const slug of order[b]) wanted.add(slug);
+  }
+  return built.filter((slug) => wanted.has(slug)).sort();
 }
 
 export function batchOf(order: Batches, slug: string): string | null {

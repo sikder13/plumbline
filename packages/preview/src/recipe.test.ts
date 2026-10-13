@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { batchOf, checkRecipe, layoutOf, lookOf, recipeContent, varietyIssues, type Placed } from './recipe.ts';
+import { batchOf, checkRecipe, layoutOf, lookOf, pagesToPublish, recipeContent, varietyIssues, type Placed } from './recipe.ts';
 import type { Recipe, Section } from './types.ts';
 
 const hero = (variant: 'photo' | 'split' | 'type' | 'frame' = 'photo'): Section => ({ kind: 'hero', variant, place: 'Seal Cove, Example Coast', lines: ['Seals at', 'their own pace'] });
@@ -88,6 +88,16 @@ describe('variety across a wave', () => {
 });
 
 describe('build batches', () => {
+  it('publishes the pages with a design of their own and the recipe pages of the batches named, and no page still being worked on', () => {
+    const order = { A: ['alpha', 'bravo'], B: ['charlie'], C: ['delta'] };
+    const built = ['alpha', 'bravo', 'charlie', 'delta', 'old-one', 'old-two'];
+    expect(pagesToPublish(built, ['old-one', 'old-two'], order, ['A'])).toEqual(['alpha', 'bravo', 'old-one', 'old-two']);
+    expect(pagesToPublish(built, ['old-one', 'old-two'], order, ['A', 'B'])).toEqual(['alpha', 'bravo', 'charlie', 'old-one', 'old-two']);
+    // A page of a named batch that has not been built is simply not there to publish.
+    expect(pagesToPublish(['alpha', 'old-one'], ['old-one'], order, ['A'])).toEqual(['alpha', 'old-one']);
+    expect(() => pagesToPublish(built, [], order, ['Z'])).toThrow('no batch Z');
+  });
+
   it('finds the batch a business is built in from the written order', () => {
     const order = { A: ['alpha', 'bravo'], B: ['charlie'], C: ['delta'] };
     expect(batchOf(order, 'charlie')).toBe('B');

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nzReadable, plainDates, plainImpact, plainSeen, withoutDashes } from './build.ts';
+import { cropInPixels, nzReadable, plainDates, plainImpact, plainSeen, withoutDashes } from './build.ts';
 import { bannedIssues, dashIssues, numberIssues, numberSet, scanPage, splitPage, visibleText } from './copy.ts';
 import { holds, kindOf, pageFacts } from './crawlmouse.ts';
 import { validMailto, validTel } from './gates.ts';
@@ -32,6 +32,19 @@ describe('words quoted from a site on a recipe page', () => {
     expect(withoutDashes('Open 9am – 5pm — every day')).toBe('Open 9am, 5pm, every day');
     expect(withoutDashes('A family-run business')).toBe('A family-run business');
     expect(withoutDashes(null)).toBeNull();
+  });
+});
+
+describe('a crop given in fractions of a photograph', () => {
+  it('is turned into whole pixels that never reach past the edge', () => {
+    expect(cropInPixels({ left: 0.5, top: 0, width: 0.5, height: 1 }, 2000, 1000)).toEqual({ left: 1000, top: 0, width: 1000, height: 1000 });
+    // 0.3 and 0.7 of 1875 round to 563 and 1313, one pixel more than the photograph has.
+    expect(cropInPixels({ left: 0, top: 0.3, width: 1, height: 0.7 }, 2500, 1875)).toEqual({ left: 0, top: 563, width: 2500, height: 1312 });
+    expect(cropInPixels({ left: 0.9, top: 0.9, width: 0.5, height: 0.5 }, 1000, 1000)).toEqual({ left: 900, top: 900, width: 100, height: 100 });
+  });
+
+  it('is left as it is when it is already given in pixels', () => {
+    expect(cropInPixels({ left: 120, top: 40, width: 800, height: 600 }, 2000, 1000)).toEqual({ left: 120, top: 40, width: 800, height: 600 });
   });
 });
 

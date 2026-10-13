@@ -15,6 +15,8 @@ export function SideScroll({ children, className, head, label, cue }: { children
     const o = outer.current;
     const t = track.current;
     if (!o || !t || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    // A row whose panels all fit has nothing to drag to, and says so, so that a design can drop its cue.
+    o.toggleAttribute('data-fits', t.scrollWidth <= t.clientWidth + 1);
     let startX = 0;
     let startLeft = 0;
     let dragging = false;

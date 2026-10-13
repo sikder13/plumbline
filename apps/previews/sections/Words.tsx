@@ -1,7 +1,7 @@
 import type { WordsSection } from '@plumbline/preview/types';
 import { Pic } from '@/components/Pic';
 import { pic } from '@/lib/data';
-import type { Ctx } from './kit';
+import { coverSizes, type Ctx } from './kit';
 import s from './sections.module.css';
 
 /**
@@ -15,7 +15,7 @@ export function Words({ section: w, data }: Ctx & { section: WordsSection }) {
     <section className={`${s.band} ${s.words}`} id={id} data-variant={w.variant} data-ground={w.variant === 'quote' ? 'deep' : undefined} aria-labelledby={w.heading ? `${id}-h` : undefined} aria-label={w.heading ? undefined : 'About'}>
       {w.image && w.variant !== 'columns' && (
         <div className={s.wordsPhoto} data-wipe>
-          <Pic pic={pic(data, w.image)} sizes={w.variant === 'quote' ? '160px' : '(min-width: 900px) 40vw, 88vw'} />
+          <Pic pic={pic(data, w.image)} sizes={w.variant === 'quote' ? '240px' : coverSizes(pic(data, w.image), { vw: 88, shape: 0.9 }, '60vw')} />
         </div>
       )}
       <div className={s.wordsText} data-reveal>

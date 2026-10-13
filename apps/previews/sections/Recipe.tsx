@@ -83,5 +83,5 @@ function Demo({ data }: { data: PageData }) {
 export const recipe: Design = {
   Demo,
   fonts: (data) => TYPE[recipeOf(data).type].fonts,
-  heroSizes: (data) => heroSizes(recipeOf(data).sections.find((x) => x.kind === 'hero')),
+  heroSizes: (data) => heroSizes(recipeOf(data).sections.find((x) => x.kind === 'hero'), data.images.hero!),
 };

@@ -1,7 +1,7 @@
 import type { VisitSection } from '@plumbline/preview/types';
 import { Pic } from '@/components/Pic';
 import { pic } from '@/lib/data';
-import { ActionLink, type Ctx } from './kit';
+import { ActionLink, coverSizes, type Ctx } from './kit';
 import s from './sections.module.css';
 
 /**
@@ -15,7 +15,7 @@ export function Visit({ section: v, data, recipe }: Ctx & { section: VisitSectio
     <section className={`${s.band} ${s.visit}`} id={id} data-variant={v.variant} data-ground={v.variant === 'plain' ? 'deep' : v.variant === 'split' ? 'soft' : undefined} aria-labelledby={`${id}-h`}>
       {v.image && v.variant === 'card' && (
         <div className={s.visitPhoto} data-wipe>
-          <Pic pic={pic(data, v.image)} sizes="100vw" />
+          <Pic pic={pic(data, v.image)} sizes={coverSizes(pic(data, v.image), { vw: 100, shape: 1.18 }, '100vw')} />
         </div>
       )}
       <div className={s.visitCard} data-reveal>

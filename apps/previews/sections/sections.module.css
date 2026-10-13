@@ -14,6 +14,7 @@
   --float-call-ink: var(--ink);
   --float-font: var(--body);
   --rule: color-mix(in srgb, currentColor 22%, transparent);
+  --accent-ink: color-mix(in srgb, var(--accent) 52%, var(--ink));
   font-family: var(--body);
   font-size: 17px;
   line-height: 1.55;
@@ -26,6 +27,7 @@
 .root h2,
 .root h3,
 .display {
+  font-variant-numeric: lining-nums;
   margin: 0;
   font-family: var(--display);
   font-weight: var(--dw);
@@ -230,7 +232,7 @@
 }
 
 .heroLines {
-  font-size: calc(clamp(44px, 12.6vw, 124px) * var(--dscale) * var(--hs));
+  font-size: calc(clamp(44px, min(12.6vw, 15svh), 124px) * var(--dscale) * var(--hs));
 }
 
 .heroFoot {
@@ -242,6 +244,7 @@
   margin: 0 0 20px !important;
   font-size: 18px;
   line-height: 1.4;
+  text-wrap: balance;
 }
 
 .heroAct {
@@ -259,7 +262,25 @@
 
 .heroMedia {
   overflow: hidden;
+  isolation: isolate;
   background: var(--deep);
+}
+
+/* The picture takes the panel's own shape, so nothing of it shows past a rounded corner while it settles or blends. */
+.heroMedia picture {
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+/* Two tones: the photograph is drained of its colours and laid over the page's dark ground, so its lights come up white. */
+.heroMedia[data-treat='duotone'],
+.heroMedia[data-treat='duotone'] picture {
+  background: var(--deep);
+}
+
+.heroMedia[data-treat='duotone'] img {
+  filter: grayscale(1) contrast(1.12) brightness(1.04);
+  mix-blend-mode: screen;
 }
 
 .heroFilm {
@@ -367,9 +388,15 @@
 }
 
 .hero[data-variant='type'][data-panel='strip'] .heroMedia {
+  flex: 1 1 30svh;
   margin-inline: calc(var(--gut) * -1);
-  height: 30svh;
   min-height: 200px;
+}
+
+/* With a panel of a fixed shape, the spare height of a tall phone sits above the closing words, not under them. */
+.hero[data-variant='type']:not([data-panel='strip']) .heroFoot {
+  margin-top: auto;
+  padding-top: 24px;
 }
 
 .hero[data-variant='type'][data-panel='tall'] .heroMedia {
@@ -398,6 +425,11 @@
 
 .hero[data-variant='type'] .heroFoot {
   margin-top: 24px;
+}
+
+.hero[data-variant='type'][data-panel='strip'] .heroMedia picture {
+  position: absolute;
+  inset: 0;
 }
 
 /* frame: the photograph held in a rounded frame, the headline beneath it on the page's own ground. */
@@ -435,6 +467,9 @@
     min-height: 76px;
     padding-top: 12px;
   }
+  .heroLines {
+    font-size: calc(clamp(44px, min(12.6vw, 15svh), 124px) * var(--dscale) * var(--hsw));
+  }
   .heroNav {
     display: flex;
     gap: 28px;
@@ -456,10 +491,7 @@
     padding: 0 22px;
     font-size: 15px;
   }
-  .hero[data-variant='split'] .heroTopAct,
-  .hero[data-variant='split'] .heroCall {
-    display: none;
-  }
+
   .heroBody {
     padding-bottom: 48px;
   }
@@ -476,25 +508,23 @@
     grid-template-rows: auto 1fr;
   }
   .hero[data-variant='split'] .heroTop {
-    grid-column: 1;
-  }
-  .hero[data-variant='split'] .heroNav {
-    display: none;
+    grid-column: 1 / -1;
   }
   .hero[data-variant='split'] .heroBody {
     grid-column: 1;
+    grid-row: 2;
     justify-content: center;
     padding-bottom: 72px;
   }
   .hero[data-variant='split'] .heroMedia {
     grid-column: 2;
-    grid-row: 1 / -1;
-    margin: 12px;
+    grid-row: 2;
+    margin: 0 12px 12px;
     min-height: 0;
     border-radius: 28px;
   }
   .hero[data-variant='split'] .heroLines {
-    font-size: calc(clamp(56px, 6.4vw, 112px) * var(--dscale) * var(--hs));
+    font-size: calc(clamp(56px, 6.4vw, 112px) * var(--dscale) * var(--hsw));
   }
   .hero[data-variant='type'] .heroBody {
     display: grid;
@@ -508,7 +538,7 @@
   }
   .hero[data-variant='type'] .heroLines {
     grid-area: 2 / 1 / 3 / -1;
-    font-size: calc(clamp(84px, 10.2vw, 176px) * var(--dscale) * var(--hs));
+    font-size: calc(clamp(84px, 10.2vw, 176px) * var(--dscale) * var(--hsw));
   }
   .hero[data-variant='type'] .heroMedia {
     grid-area: 3 / 2 / 5 / 3;
@@ -524,8 +554,8 @@
     justify-self: stretch;
     align-self: stretch;
     width: 100%;
-    height: auto;
-    min-height: 26svh;
+    height: 34svh;
+    min-height: 0;
     margin-inline: 0;
     border-radius: 6px;
   }
@@ -555,7 +585,7 @@
   .hero[data-variant='frame'] .heroBody {
     grid-column: 1;
     grid-row: 2;
-    justify-content: flex-end;
+    justify-content: center;
     padding-bottom: 64px;
   }
   .hero[data-variant='frame'] .heroMedia {
@@ -565,7 +595,7 @@
     border-radius: 36px;
   }
   .hero[data-variant='frame'] .heroLines {
-    font-size: calc(clamp(56px, 5.8vw, 104px) * var(--dscale) * var(--hs));
+    font-size: calc(clamp(56px, 5.8vw, 104px) * var(--dscale) * var(--hsw));
   }
 }
 
@@ -603,13 +633,13 @@
 }
 
 .storyCount {
+  font-variant-numeric: lining-nums tabular-nums;
   position: relative;
   flex: 0 0 auto;
   min-width: 4.4ch;
   margin: 0 !important;
   font: var(--dw) calc(28px * var(--dscale)) / 1 var(--display);
   font-style: var(--ds);
-  font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
@@ -658,7 +688,7 @@
 .storyBar {
   position: absolute;
   z-index: 3;
-  inset: auto var(--gut) 40px var(--gut);
+  inset: auto var(--gut) 88px var(--gut);
   height: 2px;
   background: color-mix(in srgb, currentColor 28%, transparent);
 }
@@ -705,7 +735,7 @@
 [data-variant='rail'] .storySteps {
   min-height: 150px;
   margin-top: auto;
-  margin-bottom: 76px;
+  margin-bottom: 120px;
 }
 
 [data-variant='wipe'] .storySteps li,
@@ -737,7 +767,7 @@
 
 [data-variant='stack'] .storySteps {
   flex: 1;
-  margin: 24px var(--gut) 72px;
+  margin: 24px var(--gut) 116px;
 }
 
 [data-variant='stack'] .storySteps li {
@@ -749,7 +779,8 @@
   border-radius: 24px;
   background: var(--paper);
   box-shadow: 0 24px 48px -32px color-mix(in srgb, var(--deep) 70%, transparent), 0 0 0 1px color-mix(in srgb, var(--ink) 8%, transparent);
-  transform: translateY(112%);
+  /* A card still to come waits below the frame, clear of the space kept for the floating action. */
+  transform: translateY(calc(100% + 160px));
   transition: transform 0.9s var(--ease), filter 0.9s var(--ease);
 }
 
@@ -810,7 +841,7 @@
   flex-direction: column;
   justify-content: center;
   gap: 24px;
-  padding: 16px var(--gut) 72px;
+  padding: 16px var(--gut) 116px;
 }
 
 [data-variant='words'] .storySteps li {
@@ -899,6 +930,7 @@
 
 .rowEnd {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -910,6 +942,8 @@
 }
 
 .rowPrice {
+  font-variant-numeric: lining-nums;
+  white-space: nowrap;
   font: var(--dw) calc(30px * var(--dscale)) / 1 var(--display);
   font-style: var(--ds);
   letter-spacing: var(--dt);
@@ -925,6 +959,7 @@
   font-weight: 700;
   font-size: 15px;
   text-decoration: none;
+  white-space: nowrap;
   box-shadow: inset 0 0 0 1.5px currentColor;
 }
 
@@ -1005,7 +1040,7 @@
   margin-bottom: 40px;
   font: var(--dw) calc(44px * var(--dscale)) / 1 var(--display);
   font-style: var(--ds);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 /* round: circles, for bottles and faces. */
@@ -1134,6 +1169,7 @@
 .numbers dl > div {
   display: flex;
   flex-direction: column-reverse;
+  justify-content: flex-end;
 }
 
 .numbers dt {
@@ -1166,6 +1202,13 @@
   gap: 40px 20px;
 }
 
+/* Three figures on a phone: the first takes the full width, so no corner is left empty. */
+@media (max-width: 899px) {
+  .numbers[data-variant='row'] dl > div:first-child:nth-last-child(3) {
+    grid-column: 1 / -1;
+  }
+}
+
 [data-variant='band'].numbers {
   padding: 64px 0;
 }
@@ -1192,6 +1235,12 @@
   font-size: calc(clamp(40px, 9vw, 84px) * var(--dscale));
 }
 
+.numbers[data-variant='band'] dt,
+.numbers[data-variant='list'] dt {
+  max-width: 56%;
+  text-align: right;
+}
+
 .numbers[data-variant='list'] dl > div {
   flex-direction: row-reverse;
   align-items: baseline;
@@ -1204,7 +1253,7 @@
 .numbers[data-variant='list'] dd {
   margin: 0;
   font-size: calc(clamp(34px, 7vw, 64px) * var(--dscale));
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 /* ------------------------------------------------------------------ Words */
@@ -1313,8 +1362,11 @@
 }
 
 .listPrice {
-  font-size: calc(30px * var(--dscale));
+  max-width: 46vw;
+  font-size: calc(26px * var(--dscale));
   line-height: 1;
+  text-align: right;
+  white-space: nowrap;
 }
 
 [data-variant='steps'] .listBody > li {
@@ -1324,7 +1376,7 @@
 .listNo {
   font-size: calc(34px * var(--dscale));
   line-height: 1;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .listBody > details {
@@ -1552,6 +1604,9 @@
   .storyBar {
     bottom: 56px;
   }
+  [data-variant='stack'] .storySteps {
+    margin-bottom: 104px;
+  }
   .storyText p {
     font-size: 21px;
   }
@@ -1581,9 +1636,30 @@
     grid-column: 1;
     align-self: end;
   }
+  /* The heading keeps the left of the frame and the lines take the right, so neither half stands empty. */
+  [data-variant='words'] .story [data-frame] {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    column-gap: 48px;
+    align-items: center;
+  }
+  [data-variant='words'] .storyHead {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+    padding-top: 0;
+  }
+  [data-variant='words'] .storyHead h2 {
+    max-width: 10ch;
+    font-size: calc(clamp(48px, 5.6vw, 88px) * var(--dscale));
+  }
   [data-variant='words'] .storySteps {
-    gap: 36px;
-    padding-bottom: 104px;
+    gap: 24px;
+    padding: 0 var(--gut) 0 0;
+  }
+  [data-variant='words'] .storyText p {
+    max-width: 40ch;
+    font-size: calc(clamp(22px, min(2.6vw, 3.6svh), 36px) * var(--dscale));
   }
   .rowCard {
     flex: 0 0 380px;
@@ -1617,9 +1693,20 @@
     pointer-events: none;
     transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
   }
-  .side[data-dragged] [data-side-cue] {
+  /* On cards of words alone the cue would sit on the words, so it stands above the row instead. */
+  [data-variant='plain'] .side [data-side-cue] {
+    top: -92px;
+    width: 72px;
+    height: 72px;
+    font-size: 13px;
+  }
+  .side[data-dragged] [data-side-cue],
+  .side[data-fits] [data-side-cue] {
     opacity: 0;
     transform: scale(0.8);
+  }
+  .side[data-fits] [data-side-track] {
+    cursor: auto;
   }
   .wipes {
     display: grid;
@@ -1645,9 +1732,33 @@
   .wipeBand .wipeWords {
     margin-bottom: 88px;
   }
-  .numbers[data-variant='row'] dl {
-    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  .numbers[data-variant='row'] dl,
+  .numbers[data-variant='band'] dl {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
     gap: 40px;
+  }
+  .numbers[data-variant='band'] dt {
+    max-width: none;
+    text-align: left;
+  }
+  .numbers[data-variant='band'] dl > div {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 28px 0 0;
+    border-top: 1px solid var(--rule);
+  }
+  .numbers[data-variant='band'] dl > div:last-child {
+    border-bottom: 0;
+  }
+  /* On a wide screen the words sit at the left, so the scrim deepens there as well as at the foot. */
+  .hero[data-variant='photo'][data-align='low'] .heroMedia::after {
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--deep) 62%, transparent) 0%, color-mix(in srgb, var(--deep) 30%, transparent) 38%, transparent 62%),
+      linear-gradient(180deg, color-mix(in srgb, var(--deep) 62%, transparent) 0%, transparent 22%, transparent 44%, color-mix(in srgb, var(--deep) 88%, transparent) 100%);
   }
   .numbers[data-variant='list'],
   .words[data-variant='columns'],
@@ -1708,23 +1819,16 @@
     padding-inline: var(--gut);
   }
   [data-variant='split'] .visitCard {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    column-gap: 64px;
-    padding: 0;
-  }
-  [data-variant='split'] .visitCard h2,
-  [data-variant='split'] .visitCard address {
-    grid-column: 1;
-  }
-  [data-variant='split'] .visitCard > * {
-    justify-self: start;
+    position: relative;
+    min-height: 280px;
+    padding: 0 calc(50% + 32px) 0 0;
   }
   [data-variant='split'] .visitHours {
-    justify-self: stretch;
-    grid-column: 2;
-    grid-row: 1 / span 3;
-    align-self: start;
+    position: absolute;
+    top: 8px;
+    right: 0;
+    width: calc(50% - 32px);
+    margin: 0;
   }
   .foot {
     padding-bottom: 64px;

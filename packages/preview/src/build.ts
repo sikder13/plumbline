@@ -57,6 +57,20 @@ export function loadContent(slug: string): ContentFile {
 
 const DEFAULT_WIDTHS = [480, 800, 1200, 1800];
 
+type Crop = { left: number; top: number; width: number; height: number };
+
+/**
+ * A crop in whole pixels. One given in fractions (all values at most 1) is measured against the
+ * photograph, and is held inside it: two rounded fractions can add up to a pixel more than there is.
+ */
+export function cropInPixels(c: Crop, width: number, height: number): Crop {
+  const fractional = c.left <= 1 && c.top <= 1 && c.width <= 1 && c.height <= 1;
+  if (!fractional) return c;
+  const left = Math.min(width - 1, Math.round(c.left * width));
+  const top = Math.min(height - 1, Math.round(c.top * height));
+  return { left, top, width: Math.max(1, Math.min(width - left, Math.round(c.width * width))), height: Math.max(1, Math.min(height - top, Math.round(c.height * height))) };
+}
+
 function hex(n: number): string {
   return Math.round(n).toString(16).padStart(2, '0');
 }
@@ -67,9 +81,7 @@ export async function buildPicture(source: string, outDir: string, urlBase: stri
   mkdirSync(outDir, { recursive: true });
   // A crop given in fractions (all values at most 1) is measured against the photo, so it survives a re-download at another size.
   const whole = await sharp(source).rotate().toBuffer({ resolveWithObject: true });
-  const c = spec.crop;
-  const fractional = c && c.left <= 1 && c.top <= 1 && c.width <= 1 && c.height <= 1;
-  const crop = c && fractional ? { left: Math.round(c.left * whole.info.width), top: Math.round(c.top * whole.info.height), width: Math.round(c.width * whole.info.width), height: Math.round(c.height * whole.info.height) } : c;
+  const crop = spec.crop ? cropInPixels(spec.crop, whole.info.width, whole.info.height) : undefined;
   const base = () => {
     const img = sharp(source).rotate();
     return crop ? img.extract(crop) : img;
@@ -78,12 +90,13 @@ export async function buildPicture(source: string, outDir: string, urlBase: stri
   const full = { width: meta.info.width, height: meta.info.height };
   const widths = [...new Set((spec.widths ?? DEFAULT_WIDTHS).map((w) => Math.min(w, full.width)))].sort((a, b) => a - b);
   // What the stored versions were made from. A key that now points at another photo, or another crop of it, is made again.
-  const made = `${source}|${JSON.stringify(crop ?? null)}|${statSync(source).mtimeMs}`;
+  // A photograph with no quality of its own is recorded as it always was, so nothing already made is made again.
+  const made = `${source}|${JSON.stringify(crop ?? null)}|${statSync(source).mtimeMs}${spec.quality ? `|q${spec.quality}` : ''}`;
   const madeFile = join(outDir, `${key}.made`);
   const current = existsSync(madeFile) && readFileSync(madeFile, 'utf8') === made;
   const formats = [
-    { ext: 'avif', type: 'image/avif', write: (img: Sharp) => img.avif({ quality: 48, effort: 5 }) },
-    { ext: 'webp', type: 'image/webp', write: (img: Sharp) => img.webp({ quality: 70, effort: 5 }) },
+    { ext: 'avif', type: 'image/avif', write: (img: Sharp) => img.avif({ quality: spec.quality ?? 48, effort: 5 }) },
+    { ext: 'webp', type: 'image/webp', write: (img: Sharp) => img.webp({ quality: spec.quality ? spec.quality + 22 : 70, effort: 5 }) },
   ];
   const sources: Picture['sources'] = [];
   for (const f of formats) {

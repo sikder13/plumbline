@@ -1,12 +1,12 @@
 import { execFileSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Command } from 'commander';
 import { db, env, nzTime, paths, type Business, type Db } from '@plumbline/core';
 import { Polite } from '@plumbline/fetch';
 import { limits, spent } from '@plumbline/budget';
 import { latestBatch } from '@plumbline/export';
-import { BASE_PATH, LIMITS, WAVE1_LAYOUTS, draftAfterRecheck, fillDraft, fixedBlocks, numbersIn, parseDraft, scanEmail, withStatus, askCorrected, buildPage, layoutOf, loadPlan, loadRecipe, lookOf, recipeSlugs, varietyIssues, checkPage, contentDir, correctedQuestions, correctedSummary, forgetToken, planCorrected, previewPaths, readVisits, removeGenerated, serveSite, summarise, tokenFor, verifyCrawlmouse, type Dropped, type GateReport, type PageData } from '@plumbline/preview';
+import { BASE_PATH, LIMITS, WAVE1_LAYOUTS, draftAfterRecheck, fillDraft, fixedBlocks, numbersIn, parseDraft, scanEmail, withStatus, askCorrected, buildPage, layoutOf, loadPlan, loadRecipe, lookOf, pagesToPublish, recipeSlugs, varietyIssues, checkPage, contentDir, correctedQuestions, correctedSummary, forgetToken, planCorrected, previewPaths, readVisits, removeGenerated, serveSite, summarise, tokenFor, verifyCrawlmouse, type Dropped, type GateReport, type PageData } from '@plumbline/preview';
 import { aiSummary } from '@plumbline/ai';
 import { speedRuns, statedSentence, waveMembers } from '@plumbline/wave';
 import { waveBatch, waveCrawlmouse } from './wave.ts';
@@ -245,20 +245,38 @@ export async function previewData(d: Db, opts: { only?: string; draft?: boolean 
   return call;
 }
 
-/** Builds the data, the pages and the folder that is deployed. Everything lands under previews/out/. */
-export async function previewBuild(d: Db, opts: { only?: string; draft?: boolean }): Promise<void> {
+/**
+ * Builds the data, the pages and the folder that is deployed. Everything lands under previews/out/.
+ * With `batches`, the site is written out with the pages that have a design of their own and the
+ * recipe pages of those batches only, so a page still being worked on is never deployed.
+ */
+export async function previewBuild(d: Db, opts: { only?: string; draft?: boolean; batches?: string[] }): Promise<void> {
   const call = await previewData(d, opts);
+
+  // The pages that go into the site are staged in a folder of their own, which is what the build reads.
+  const built = readdirSync(previewPaths.data).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5));
+  const designed = built.filter((slug) => existsSync(join(contentDir(slug), 'content.json')));
+  const publish = opts.batches ? pagesToPublish(built, designed, loadPlan().batches, opts.batches) : built;
+  const staged = join(previewPaths.out, 'staged');
+  rmSync(staged, { recursive: true, force: true });
+  mkdirSync(staged, { recursive: true });
+  for (const slug of publish) copyFileSync(join(previewPaths.data, `${slug}.json`), join(staged, `${slug}.json`));
 
   const app = previewPaths.app;
   execFileSync(process.execPath, [join(app, 'scripts', 'fonts.mjs')], { cwd: app, stdio: 'inherit' });
-  execFileSync(join(app, 'node_modules', '.bin', 'next'), ['build'], { cwd: app, stdio: 'inherit', env: { ...process.env, PREVIEWS_DATA: previewPaths.data, NEXT_TELEMETRY_DISABLED: '1' } });
+  execFileSync(join(app, 'node_modules', '.bin', 'next'), ['build'], { cwd: app, stdio: 'inherit', env: { ...process.env, PREVIEWS_DATA: staged, NEXT_TELEMETRY_DISABLED: '1' } });
 
   // The host serves the site folder as it is, so the pages sit under the same path they are reached at.
   const served = join(previewPaths.site, BASE_PATH);
   rmSync(previewPaths.site, { recursive: true, force: true });
-  cpSync(join(app, 'out'), served, { recursive: true });
+  cpSync(join(app, 'out'), served, { recursive: true, dereference: true });
+  // Only what is published belongs in the site. Photographs linked into the app's public folder, for looking at a page in development, are left behind.
+  const published = new Set(readdirSync(staged).map((f) => (JSON.parse(readFileSync(join(staged, f), 'utf8')) as PageData).path));
+  for (const e of readdirSync(served, { withFileTypes: true })) {
+    if (e.isDirectory() && /-[a-z0-9]{6}$/.test(e.name) && !published.has(e.name)) rmSync(join(served, e.name), { recursive: true, force: true });
+  }
   const assets = join(previewPaths.out, 'assets');
-  for (const page of readdirSync(previewPaths.data).map((f) => JSON.parse(readFileSync(join(previewPaths.data, f), 'utf8')) as PageData)) {
+  for (const page of readdirSync(staged).map((f) => JSON.parse(readFileSync(join(staged, f), 'utf8')) as PageData)) {
     if (existsSync(join(assets, page.path))) cpSync(join(assets, page.path), join(served, page.path), { recursive: true, filter: (from) => !from.endsWith('.made') });
     const html = join(served, page.path, 'index.html');
     writeFileSync(html, scriptsAfterPaint(readFileSync(html, 'utf8')));
@@ -267,13 +285,16 @@ export async function previewBuild(d: Db, opts: { only?: string; draft?: boolean
   writeFileSync(join(previewPaths.out, 'vercel.json'), JSON.stringify(VERCEL_JSON, null, 2));
   if (opts.draft && !call) writeFileSync(draftMarker(), 'Built without CAL_LINK.\n');
   else rmSync(draftMarker(), { force: true });
-  console.log(`Built ${readdirSync(previewPaths.data).length} page(s) into ${previewPaths.site}${opts.draft && !call ? ' (draft: no call link)' : ''}`);
+  console.log(`Built ${publish.length} page(s) into ${previewPaths.site}${opts.draft && !call ? ' (draft: no call link)' : ''}`);
 }
 
 function pages(only?: string): PageData[] {
-  if (!existsSync(previewPaths.data)) throw new Error('nothing is built yet. Run plumb preview build.');
+  // The pages of the site as it was last written out, which may be fewer than the pages that have data.
+  const staged = join(previewPaths.out, 'staged');
+  const from = existsSync(staged) ? staged : previewPaths.data;
+  if (!existsSync(from)) throw new Error('nothing is built yet. Run plumb preview build.');
   const wanted = only ? new Set(only.split(',').map((x) => x.trim())) : null;
-  return readdirSync(previewPaths.data).map((f) => JSON.parse(readFileSync(join(previewPaths.data, f), 'utf8')) as PageData).filter((p) => !wanted || wanted.has(p.slug));
+  return readdirSync(from).map((f) => JSON.parse(readFileSync(join(from, f), 'utf8')) as PageData).filter((p) => !wanted || wanted.has(p.slug));
 }
 
 /** Runs every quality gate for each page and saves the screenshots for review. */
@@ -415,12 +436,14 @@ export function registerPreview(program: Command): void {
     .description('Build the pages into previews/out/ from the database, previews/content/ and previews/recipes/. With a slug or a wave, only those pages are made again; the site is always written out whole.')
     .option('--only <slugs>', 'comma separated slugs')
     .option('--wave <name>', 'the businesses of a wave that have a recipe')
+    .option('--batches <letters>', 'write the site out with the designed pages and the recipe pages of these batches only (comma separated, as in previews/batches.json)')
     .option('--draft', 'build without CAL_LINK, for looking at the pages locally')
-    .action((slug: string | undefined, o: { only?: string; wave?: string; draft?: boolean }) => {
+    .action((slug: string | undefined, o: { only?: string; wave?: string; batches?: string; draft?: boolean }) => {
       const d = db();
       const wave = o.wave ? waveMembers(d, o.wave).map((b) => b.slug).filter((s) => recipeSlugs().includes(s)) : null;
       if (wave && !wave.length) throw new Error(`no business of ${o.wave} has a recipe under previews/recipes/`);
-      return previewBuild(d, { only: slug ?? wave?.join(',') ?? o.only, draft: o.draft });
+      const batches = o.batches?.split(',').map((x) => x.trim()).filter(Boolean);
+      return previewBuild(d, { only: slug ?? wave?.join(',') ?? o.only, draft: o.draft, batches });
     });
 
   preview

@@ -65,7 +65,8 @@ export interface ContentFile {
   design: string;
   /** The business name as it should read on the page, when the stored name carries extra words. */
   name?: string;
-  images: Record<string, { file: string; alt: string; widths?: number[]; position?: string; crop?: { left: number; top: number; width: number; height: number } }>;
+  /** `quality` (20 to 60, 48 unless given) sets how hard a photograph is compressed: a busy one at the top of a page may need less to load in time. */
+  images: Record<string, { file: string; alt: string; widths?: number[]; position?: string; quality?: number; crop?: { left: number; top: number; width: number; height: number } }>;
   /** A short loop cut from the business's own film, under previews/content/<slug>/. */
   video?: { file: string };
   /** Awards and certifications shown on the business's own site, each with the page it is shown on. */
@@ -120,11 +121,16 @@ export interface HeroSection {
   ground?: 'paper' | 'soft' | 'deep';
   /** Sets the headline a little larger or smaller, for a long word or a short line. */
   scale?: number;
+  /** The same for a wide screen, when the headline wants a different size there. */
+  scaleWide?: number;
+  /** Sets the photograph in two tones, the page's dark colour and white: for an old or small photograph that would look dated in its own colours. */
+  treat?: 'duotone';
 }
 
 export interface StorySection {
   kind: 'story';
   variant: 'wipe' | 'stack' | 'rail' | 'words';
+  id?: string;
   /** What the story is about, in a word or two: kept for the variety check and the brief. */
   subject: string;
   heading: string;
