@@ -89,7 +89,8 @@ function googleProblems(s: Section): string[] {
     running = rest;
     for (const x of items) if (GOOGLE.test(`${x.label} ${x.source ?? ''}`) && !GOOGLE_SOURCE.test(x.source ?? '')) out.push(`the figure "${x.value} ${x.label}" comes from Google and ${needs}`);
   }
-  if (wordsUnder(running).some((line) => GOOGLE_RATING.test(line))) out.push(`${s.kind} speaks of a Google rating in running text; it belongs in the note under the action or among the figures, with its source`);
+  // A rating is a figure: a line that only asks for a review, or points to a map, is not one.
+  if (wordsUnder(running).some((line) => GOOGLE_RATING.test(line) && /\d/.test(line))) out.push(`${s.kind} speaks of a Google rating in running text; it belongs in the note under the action or among the figures, with its source`);
   return out;
 }
 

@@ -66,7 +66,7 @@ describe('a page recipe', () => {
     const sections: Section[] = [
       { ...hero(), note: '4.9 from 240 reviews', noteSource: 'Google, October 2026' } as Section,
       { kind: 'numbers', variant: 'row', items: [{ value: '5.0', label: 'From 180 Google reviews', source: 'Google, October 2026' }, { value: '25', label: 'Years guiding' }] },
-      { kind: 'visit', variant: 'plain', heading: 'Find us', address: ['1 Cove Road'], notes: ['Search for us on Google Maps.'] },
+      { kind: 'visit', variant: 'plain', heading: 'Find us', address: ['1 Cove Road'], notes: ['Search for us on Google Maps.', 'Enjoyed your day? Leave us a Google review.'] },
     ];
     expect(checkRecipe(recipe({ sections, nav: [] }))).toEqual([]);
   });
