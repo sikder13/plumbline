@@ -51,6 +51,7 @@ describe('copy scan', () => {
     expect(copy.rest).toBe('Bar');
     const issues = scanPage(copy, { ownSite: 'nothing', measured: 'Score 28', offer: '' });
     expect(issues.map((i) => `${i.kind}:${i.where}`).sort()).toEqual(['dash:demo', 'number:demo']);
+    expect(scanPage({ demo: 'Rated 28', found: '', rest: '' }, { ownSite: '', measured: 'Score 28', offer: '' })).toEqual([]);
   });
 });
 

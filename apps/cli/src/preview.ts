@@ -175,7 +175,7 @@ export async function previewCheck(opts: { only?: string; live?: boolean; base?:
       const r = await checkPage(page, { base, offerText, skipLighthouse: opts.noLighthouse, log: console.log });
       reports.push(r);
       const lh = r.lighthouse;
-      if (!opts.noLighthouse) console.log(`  median: performance ${lh.performance} (needs ${LIMITS.performance}), accessibility ${lh.accessibility} (needs ${LIMITS.accessibility}), LCP ${lh.lcpMs === null ? 'n/a' : `${(lh.lcpMs / 1000).toFixed(2)} s`} (needs under ${LIMITS.lcpMs / 1000} s)`);
+      if (!opts.noLighthouse) console.log(`  median: performance ${lh.performance} (needs ${LIMITS.performance}), accessibility ${lh.accessibility} (needs ${LIMITS.accessibility}), LCP ${lh.lcpMs === null ? 'n/a' : `${(lh.lcpMs / 1000).toFixed(2)} s`} (under ${LIMITS.lcpMs / 1000} s), CLS ${lh.cls === null ? 'n/a' : lh.cls.toFixed(3)} (under ${LIMITS.cls}), TBT ${lh.tbtMs === null ? 'n/a' : `${Math.round(lh.tbtMs)} ms`} (under ${LIMITS.tbtMs} ms)`);
       console.log(`  links: ${r.links.filter((l) => l.ok).length} of ${r.links.length} pass; booking ${[...new Set(r.links.filter((l) => l.kind === 'booking').map((l) => l.href))].length}, tel ${r.links.filter((l) => l.kind === 'tel').length}, mailto ${r.links.filter((l) => l.kind === 'mailto').length}`);
       console.log(r.failures.length ? `  FAILED ${r.failures.length}:` : '  all gates pass');
       for (const f of r.failures) console.log(`    ${f}`);

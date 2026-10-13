@@ -95,7 +95,8 @@ export function splitPage(html: string): PageCopy {
 export function scanPage(copy: PageCopy, sources: { ownSite: string; measured: string; offer: string }): CopyIssue[] {
   const issues: CopyIssue[] = [];
   for (const [where, text] of Object.entries(copy) as [keyof PageCopy, string][]) issues.push(...dashIssues(text, where), ...bannedIssues(text, where));
-  issues.push(...numberIssues(copy.demo, 'demo', numberSet(sources.ownSite)));
+  // The demo may quote a stored measurement about the business, such as its Google rating, beside what its own site says.
+  issues.push(...numberIssues(copy.demo, 'demo', numberSet(`${sources.ownSite}\n${sources.measured}`)));
   issues.push(...numberIssues(copy.found, 'found', numberSet(`${sources.measured}\n${sources.offer}`)));
   issues.push(...numberIssues(copy.rest, 'rest', numberSet(sources.offer)));
   return issues;

@@ -5,8 +5,8 @@
 }
 
 :root {
-  --bar-h: 88px;
-  --sticky-h: 65px;
+  --bar-h: 36px;
+  --sticky-h: 0px;
   --ink: #16181d;
   --paper: #f7f6f3;
   --line: #dcd9d2;
@@ -38,105 +38,182 @@ img {
   display: none !important;
 }
 
-/* The bar: plain, small, and the same on every page. */
-.bar {
+/* The strip: one thin line, the same on every page. It slides away as the visitor reads down. */
+.strip {
   position: fixed;
   inset: 0 0 auto 0;
   z-index: 50;
   height: var(--bar-h);
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  gap: 6px;
   padding: 0 12px;
   background: #16181d;
-  color: #fff;
-  font-family: var(--system);
-}
-
-.bar-line {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.25;
   color: #d5d8de;
-  text-align: center;
-  text-wrap: balance;
+  font: 500 12.5px/1 var(--system);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.bar-line a {
+[data-strip-away] .strip {
+  transform: translateY(-100%);
+}
+
+.strip p {
+  display: flex;
+  gap: 5px;
+  margin: 0;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+/* On a narrow screen a long business name gives way before the link does. */
+.strip-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.strip-found {
+  flex: 0 0 auto;
+}
+
+.strip a {
   color: #fff;
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
-.bar-line a:hover {
-  text-decoration-thickness: 2px;
+.strip-by {
+  display: none;
 }
 
-.bar-line a:focus-visible {
-  outline: 2px solid #8ab4ff;
-  outline-offset: 2px;
-}
-
-.bar-tabs {
-  display: flex;
-  gap: 4px;
-  justify-content: center;
-}
-
-.bar-tabs button {
-  appearance: none;
-  border: 1px solid transparent;
-  border-radius: 999px;
-  padding: 0 12px;
-  min-height: 36px;
-  font: 600 13px/1 var(--system);
-  color: #d5d8de;
-  background: transparent;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.bar-tabs button[aria-selected='true'] {
-  background: #fff;
-  color: #16181d;
-}
-
-.bar-tabs button:focus-visible,
+.strip a:focus-visible,
+.tab-pill button:focus-visible,
 .found a:focus-visible {
   outline: 2px solid #8ab4ff;
   outline-offset: 2px;
 }
 
-@media (min-width: 760px) {
-  :root {
-    --bar-h: 48px;
-    --sticky-h: 0px;
-  }
-  .bar {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-  }
-  .bar-line {
-    font-size: 13px;
-    text-align: left;
-  }
-  .bar-tabs button {
-    min-height: 32px;
+@media (min-width: 620px) {
+  .strip-by {
+    display: inline;
   }
 }
 
-/* Reveals. Only elements below the screen at load are held back, and only when motion is welcome. */
-@media (prefers-reduced-motion: no-preference) {
-  [data-reveal] {
-    transition: opacity 0.7s ease, transform 0.7s ease;
+/* The two tabs: a small pill at the bottom left, shown once the opening photo has gone by. */
+.tab-pill {
+  position: fixed;
+  left: 12px;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  z-index: 45;
+  display: flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(22, 24, 29, 0.86);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  backdrop-filter: blur(18px) saturate(1.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 0 0 1px rgba(255, 255, 255, 0.16);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.4s;
+  transform: translateY(16px);
+}
+
+[data-past-hero] .tab-pill,
+[data-tab='found'] .tab-pill {
+  transform: none;
+  opacity: 1;
+  visibility: visible;
+}
+
+.tab-pill button {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  min-height: 38px;
+  padding: 0 12px;
+  background: transparent;
+  color: #e3e5ea;
+  font: 600 12.5px/1 var(--system);
+  cursor: pointer;
+}
+
+.tab-pill button[aria-selected='true'] {
+  background: #fff;
+  color: #16181d;
+}
+
+/* The one action, floating on phones after the opening photo. Each design sets its colours. */
+.float-bar {
+  position: fixed;
+  right: 12px;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  z-index: 44;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.4s;
+  transform: translateY(16px);
+}
+
+[data-past-hero] .float-bar {
+  transform: none;
+  opacity: 1;
+  visibility: visible;
+}
+
+.float-bar a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  border-radius: 999px;
+  font: 700 16px/1 var(--float-font, inherit);
+  text-decoration: none;
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  backdrop-filter: blur(18px) saturate(1.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+
+.float-bar a.float-main {
+  padding: 0 24px;
+  background: var(--float-bg, rgba(22, 24, 29, 0.94));
+  color: var(--float-ink, #fff);
+}
+
+.float-bar a.float-call {
+  width: 52px;
+  background: var(--float-call-bg, rgba(255, 255, 255, 0.94));
+  color: var(--float-call-ink, #16181d);
+}
+
+@media (min-width: 760px) {
+  .float-bar {
+    display: none;
   }
-  .reveal-wait {
-    opacity: 0;
-    transform: translateY(18px);
+}
+
+/* The switch between the two tabs: the old one eases away upward as the new one rises into place. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: tab-out 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+  ::view-transition-new(root) {
+    animation: tab-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes tab-out {
+    to {
+      opacity: 0;
+      transform: translateY(-12px) scale(0.99);
+    }
+  }
+  @keyframes tab-in {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
   }
 }
 
@@ -144,7 +221,7 @@ img {
 .found {
   max-width: 760px;
   margin: 0 auto;
-  padding: 40px 20px 96px;
+  padding: 40px 20px 112px;
   font-size: 17px;
   background: #fff;
 }
@@ -364,56 +441,25 @@ img {
   color: var(--muted);
 }
 
-/* The bar at the bottom of a phone screen in the demo. Each design sets its colours. */
-.sticky-bar {
-  position: fixed;
-  inset: auto 0 0 0;
-  z-index: 40;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-  background: var(--sticky-bg, #fff);
-  border-top: 1px solid var(--sticky-line, rgba(0, 0, 0, 0.12));
-}
-
-.sticky-bar a {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 48px;
-  padding: 0 22px;
-  border-radius: var(--sticky-radius, 8px);
-  font-weight: 700;
-  font-size: 16px;
-  text-decoration: none;
-}
-
-.sticky-bar a.sticky-main {
-  background: var(--sticky-main-bg, #16181d);
-  color: var(--sticky-main-ink, #fff);
-}
-
-.sticky-bar a.sticky-call {
-  background: transparent;
-  color: var(--sticky-call-ink, #16181d);
-  border: 1.5px solid currentColor;
-}
-
 .demo-foot-note {
   margin: 0;
   font-size: 13px;
   opacity: 0.85;
 }
 
-@media (max-width: 759px) {
-  .has-sticky {
-    padding-bottom: 76px;
-  }
+.demo-foot-note a {
+  color: inherit;
 }
 
-@media (min-width: 760px) {
-  .sticky-bar {
-    display: none;
+/* With reduced motion asked for, the frame's own controls appear and go without easing. */
+@media (prefers-reduced-motion: reduce) {
+  .strip,
+  .tab-pill,
+  .float-bar {
+    transition: none;
+  }
+  .tab-pill,
+  .float-bar {
+    transform: none;
   }
 }
