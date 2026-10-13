@@ -220,6 +220,9 @@ importers:
       '@plumbline/report':
         specifier: workspace:*
         version: link:packages/report
+      '@plumbline/wave':
+        specifier: workspace:*
+        version: link:packages/wave
       better-sqlite3:
         specifier: 13.0.3
         version: 13.0.3
@@ -402,6 +405,8 @@ importers:
   packages/render: {}
 
   packages/report: {}
+
+  packages/wave: {}
 
 packages:
 

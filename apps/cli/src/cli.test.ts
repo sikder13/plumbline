@@ -8,6 +8,7 @@ import { importResearchContacts } from './commands.ts';
 import { parseCsv, toCsv } from './csv.ts';
 import { dossierSection, readDossiers, seed, storefrontBelongs } from './seed.ts';
 import { fit, rank, selectBatch } from './select.ts';
+import { readWaveList } from './wave.ts';
 
 describe('CSV', () => {
   it('reads quoted fields, doubled quotes and line breaks inside quotes', () => {
@@ -138,5 +139,15 @@ describe('calibration', () => {
     const md = calibrationReport(c, 'c');
     expect(md).toContain('| False findings (must be zero) | 2 |');
     expect(md).toContain('| one | reproduced | C02 | 1 | C11, C70 | C20 |');
+  });
+});
+
+describe('a wave list', () => {
+  it('reads the order, the slug and whether a row is in the wave or a reserve', () => {
+    const csv = 'order,status,slug,name,town\n1,wave 2,fixture-kayakers,Fixture Kayakers,"Paihia, Northland"\n21,reserve,second-charters,Second Charters,Taupō\n,wave 2,,No slug,\n';
+    expect(readWaveList(csv)).toEqual([
+      { slug: 'fixture-kayakers', position: 1, status: 'wave' },
+      { slug: 'second-charters', position: 21, status: 'reserve' },
+    ]);
   });
 });

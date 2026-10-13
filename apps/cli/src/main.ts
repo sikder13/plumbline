@@ -13,6 +13,7 @@ import { writeReport } from '@plumbline/report';
 import { registerPreview } from './preview.ts';
 import { seed } from './seed.ts';
 import { selectBatch } from './select.ts';
+import { registerWave } from './wave.ts';
 
 /** Limits of this build that anyone reading a report should know. */
 const UNCERTAIN = [
@@ -188,5 +189,6 @@ program
   });
 
 registerPreview(program);
+registerWave(program);
 
 await program.parseAsync();
