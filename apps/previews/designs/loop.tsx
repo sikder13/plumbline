@@ -4,8 +4,9 @@ import { DemoFoot } from '@/components/DemoFoot';
 import { FlapBoard, type BoardRow } from '@/components/FlapBoard';
 import { Pic } from '@/components/Pic';
 import { Pinned } from '@/components/Pinned';
-import { SideScroll } from '@/components/SideScroll';
+import { SectionLinks } from '@/components/SectionLinks';
 import { StickyBar } from '@/components/StickyBar';
+import { StopGallery } from '@/components/StopGallery';
 import { pic, type PageData } from '@/lib/data';
 import type { Design } from './types';
 import s from './loop.module.css';
@@ -37,8 +38,8 @@ interface Content {
     prices: { label: string; value: string }[];
     book: { label: string; href: string };
   };
-  onDay: { heading: string; lead: string; cue: string; items: { image: string; name: string; text: string; size: 'tall' | 'short' }[] };
-  trust: { ratingLabel: string; ratingUnit: string; ratingSource: string; heading: string; text: string; year: string; yearLabel: string; caption: string };
+  onDay: { heading: string; lead: string; items: { image: string; name: string; text: string }[] };
+  trust: { ratingLabel: string; ratingUnit: string; ratingSource: string; heading: string; text: string; year: string; yearLabel: string };
   end: { heading: string; line: string; local: { label: string; value: string }; hours: { label: string; value: string }[]; post: string };
 }
 
@@ -93,13 +94,7 @@ function Demo({ data }: { data: PageData }) {
   return (
     <div className={s.root}>
       <nav className={s.nav} aria-label="Sections">
-        <span className={s.navLinks}>
-          {c.nav.map((n) => (
-            <a key={n.href} href={n.href}>
-              {n.label}
-            </a>
-          ))}
-        </span>
+        <SectionLinks className={s.navLinks} items={c.nav} />
         <a className={s.navBook} data-press data-magnetic {...book}>
           {c.book.label}
         </a>
@@ -292,40 +287,16 @@ function Demo({ data }: { data: PageData }) {
         </section>
 
         <section className={s.onDay} id="on-the-day" aria-labelledby="on-h">
-          <SideScroll
-            className={s.side}
-            label={c.onDay.heading}
-            cue={c.onDay.cue}
-            head={
-              <header className={s.onHead}>
-                <h2 id="on-h" data-reveal>
-                  {c.onDay.heading}
-                </h2>
-                <p data-reveal>{c.onDay.lead}</p>
-              </header>
-            }
-          >
-            {c.onDay.items.map((it, i) => (
-              <article key={it.name} className={s.card} data-size={it.size}>
-                <p className={s.cardNo} aria-hidden="true">
-                  <i />
-                  {String(i + 1).padStart(2, '0')}
-                </p>
-                <div className={s.cardPhoto} data-wipe>
-                  <Pic pic={pic(data, it.image)} sizes="(min-width: 900px) 30vw, 72vw" />
-                </div>
-                <h3>{it.name}</h3>
-                <p className={s.cardText}>{it.text}</p>
-              </article>
-            ))}
-          </SideScroll>
+          <header className={s.onHead}>
+            <h2 id="on-h" data-reveal>
+              {c.onDay.heading}
+            </h2>
+            <p data-reveal>{c.onDay.lead}</p>
+          </header>
+          <StopGallery className={s.gallery} label={c.onDay.heading} items={c.onDay.items.map((it) => ({ name: it.name, text: it.text, picture: <Pic pic={pic(data, it.image)} sizes="(min-width: 900px) 58vw, 100vw" /> }))} />
         </section>
 
         <section className={s.trust} aria-labelledby="trust-h">
-          <figure className={s.trustPhoto} data-wipe data-parallax-frame>
-            <Pic pic={pic(data, 'guide')} sizes="(min-width: 900px) 50vw, 100vw" parallax />
-            <figcaption>{c.trust.caption}</figcaption>
-          </figure>
           <div className={s.trustText}>
             <h2 id="trust-h" data-reveal>
               {c.trust.heading}
@@ -333,47 +304,48 @@ function Demo({ data }: { data: PageData }) {
             <p className={s.trustLine} data-reveal>
               {c.trust.text}
             </p>
-            <div className={s.figures}>
-              {data.rating && (
-                <p data-reveal>
+          </div>
+          <div className={s.pass} data-reveal>
+            {data.rating && (
+              <div className={s.rated}>
+                <p className={s.roundel}>
                   <b data-count>{data.rating.value}</b>
-                  <span>
-                    {c.trust.ratingLabel} <span data-count>{String(data.rating.count)}</span> {c.trust.ratingUnit}
-                    <small>{c.trust.ratingSource}</small>
-                  </span>
                 </p>
-              )}
-              <p data-reveal>
-                <b>{c.trust.year}</b>
-                <span>{c.trust.yearLabel}</span>
-              </p>
-            </div>
+                <p className={s.ratedText}>
+                  {c.trust.ratingLabel} <span data-count>{String(data.rating.count)}</span> {c.trust.ratingUnit}
+                  <small>{c.trust.ratingSource}</small>
+                </p>
+              </div>
+            )}
+            <p className={s.since}>
+              <span>{c.trust.yearLabel}</span>
+              <b>{c.trust.year}</b>
+            </p>
           </div>
         </section>
 
         <section className={s.end} id="contact" aria-labelledby="end-h">
+          <span className={s.endRail} aria-hidden="true" />
           <h2 id="end-h" data-reveal>
             {c.end.heading}
           </h2>
           <p className={s.endLine} data-reveal>
             {c.end.line}
           </p>
-          <div className={s.reach} data-reveal>
-            <a href={c.call.tel}>{c.call.display}</a>
-            <a href={`mailto:${c.email}`}>{c.email}</a>
-          </div>
-          <dl className={s.hours}>
-            <div>
-              <dt>{c.end.local.label}</dt>
-              <dd>{c.end.local.value}</dd>
-            </div>
-            {c.end.hours.map((h) => (
-              <div key={h.label}>
-                <dt>{h.label}</dt>
-                <dd>{h.value}</dd>
-              </div>
+          <a className={s.phone} href={c.call.tel} data-reveal>
+            {c.call.display}
+          </a>
+          <a className={s.mail} href={`mailto:${c.email}`} data-reveal>
+            {c.email}
+          </a>
+          <ul className={s.tiles}>
+            {[c.end.local, ...c.end.hours].map((h) => (
+              <li key={h.label} data-reveal>
+                <span>{h.label}</span>
+                <b>{h.value}</b>
+              </li>
             ))}
-          </dl>
+          </ul>
           <a className={s.go} data-press data-magnetic {...book}>
             {c.book.label}
             <Arrow />
@@ -382,12 +354,14 @@ function Demo({ data }: { data: PageData }) {
       </main>
 
       <footer className={s.foot}>
-        <span className={s.footMark}>
+        <p className={s.post}>
           <i aria-hidden="true" />
-          {c.wordmark.join(' ')}
-        </span>
-        <p className={s.post}>{c.end.post}</p>
+          {c.end.post}
+        </p>
         <DemoFoot domain={data.domain} />
+        <p className={s.giant} aria-hidden="true">
+          {c.wordmark.join(' ')}
+        </p>
       </footer>
 
       <StickyBar main={{ label: c.book.label, href: c.book.href, external: true }} call={{ label: c.call.label, tel: c.call.tel }} />

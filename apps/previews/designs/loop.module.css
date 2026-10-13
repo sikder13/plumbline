@@ -1,9 +1,9 @@
 .root {
-  --paper: #f5f2eb;
+  --paper: #f2f4f7;
   --ink: #1b2130;
   --red: #e2131b;
   --slate: #8898b8;
-  --mist: #e6e9f0;
+  --mist: #e1e6ef;
   --night: #131824;
   --tile: #232a3d;
   --rule: rgba(27, 33, 48, 0.16);
@@ -31,7 +31,7 @@
 }
 
 .root h2 {
-  font-size: clamp(40px, 11.4vw, 48px);
+  font-size: clamp(44px, 11.4vw, 48px);
   line-height: 0.98;
 }
 
@@ -161,8 +161,7 @@
   text-decoration: none;
 }
 
-.mark i,
-.footMark i {
+.mark i {
   width: 14px;
   height: 14px;
   border: 4px solid var(--red);
@@ -238,7 +237,7 @@
   fill: none;
   stroke: var(--red);
   stroke-width: 2px;
-  stroke-dasharray: 1;
+  stroke-dasharray: 1px;
   animation: draw 0.34s cubic-bezier(0.3, 0.3, 0.6, 0.9) 1.5s both;
 }
 
@@ -372,8 +371,9 @@
   stroke: var(--red);
   stroke-width: 3px;
   stroke-linecap: round;
-  stroke-dasharray: 1 1;
-  stroke-dashoffset: calc(1 - var(--t));
+  /* The line's whole length is 1, so the part not yet travelled is held back as a length. */
+  stroke-dasharray: 1px 1px;
+  stroke-dashoffset: calc((1 - var(--t)) * 1px);
   transition: stroke-dashoffset 1.2s var(--ease);
 }
 
@@ -383,8 +383,8 @@
 .busCore {
   fill: none;
   stroke-linecap: round;
-  stroke-dasharray: 0 1;
-  stroke-dashoffset: calc(0 - var(--t));
+  stroke-dasharray: 0 1px;
+  stroke-dashoffset: calc(var(--t) * -1px);
   transition: stroke-dashoffset 1.2s var(--ease);
 }
 
@@ -1225,9 +1225,9 @@
   letter-spacing: -0.03em;
 }
 
-/* Along the route: photographs hung from one line, a stop to each. */
+/* Along the route: one photograph at a time, edge to edge, with the stops on a line beneath. */
 .onDay {
-  padding: 72px 0;
+  padding: 72px 0 56px;
   background: var(--paper);
   scroll-margin-top: 8px;
 }
@@ -1242,154 +1242,153 @@
   max-width: 32ch;
 }
 
-.side [data-side-wrap] {
-  position: relative;
-}
-
-.side [data-side-track] {
+.gallery [data-gallery-track] {
   display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 0 var(--pad) 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  scroll-padding-left: var(--pad);
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  background: var(--night);
 }
 
-.side [data-side-track]::-webkit-scrollbar {
+.gallery [data-gallery-track]::-webkit-scrollbar {
   display: none;
 }
 
-.side [data-side-track][data-dragging] {
-  scroll-snap-type: none;
-  cursor: grabbing;
-}
-
-.side [data-side-cue] {
-  display: none;
-}
-
-.card {
-  flex: 0 0 72vw;
-  max-width: 320px;
+.gallery [data-gallery-track] li {
+  position: relative;
+  flex: 0 0 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
   scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
-.cardNo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 14px !important;
-  font: 500 12px/1 var(--mono);
+.gallery [data-gallery-track] picture,
+.gallery [data-gallery-track] img {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
 }
 
-.cardNo i {
-  flex: 0 0 auto;
-  width: 12px;
-  height: 12px;
-  border: 2px solid var(--red);
-  border-radius: 50%;
-  background: var(--paper);
+.gallery [data-gallery-track] img {
+  object-fit: cover;
 }
 
-/* The line carries on to the next card, across the gap between them. */
-.cardNo::after {
+.gallery [data-gallery-track] li::after {
   content: '';
-  flex: 1 1 auto;
+  position: absolute;
+  inset: 40% 0 0 0;
+  background: linear-gradient(180deg, rgba(19, 24, 36, 0), rgba(19, 24, 36, 0.9));
+}
+
+.gallery [data-gallery-words] {
+  position: absolute;
+  inset: auto var(--pad) 26px var(--pad);
+  z-index: 1;
+  color: #fff;
+}
+
+.gallery [data-gallery-words] h3 {
+  font-size: clamp(32px, 9.4vw, 40px);
+  line-height: 1;
+}
+
+.gallery [data-gallery-words] p {
+  max-width: 32ch;
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* The stops: four markers on one line, the reached one in red. */
+.gallery [data-gallery-stops] {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  margin: 0 var(--pad);
+  padding-top: 22px;
+}
+
+.gallery [data-gallery-stops]::before {
+  content: '';
+  position: absolute;
+  top: 27px;
+  left: calc(-1 * var(--pad));
+  right: calc(-1 * var(--pad));
   height: 2px;
-  margin-right: -14px;
   background: var(--rule);
 }
 
-.card:last-child .cardNo::after {
-  margin-right: 0;
-}
-
-.cardPhoto {
+.gallery [data-gallery-stops] button {
   position: relative;
-  overflow: hidden;
-  border-radius: 22px;
-  aspect-ratio: 3 / 4;
-  background: var(--mist);
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  min-height: 56px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: 500 12px/1 var(--mono);
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.card[data-size='short'] .cardPhoto {
-  aspect-ratio: 5 / 4;
+.gallery [data-gallery-stops] i {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--paper);
+  transition: background-color 0.4s var(--ease), border-color 0.4s var(--ease), transform 0.5s var(--ease), box-shadow 0.5s var(--ease);
 }
 
-.cardPhoto picture,
-.cardPhoto img {
-  display: block;
+.gallery [data-gallery-stops] button[aria-pressed='true'] i {
+  border-color: var(--red);
+  background: var(--red);
+  transform: scale(1.25);
+  box-shadow: 0 0 0 6px rgba(226, 19, 27, 0.16);
+}
+
+.gallery [data-gallery-stops] [data-no] {
+  opacity: 0.74;
+  transition: opacity 0.4s var(--ease);
+}
+
+.gallery [data-gallery-stops] button[aria-pressed='true'] [data-no] {
+  opacity: 1;
+}
+
+/* On a phone the photograph carries the name and the words, so the stop keeps its name for a screen reader only. */
+.gallery [data-gallery-stops] b {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-.cardPhoto img {
-  object-fit: cover;
+.gallery [data-gallery-stops] [data-text] {
+  display: none;
 }
 
-.card h3 {
-  margin-top: 16px;
-  font-size: 22px;
-  line-height: 1.05;
-}
-
-.cardText {
-  margin-top: 8px !important;
-  font-size: 15.5px;
-  line-height: 1.42;
-}
-
-/* Trust: the family and the rating, on the logo's second colour. */
+/* Trust: the family, and a pass that carries the rating and the year. */
 .trust {
+  display: grid;
+  gap: 36px;
+  padding: 72px var(--pad);
   background: var(--slate);
   color: var(--ink);
-}
-
-.trustPhoto {
-  position: relative;
-  margin: 0;
-  aspect-ratio: 4 / 3;
-  overflow: hidden;
-}
-
-.trustPhoto picture,
-.trustPhoto img {
-  display: block;
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.trustPhoto img {
-  object-fit: cover;
-}
-
-.trustPhoto figcaption {
-  position: absolute;
-  left: var(--pad);
-  right: var(--pad);
-  bottom: 14px;
-  z-index: 1;
-  color: #fff;
-  font-size: 14px;
-  line-height: 1.3;
-}
-
-.trustPhoto::after {
-  content: '';
-  position: absolute;
-  inset: 55% 0 0 0;
-  background: linear-gradient(180deg, rgba(19, 24, 36, 0), rgba(19, 24, 36, 0.82));
-}
-
-.trustText {
-  padding: 56px var(--pad) 72px;
 }
 
 .trustLine {
@@ -1399,62 +1398,143 @@
   line-height: 1.36;
 }
 
-.figures {
+.pass {
+  position: relative;
+  padding: 24px 20px 20px;
+  border-radius: 20px;
+  background: var(--paper);
+}
+
+.pass::before,
+.pass::after {
+  content: '';
+  position: absolute;
+  bottom: 86px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--slate);
+}
+
+.pass::before {
+  left: -10px;
+}
+
+.pass::after {
+  right: -10px;
+}
+
+.rated {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 22px;
+}
+
+/* The rating in a ring, as a line's own sign. */
+.roundel {
+  flex: 0 0 auto;
   display: grid;
-  gap: 28px;
-  margin: 40px 0 0;
+  place-items: center;
+  width: 124px;
+  height: 124px;
+  border: 10px solid var(--red);
+  border-radius: 50%;
 }
 
-.figures p {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: end;
-  column-gap: 18px;
-  padding-top: 20px;
-  border-top: 1.5px solid rgba(27, 33, 48, 0.42);
+.roundel b {
+  font: 700 40px/1 var(--wide);
+  letter-spacing: -0.04em;
 }
 
-.figures b {
-  font: 700 clamp(64px, 19vw, 84px)/0.84 var(--wide);
-  letter-spacing: -0.045em;
-}
-
-.figures p > span {
-  padding-bottom: 4px;
+.ratedText {
+  font-size: 19px;
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 1.25;
 }
 
-.figures small {
+.ratedText small {
   display: block;
-  margin-top: 4px;
+  margin-top: 8px;
   font: 500 12px/1.3 var(--mono);
 }
 
-/* The practical end. */
+.since {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  height: 76px;
+  padding-top: 18px;
+  border-top: 1.5px dashed var(--rule);
+}
+
+.since span {
+  max-width: 18ch;
+  font: 500 11px/1.4 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.since b {
+  font: 700 46px/0.8 var(--wide);
+  letter-spacing: -0.04em;
+}
+
+/* The practical end: the end of the line. */
 .end {
+  position: relative;
   display: grid;
   justify-items: start;
-  padding: 72px var(--pad) 120px;
-  background: var(--paper);
+  padding: 96px var(--pad) 72px;
+  background: var(--night);
+  color: #fff;
   scroll-margin-top: 8px;
 }
 
+.endRail {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  width: calc(var(--pad) + 6px);
+  height: 2px;
+  background: var(--red);
+}
+
+.endRail::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  right: -9px;
+  width: 18px;
+  height: 18px;
+  border: 5px solid var(--red);
+  border-radius: 50%;
+  background: #fff;
+}
+
 .endLine {
-  max-width: 32ch;
+  max-width: 38ch;
   margin-top: 18px !important;
+  color: rgba(255, 255, 255, 0.86);
 }
 
-.reach {
-  display: grid;
-  gap: 8px;
-  margin-top: 32px;
+.phone,
+.mail {
+  color: #fff;
+  text-decoration: none;
 }
 
-.reach a {
-  color: var(--ink);
-  font: 700 clamp(22px, 6.6vw, 30px)/1.15 var(--wide);
-  letter-spacing: -0.03em;
+.phone {
+  margin-top: 40px;
+  font: 800 clamp(34px, 11vw, 52px)/1 var(--text);
+  letter-spacing: -0.035em;
+  white-space: nowrap;
+}
+
+.mail {
+  margin-top: 12px;
+  font: 600 clamp(15px, 4.6vw, 20px)/1.3 var(--text);
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-decoration-color: var(--red);
@@ -1462,58 +1542,69 @@
   overflow-wrap: anywhere;
 }
 
-.reach a + a {
-  font-size: clamp(15px, 4.5vw, 22px);
-}
-
-.hours {
+.tiles {
   display: grid;
+  gap: 8px;
   width: 100%;
-  margin: 36px 0 36px;
-  border-top: 1.5px solid var(--ink);
+  margin: 40px 0 36px;
+  padding: 0;
+  list-style: none;
 }
 
-.hours div {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 13px 0;
-  border-bottom: 1px solid var(--rule);
+.tiles li {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--tile);
 }
 
-.hours dt {
-  font: 500 12px/1.3 var(--mono);
+.tiles span {
+  font: 500 11px/1.2 var(--mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
 }
 
-.hours dd {
-  margin: 0;
+.tiles b {
+  font-size: 18px;
   font-weight: 600;
-  text-align: right;
+  line-height: 1.25;
 }
 
+/* The foot: the name, as large as the page is wide. */
 .foot {
   display: grid;
-  gap: 14px;
-  padding: 40px var(--pad) 112px;
-  background: var(--night);
-  color: #fff;
-}
-
-.footMark {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font: 700 14px/1 var(--wide);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding: 36px var(--pad) 0;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
 }
 
 .post {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.84);
+}
+
+.post i {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border: 4px solid var(--red);
+  border-radius: 50%;
+  background: #fff;
+}
+
+.giant {
+  margin: 28px -0.04em -0.17em !important;
+  font: 700 10.1vw/0.8 var(--wide);
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 @keyframes drift {
@@ -1549,7 +1640,7 @@
 
 @keyframes draw {
   from {
-    stroke-dashoffset: 1;
+    stroke-dashoffset: 1px;
   }
 }
 
@@ -1640,10 +1731,38 @@
   }
 
   .navLinks a {
+    position: relative;
     color: #fff;
     font: 600 15px/1 var(--text);
     text-decoration: none;
     white-space: nowrap;
+    transition: padding-left 0.5s var(--ease);
+  }
+
+  /* The section the visitor is in is marked like the stop a line has reached. */
+  .navLinks a::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 10px;
+    height: 10px;
+    margin-top: -5px;
+    border: 2px solid var(--red);
+    border-radius: 50%;
+    background: #fff;
+    opacity: 0;
+    transform: scale(0.2);
+    transition: opacity 0.4s var(--ease), transform 0.5s var(--ease);
+  }
+
+  .navLinks a[aria-current] {
+    padding-left: 18px;
+  }
+
+  .navLinks a[aria-current]::before {
+    opacity: 1;
+    transform: none;
   }
 
   .navBook {
@@ -1733,7 +1852,7 @@
     grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
     grid-template-rows: auto 1fr auto;
     column-gap: 72px;
-    padding: 112px var(--pad) 56px;
+    padding: 148px var(--pad) 56px;
   }
 
   .storyHead {
@@ -1962,6 +2081,8 @@
   }
 
   .onDay {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
     padding: 128px 0;
   }
 
@@ -1976,103 +2097,229 @@
     font-size: 21px;
   }
 
-  .side [data-side-track] {
-    gap: 22px;
-    cursor: grab;
+  /* Wide: the photographs are stacked in one frame, and the stops are a list beside it. */
+  .gallery {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: stretch;
+    column-gap: 72px;
+    padding-right: var(--pad);
   }
 
-  .side [data-side-cue] {
-    position: absolute;
-    top: -40px;
-    right: var(--pad);
+  .gallery [data-gallery-track] {
+    position: relative;
     display: block;
-    font: 500 12px/1 var(--mono);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    transition: opacity 0.4s var(--ease);
+    height: min(76vh, 720px);
+    overflow: hidden;
+    border-radius: 0 28px 28px 0;
   }
 
-  .side[data-dragged] [data-side-cue],
-  .side[data-fits] [data-side-cue] {
+  .gallery [data-gallery-track] li {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
     opacity: 0;
+    transition: opacity 0.7s var(--ease);
   }
 
-  .card {
-    flex-basis: calc((100vw - 2 * var(--pad) - 3 * 22px) / 4);
-    max-width: none;
+  .gallery [data-gallery-track] li img {
+    transform: scale(1.06);
+    transition: transform 1.4s var(--ease);
   }
 
-  .cardNo::after {
-    margin-right: -22px;
+  .gallery [data-gallery-track] li[data-on] {
+    opacity: 1;
   }
 
-  .card h3 {
-    font-size: 28px;
+  .gallery [data-gallery-track] li[data-on] img {
+    transform: none;
   }
 
-  .cardText {
-    font-size: 17px;
+  .gallery [data-gallery-track] li::after,
+  .gallery [data-gallery-words] {
+    display: none;
+  }
+
+  .gallery [data-gallery-stops] {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    align-content: center;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+  }
+
+  .gallery [data-gallery-stops]::before {
+    top: 34px;
+    bottom: 34px;
+    left: 8px;
+    right: auto;
+    width: 2px;
+    height: auto;
+  }
+
+  .gallery [data-gallery-stops] button {
+    grid-template-columns: 18px auto minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: 18px;
+    row-gap: 0;
+    min-height: 0;
+    padding: 22px 0;
+    font-size: 13px;
+  }
+
+  .gallery [data-gallery-stops] i {
+    align-self: center;
+    width: 18px;
+    height: 18px;
+    border-width: 2.5px;
+  }
+
+  .gallery [data-gallery-stops] b {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    font: 700 clamp(30px, 2.9vw, 46px)/1 var(--wide);
+    letter-spacing: -0.03em;
+    opacity: 0.6;
+    transition: opacity 0.5s var(--ease);
+  }
+
+  .gallery [data-gallery-stops] button:hover b,
+  .gallery [data-gallery-stops] button[aria-pressed='true'] b {
+    opacity: 1;
+  }
+
+  /* The words of the stop that is showing open under its name. */
+  .gallery [data-gallery-stops] [data-text] {
+    grid-column: 3;
+    display: block;
+    max-width: 34ch;
+    max-height: 0;
+    overflow: hidden;
+    font: 400 18px/1.45 var(--text);
+    opacity: 0;
+    transition: max-height 0.7s var(--ease), opacity 0.5s var(--ease), margin-top 0.7s var(--ease);
+  }
+
+  .gallery [data-gallery-stops] button[aria-pressed='true'] [data-text] {
+    max-height: 120px;
+    margin-top: 14px;
+    opacity: 1;
   }
 
   .trust {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-
-  .trustPhoto {
-    aspect-ratio: auto;
-    min-height: 720px;
-  }
-
-  .trustText {
-    align-self: center;
-    padding: 96px var(--pad);
-  }
-
-  .trustLine {
-    font-size: 24px;
-  }
-
-  .figures {
-    margin-top: 56px;
-  }
-
-  .figures b {
-    font-size: clamp(88px, 8vw, 132px);
-  }
-
-  .end {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    align-items: center;
     column-gap: 72px;
     padding: 128px var(--pad);
   }
 
-  .end h2,
-  .endLine,
-  .reach {
-    grid-column: 1;
+  .trustLine {
+    max-width: 28ch;
+    font-size: 26px;
+  }
+
+  .pass {
+    padding: 40px 40px 32px;
+  }
+
+  .pass::before,
+  .pass::after {
+    bottom: 118px;
+  }
+
+  .rated {
+    gap: 32px;
+    padding-bottom: 36px;
+  }
+
+  .roundel {
+    width: 200px;
+    height: 200px;
+    border-width: 16px;
+  }
+
+  .roundel b {
+    font-size: 64px;
+  }
+
+  .ratedText {
+    font-size: 26px;
+  }
+
+  .ratedText small {
+    font-size: 13px;
+  }
+
+  .since {
+    height: 96px;
+  }
+
+  .since span {
+    font-size: 12px;
+  }
+
+  .since b {
+    font-size: 72px;
+  }
+
+  .end {
+    padding: 168px var(--pad) 112px;
+  }
+
+  .endRail {
+    top: 84px;
   }
 
   .endLine {
     font-size: 21px;
   }
 
-  .hours {
-    grid-column: 2;
-    grid-row: 1 / span 3;
-    align-self: end;
-    margin: 0;
+  .phone {
+    margin-top: 56px;
+    font-size: clamp(88px, 9.6vw, 168px);
+    transition: color 0.4s var(--ease);
   }
 
-  .end .go {
-    grid-column: 1;
-    margin-top: 40px;
+  .phone:hover {
+    color: var(--red);
+  }
+
+  .mail {
+    margin-top: 20px;
+    font-size: 26px;
+  }
+
+  .tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 64px 0 56px;
+  }
+
+  .tiles li {
+    padding: 22px 24px;
+  }
+
+  .tiles b {
+    font-size: 21px;
   }
 
   .foot {
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
-    gap: 32px;
-    padding: 36px var(--pad);
+    column-gap: 32px;
+    padding-top: 44px;
+  }
+
+  .giant {
+    font-size: 10.5vw;
+  }
+
+  .giant {
+    grid-column: 1 / -1;
   }
 }
