@@ -155,7 +155,27 @@ export function varietyIssues(pages: Placed[], wave1: { name: string; layout: st
   return out;
 }
 
+/** The wave 1 pages, each with a design of its own, set down as the nearest sequence of library sections. */
+export const WAVE1_LAYOUTS: { name: string; layout: string }[] = [
+  { name: 'waterline', layout: 'hero:photo > story:wipe > rows:tall > wipes:band > words:letter > list:questions > visit:card' },
+  { name: 'label', layout: 'hero:photo > story:stack > wipes:pair > list:ruled > rows:wide > words:letter > visit:split' },
+  { name: 'journal', layout: 'hero:photo > list:ruled > words:letter > numbers:band > story:rail > visit:plain' },
+  { name: 'coastal', layout: 'hero:photo > story:rail > rows:wide > words:letter > list:steps > visit:plain' },
+];
+
 export type Batches = Record<string, string[]>;
+
+/** The order the pages of a wave are built in, and the kinds and places each business shares with others: previews/batches.json. */
+export interface WavePlan {
+  batches: Batches;
+  groups: Record<string, string[]>;
+}
+
+export function loadPlan(): WavePlan {
+  const file = join(previewPaths.root, 'batches.json');
+  if (!existsSync(file)) throw new Error(`${file} does not exist. It holds the build order and the groups for the variety check.`);
+  return JSON.parse(readFileSync(file, 'utf8')) as WavePlan;
+}
 
 export function batchOf(order: Batches, slug: string): string | null {
   return Object.entries(order).find(([, slugs]) => slugs.includes(slug))?.[0] ?? null;

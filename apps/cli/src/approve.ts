@@ -54,11 +54,20 @@ export function suppressionList(file: string = join(paths.data, 'suppression.csv
   return { list: found ? readSuppression(readFileSync(file, 'utf8')) : new Set(), file, found };
 }
 
-/** Whether a business is on the suppression list by its slug or by any address we hold for it. */
-export function businessSuppressed(d: Db, b: { id: number; slug: string }, list: Set<string>): boolean {
+/**
+ * Why a business must not be built for or written to, or null when nothing stands in the way: it
+ * is on the suppression list by its slug or by any address we hold for it, it was excluded, or its
+ * own site refuses unsolicited messages.
+ */
+export function businessSuppressed(d: Db, b: { id: number; slug: string }, list: Set<string>): string | null {
   const emails = (d.prepare('SELECT email FROM contacts WHERE business_id = ? AND email IS NOT NULL').all(b.id) as { email: string }[]).map((e) => e.email);
   const published = factsFor(d, b.id, 'email')[0]?.label;
-  return isSuppressed(list, b.slug, published ? [...emails, published] : emails);
+  if (isSuppressed(list, b.slug, published ? [...emails, published] : emails)) return 'on the suppression list';
+  const status = (d.prepare('SELECT status FROM businesses WHERE id = ?').get(b.id) as { status: string } | undefined)?.status;
+  if (status === 'excluded') return 'excluded';
+  const consent = d.prepare('SELECT quote FROM consent_checks WHERE business_id = ? AND no_unsolicited_statement_found = 1').get(b.id) as { quote: string | null } | undefined;
+  if (consent) return `their site refuses unsolicited messages: "${consent.quote ?? ''}"`;
+  return null;
 }
 
 /** A reviewer's verdict as it is kept: with the sentence it was given on, and whether a flag is about the wording alone. */
@@ -100,7 +109,7 @@ export function approveWave(d: Db, wave: string, members: WaveMember[], batch: s
   const packet: unknown[] = [];
 
   for (const b of members) {
-    if (businessSuppressed(d, b, list)) {
+    if (businessSuppressed(d, b, list) !== null) {
       out.suppressed.push(b.slug);
       continue;
     }

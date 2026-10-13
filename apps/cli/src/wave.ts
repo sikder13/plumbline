@@ -322,7 +322,7 @@ export async function waveHero(d: Db, o: { name: string; only?: string; business
 }
 
 /** Measures every photo on the pages kept for each business, picks the best for the top of a page, and looks up its videos, logo, colours and fonts. */
-export async function waveAssets(d: Db, o: { name: string; only?: string; max?: number }): Promise<void> {
+export async function waveAssets(d: Db, o: { name: string; only?: string; max?: number; keepFrom?: number }): Promise<void> {
   const polite = new Polite();
   const renderer = new Renderer(polite);
   await renderer.start();
@@ -349,7 +349,7 @@ export async function waveAssets(d: Db, o: { name: string; only?: string; max?: 
             for (const p of [...home, ...pages.filter((x) => !home.includes(x))]) for (const f of imageUrlsIn(savedHtml(p), p.finalUrl)) add(f);
             for (const i of JSON.parse(pack?.hero_images ?? '[]') as BrandImage[]) if (/^https?:/.test(i.url)) add({ url: fullSize(i.url), asFound: i.url, alt: i.alt, pageUrl: b.website! });
             const max = o.max ?? 80;
-            const photos = await collectPhotos(polite, [...found.values()], join(waveDir(b.slug), 'photos'), { max });
+            const photos = await collectPhotos(polite, [...found.values()], join(waveDir(b.slug), 'photos'), { max, keepFromWidth: o.keepFrom });
             // Photos a person chose earlier stay chosen, as long as they are still on the site.
             const before = existsSync(join(waveDir(b.slug), 'assets.json')) ? (JSON.parse(readFileSync(join(waveDir(b.slug), 'assets.json'), 'utf8')) as { heroes?: string[]; chosenByHand?: boolean }) : {};
             const chosen = before.chosenByHand ? (before.heroes ?? []).map((u) => photos.find((p) => p.url === u)).filter((p): p is Photo => !!p) : [];
@@ -465,7 +465,8 @@ export function registerWave(program: Command): void {
     .requiredOption('--name <name>', 'wave name')
     .option('--only <slugs>', 'comma separated slugs')
     .option('--max <n>', 'pictures to fetch per business', (v) => Number(v))
-    .action((o: { name: string; only?: string; max?: number }) => waveAssets(db(), o));
+    .option('--keep-from <px>', 'keep a copy of every photo at least this wide (1200 unless given), for a business whose photos are all small', (v) => Number(v))
+    .action((o: { name: string; only?: string; max?: number; keepFrom?: number }) => waveAssets(db(), o));
 
   wave
     .command('pack')

@@ -79,6 +79,8 @@ export interface GateReport {
   axe: { tab: string; id: string; impact: string; help: string; nodes: number; first: string }[];
   overflow: { width: number; tab: string; scrollWidth: number }[];
   links: LinkCheck[];
+  /** What the page reported about the visit: nothing in its first three seconds on screen, then one view with its own token. */
+  beacon: { early: number; views: number; tokens: string[]; ok: boolean };
   copy: CopyIssue[];
   screenshots: string[];
   failures: string[];
@@ -163,6 +165,39 @@ async function checkLinks(browser: Browser, url: string, bookingHosts: RegExp, o
   return out;
 }
 
+/**
+ * Opens the page as a visitor would and listens for what it reports. Nothing may leave in the
+ * first three seconds, and after that exactly one view, carrying the page's own token. The report
+ * is answered here and never reaches the real address, so a check is not counted as a visit.
+ */
+export async function checkBeacon(browser: Browser, url: string, token: string): Promise<GateReport['beacon']> {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const posts: { at: number; token: string; kind: string }[] = [];
+  let start = Date.now();
+  await ctx.route('**/api/demo-visit', async (route) => {
+    let body: { token?: string; kind?: string } = {};
+    try {
+      body = JSON.parse(route.request().postData() ?? '{}') as { token?: string; kind?: string };
+    } catch {
+      // A report that cannot be read is counted as one with no token.
+    }
+    posts.push({ at: Date.now() - start, token: String(body.token ?? ''), kind: String(body.kind ?? '') });
+    await route.fulfill({ status: 204, body: '' });
+  });
+  const page = await ctx.newPage();
+  await page.goto(url, { waitUntil: 'load' });
+  start = Date.now();
+  // The scripts wake on the first touch, as they do for a person.
+  await page.mouse.move(120, 300);
+  await page.touchscreen.tap(195, 420).catch(() => undefined);
+  await page.waitForTimeout(2600);
+  const early = posts.length;
+  await page.waitForTimeout(7400);
+  await ctx.close();
+  const views = posts.filter((p) => p.kind === 'view');
+  return { early, views: views.length, tokens: [...new Set(posts.map((p) => p.token))], ok: early === 0 && views.length === 1 && posts.every((p) => p.token === token) };
+}
+
 export interface CheckOptions {
   /** Where the pages are served: the live address, or a local server. */
   base: string;
@@ -242,14 +277,17 @@ export async function checkPage(data: PageData, opts: CheckOptions): Promise<Gat
     }
     for (const v of axe) failures.push(`axe ${v.impact}: ${v.id} on ${v.tab} (${v.nodes} elements) ${v.first}`);
 
-    const links = await checkLinks(browser, url, /rezdy|fareharbor|lodgify|bookeo|checkfront/i, ownSiteHtml(data.slug));
+    const links = await checkLinks(browser, url, /rezdy|fareharbor|lodgify|bookeo|checkfront|ibisnz|rtbslive|bookit|eveve|resdiary|bookme|bokun/i, ownSiteHtml(data.slug));
     for (const l of links.filter((x) => !x.ok)) failures.push(`link "${l.label}" ${l.href}: ${l.note}`);
     if (!links.some((l) => l.kind === 'tel')) failures.push('no tap to call link on the page');
     if (!links.some((l) => l.kind === 'mailto')) failures.push('no email link on the page');
 
+    const beacon = await checkBeacon(browser, url, data.path);
+    if (!beacon.ok) failures.push(`visit report: ${beacon.early} sent in the first three seconds, ${beacon.views} view(s) in all, token(s) ${beacon.tokens.join(', ') || 'none'} (one view with ${data.path} is expected, and nothing early)`);
+
     const copy = scanPage(splitPage(html), { ownSite: ownSiteText(data.slug), measured: JSON.stringify({ findings: data.findings, strengths: data.strengths, secondCheck: data.secondCheck, rating: data.rating }), offer: opts.offerText });
     for (const c of copy) failures.push(`copy ${c.kind} in ${c.where}: "${c.text}" in "${c.context}"`);
-    return { slug: data.slug, url, lighthouse, axe, overflow, links, copy, screenshots, failures };
+    return { slug: data.slug, url, lighthouse, axe, overflow, links, beacon, copy, screenshots, failures };
   } finally {
     await browser.close();
   }

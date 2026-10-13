@@ -52,6 +52,8 @@ export function numberIssues(text: string, where: string, known: Set<string>): C
 export function visibleText(html: string): string {
   const $ = cheerio.load(html);
   $('script, style, template, noscript, svg title').remove();
+  // Decoration hidden from a screen reader, such as a step counter, is not copy. A headline split for show keeps its label.
+  $('[aria-hidden="true"]').remove();
   $('img[alt]').each((_, e) => void $(e).replaceWith(` ${$(e).attr('alt')} `));
   $('[aria-label]').each((_, e) => void $(e).prepend(` ${$(e).attr('aria-label')} `));
   $('br, p, div, li, h1, h2, h3, h4, td, th, section, summary, dt, dd, button, a, span, label, option').each((_, e) => void $(e).append(' '));

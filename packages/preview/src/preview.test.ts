@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nzReadable, plainDates, plainImpact, plainSeen } from './build.ts';
+import { nzReadable, plainDates, plainImpact, plainSeen, withoutDashes } from './build.ts';
 import { bannedIssues, dashIssues, numberIssues, numberSet, scanPage, splitPage, visibleText } from './copy.ts';
 import { holds, kindOf, pageFacts } from './crawlmouse.ts';
 import { validMailto, validTel } from './gates.ts';
@@ -23,6 +23,22 @@ describe('finding text for a page', () => {
 
   it('shows the time in New Zealand', () => {
     expect(nzReadable('2026-10-11T03:52:01.000Z')).toBe('11 October 2026, 4:52 pm');
+  });
+});
+
+describe('words quoted from a site on a recipe page', () => {
+  it('lose a dash set off by spaces, which the copy rules do not allow anywhere on a page', () => {
+    expect(withoutDashes('2023 © Copyright - Alpha Penguins. All rights reserved.')).toBe('2023 © Copyright, Alpha Penguins. All rights reserved.');
+    expect(withoutDashes('Open 9am – 5pm — every day')).toBe('Open 9am, 5pm, every day');
+    expect(withoutDashes('A family-run business')).toBe('A family-run business');
+    expect(withoutDashes(null)).toBeNull();
+  });
+});
+
+describe('the words a visitor can read', () => {
+  it('leave out what is hidden from a screen reader as decoration, and keep a label that stands in for it', () => {
+    const html = '<h1 aria-label="Meet the penguins"><span aria-hidden="true">Meet the</span><span aria-hidden="true">penguins</span></h1><p aria-hidden="true">01 / 04</p><p>Four tours.</p>';
+    expect(visibleText(html)).toBe('Meet the penguins Four tours.');
   });
 });
 

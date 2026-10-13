@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { memoryDb, type Business } from '@plumbline/core';
-import { verdictStands } from './approve.ts';
+import { businessSuppressed, verdictStands } from './approve.ts';
 import { calibrate, calibrationReport } from './calibrate.ts';
 import { importResearchContacts } from './commands.ts';
 import { parseCsv, toCsv } from './csv.ts';
@@ -165,5 +165,29 @@ describe('a kept verdict of the independent check', () => {
     expect(verdictStands({ ...flag, scope: 'sentence' }, '1 menu item leads nowhere')).toBe(true);
     // A verdict kept without its sentence speaks for the finding as a whole.
     expect(verdictStands({ verdict: 'ok', reason: '' }, 'anything')).toBe(true);
+  });
+});
+
+describe('a business that must not be built for or written to', () => {
+  function seeded() {
+    const db = memoryDb();
+    const add = db.prepare("INSERT INTO businesses (id, slug, name, website, source, status, created_at) VALUES (?, ?, ?, ?, 'discovered', ?, 'x')");
+    add.run(1, 'alpha', 'Alpha', 'https://alpha.co.nz/', 'audited');
+    add.run(2, 'bravo', 'Bravo', 'https://bravo.co.nz/', 'excluded');
+    add.run(3, 'charlie', 'Charlie', 'https://charlie.co.nz/', 'audited');
+    add.run(4, 'delta', 'Delta', 'https://delta.co.nz/', 'audited');
+    db.prepare("INSERT INTO contacts (business_id, role, email, captured_at) VALUES (4, 'general', 'Info@Delta.co.nz', 'x')").run();
+    db.prepare("INSERT INTO consent_checks (business_id, pages_checked, no_unsolicited_statement_found, quote, checked_at) VALUES (3, '[]', 1, 'No unsolicited marketing please.', 'x')").run();
+    return db;
+  }
+
+  it('is one on the suppression list by slug or address, one we excluded, or one whose site refuses unsolicited messages', () => {
+    const db = seeded();
+    const list = new Set(['info@delta.co.nz']);
+    expect(businessSuppressed(db, { id: 1, slug: 'alpha' }, list)).toBeNull();
+    expect(businessSuppressed(db, { id: 1, slug: 'alpha' }, new Set(['alpha']))).toBe('on the suppression list');
+    expect(businessSuppressed(db, { id: 2, slug: 'bravo' }, list)).toBe('excluded');
+    expect(businessSuppressed(db, { id: 3, slug: 'charlie' }, list)).toBe('their site refuses unsolicited messages: "No unsolicited marketing please."');
+    expect(businessSuppressed(db, { id: 4, slug: 'delta' }, list)).toBe('on the suppression list');
   });
 });

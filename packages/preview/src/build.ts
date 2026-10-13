@@ -141,6 +141,11 @@ export function plainSeen(excerpt: string | null): string | null {
   return s || null;
 }
 
+/** Words quoted from a site, with any dash set off by spaces turned into a comma. A page may carry no such dash, even inside a quotation. */
+export function withoutDashes(text: string | null): string | null {
+  return text === null ? null : text.replace(/\s+[-‐‒–—―−]\s+/g, ', ');
+}
+
 async function evidenceImage(e: EvidenceRow, outDir: string, urlBase: string, name: string): Promise<{ src: string; width: number; height: number } | null> {
   if (!e.path || !existsSync(e.path)) return null;
   mkdirSync(outDir, { recursive: true });
@@ -220,7 +225,7 @@ export async function buildPage(db: Db, slug: string, opts: BuildOptions): Promi
     if (hours > config.fresh.maxAgeHours) warnings.push(`${f.checkId}: last verified ${hours.toFixed(1)} hours ago. Run plumb preview recheck before sending.`);
     const rows = f.evidence.slice(0, TWO_SHOTS.has(f.checkId) ? 2 : 1);
     const shots: FindingCard['shots'] = [];
-    const seen = (e: EvidenceRow) => (fromRecipe && f.checkId === 'C20_slow_mobile' ? (speedSeen(runs) ?? plainSeen(e.excerpt)) : plainSeen(e.excerpt));
+    const seen = (e: EvidenceRow) => (!fromRecipe ? plainSeen(e.excerpt) : f.checkId === 'C20_slow_mobile' ? (speedSeen(runs) ?? plainSeen(e.excerpt)) : withoutDashes(plainSeen(e.excerpt)));
     for (const [i, e] of rows.entries()) shots.push({ image: await evidenceImage(e, join(assets, 'evidence'), `${BASE_PATH}/${path}/evidence`, `${f.id}-${i + 1}`), seen: seen(e) });
     cards.push({ check: f.checkId, title: plainDates(said(f)), sentence: plainImpact(f.impact.impact), fix: f.impact.fix, measuredNz: nzReadable(f.evidence[0]?.captured_at_utc ?? f.lastVerifiedAt), pageUrl: f.pageUrl, shots, score: f.score });
   }

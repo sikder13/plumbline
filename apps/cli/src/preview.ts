@@ -2,13 +2,15 @@ import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Command } from 'commander';
-import { db, env, nzTime, type Business, type Db } from '@plumbline/core';
+import { db, env, nzTime, paths, type Business, type Db } from '@plumbline/core';
 import { Polite } from '@plumbline/fetch';
 import { limits, spent } from '@plumbline/budget';
 import { latestBatch } from '@plumbline/export';
-import { BASE_PATH, LIMITS, askCorrected, buildPage, recipeSlugs, checkPage, contentDir, correctedQuestions, correctedSummary, forgetToken, planCorrected, previewPaths, readVisits, removeGenerated, serveSite, summarise, tokenFor, verifyCrawlmouse, type Dropped, type GateReport, type PageData } from '@plumbline/preview';
+import { BASE_PATH, LIMITS, WAVE1_LAYOUTS, draftAfterRecheck, numbersIn, parseDraft, scanEmail, withStatus, askCorrected, buildPage, layoutOf, loadPlan, loadRecipe, lookOf, recipeSlugs, varietyIssues, checkPage, contentDir, correctedQuestions, correctedSummary, forgetToken, planCorrected, previewPaths, readVisits, removeGenerated, serveSite, summarise, tokenFor, verifyCrawlmouse, type Dropped, type GateReport, type PageData } from '@plumbline/preview';
 import { aiSummary } from '@plumbline/ai';
-import { waveMembers } from '@plumbline/wave';
+import { speedRuns, statedSentence, waveMembers } from '@plumbline/wave';
+import { waveBatch, waveCrawlmouse } from './wave.ts';
+import { businessSuppressed, suppressionList } from './approve.ts';
 import { auditBatch } from './audit.ts';
 
 function business(d: Db, slug: string): Business {
@@ -76,6 +78,71 @@ export async function previewCrawlmouse(opts: { only?: string }): Promise<void> 
   }
 }
 
+/** Where the email drafts of a wave are kept. Like every report, they stay out of the repository. */
+export function emailsDir(findingsBatch: string, wave: string): string {
+  return join(paths.reports, findingsBatch, wave, 'emails');
+}
+
+/** Each finding a draft may use, as it stands now: its status, the sentence it would be put in today, and when it was last checked. */
+function findingsNow(d: Db, businessId: number, findingsBatch: string): Map<number, { status: string; sentence: string; verifiedAt: string | null }> {
+  const runs = speedRuns(d, businessId, findingsBatch);
+  const rows = d.prepare('SELECT id, check_id, status, title, detail, last_verified_at FROM findings WHERE business_id = ? AND batch = ?').all(businessId, findingsBatch) as { id: number; check_id: string; status: string; title: string; detail: string; last_verified_at: string | null }[];
+  return new Map(rows.map((r) => [r.id, { status: r.status, sentence: statedSentence({ checkId: r.check_id, title: r.title, detail: JSON.parse(r.detail || '{}') as Record<string, unknown> }, runs), verifiedAt: r.last_verified_at }]));
+}
+
+/**
+ * Before a batch of emails goes out: every finding its drafts use is verified again, and each draft
+ * is marked ready, or as needing an edit with the line named. A ready draft is good for 24 hours.
+ */
+export async function previewRecheckBatch(d: Db, o: { wave: string; batch: string; concurrency?: number }): Promise<void> {
+  const slugs = loadPlan().batches[o.batch];
+  if (!slugs?.length) throw new Error(`previews/batches.json names no batch ${o.batch}`);
+  const all = waveMembers(d, o.wave);
+  const members = all.filter((b) => slugs.includes(b.slug));
+  const findingsBatch = waveBatch(d, all);
+  const s = await auditBatch(d, { aiSummary, batch: findingsBatch, kind: 'recheck', only: members.map((b) => b.slug), concurrency: o.concurrency });
+  console.log(`recheck ${findingsBatch}: ${s.done} done, ${s.blocked} blocked, ${s.failed} failed. Still true ${s.reproduced}, no longer true ${s.resolved}.`);
+  await waveCrawlmouse(d, { name: o.wave, batch: findingsBatch, only: members.map((b) => b.slug).join(',') });
+  const now = new Date();
+  for (const b of members) {
+    const file = join(emailsDir(findingsBatch, o.wave), `${b.slug}.md`);
+    if (!existsSync(file)) {
+      console.log(`${b.slug}: no draft at ${file}`);
+      continue;
+    }
+    const text = readFileSync(file, 'utf8');
+    const draft = parseDraft(text);
+    const r = draftAfterRecheck(draft, findingsNow(d, b.id, findingsBatch), now);
+    const line = r.status === 'ready' ? `ready, rechecked ${nzTime(now)}. Send within 24 hours.` : r.status === 'needs edit' ? `needs edit: ${r.notes.join('; ')}` : `${draft.statusLine.split(' | ')[0]}${r.notes.length ? ` | ${r.notes.join('; ')}` : ''}`;
+    writeFileSync(file, withStatus(text, line));
+    console.log(`${b.slug}: ${line}`);
+  }
+}
+
+/** Runs the writing rules over the drafts of a wave, or of one batch of it, and prints what each breaks. */
+export function previewEmails(d: Db, o: { wave: string; batch?: string }): void {
+  const all = waveMembers(d, o.wave);
+  const findingsBatch = waveBatch(d, all);
+  const only = o.batch ? (loadPlan().batches[o.batch] ?? []) : null;
+  let broken = 0;
+  for (const b of all.filter((x) => !only || only.includes(x.slug))) {
+    const file = join(emailsDir(findingsBatch, o.wave), `${b.slug}.md`);
+    if (!existsSync(file)) {
+      console.log(`${b.slug}: no draft`);
+      continue;
+    }
+    const draft = parseDraft(readFileSync(file, 'utf8'));
+    // A number may be stated when the pack holds it or a finding the draft uses carries it.
+    const pack = join(paths.reports, findingsBatch, o.wave, `${b.slug}.json`);
+    const sources = `${existsSync(pack) ? readFileSync(pack, 'utf8') : ''}\n${draft.findings.map((f) => f.sentence).join('\n')}`;
+    const issues = scanEmail(draft, new Set(numbersIn(sources).map((n) => n.token)));
+    broken += issues.length ? 1 : 0;
+    console.log(`${b.slug}: ${draft.statusLine || 'no status'} | to ${draft.to} | "${draft.subject}"${issues.length ? '' : ' | clean'}`);
+    for (const i of issues) console.log(`  ${i.kind}: ${i.text}`);
+  }
+  if (broken) process.exitCode = 1;
+}
+
 const REPLY_EMAIL = 'udaay@nahltech.com';
 const SITE_ADDRESS = 'https://nahltech.com';
 const VERCEL_PROJECT = 'nahl-previews';
@@ -130,7 +197,15 @@ export async function previewData(d: Db, opts: { only?: string; draft?: boolean 
   const call = env().CAL_LINK;
   if (!call && !opts.draft) throw new Error('CAL_LINK is not set in .env. It holds the link behind "Book a 15 minute call". Use --draft to build without it; a draft cannot be deployed.');
   const dropped: (Dropped & { slug: string })[] = [];
+  const { list } = suppressionList();
   for (const slug of slugs) {
+    const why = businessSuppressed(d, business(d, slug), list);
+    if (why) {
+      // A suppressed business gets no page, and any page it had is not built again.
+      console.log(`${slug}: skipped, ${why}`);
+      rmSync(join(previewPaths.data, `${slug}.json`), { force: true });
+      continue;
+    }
     const r = await buildPage(d, slug, { replyEmail: REPLY_EMAIL, callLink: call || `mailto:${REPLY_EMAIL}?subject=${encodeURIComponent('15 minute call')}` });
     console.log(`${slug}: /${r.data.path}/  ${r.data.findings.length} findings, ${Object.keys(r.data.images).length} images${r.dropped.length ? `, ${r.dropped.length} dropped` : ''}`);
     for (const x of r.dropped) {
@@ -192,6 +267,7 @@ export async function previewCheck(opts: { only?: string; live?: boolean; base?:
       const lh = r.lighthouse;
       if (!opts.noLighthouse) console.log(`  median: performance ${lh.performance} (needs ${LIMITS.performance}), accessibility ${lh.accessibility} (needs ${LIMITS.accessibility}), LCP ${lh.lcpMs === null ? 'n/a' : `${(lh.lcpMs / 1000).toFixed(2)} s`} (under ${LIMITS.lcpMs / 1000} s), CLS ${lh.cls === null ? 'n/a' : lh.cls.toFixed(3)} (under ${LIMITS.cls}), TBT ${lh.tbtMs === null ? 'n/a' : `${Math.round(lh.tbtMs)} ms`} (under ${LIMITS.tbtMs} ms)`);
       console.log(`  links: ${r.links.filter((l) => l.ok).length} of ${r.links.length} pass; booking ${[...new Set(r.links.filter((l) => l.kind === 'booking').map((l) => l.href))].length}, tel ${r.links.filter((l) => l.kind === 'tel').length}, mailto ${r.links.filter((l) => l.kind === 'mailto').length}`);
+      console.log(`  visit report: ${r.beacon.ok ? 'one view after three seconds, with the right token' : 'NOT as expected'}`);
       console.log(r.failures.length ? `  FAILED ${r.failures.length}:` : '  all gates pass');
       for (const f of r.failures) console.log(`    ${f}`);
     }
@@ -279,10 +355,23 @@ export function registerPreview(program: Command): void {
 
   preview
     .command('recheck')
-    .description('Re-verify the approved findings behind every preview page')
+    .description('Re-verify the approved findings behind every preview page. With a wave and a batch, re-verify what that batch\'s email drafts use and mark each draft ready or as needing an edit.')
     .option('--only <slugs>', 'comma separated slugs')
+    .option('--wave <name>', 'wave name')
+    .option('--batch <letter>', 'the batch of the wave, as written in previews/batches.json')
     .option('--concurrency <n>', 'sites collected at once', (v) => Number(v))
-    .action((o: { only?: string; concurrency?: number }) => previewRecheck(db(), o));
+    .action((o: { only?: string; wave?: string; batch?: string; concurrency?: number }) => {
+      if (o.wave && o.batch) return previewRecheckBatch(db(), { wave: o.wave, batch: o.batch, concurrency: o.concurrency });
+      if (o.wave || o.batch) throw new Error('give both --wave and --batch, or neither');
+      return previewRecheck(db(), o);
+    });
+
+  preview
+    .command('emails')
+    .description('Run the writing rules over the email drafts of a wave: length, dashes and hyphens, hype, the subject, the link, and a source for every number')
+    .requiredOption('--wave <name>', 'wave name')
+    .option('--batch <letter>', 'only the drafts of one batch')
+    .action((o: { wave: string; batch?: string }) => previewEmails(db(), o));
 
   preview
     .command('ai')
@@ -316,6 +405,27 @@ export function registerPreview(program: Command): void {
     .option('--only <slugs>', 'comma separated slugs')
     .option('--draft', 'work without CAL_LINK')
     .action(async (slug: string | undefined, o: { only?: string; draft?: boolean }) => void (await previewData(db(), { only: slug ?? o.only, draft: o.draft })));
+
+  preview
+    .command('variety')
+    .description('Check the recipes of a wave against the variety rules: no two pages alike, businesses of one kind or place clearly different, none laid out like a wave 1 page')
+    .requiredOption('--wave <name>', 'wave name')
+    .action((o: { wave: string }) => {
+      const plan = loadPlan();
+      const made = new Set(recipeSlugs());
+      const members = waveMembers(db(), o.wave).map((b) => b.slug);
+      const pages = members.filter((s) => made.has(s)).map((slug) => ({ slug, groups: plan.groups[slug] ?? [], recipe: loadRecipe(slug) }));
+      for (const p of pages) {
+        const look = lookOf(p.recipe);
+        console.log(`${p.slug}: ${look.hero}, ${look.type}, ${look.family} | ${layoutOf(p.recipe)}`);
+      }
+      const missing = members.filter((s) => !made.has(s));
+      if (missing.length) console.log(`No recipe yet: ${missing.join(', ')}`);
+      const issues = varietyIssues(pages, WAVE1_LAYOUTS);
+      for (const i of issues) console.log(`PROBLEM ${i}`);
+      console.log(issues.length ? `${issues.length} problem(s).` : `${pages.length} page(s), and the variety rules hold.`);
+      if (issues.length) process.exitCode = 1;
+    });
 
   preview
     .command('check')
