@@ -58,8 +58,37 @@ export function draftAfterRecheck(draft: Draft, now: Map<number, FindingNow>, at
   return { status: notes.length ? 'needs edit' : 'ready', notes };
 }
 
+/**
+ * Some of every email is the same: the line that introduces us, the lines around the demo link,
+ * and the offer, call to action, signature and footer. A draft marks where each goes, as
+ * [[INTRO]], [[DEMO LINES: <link>]] and [[CLOSING]], and the wording is kept once, in a sheet of
+ * blocks headed "## INTRO", "## DEMO LINES" (with {link} where the link goes) and "## CLOSING".
+ */
+export const FIXED_BLOCKS = ['INTRO', 'DEMO LINES', 'CLOSING'] as const;
+const MARK = /\[\[(INTRO|DEMO LINES|CLOSING)(?::\s*([^\]]+))?\]\]/g;
+
+export function fixedBlocks(sheet: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  const parts = sheet.split(/^##\s+/m).slice(1);
+  for (const part of parts) {
+    const [name = '', ...rest] = part.split('\n');
+    const body = rest.join('\n').trim();
+    // A block still holding the note it was handed over with has not been filled in.
+    if (body && !/^\(.*\)$/s.test(body) && (FIXED_BLOCKS as readonly string[]).includes(name.trim())) out[name.trim()] = body;
+  }
+  return out;
+}
+
+export function fillDraft(text: string, blocks: Record<string, string>): string {
+  return text.replace(MARK, (whole, name: string, link: string | undefined) => {
+    const block = blocks[name];
+    if (block === undefined) return whole;
+    return link ? block.replace('{link}', link.trim()) : block;
+  });
+}
+
 export interface EmailIssue {
-  kind: 'length' | 'dash' | 'hyphen' | 'exclamation' | 'banned' | 'subject' | 'number' | 'link';
+  kind: 'length' | 'dash' | 'hyphen' | 'exclamation' | 'banned' | 'subject' | 'number' | 'link' | 'fixed';
   text: string;
 }
 
@@ -74,14 +103,17 @@ export const EMAIL_WORDS = { min: 120, max: 170 };
  */
 export function scanEmail(draft: Draft, known: Set<string>): EmailIssue[] {
   const out: EmailIssue[] = [];
-  const lines = draft.body.split('\n');
-  const links = lines.filter((l) => /https?:\/\//.test(l));
+  const waiting = [...draft.body.matchAll(MARK)].map((m) => m[1]!);
+  if (waiting.length) out.push({ kind: 'fixed', text: `the shared wording is not filled in yet: ${[...new Set(waiting)].join(', ')}` });
+  // A mark stands for wording that is not judged here, and the link inside one is laid out by the fill.
+  const lines = draft.body.replace(MARK, '').split('\n');
+  const links = waiting.includes('DEMO LINES') ? ['https://held.example/in-the-mark'] : lines.filter((l) => /https?:\/\//.test(l));
   for (const l of links) if (!/^https:\/\/\S+[^/\s]$/.test(l.trim())) out.push({ kind: 'link', text: l.trim() });
   if (!links.length) out.push({ kind: 'link', text: 'no demo link' });
   // What is read as copy: the body without the link lines and without the numbers that only order the list.
   const copy = lines.filter((l) => !/https?:\/\//.test(l)).map((l) => l.replace(/^\s*\d+\.\s+/, '')).join('\n');
   const words = copy.split(/\s+/).filter((w) => /[A-Za-z0-9]/.test(w)).length;
-  if (words < EMAIL_WORDS.min || words > EMAIL_WORDS.max) out.push({ kind: 'length', text: `${words} words; ${EMAIL_WORDS.min} to ${EMAIL_WORDS.max} are wanted` });
+  if (!waiting.length && (words < EMAIL_WORDS.min || words > EMAIL_WORDS.max)) out.push({ kind: 'length', text: `${words} words; ${EMAIL_WORDS.min} to ${EMAIL_WORDS.max} are wanted` });
   const everything = `${draft.subject}\n${copy}`;
   for (const m of everything.matchAll(/[‐‒–—―−]|(?<=\s)-(?=\s)/g)) out.push({ kind: 'dash', text: everything.slice(Math.max(0, m.index - 30), m.index + 30).replace(/\s+/g, ' ') });
   for (const m of everything.matchAll(/\b[\p{L}\d]+-[\p{L}\d]+\b/gu)) out.push({ kind: 'hyphen', text: m[0] });

@@ -6,7 +6,7 @@ import { db, env, nzTime, paths, type Business, type Db } from '@plumbline/core'
 import { Polite } from '@plumbline/fetch';
 import { limits, spent } from '@plumbline/budget';
 import { latestBatch } from '@plumbline/export';
-import { BASE_PATH, LIMITS, WAVE1_LAYOUTS, draftAfterRecheck, numbersIn, parseDraft, scanEmail, withStatus, askCorrected, buildPage, layoutOf, loadPlan, loadRecipe, lookOf, recipeSlugs, varietyIssues, checkPage, contentDir, correctedQuestions, correctedSummary, forgetToken, planCorrected, previewPaths, readVisits, removeGenerated, serveSite, summarise, tokenFor, verifyCrawlmouse, type Dropped, type GateReport, type PageData } from '@plumbline/preview';
+import { BASE_PATH, LIMITS, WAVE1_LAYOUTS, draftAfterRecheck, fillDraft, fixedBlocks, numbersIn, parseDraft, scanEmail, withStatus, askCorrected, buildPage, layoutOf, loadPlan, loadRecipe, lookOf, recipeSlugs, varietyIssues, checkPage, contentDir, correctedQuestions, correctedSummary, forgetToken, planCorrected, previewPaths, readVisits, removeGenerated, serveSite, summarise, tokenFor, verifyCrawlmouse, type Dropped, type GateReport, type PageData } from '@plumbline/preview';
 import { aiSummary } from '@plumbline/ai';
 import { speedRuns, statedSentence, waveMembers } from '@plumbline/wave';
 import { waveBatch, waveCrawlmouse } from './wave.ts';
@@ -119,10 +119,32 @@ export async function previewRecheckBatch(d: Db, o: { wave: string; batch: strin
   }
 }
 
-/** Runs the writing rules over the drafts of a wave, or of one batch of it, and prints what each breaks. */
-export function previewEmails(d: Db, o: { wave: string; batch?: string }): void {
+/** The sheet that holds the wording every email of a wave shares. It is filled in once, by hand. */
+const FIXED_SHEET = `# The wording every email of this wave shares
+
+Each block below is pasted in once. "preview emails --fill" then puts it into every draft where the draft marks its place.
+
+## INTRO
+(the line that introduces us, as in the wave 1 emails)
+
+## DEMO LINES
+(the lines around the demo link, as in the wave 1 emails, with {link} on a line of its own where the link goes)
+
+## CLOSING
+(the offer, the call to action, the signature and the footer, word for word as in the wave 1 emails)
+`;
+
+/** Runs the writing rules over the drafts of a wave, or of one batch of it, and prints what each breaks. With `fill`, the shared wording is put in first. */
+export function previewEmails(d: Db, o: { wave: string; batch?: string; fill?: boolean }): void {
   const all = waveMembers(d, o.wave);
   const findingsBatch = waveBatch(d, all);
+  const sheet = join(emailsDir(findingsBatch, o.wave), '_shared.md');
+  if (!existsSync(sheet)) {
+    mkdirSync(emailsDir(findingsBatch, o.wave), { recursive: true });
+    writeFileSync(sheet, FIXED_SHEET);
+  }
+  const blocks = fixedBlocks(readFileSync(sheet, 'utf8'));
+  if (o.fill && !Object.keys(blocks).length) console.log(`Nothing to fill in: ${sheet} still holds its notes.`);
   const only = o.batch ? (loadPlan().batches[o.batch] ?? []) : null;
   let broken = 0;
   for (const b of all.filter((x) => !only || only.includes(x.slug))) {
@@ -131,10 +153,11 @@ export function previewEmails(d: Db, o: { wave: string; batch?: string }): void 
       console.log(`${b.slug}: no draft`);
       continue;
     }
+    if (o.fill) writeFileSync(file, fillDraft(readFileSync(file, 'utf8'), blocks));
     const draft = parseDraft(readFileSync(file, 'utf8'));
     // A number may be stated when the pack holds it or a finding the draft uses carries it.
     const pack = join(paths.reports, findingsBatch, o.wave, `${b.slug}.json`);
-    const sources = `${existsSync(pack) ? readFileSync(pack, 'utf8') : ''}\n${draft.findings.map((f) => f.sentence).join('\n')}`;
+    const sources = `${existsSync(pack) ? readFileSync(pack, 'utf8') : ''}\n${draft.findings.map((f) => f.sentence).join('\n')}\n${Object.values(blocks).join('\n')}`;
     const issues = scanEmail(draft, new Set(numbersIn(sources).map((n) => n.token)));
     broken += issues.length ? 1 : 0;
     console.log(`${b.slug}: ${draft.statusLine || 'no status'} | to ${draft.to} | "${draft.subject}"${issues.length ? '' : ' | clean'}`);
@@ -371,7 +394,8 @@ export function registerPreview(program: Command): void {
     .description('Run the writing rules over the email drafts of a wave: length, dashes and hyphens, hype, the subject, the link, and a source for every number')
     .requiredOption('--wave <name>', 'wave name')
     .option('--batch <letter>', 'only the drafts of one batch')
-    .action((o: { wave: string; batch?: string }) => previewEmails(db(), o));
+    .option('--fill', 'first put the shared wording from emails/_shared.md into each draft where it marks its place')
+    .action((o: { wave: string; batch?: string; fill?: boolean }) => previewEmails(db(), o));
 
   preview
     .command('ai')

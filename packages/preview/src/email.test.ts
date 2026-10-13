@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { draftAfterRecheck, parseDraft, scanEmail, withStatus } from './email.ts';
+import { draftAfterRecheck, fillDraft, fixedBlocks, parseDraft, scanEmail, withStatus } from './email.ts';
 
 const DRAFT = `Status: ready
 Batch: A
@@ -91,5 +91,45 @@ describe('the copy scan for an email', () => {
     const issues = scanEmail(parseDraft(DRAFT), known);
     expect(issues.filter((i) => i.kind === 'number')).toEqual([]);
     expect(issues.filter((i) => i.kind === 'hyphen')).toEqual([]);
+  });
+});
+
+describe('the wording every email shares', () => {
+  const sheet = `# The wording every email shares
+
+## INTRO
+My name is Udaay.
+
+## DEMO LINES
+I built a demo of what your homepage could be:
+
+{link}
+
+## CLOSING
+Reply to this email and I will send the details.
+
+Udaay
+`;
+  const draft = DRAFT.replace('I tested your website on a phone this week.', '[[INTRO]]\n\nI tested your website on a phone this week.').replace('https://nahltech.com/demo/alpha-abc123\n\nUdaay\n', '[[DEMO LINES: https://nahltech.com/demo/alpha-abc123]]\n\n[[CLOSING]]\n');
+
+  it('is read from a sheet of named blocks, and a block left empty or as it was handed over is not counted', () => {
+    expect(fixedBlocks(sheet)).toEqual({ INTRO: 'My name is Udaay.', 'DEMO LINES': 'I built a demo of what your homepage could be:\n\n{link}', CLOSING: 'Reply to this email and I will send the details.\n\nUdaay' });
+    expect(fixedBlocks('## INTRO\n(paste the intro line here)\n\n## CLOSING\n\n')).toEqual({});
+  });
+
+  it('is put into a draft where the draft marks its place, with the link on a line of its own', () => {
+    const filled = fillDraft(draft, fixedBlocks(sheet));
+    expect(filled).toContain('Hi Jack,\n\nMy name is Udaay.\n\nI tested your website on a phone this week.');
+    expect(filled).toContain('I built a demo of what your homepage could be:\n\nhttps://nahltech.com/demo/alpha-abc123\n\nReply to this email and I will send the details.\n\nUdaay\n');
+    expect(filled).not.toContain('[[');
+    // A block that is not there yet leaves its mark in place.
+    expect(fillDraft(draft, { INTRO: 'My name is Udaay.' })).toContain('[[CLOSING]]');
+  });
+
+  it('counts as missing in the scan until it is filled in, and the length is not judged before then', () => {
+    const kinds = scanEmail(parseDraft(draft), new Set(['30', '100', '6.0', '4.8', '594'])).map((i) => i.kind);
+    expect(kinds).toContain('fixed');
+    expect(kinds).not.toContain('length');
+    expect(kinds).not.toContain('link');
   });
 });
