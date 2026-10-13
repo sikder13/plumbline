@@ -9,7 +9,7 @@ import { businessView, type BusinessView, type FindingView } from '@plumbline/re
 export interface GateFailure {
   findingId: number | null;
   check: string | null;
-  gate: 'evidence' | 'reproduced' | 'visible' | 'approved' | 'fresh' | 'sources' | 'nothing_to_export';
+  gate: 'evidence' | 'reproduced' | 'visible' | 'approved' | 'fresh' | 'sources' | 'nothing_to_export' | 'suppressed';
   reason: string;
 }
 

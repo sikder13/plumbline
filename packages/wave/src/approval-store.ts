@@ -3,19 +3,56 @@ import type { Db } from '@plumbline/core';
 import { decide, refreshTop3 } from '@plumbline/checks/review';
 import type { ApprovalFinding, Decision } from './approve.ts';
 
-/** The suppression list: slugs and email addresses that must not be built for or written to. */
-export function readSuppression(text: string): Set<string> {
-  return new Set(
-    text
-      .split(/[\r\n,;]+/)
-      // A list saved from a spreadsheet has its cells in quotes.
-      .map((x) => x.trim().replace(/^"(.*)"$/, '$1').trim().toLowerCase())
-      .filter((x) => x && !/^(slug|email|address|reason)$/.test(x)),
-  );
+/** The columns of a suppression sheet that say who is suppressed. Any other column, such as a date or a reason, is a note for people. */
+const NAMES = /^(slugs?|domains?|emails?|address(es)?)$/;
+
+/** The cells of one line. A cell in quotes may hold a comma of its own. */
+function cells(line: string): string[] {
+  const out: string[] = [];
+  let cell = '';
+  let quoted = false;
+  for (const ch of line) {
+    if (ch === '"') quoted = !quoted;
+    else if (ch === ',' && !quoted) {
+      out.push(cell);
+      cell = '';
+    } else cell += ch;
+  }
+  return [...out, cell].map((c) => c.trim().toLowerCase());
 }
 
-export function isSuppressed(list: Set<string>, slug: string, emails: string[]): boolean {
-  return list.has(slug.toLowerCase()) || emails.some((e) => list.has(e.trim().toLowerCase()));
+/**
+ * The suppression list: slugs, email addresses and domains that must not be built for or written
+ * to. A sheet with headings is read by them, so a date or a reason is never taken for an entry.
+ * A bare list is read whole. One cell may hold several entries, set apart by semicolons or spaces.
+ */
+export function readSuppression(text: string): Set<string> {
+  const rows = text.replace(/^\uFEFF/, '').split(/\r?\n/).map(cells).filter((r) => r.some(Boolean));
+  const head = rows[0] ?? [];
+  const headed = head.some((c) => NAMES.test(c));
+  const out = new Set<string>();
+  for (const row of headed ? rows.slice(1) : rows) {
+    row.forEach((cell, i) => {
+      if (headed && !NAMES.test(head[i] ?? '')) return;
+      for (const entry of cell.split(/[;\s]+/)) if (entry) out.add(entry);
+    });
+  }
+  return out;
+}
+
+const host = (address: string) => address.trim().toLowerCase().replace(/^[a-z]+:\/\//, '').replace(/^www\./, '').split(/[/?#:]/)[0]!;
+
+/**
+ * Whether a business is on the list: by its slug, by any address we hold for it, or by a domain.
+ * An entry with a dot and no @ is a domain. It covers every address at that domain and the
+ * business whose own site is on it.
+ */
+export function isSuppressed(list: Set<string>, slug: string, emails: string[], website?: string | null): boolean {
+  const addresses = emails.map((e) => e.trim().toLowerCase());
+  if (list.has(slug.toLowerCase()) || addresses.some((e) => list.has(e))) return true;
+  const domains = [...list].filter((x) => x.includes('.') && !x.includes('@')).map(host);
+  const names = [...addresses.map((e) => e.split('@')[1] ?? ''), website ? host(website) : ''].filter(Boolean);
+  return domains.some((d) => names.some((n) => n === d || n.endsWith(`.${d}`)));
 }
 
 /** A decision made by the rules is marked so. A rejection without the mark was made by a person and stands. */

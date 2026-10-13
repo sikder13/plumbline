@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { paths, type Db } from '@plumbline/core';
 import { allPages, loadSite } from '@plumbline/collect';
+import { exportBusiness, type ExportResult } from '@plumbline/export';
 import type { PageCapture } from '@plumbline/render';
 import {
   bookingRoutesOn,
@@ -57,18 +58,26 @@ export function suppressionList(file: string = join(paths.data, 'suppression.csv
 
 /**
  * Why a business must not be built for or written to, or null when nothing stands in the way: it
- * is on the suppression list by its slug or by any address we hold for it, it was excluded, or its
- * own site refuses unsolicited messages.
+ * is on the suppression list by its slug, by any address we hold for it or by the domain of its
+ * site, it was excluded, or its own site refuses unsolicited messages.
  */
 export function businessSuppressed(d: Db, b: { id: number; slug: string }, list: Set<string>): string | null {
   const emails = (d.prepare('SELECT email FROM contacts WHERE business_id = ? AND email IS NOT NULL').all(b.id) as { email: string }[]).map((e) => e.email);
   const published = factsFor(d, b.id, 'email')[0]?.label;
-  if (isSuppressed(list, b.slug, published ? [...emails, published] : emails)) return 'on the suppression list';
-  const status = (d.prepare('SELECT status FROM businesses WHERE id = ?').get(b.id) as { status: string } | undefined)?.status;
-  if (status === 'excluded') return 'excluded';
+  const row = d.prepare('SELECT status, website, domain FROM businesses WHERE id = ?').get(b.id) as { status: string; website: string | null; domain: string | null } | undefined;
+  if (isSuppressed(list, b.slug, published ? [...emails, published] : emails, row?.website ?? row?.domain)) return 'on the suppression list';
+  if (row?.status === 'excluded') return 'excluded';
   const consent = d.prepare('SELECT quote FROM consent_checks WHERE business_id = ? AND no_unsolicited_statement_found = 1').get(b.id) as { quote: string | null } | undefined;
   if (consent) return `their site refuses unsolicited messages: "${consent.quote ?? ''}"`;
   return null;
+}
+
+/** The export for one business. One that must not be written to is refused before any gate is looked at. */
+export function exportIfClear(d: Db, slug: string, opts: { batch?: string; now?: Date; outRoot?: string; suppression?: string } = {}): ExportResult {
+  const b = d.prepare('SELECT id, slug FROM businesses WHERE slug = ?').get(slug) as { id: number; slug: string } | undefined;
+  const why = b ? businessSuppressed(d, b, suppressionList(opts.suppression).list) : null;
+  if (why) return { ok: false, dir: null, exported: 0, failures: [{ findingId: null, check: null, gate: 'suppressed', reason: why }] };
+  return exportBusiness(d, slug, opts);
 }
 
 /** Sorts a list of businesses into those that may be built for and written to, and those that may not, each with the reason. */

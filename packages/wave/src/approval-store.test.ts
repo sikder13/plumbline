@@ -101,6 +101,28 @@ describe('a suppression list kept in a spreadsheet', () => {
   });
 });
 
+describe('a suppression entry for a whole domain', () => {
+  const sheet = 'domain,emails,date,reason\ndelta.co.nz,lucy@delta.co.nz;lucyp@delta.co.nz,2026-10-13,"replied, no thanks"\n';
+
+  it('is read from its own column, and the date and the reason beside it are not taken for entries', () => {
+    expect([...readSuppression(sheet)].sort()).toEqual(['delta.co.nz', 'lucy@delta.co.nz', 'lucyp@delta.co.nz']);
+  });
+
+  it('holds back every address at the domain, and the business whose site is on it', () => {
+    const list = readSuppression(sheet);
+    expect(isSuppressed(list, 'delta-treks', ['Bookings@Delta.co.nz'])).toBe(true);
+    expect(isSuppressed(list, 'delta-treks', ['hello@mail.delta.co.nz'])).toBe(true);
+    expect(isSuppressed(list, 'delta-treks', [], 'https://www.delta.co.nz/contact')).toBe(true);
+    expect(isSuppressed(list, 'delta-treks', [], 'delta.co.nz')).toBe(true);
+  });
+
+  it('leaves alone a business whose name only ends the same way', () => {
+    const list = readSuppression(sheet);
+    expect(isSuppressed(list, 'other', ['info@notdelta.co.nz'], 'https://notdelta.co.nz/')).toBe(false);
+    expect(isSuppressed(list, 'other', [], null)).toBe(false);
+  });
+});
+
 describe('an approval whose pass no longer stands', () => {
   it('is taken back until the independent check has seen the finding as it now reads', () => {
     const db = seeded();

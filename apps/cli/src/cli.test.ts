@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { memoryDb, type Business } from '@plumbline/core';
-import { businessSuppressed, clearToContact, verdictStands } from './approve.ts';
+import { businessSuppressed, clearToContact, exportIfClear, verdictStands } from './approve.ts';
 import { calibrate, calibrationReport } from './calibrate.ts';
 import { importResearchContacts } from './commands.ts';
 import { parseCsv, toCsv } from './csv.ts';
@@ -197,6 +197,24 @@ describe('a business that must not be built for or written to', () => {
     expect(businessSuppressed(db, { id: 2, slug: 'bravo' }, list)).toBe('excluded');
     expect(businessSuppressed(db, { id: 3, slug: 'charlie' }, list)).toBe('their site refuses unsolicited messages: "No unsolicited marketing please."');
     expect(businessSuppressed(db, { id: 4, slug: 'delta' }, list)).toBe('on the suppression list');
+  });
+
+  it('is one whose site is on a suppressed domain, though no address of theirs is on file', () => {
+    const db = seeded();
+    expect(businessSuppressed(db, { id: 1, slug: 'alpha' }, new Set(['alpha.co.nz']))).toBe('on the suppression list');
+    expect(businessSuppressed(db, { id: 4, slug: 'delta' }, new Set(['delta.co.nz']))).toBe('on the suppression list');
+    expect(businessSuppressed(db, { id: 1, slug: 'alpha' }, new Set(['delta.co.nz']))).toBeNull();
+  });
+
+  it('is refused an export, whatever its findings', () => {
+    const db = seeded();
+    const file = join(mkdtempSync(join(tmpdir(), 'plumbline-suppression-')), 'suppression.csv');
+    writeFileSync(file, 'domain,emails,date,reason\ndelta.co.nz,info@delta.co.nz,2026-10-13,replied no thanks\n');
+    const r = exportIfClear(db, 'delta', { suppression: file });
+    expect(r).toMatchObject({ ok: false, dir: null, exported: 0 });
+    expect(r.failures).toEqual([{ findingId: null, check: null, gate: 'suppressed', reason: 'on the suppression list' }]);
+    // A business that is clear goes on to the gates every export has to pass.
+    expect(() => exportIfClear(db, 'alpha', { suppression: file })).toThrow('alpha has not been audited');
   });
 
   it('is sorted out of any list of pages to publish or drafts to mark, with the reason', () => {
