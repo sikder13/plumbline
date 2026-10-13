@@ -1,8 +1,11 @@
+import type { CSSProperties } from 'react';
 import { CoastMap } from '@/components/CoastMap';
+import { DemoFoot } from '@/components/DemoFoot';
+import { HeroVideo } from '@/components/HeroVideo';
 import { Pic } from '@/components/Pic';
+import { SideScroll } from '@/components/SideScroll';
 import { StickyBar } from '@/components/StickyBar';
 import { pic, type PageData } from '@/lib/data';
-import { demoNote } from '@/lib/offer';
 import type { Design } from './types';
 import s from './coastal.module.css';
 
@@ -12,17 +15,17 @@ interface Content {
   book: { label: string; href: string };
   call: { label: string; tel: string; display: string };
   email: string;
-  hero: { place: string; title: string; line: string };
-  coast: { heading: string; lead: string } & Omit<Parameters<typeof CoastMap>[0], 'className'>;
-  trips: { heading: string; button: string; items: { image: string; name: string; duration: string | null; prices: { who: string; price: string | null }[]; text: string }[] };
-  us: { heading: string; lead: string; people: { name: string; text: string }[] };
-  board: { heading: string; items: { title: string; text: string }[] };
-  end: { heading: string; text: string; button: string };
+  hero: { place: string; lines: string[]; line: string };
+  intro: { text: string; ratingLabel: string; ratingUnit: string };
+  coast: { heading: string; lead: string } & Pick<Parameters<typeof CoastMap>[0], 'viewBox' | 'paths' | 'spots' | 'credit'>;
+  trips: { heading: string; lead: string; items: { image: string; name: string; duration: string; text: string; prices: { who: string; price: string }[]; note?: string }[] };
+  us: { heading: string; statement: string; caption: string; people: { name: string; text: string }[] };
+  book_section: { heading: string; steps: { title: string; text: string }[]; provided: string };
 }
 
-function Wordmark({ lines, className }: { lines: string[]; className?: string }) {
+function Wordmark({ lines }: { lines: string[] }) {
   return (
-    <span className={`${s.wordmark} ${className ?? ''}`}>
+    <span className={s.wordmark}>
       {lines.map((l) => (
         <span key={l}>{l}</span>
       ))}
@@ -30,129 +33,173 @@ function Wordmark({ lines, className }: { lines: string[]; className?: string })
   );
 }
 
-/** Bold and coastal: a tall photo with a very large serif headline, then the coast itself as a map to tap. */
+/**
+ * Bold, salty, local. Their own film runs under a headline that rises line by line; the coast is
+ * held in view while its spots light up one after another; the trips travel sideways with prices
+ * set as large as headlines.
+ */
 function Demo({ data }: { data: PageData }) {
   const c = data.demo as Content;
+  const book = { href: c.book.href, rel: 'noopener' };
   return (
-    <div className={`${s.root} has-sticky`}>
-      <section className={s.hero} id="top">
-        <div className={s.heroPhoto}>
-          <Pic pic={pic(data, 'hero')} sizes="100vw" first />
+    <div className={s.root}>
+      <nav className={s.nav} aria-label="Sections">
+        <a href="#top" aria-label={data.name}>
+          <Wordmark lines={c.wordmark} />
+        </a>
+        <span className={s.navLinks}>
+          {c.nav.map((n) => (
+            <a key={n.href} href={n.href}>
+              {n.label}
+            </a>
+          ))}
+        </span>
+        <a className={s.navBook} data-press data-magnetic {...book}>
+          {c.book.label}
+        </a>
+      </nav>
+
+      <section className={s.hero} id="top" data-hero>
+        <div className={s.heroMedia}>
+          <Pic pic={pic(data, 'hero')} phone={data.images.heroPhone} sizes="100vw" first />
+          {data.video && <HeroVideo src={data.video} className={s.film} />}
         </div>
-        <header className={s.top}>
-          <a href="#top" aria-label={data.name} className={s.homeLink}>
-            <Wordmark lines={c.wordmark} />
-          </a>
-          <nav className={s.nav} aria-label="Sections">
-            {c.nav.map((n) => (
-              <a key={n.href} href={n.href}>
-                {n.label}
-              </a>
-            ))}
-          </nav>
-          <a className={s.topBook} href={c.book.href} rel="noopener">
-            {c.book.label}
-          </a>
-        </header>
+        <a className={s.heroMark} href="#top" aria-label={data.name}>
+          <Wordmark lines={c.wordmark} />
+        </a>
         <div className={s.heroText}>
           <p className={s.place}>{c.hero.place}</p>
-          <h1>{c.hero.title}</h1>
-          <p className={s.line}>{c.hero.line}</p>
+          <h1 aria-label={c.hero.lines.join(' ')}>
+            {c.hero.lines.map((l, i) => (
+              <span key={l} className={s.line} aria-hidden="true">
+                <span style={{ '--i': i } as CSSProperties}>{l}</span>
+              </span>
+            ))}
+          </h1>
+          <p className={s.sub}>{c.hero.line}</p>
+          <a className={s.red} data-press data-magnetic {...book}>
+            {c.book.label}
+          </a>
         </div>
       </section>
 
       <main>
-        <section className={s.coast} id="coast" aria-labelledby="coast-h">
-          <div className={s.wrap}>
-            <h2 id="coast-h">{c.coast.heading}</h2>
-            <p className={s.lead}>{c.coast.lead}</p>
-            <CoastMap className={s.map} viewBox={c.coast.viewBox} land={c.coast.land} islands={c.coast.islands} spots={c.coast.spots} />
-          </div>
+        <section className={s.intro} aria-label="What you will see">
+          <p className={s.statement} data-reveal>
+            {c.intro.text}
+          </p>
+          {data.rating && (
+            <p className={s.rating} data-reveal>
+              <b data-count>{data.rating.value}</b>
+              <span>
+                {c.intro.ratingLabel} <span data-count>{String(data.rating.count)}</span> {c.intro.ratingUnit}
+              </span>
+            </p>
+          )}
+        </section>
+
+        <section id="coast" aria-labelledby="coast-h" className={s.coast}>
+          <CoastMap
+            className={s.story}
+            viewBox={c.coast.viewBox}
+            paths={c.coast.paths}
+            spots={c.coast.spots}
+            credit={c.coast.credit}
+            head={
+              <header className={s.storyHead}>
+                <h2 id="coast-h">{c.coast.heading}</h2>
+                <p>{c.coast.lead}</p>
+              </header>
+            }
+          />
         </section>
 
         <section className={s.trips} id="trips" aria-labelledby="trips-h">
-          <div className={s.wrap}>
-            <h2 id="trips-h">{c.trips.heading}</h2>
-            {c.trips.items.map((t, i) => (
-              <article key={t.name} className={`${s.trip} ${i % 2 ? s.flip : ''}`} data-reveal>
-                <div className={s.tripPhoto}>
-                  <Pic pic={pic(data, t.image)} sizes="(min-width: 900px) 56vw, 100vw" />
+          <SideScroll
+            className={s.side}
+            label={c.trips.heading}
+            head={
+              <header className={s.tripsHead}>
+                <h2 id="trips-h">{c.trips.heading}</h2>
+                <p>{c.trips.lead}</p>
+                <a className={s.red} data-press data-magnetic {...book}>
+                  {c.book.label}
+                </a>
+              </header>
+            }
+          >
+            {c.trips.items.map((t) => (
+              <article key={t.name} className={s.panel}>
+                <div className={s.panelPhoto} data-wipe>
+                  <Pic pic={pic(data, t.image)} sizes="(min-width: 900px) 46vw, 84vw" />
                 </div>
-                <div className={s.tripBody}>
-                  {t.duration && <p className={s.duration}>{t.duration}</p>}
+                <div className={s.panelBody}>
+                  <p className={s.duration}>{t.duration}</p>
                   <h3>{t.name}</h3>
-                  <p>{t.text}</p>
-                  <ul className={s.prices}>
-                    {t.prices.map((p) => (
-                      <li key={p.who}>
-                        <span>{p.who}</span>
-                        {p.price && <b>{p.price}</b>}
-                      </li>
-                    ))}
-                  </ul>
-                  <a className={s.red} href={c.book.href} rel="noopener" aria-label={`${c.trips.button}: ${t.name}`}>
-                    {c.trips.button}
-                  </a>
+                  <p className={s.panelText}>{t.text}</p>
+                  {t.prices.length > 0 ? (
+                    <dl className={s.prices}>
+                      {t.prices.map((p) => (
+                        <div key={p.who}>
+                          <dd data-count>{p.price}</dd>
+                          <dt>{p.who}</dt>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : (
+                    <p className={s.poa}>{t.note}</p>
+                  )}
                 </div>
               </article>
+            ))}
+          </SideScroll>
+        </section>
+
+        <section className={s.us} id="us" aria-labelledby="us-h">
+          <figure className={s.usPhoto} data-wipe data-parallax-frame>
+            <Pic pic={pic(data, 'team')} sizes="(min-width: 900px) 46vw, 100vw" parallax />
+            <figcaption>{c.us.caption}</figcaption>
+          </figure>
+          <div className={s.usText}>
+            <h2 id="us-h">{c.us.heading}</h2>
+            <p className={s.usStatement} data-reveal>
+              {c.us.statement}
+            </p>
+            {c.us.people.map((p) => (
+              <div key={p.name} className={s.person} data-reveal>
+                <h3>{p.name}</h3>
+                <p>{p.text}</p>
+              </div>
             ))}
           </div>
         </section>
 
-        <section className={s.us} id="us" aria-labelledby="us-h">
-          <div className={`${s.wrap} ${s.usGrid}`}>
-            <div className={s.usPhoto} data-reveal>
-              <Pic pic={pic(data, 'team')} sizes="(min-width: 900px) 440px, 100vw" />
-            </div>
-            <div>
-              <h2 id="us-h">{c.us.heading}</h2>
-              <p className={s.lead}>{c.us.lead}</p>
-              {c.us.people.map((p) => (
-                <div key={p.name} className={s.person}>
-                  <h3>{p.name}</h3>
-                  <p>{p.text}</p>
-                </div>
+        <section className={s.book} id="book" aria-labelledby="book-h">
+          <div className={s.bookPhoto} data-parallax-frame>
+            <Pic pic={pic(data, 'snorkel')} sizes="100vw" parallax />
+          </div>
+          <div className={s.bookCard} data-reveal>
+            <h2 id="book-h">{c.book_section.heading}</h2>
+            <ol>
+              {c.book_section.steps.map((st) => (
+                <li key={st.title}>
+                  <h3>{st.title}</h3>
+                  <p>{st.text}</p>
+                </li>
               ))}
+            </ol>
+            <div className={s.meet}>
+              <Pic pic={pic(data, 'sign')} sizes="96px" />
+              <p>{c.book_section.provided}</p>
             </div>
-          </div>
-        </section>
-
-        <section className={s.board} id="board" aria-labelledby="board-h">
-          <div className={s.boardPhoto}>
-            <Pic pic={pic(data, 'snorkel')} sizes="100vw" />
-          </div>
-          <div className={s.wrap}>
-            <h2 id="board-h">{c.board.heading}</h2>
-            <dl className={s.list}>
-              {c.board.items.map((b) => (
-                <div key={b.title} data-reveal>
-                  <dt>{b.title}</dt>
-                  <dd>{b.text}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </section>
-
-        <section className={s.end} aria-labelledby="end-h">
-          <div className={`${s.wrap} ${s.endGrid}`}>
-            <div>
-              <h2 id="end-h">{c.end.heading}</h2>
-              <p>{c.end.text}</p>
-              <div className={s.endRow}>
-                <a className={s.red} href={c.book.href} rel="noopener">
-                  {c.end.button}
-                </a>
-                <a className={s.plain} href={c.call.tel}>
-                  {c.call.label} {c.call.display}
-                </a>
-              </div>
-              <a className={s.mail} href={`mailto:${c.email}`}>
-                {c.email}
+            <div className={s.bookRow}>
+              <a className={s.red} data-press data-magnetic {...book}>
+                {c.book.label}
               </a>
-            </div>
-            <div className={s.sign}>
-              <Pic pic={pic(data, 'sign')} sizes="(min-width: 900px) 320px, 70vw" />
+              <span className={s.reach}>
+                <a href={c.call.tel}>{c.call.display}</a>
+                <a href={`mailto:${c.email}`}>{c.email}</a>
+              </span>
             </div>
           </div>
         </section>
@@ -160,7 +207,7 @@ function Demo({ data }: { data: PageData }) {
 
       <footer className={s.foot}>
         <Wordmark lines={c.wordmark} />
-        <p className="demo-foot-note">{demoNote(data.domain)}</p>
+        <DemoFoot domain={data.domain} />
       </footer>
 
       <StickyBar main={{ label: c.book.label, href: c.book.href, external: true }} call={{ label: c.call.label, tel: c.call.tel }} />
