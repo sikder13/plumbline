@@ -1,7 +1,9 @@
 .root {
   --forest: #042f22;
   --teal: #2b6973;
-  --float-bg: rgba(4, 47, 34, 0.94);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --drift: cubic-bezier(0.45, 0, 0.15, 1);
+  --float-bg: rgba(4, 47, 34, 0.9);
   --float-call-ink: var(--forest);
   --float-font: 'Figtree', system-ui, sans-serif;
   font-family: 'Figtree', system-ui, sans-serif;
@@ -31,6 +33,11 @@
 .root summary:focus-visible {
   outline: 3px solid #f2c94c;
   outline-offset: 3px;
+}
+
+/* A frosted bar across the top on large screens. */
+.nav {
+  display: none;
 }
 
 /* Hero: the photo fills the screen. The headline sits high, the two priced trips rest on glass at the foot. */
@@ -107,10 +114,19 @@
 }
 
 .hero h1 {
-  max-width: 9ch;
-  font-size: clamp(48px, 12.6vw, 104px);
-  line-height: 0.96;
-  text-wrap: balance;
+  font-size: clamp(46px, 12.4vw, 112px);
+  line-height: 0.98;
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+
+.line > span {
+  display: block;
 }
 
 .sub {
@@ -127,8 +143,9 @@
   padding: 8px;
   border-radius: 24px;
   background: rgba(4, 47, 34, 0.5);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  backdrop-filter: blur(20px) saturate(1.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.22);
 }
 
 .glass ul {
@@ -171,7 +188,136 @@
   text-decoration: none;
 }
 
-/* Trips: tall photographs in a row to swipe. */
+/* A morning on the water: the frame holds while three photographs open, each through a widening ripple. */
+.route {
+  position: relative;
+  height: calc(var(--steps) * 75svh + 100svh);
+}
+
+.route [data-frame] {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--forest);
+  color: #fff;
+}
+
+.routePhoto {
+  position: absolute;
+  inset: 0;
+  clip-path: circle(0% at 50% 64%);
+  transition: clip-path 1.3s var(--drift);
+}
+
+.routePhoto[data-step='0'],
+.routePhoto[data-state='on'],
+.routePhoto[data-state='done'] {
+  clip-path: circle(125% at 50% 64%);
+}
+
+.routePhoto picture,
+.routePhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.routePhoto img {
+  object-fit: cover;
+  transform: scale(1.08);
+  transition: transform 2.4s var(--drift);
+}
+
+.routePhoto[data-state='on'] img {
+  transform: scale(1);
+}
+
+.routePhoto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(4, 47, 34, 0.62) 0%, rgba(4, 47, 34, 0) 30%, rgba(4, 47, 34, 0) 46%, rgba(4, 47, 34, 0.88) 100%);
+}
+
+.routeHead {
+  position: absolute;
+  top: 56px;
+  left: 24px;
+  right: 24px;
+  max-width: 10ch;
+}
+
+.routeFoot {
+  position: absolute;
+  inset: auto 24px 104px 24px;
+}
+
+.captions {
+  position: relative;
+  min-height: 96px;
+}
+
+.captions p {
+  position: absolute;
+  inset: auto 0 0 0;
+  max-width: 24ch;
+  margin: 0;
+  font-size: clamp(22px, 2.6vw, 34px);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  opacity: 0;
+  transform: translateX(24px);
+  transition: opacity 0.5s var(--ease), transform 0.9s var(--drift);
+}
+
+.captions p[data-state='on'] {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.25s;
+}
+
+.captions p[data-state='done'] {
+  transform: translateX(-24px);
+}
+
+/* The horizon: three stops along a line, and a marker that travels it with the scroll. */
+.horizon {
+  position: relative;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  margin: 24px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.horizon li {
+  opacity: 0.6;
+  transition: opacity 0.5s var(--ease);
+}
+
+.horizon li[data-state='on'],
+.horizon li[data-state='done'] {
+  opacity: 1;
+}
+
+.horizon .marker {
+  position: absolute;
+  top: -7px;
+  left: calc(var(--p) * (100% - 13px));
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.25);
+  opacity: 1;
+}
+
+/* Trips: tall photographs that drift past. */
 .trips {
   padding: 72px 0;
   scroll-margin-top: 8px;
@@ -179,8 +325,6 @@
 
 .head {
   padding: 0 24px 32px;
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
 .head p {
@@ -189,26 +333,32 @@
   font-weight: 500;
 }
 
-.row {
-  list-style: none;
-  margin: 0;
-  padding: 0 24px 8px;
+.side [data-side-wrap] {
+  position: relative;
+}
+
+.side [data-side-track] {
   display: flex;
   gap: 16px;
+  padding: 0 24px 8px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scroll-padding-left: 24px;
   scrollbar-width: none;
 }
 
-.row::-webkit-scrollbar {
+.side [data-side-track]::-webkit-scrollbar {
+  display: none;
+}
+
+.side [data-side-cue] {
   display: none;
 }
 
 .card {
   position: relative;
   flex: 0 0 76vw;
-  max-width: 320px;
+  max-width: 340px;
   aspect-ratio: 3 / 4.4;
   scroll-snap-align: start;
   overflow: hidden;
@@ -216,6 +366,7 @@
   background: var(--forest);
   color: #fff;
   scroll-margin-top: 24px;
+  transition: transform 0.8s var(--ease), box-shadow 0.8s var(--ease);
 }
 
 .card details,
@@ -234,15 +385,17 @@
   display: none;
 }
 
-.card summary picture,
-.card summary img {
+.cardPhoto,
+.cardPhoto picture,
+.cardPhoto img {
   display: block;
   width: 100%;
   height: 100%;
 }
 
-.card summary img {
+.cardPhoto img {
   object-fit: cover;
+  transition: transform 1.2s var(--ease);
 }
 
 .face {
@@ -271,7 +424,7 @@
 }
 
 .price b {
-  font-size: 40px;
+  font-size: 44px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -294,8 +447,14 @@
   inset: auto 8px 8px 8px;
   padding: 20px;
   border-radius: 18px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   color: var(--forest);
+}
+
+.card details[open] .sheet {
+  animation: sheet-up 0.6s var(--ease) both;
 }
 
 .sheet p {
@@ -313,6 +472,13 @@
   color: #fff;
   font-weight: 700;
   text-decoration: none;
+}
+
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
 }
 
 /* Why: three lines on open water. */
@@ -347,7 +513,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(3, 30, 48, 0.1) 0%, rgba(3, 30, 48, 0.55) 45%, rgba(3, 30, 48, 0.92) 100%);
+  background: linear-gradient(180deg, rgba(3, 30, 48, 0) 0%, rgba(3, 30, 48, 0.3) 40%, rgba(3, 30, 48, 0.82) 100%);
 }
 
 .whyText {
@@ -576,12 +742,82 @@
   margin-bottom: 8px;
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 32px 48px -28px rgba(4, 47, 34, 0.6);
+  }
+  .card:hover .cardPhoto img {
+    transform: scale(1.06);
+  }
+}
+
+@media (max-width: 899px) {
+  .card:active {
+    transform: scale(0.985);
+  }
+}
+
 @media (min-width: 900px) {
+  .nav {
+    position: fixed;
+    top: calc(var(--bar-h) + 14px);
+    left: 24px;
+    right: 24px;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    padding: 8px 8px 8px 24px;
+    border-radius: 20px;
+    background: rgba(4, 47, 34, 0.4);
+    -webkit-backdrop-filter: blur(22px) saturate(1.4);
+    backdrop-filter: blur(22px) saturate(1.4);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2);
+    color: #fff;
+    transition: top 0.5s var(--ease);
+  }
+  :global([data-strip-away]) .nav {
+    top: 14px;
+  }
+  .navName {
+    color: #fff;
+    font-weight: 700;
+    font-size: 17px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .navLinks {
+    display: flex;
+    gap: 32px;
+  }
+  .navLinks a {
+    color: #fff;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .navBook {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 22px;
+    border-radius: 14px;
+    background: #fff;
+    color: var(--forest);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
   .top {
-    padding: 24px 48px 0;
+    display: none;
   }
   .heroHead {
-    padding: 56px 48px 0;
+    padding: 128px 48px 0;
+  }
+  .hero h1 {
+    font-size: clamp(64px, 6.4vw, 104px);
   }
   .heroPhoto::after {
     background: linear-gradient(90deg, rgba(4, 47, 34, 0.82) 0%, rgba(4, 47, 34, 0.5) 30%, rgba(4, 47, 34, 0) 58%), linear-gradient(180deg, rgba(4, 47, 34, 0) 60%, rgba(4, 47, 34, 0.6) 100%);
@@ -593,24 +829,63 @@
     margin: auto auto 48px 48px;
     width: 400px;
   }
+  .routeHead {
+    top: 120px;
+    left: 48px;
+  }
+  .routeFoot {
+    inset: auto 48px 64px 48px;
+  }
+  .captions {
+    min-height: 120px;
+  }
   .trips,
   .faq {
     padding-top: 120px;
     padding-bottom: 120px;
   }
   .head {
+    display: flex;
+    align-items: baseline;
+    gap: 32px;
     padding: 0 48px 40px;
   }
-  .row {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 48px;
-    overflow: visible;
+  .side [data-side-track] {
     gap: 20px;
+    padding: 16px 48px 48px;
+    scroll-padding-left: 48px;
+    cursor: grab;
+    user-select: none;
+  }
+  .side [data-side-track][data-dragging] {
+    cursor: grabbing;
+    scroll-snap-type: none;
   }
   .card {
-    flex: 1 1 0;
+    flex: 0 0 400px;
     max-width: none;
+  }
+  .side [data-side-cue] {
+    position: absolute;
+    right: 40px;
+    top: 44%;
+    display: grid;
+    place-items: center;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.8);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(4, 47, 34, 0.14);
+    font-weight: 700;
+    font-size: 15px;
+    pointer-events: none;
+    transition: opacity 0.6s var(--ease), transform 0.8s var(--ease);
+  }
+  .side[data-dragged] [data-side-cue] {
+    opacity: 0;
+    transform: scale(0.8);
   }
   .why {
     min-height: 720px;
@@ -649,5 +924,50 @@
     align-self: center;
     margin: 0;
     padding: 72px 56px;
+  }
+}
+
+/* The opening: the picture settles and then keeps drifting in, the headline rises, the card arrives. */
+@media (prefers-reduced-motion: no-preference) {
+  .heroPhoto {
+    animation: settle 1.6s var(--ease) both;
+  }
+  .heroPhoto picture {
+    animation: push-in 22s ease-in-out 1.6s infinite alternate;
+  }
+  .line > span {
+    animation: rise 1s var(--ease) both;
+    animation-delay: calc(var(--i) * 60ms + 150ms);
+  }
+  .place,
+  .sub,
+  .glass,
+  .top {
+    animation: arrive 0.7s var(--ease) both;
+    animation-delay: 0.6s;
+  }
+  .glass {
+    animation-delay: 0.72s;
+  }
+  @keyframes settle {
+    from {
+      transform: scale(1.08);
+    }
+  }
+  @keyframes push-in {
+    to {
+      transform: scale(1.07) translate3d(-1%, 0, 0);
+    }
+  }
+  @keyframes rise {
+    from {
+      transform: translateY(105%);
+    }
+  }
+  @keyframes arrive {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
   }
 }

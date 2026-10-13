@@ -1,5 +1,8 @@
+import type { CSSProperties } from 'react';
 import { DemoFoot } from '@/components/DemoFoot';
 import { Pic } from '@/components/Pic';
+import { Pinned } from '@/components/Pinned';
+import { SideScroll } from '@/components/SideScroll';
 import { StickyBar } from '@/components/StickyBar';
 import { pic, type PageData } from '@/lib/data';
 import type { Design } from './types';
@@ -7,25 +10,48 @@ import s from './waterline.module.css';
 
 interface Content {
   sand: string;
+  nav: { label: string; href: string }[];
   book: { label: string; href: string };
   call: { label: string; tel: string; display: string };
   email: string;
-  hero: { place: string; title: string; sub: string; chips: { label: string; price: string; href: string }[] };
+  hero: { place: string; lines: string[]; sub: string; chips: { label: string; price: string; href: string }[] };
+  route: { heading: string; stops: { image: string; label: string; text: string }[] };
   why: { heading: string; lines: string[] };
-  trips: { heading: string; lead: string; button: string; open: string; per: string; items: { id: string; image: string; name: string; duration: string; price: string | null; text: string; href: string }[] };
+  trips: { heading: string; lead: string; button: string; open: string; per: string; cue: string; items: { id: string; image: string; name: string; duration: string; price: string | null; text: string; href: string }[] };
   family: { heading: string; quote: string; paragraphs: string[]; names: string };
   faq: { heading: string; items: { q: string; a: string }[] };
   find: { heading: string; address: string[]; notes: string[]; pin: { x: number; y: number; label: string }; credit: string };
 }
 
-/** Calm water, open space: the headline rides high in the sky, trips swipe past as tall photographs, and words sit on water. */
+/**
+ * Calm water, open space. Everything moves slowly and mostly sideways, like drifting: the headline
+ * rises over the water, a morning's paddle opens photograph by photograph as a ripple widens, and
+ * the trips float past as tall cards.
+ */
 function Demo({ data }: { data: PageData }) {
   const c = data.demo as Content;
+  const book = { href: c.book.href, rel: 'noopener' };
   return (
     <div className={s.root} style={{ ['--sand' as string]: c.sand }}>
+      <nav className={s.nav} aria-label="Sections">
+        <a className={s.navName} href="#top">
+          {data.name}
+        </a>
+        <span className={s.navLinks}>
+          {c.nav.map((n) => (
+            <a key={n.href} href={n.href}>
+              {n.label}
+            </a>
+          ))}
+        </span>
+        <a className={s.navBook} data-press data-magnetic {...book}>
+          {c.book.label}
+        </a>
+      </nav>
+
       <section className={s.hero} id="top" data-hero>
-        <div className={s.heroPhoto}>
-          <Pic pic={pic(data, 'hero')} phone={data.images.heroPhone} sizes="100vw" first />
+        <div className={s.heroPhoto} data-parallax-frame>
+          <Pic pic={pic(data, 'hero')} phone={data.images.heroPhone} sizes="100vw" first parallax />
         </div>
         <header className={s.top}>
           <a className={s.brand} href="#top">
@@ -37,7 +63,13 @@ function Demo({ data }: { data: PageData }) {
         </header>
         <div className={s.heroHead}>
           <p className={s.place}>{c.hero.place}</p>
-          <h1>{c.hero.title}</h1>
+          <h1 aria-label={c.hero.lines.join(' ')}>
+            {c.hero.lines.map((l, i) => (
+              <span key={l} className={s.line} aria-hidden="true">
+                <span style={{ '--i': i } as CSSProperties}>{l}</span>
+              </span>
+            ))}
+          </h1>
           <p className={s.sub}>{c.hero.sub}</p>
         </div>
         <div className={s.glass}>
@@ -51,30 +83,68 @@ function Demo({ data }: { data: PageData }) {
               </li>
             ))}
           </ul>
-          <a className={s.book} href={c.book.href} rel="noopener">
+          <a className={s.book} data-press {...book}>
             {c.book.label}
           </a>
         </div>
       </section>
 
       <main>
+        <section aria-labelledby="route-h" className={s.routeWrap}>
+          <Pinned steps={c.route.stops.length} className={s.route}>
+            {c.route.stops.map((stop, i) => (
+              <div key={stop.image} className={s.routePhoto} data-step={i} data-state={i === 0 ? 'on' : 'off'}>
+                <Pic pic={pic(data, stop.image)} sizes="100vw" />
+              </div>
+            ))}
+            <h2 id="route-h" className={s.routeHead}>
+              {c.route.heading}
+            </h2>
+            <div className={s.routeFoot}>
+              <div className={s.captions}>
+                {c.route.stops.map((stop, i) => (
+                  <p key={stop.label} data-step={i} data-state={i === 0 ? 'on' : 'off'}>
+                    {stop.text}
+                  </p>
+                ))}
+              </div>
+              <ol className={s.horizon}>
+                {c.route.stops.map((stop, i) => (
+                  <li key={stop.label} data-step={i} data-state={i === 0 ? 'on' : 'off'}>
+                    {stop.label}
+                  </li>
+                ))}
+                <li className={s.marker} aria-hidden="true" />
+              </ol>
+            </div>
+          </Pinned>
+        </section>
+
         <section className={s.trips} id="trips" aria-labelledby="trips-h">
-          <div className={s.head}>
-            <h2 id="trips-h">{c.trips.heading}</h2>
-            <p>{c.trips.lead}</p>
-          </div>
-          <ul className={s.row}>
+          <SideScroll
+            className={s.side}
+            label={c.trips.heading}
+            cue={c.trips.cue}
+            head={
+              <header className={s.head}>
+                <h2 id="trips-h">{c.trips.heading}</h2>
+                <p>{c.trips.lead}</p>
+              </header>
+            }
+          >
             {c.trips.items.map((t) => (
-              <li key={t.id} id={t.id} className={s.card}>
+              <article key={t.id} id={t.id} className={s.card}>
                 <details>
                   <summary>
-                    <Pic pic={pic(data, t.image)} sizes="(min-width: 900px) 300px, 76vw" />
+                    <span className={s.cardPhoto} data-wipe>
+                      <Pic pic={pic(data, t.image)} sizes="(min-width: 900px) 340px, 76vw" />
+                    </span>
                     <span className={s.face}>
                       <span className={s.name}>{t.name}</span>
                       <span className={s.when}>{t.duration}</span>
                       {t.price && (
                         <span className={s.price}>
-                          <b>{t.price}</b> {c.trips.per}
+                          <b data-count>{t.price}</b> {c.trips.per}
                         </span>
                       )}
                       <span className={s.open}>{c.trips.open}</span>
@@ -82,17 +152,17 @@ function Demo({ data }: { data: PageData }) {
                   </summary>
                   <div className={s.sheet}>
                     <p>{t.text}</p>
-                    <a href={t.href} rel="noopener" aria-label={`${c.trips.button}: ${t.name}`}>
+                    <a href={t.href} rel="noopener" data-press aria-label={`${c.trips.button}: ${t.name}`}>
                       {c.trips.button}
                     </a>
                   </div>
                 </details>
-              </li>
+              </article>
             ))}
-          </ul>
+          </SideScroll>
         </section>
 
-        <section className={s.why} aria-labelledby="why-h">
+        <section className={s.why} aria-labelledby="why-h" data-parallax-frame>
           <div className={s.whyPhoto}>
             <Pic pic={pic(data, 'why')} sizes="100vw" parallax />
           </div>
@@ -109,7 +179,7 @@ function Demo({ data }: { data: PageData }) {
         </section>
 
         <section className={s.family} id="family" aria-labelledby="family-h">
-          <div className={s.familyPhoto}>
+          <div className={s.familyPhoto} data-wipe>
             <Pic pic={pic(data, 'family')} sizes="100vw" />
           </div>
           <div className={s.familyCard} data-reveal>
@@ -136,14 +206,14 @@ function Demo({ data }: { data: PageData }) {
           <figure className={s.map}>
             <div className={s.mapFrame}>
               <Pic pic={pic(data, 'map')} sizes="100vw" />
-              <span className={s.pin} style={{ left: `${c.find.pin.x}%`, top: `${c.find.pin.y}%` }}>
+              <span className={s.pin}>
                 <i aria-hidden="true" />
                 <b>{c.find.pin.label}</b>
               </span>
             </div>
             <figcaption>{c.find.credit}</figcaption>
           </figure>
-          <div className={s.findText}>
+          <div className={s.findText} data-reveal>
             <h2 id="find-h">{c.find.heading}</h2>
             <address>
               {c.find.address.map((l) => (
