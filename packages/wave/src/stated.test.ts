@@ -62,6 +62,24 @@ describe('the sentence put to an owner', () => {
     );
   });
 
+  it('lists only the pages that load and that nothing links to', () => {
+    const detail = {
+      measured: 'https://alpha.co.nz/old answers 404 (not found). The menu link "Old trips" on https://alpha.co.nz/ leads to it. The 2 example pages load. None of the 9 other pages we read links to them.',
+      examples: [
+        { url: 'https://alpha.co.nz/packages', status: 200, missing: false, linkedFrom: [] },
+        { url: 'https://alpha.co.nz/old', status: 404, missing: true, linkedFrom: [{ pageUrl: 'https://alpha.co.nz/', text: 'Old trips' }] },
+        { url: 'https://alpha.co.nz/tours', status: 200, missing: false, linkedFrom: [{ pageUrl: 'https://alpha.co.nz/', text: 'Tours' }] },
+        { url: 'https://alpha.co.nz/gone', status: 404, missing: true, linkedFrom: [] },
+      ],
+    };
+    expect(statedSentence(f('CM_orphan_page', 'Several pages are not linked from anywhere.', detail), [])).toBe('The page at /packages is not linked from any of the 9 other pages we read');
+  });
+
+  it('falls back on the finding in its own words when no example is truly unlinked', () => {
+    const detail = { measured: 'The page loads. None of the 9 other pages we read links to it.', examples: [{ url: 'https://alpha.co.nz/old', status: 404, missing: true, linkedFrom: [{ pageUrl: 'https://alpha.co.nz/', text: 'Old trips' }] }] };
+    expect(statedSentence(f('CM_orphan_page', 'A page is not linked from anywhere.', detail), [])).toBe('A page is not linked from anywhere.');
+  });
+
   it('leaves every other finding in its own words', () => {
     expect(statedSentence(f('C41_outdated_platform', 'PHP 7.1.33 is past its end of life (2019-12-01)'), [])).toBe('PHP 7.1.33 is past its end of life (2019-12-01)');
   });

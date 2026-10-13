@@ -53,6 +53,9 @@ const ABSENT = /No (meta description|main heading|structured data) on the (?:(\d
 interface Example {
   url: string;
   title?: string;
+  status?: number | null;
+  missing?: boolean;
+  unread?: boolean;
   linkedFrom?: { pageUrl: string; text?: string }[];
 }
 
@@ -84,9 +87,11 @@ export function statedSentence(f: { checkId: string; title: string; detail: Reco
   }
   if (f.checkId === 'CM_orphan_page') {
     const others = /None of the (\d+) other pages we read/.exec(measured)?.[1];
-    if (!examples.length || !others) return f.title;
-    const where = examples.map((e) => place(e.url));
-    return `The page${where.length > 1 ? 's' : ''} at ${where.join(' and ')} ${where.length > 1 ? 'are' : 'is'} not linked from any of the ${others} other pages we read`;
+    // Only a page that loads and that nothing links to is unlinked. One that is linked but missing belongs to another sentence.
+    const unlinked = examples.filter((e) => !e.missing && !e.unread && !(e.status && e.status >= 400) && !e.linkedFrom?.length);
+    if (!unlinked.length || !others) return f.title;
+    const where = unlinked.map((e) => place(e.url));
+    return `The page${where.length > 1 ? 's' : ''} at ${listed(where)} ${where.length > 1 ? 'are' : 'is'} not linked from any of the ${others} other pages we read`;
   }
   if (f.checkId === 'CM_leftover_page') {
     const e = examples[0];
