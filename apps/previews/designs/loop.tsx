@@ -229,15 +229,17 @@ function Demo({ data }: { data: PageData }) {
             </h2>
             <div className={s.scene} data-scene="bike">
               <Pic pic={pic(data, 'bike')} phone={data.images.bikePhone} sizes="100vw" />
-              <div className={s.sceneText}>
+              <div className={s.sceneHead}>
                 <p className={s.kicker}>{c.bike.kicker}</p>
                 <p className={s.sceneTitle} aria-hidden="true">
                   {c.bike.first}
                 </p>
+              </div>
+              <div className={s.sceneText}>
                 <div className={s.sceneSteps}>
                   <div data-step={0} data-state="on">
                     <p className={s.sceneLead}>{c.bike.lead}</p>
-                    <ol className={s.miniLine}>
+                    <ol className={s.times}>
                       {c.bike.departures.map((d) => (
                         <li key={d.time}>
                           <b>{d.time}</b>
@@ -263,11 +265,6 @@ function Demo({ data }: { data: PageData }) {
             <div className={s.scene} data-scene="wine">
               <Pic pic={pic(data, 'pour')} phone={data.images.pourPhone} sizes="100vw" />
               <div className={s.sceneText}>
-                <p className={s.kicker}>{c.bike.kicker}</p>
-                <p className={s.sceneTitle} aria-hidden="true">
-                  {c.bike.later}
-                </p>
-                <p className={s.sceneLead}>{c.bike.laterText}</p>
                 <dl className={s.fares}>
                   {c.bike.prices.map((p) => (
                     <div key={p.label}>
@@ -276,10 +273,14 @@ function Demo({ data }: { data: PageData }) {
                     </div>
                   ))}
                 </dl>
+                <p className={s.sceneLead}>{c.bike.laterText}</p>
                 <a className={s.go} data-press href={c.bike.book.href} rel="noopener">
                   {c.bike.book.label}
                   <Arrow />
                 </a>
+                <p className={s.sceneTitle} aria-hidden="true">
+                  {c.bike.later}
+                </p>
               </div>
             </div>
             <span className={s.seam} aria-hidden="true" />

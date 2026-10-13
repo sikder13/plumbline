@@ -1004,15 +1004,16 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
-/* Bike first, wine later: one frame, and the afternoon drawn across the morning as the visitor scrolls. */
+/* Bike first, wine later: one frame split in two. The afternoon starts as a band at the right and is drawn across the morning as the visitor scrolls. */
 .bike {
   background: var(--night);
   color: #fff;
 }
 
 .scenes {
-  /* How far the second scene has come across, from 0 to 1, over the middle of the scroll. */
-  --w: clamp(0, calc((var(--p) - 0.46) * 3.4), 1);
+  /* How much of the frame the afternoon holds, from a band at the start to all of it. */
+  --w0: 0.16;
+  --w: clamp(var(--w0), calc(var(--w0) + (var(--p) - 0.3) * 2.4), 1);
   position: relative;
   height: calc(3 * 66svh + 100svh);
 }
@@ -1047,11 +1048,15 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(19, 24, 36, 0.5) 0%, rgba(19, 24, 36, 0.1) 24%, rgba(19, 24, 36, 0.62) 52%, rgba(19, 24, 36, 0.95) 100%);
+  background: linear-gradient(180deg, rgba(19, 24, 36, 0.78) 0%, rgba(19, 24, 36, 0.2) 26%, rgba(19, 24, 36, 0.16) 46%, rgba(19, 24, 36, 0.86) 72%, rgba(19, 24, 36, 0.96) 100%);
 }
 
 .scene[data-scene='wine'] {
   clip-path: inset(0 0 0 calc((1 - var(--w)) * 100%));
+}
+
+.scene[data-scene='wine']::after {
+  background: linear-gradient(180deg, rgba(19, 24, 36, 0.4) 0%, rgba(19, 24, 36, 0.1) 24%, rgba(19, 24, 36, 0.66) 52%, rgba(19, 24, 36, 0.96) 100%);
 }
 
 .seam {
@@ -1063,35 +1068,45 @@
   width: 2px;
   margin-left: -1px;
   background: var(--red);
-  /* Gone at either end, there in between. */
-  opacity: clamp(0, calc(var(--w) * (1 - var(--w)) * 60), 1);
+  /* There while the frame is split, gone once the afternoon holds all of it. */
+  opacity: clamp(0, calc((1 - var(--w)) * 30), 1);
 }
 
-.sceneText {
+/* The morning's title sits at the top left, and what the morning holds at the bottom left. */
+.sceneHead {
   position: absolute;
-  inset: auto var(--pad) 96px var(--pad);
+  inset: calc(var(--bar-h) + 26px) var(--pad) auto var(--pad);
   z-index: 2;
 }
 
 .sceneTitle {
-  margin: 12px 0 16px !important;
   font: 700 clamp(44px, 13.4vw, 58px)/0.96 var(--wide);
   letter-spacing: -0.03em;
 }
 
+.sceneHead .sceneTitle {
+  margin-top: 12px !important;
+}
+
+.sceneText {
+  position: absolute;
+  inset: auto var(--pad) 92px var(--pad);
+  z-index: 2;
+}
+
 .sceneLead {
-  max-width: 32ch;
+  max-width: 31ch;
   line-height: 1.4;
 }
 
 .sceneSteps {
   position: relative;
-  min-height: 176px;
+  min-height: 204px;
 }
 
 .sceneSteps > div {
   position: absolute;
-  inset: 0 0 auto 0;
+  inset: auto 0 0 0;
   opacity: 0;
   transform: translateY(18px);
   transition: opacity 0.45s var(--ease), transform 0.8s var(--ease);
@@ -1107,71 +1122,18 @@
   transform: translateY(-18px);
 }
 
-/* The morning's three pick-ups, on a line of the logo's second colour. */
-.miniLine {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 22px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.miniLine::before {
-  content: '';
-  position: absolute;
-  top: 5px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--slate);
-}
-
-.miniLine li {
-  position: relative;
-  display: grid;
-  gap: 2px;
-  padding: 22px 6px 0 0;
-}
-
-.miniLine li::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 12px;
-  height: 12px;
-  border: 2px solid var(--slate);
-  border-radius: 50%;
-  background: #fff;
-}
-
-.miniLine b {
-  font: 500 12.5px/1.2 var(--mono);
-}
-
-.miniLine span {
-  font-size: 12px;
-  line-height: 1.25;
-  color: rgba(255, 255, 255, 0.86);
-}
-
-.trailLabel {
-  font: 500 12px/1.2 var(--mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.86);
-}
-
+/* Times and places down a line of the logo's second colour. */
+.times,
 .trail {
   position: relative;
   display: grid;
-  gap: 12px;
-  margin: 14px 0 0;
+  gap: 10px;
+  margin: 16px 0 0;
   padding: 0 0 0 26px;
   list-style: none;
 }
 
+.times::before,
 .trail::before {
   content: '';
   position: absolute;
@@ -1182,22 +1144,46 @@
   background: var(--slate);
 }
 
+.times li,
 .trail li {
   position: relative;
   display: grid;
   gap: 2px;
 }
 
+.times li {
+  grid-template-columns: 82px minmax(0, 1fr);
+  align-items: baseline;
+}
+
+.times li::before,
 .trail li::before {
   content: '';
   position: absolute;
-  top: 6px;
+  top: 5px;
   left: -26px;
   width: 12px;
   height: 12px;
   border: 2px solid var(--slate);
   border-radius: 50%;
   background: #fff;
+}
+
+.times b {
+  font: 500 14px/1.5 var(--mono);
+}
+
+.times span {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.trailLabel {
+  font: 500 12px/1.2 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.86);
 }
 
 .trail b {
@@ -1212,15 +1198,37 @@
   color: rgba(255, 255, 255, 0.86);
 }
 
+/* The afternoon's words are set to the right, with its title last, at the bottom right. They come in once the afternoon holds most of the frame. */
+.scene[data-scene='wine'] .sceneText {
+  display: grid;
+  justify-items: end;
+  text-align: right;
+  opacity: clamp(0, calc((var(--w) - 0.5) * 4), 1);
+}
+
+.scene[data-scene='wine'] .sceneTitle {
+  margin-top: 22px !important;
+}
+
+.scene[data-scene='wine'] .sceneLead {
+  margin: 16px 0 20px;
+}
+
 .fares {
   display: flex;
-  gap: 28px;
-  margin: 20px 0 22px;
+  gap: 8px;
+  margin: 0;
 }
 
 .fares div {
   display: grid;
-  gap: 5px;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(19, 24, 36, 0.72);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  text-align: left;
 }
 
 .fares dt {
@@ -1232,7 +1240,7 @@
 
 .fares dd {
   margin: 0;
-  font: 700 22px/1 var(--wide);
+  font: 700 20px/1 var(--wide);
   letter-spacing: -0.03em;
 }
 
@@ -2039,6 +2047,7 @@
   }
 
   .scenes {
+    --w0: 0.4;
     height: calc(3 * 70vh + 100vh);
   }
 
@@ -2046,18 +2055,27 @@
     height: 100vh;
   }
 
+  .sceneHead {
+    inset: 124px auto auto var(--pad);
+  }
+
+  .sceneTitle {
+    font-size: clamp(72px, 6.8vw, 120px);
+  }
+
+  .sceneHead .sceneTitle {
+    margin-top: 18px !important;
+  }
+
   .sceneText {
-    inset: auto auto 64px var(--pad);
-    width: min(560px, 46vw);
+    inset: auto auto 84px var(--pad);
+    width: min(460px, 34vw);
   }
 
   .scene[data-scene='wine'] .sceneText {
     inset: auto var(--pad) 64px auto;
-  }
-
-  .sceneTitle {
-    font-size: clamp(72px, 7vw, 124px);
-    margin: 18px 0 24px !important;
+    width: min(500px, 36vw);
+    opacity: 1;
   }
 
   .sceneLead {
@@ -2065,16 +2083,27 @@
   }
 
   .sceneSteps {
-    min-height: 190px;
+    min-height: 230px;
   }
 
-  .miniLine b,
-  .miniLine span {
-    font-size: 14px;
+  .times b {
+    font-size: 15px;
+  }
+
+  .times span {
+    font-size: 19px;
+  }
+
+  .times li {
+    grid-template-columns: 96px minmax(0, 1fr);
   }
 
   .trail b {
     font-size: 21px;
+  }
+
+  .fares dd {
+    font-size: 24px;
   }
 
   .onDay {
