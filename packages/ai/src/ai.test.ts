@@ -178,16 +178,36 @@ describe('planning and running', () => {
     await runPlan(db, p, { asks: { openai: ask, perplexity: ask }, log: () => undefined });
     indexMentions(db, 'b');
     const coastal = aiSummary(db, list[0]!, 'b')!;
-    expect(coastal).toMatchObject({ questions: 12, namedIn: 6 });
+    // The headline figures are for the question where the business does best, and the sample is from that same question.
+    expect(coastal).toMatchObject({ questions: 6, namedIn: 6 });
+    expect(coastal.sample!.question).toBe('Who should I book a kayak tour with in or near Paihia, New Zealand? Name specific operators.');
     expect(coastal.asked.map((q) => [q.question, q.answers, q.namedIn])).toEqual([
       ['Who should I book a kayak tour with in or near Paihia, New Zealand? Name specific operators.', 6, 6],
       ['Who should I book a kayak hire with in or near Paihia, New Zealand? Name specific operators.', 6, 0],
     ]);
     expect(coastal.asked[1]!.others.map((o) => o.name)).toEqual(['Rival One', 'Rival Two']);
     expect(coastal.asked[1]!.sample!.answer).toBe('Try **Rival One** or **Rival Two**.');
-    expect(coastal.others.find((o) => o.name === 'Rival One')!.answers).toBe(12);
+    expect(coastal.lastAskedAt).toBe((db.prepare('SELECT MAX(asked_at) AS at FROM ai_answers').get() as { at: string }).at);
     // The other business offers tours only, so it is judged on that question alone.
     expect(aiSummary(db, list[1]!, 'b')).toMatchObject({ questions: 6, namedIn: 0 });
+  });
+
+  it('sees agreement across two passes only when every question was asked in both', async () => {
+    const db = memoryDb();
+    seed(db, list);
+    const both: HomepageWords = { ...kayaks, title: 'Guided kayak tours and kayak hire' };
+    const options = { homepage: () => both, businesses: list.slice(0, 1), batch: 'b', brandQuestions: 0 };
+    const ask = async (): Promise<Answer> => ({ text: 'Try **Rival One** or **Rival Two**.', citations: [], model: 'm', usage: {}, costUsd: 0 });
+    await runPlan(db, plan(db, { ...options, pass: 1 }), { asks: { openai: ask, perplexity: ask }, log: () => undefined });
+    // The second pass stops after the first question: the hire question never gets its later answers.
+    const second = plan(db, { ...options, pass: 2 });
+    second.toRun = second.toRun.filter((t) => t.key.endsWith('kayak-tour'));
+    await runPlan(db, second, { asks: { openai: ask, perplexity: ask }, log: () => undefined });
+    db.prepare('UPDATE ai_answers SET asked_at = ? WHERE run_index > 0').run(new Date(Date.now() + 90 * 60_000).toISOString());
+    indexMentions(db, 'b');
+    const s = aiSummary(db, list[0]!, 'b')!;
+    expect(s.asked.map((q) => [q.answers, q.holdsInBothPasses])).toEqual([[6, true], [2, false]]);
+    expect(s.holdsInBothPasses).toBe(false);
   });
 
   it('summarises how often a business is named against others', async () => {
@@ -205,6 +225,16 @@ describe('planning and running', () => {
     // All six answers were asked together, so nothing has been shown twice over time.
     expect(coastal.holdsInBothPasses).toBe(false);
     expect(coastal.spanMinutes).toBeLessThan(1);
+  });
+
+  it('keeps the neutral questions about a business when a run asks only the activity questions', () => {
+    const db = memoryDb();
+    seed(db, list);
+    plan(db, { homepage, businesses: list.slice(0, 1), batch: 'b' });
+    const kinds = () => (db.prepare("SELECT kind FROM ai_question_links WHERE batch = 'b' AND business_id = 1 ORDER BY kind").all() as { kind: string }[]).map((l) => l.kind);
+    expect(kinds()).toEqual(['activity', 'brand', 'brand']);
+    plan(db, { homepage, businesses: list.slice(0, 1), batch: 'b', brandQuestions: 0 });
+    expect(kinds()).toEqual(['activity', 'brand', 'brand']);
   });
 
   it('indexes the answers of the businesses it is given and leaves the rest of the batch alone', async () => {

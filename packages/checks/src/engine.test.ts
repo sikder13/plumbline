@@ -192,7 +192,7 @@ describe('slow mobile speed in the top three', () => {
 describe('findings built from AI answers', () => {
   const others = [{ name: 'Rival One', answers: 6 }, { name: 'Rival Two', answers: 4 }];
   const sample = { provider: 'openai', askedAt: '2026-10-10T20:00:00Z', answer: 'Rival One', citations: [] };
-  const ai = (holds: boolean, namedIn = 0) => ({ questions: 12, namedIn, others, sample: { question: 'Q', ...sample }, asked: [{ question: 'Q', answers: 6, namedIn, others, sample }, { question: 'Q2', answers: 6, namedIn: 0, others, sample }], spanMinutes: holds ? 95 : 0, holdsInBothPasses: holds });
+  const ai = (holds: boolean, namedIn = 0, answers = 6) => ({ questions: 6, namedIn, others, sample: { question: 'Q', ...sample }, asked: [{ question: 'Q', answers: 6, namedIn, others, sample, holdsInBothPasses: holds }, { question: 'Q2', answers, namedIn: 0, others, sample, holdsInBothPasses: holds }], lastAskedAt: '2026-10-12T02:30:00.000Z', spanMinutes: holds ? 95 : 0, holdsInBothPasses: holds });
   const status = () => (db.prepare("SELECT status, reproduced FROM findings WHERE check_id = 'C37_not_named_by_ai'").get() as { status: string; reproduced: number });
 
   it('stay candidates when every answer was asked at one time, however many site runs see them', async () => {
@@ -219,14 +219,15 @@ describe('findings built from AI answers', () => {
 describe('findings built from AI answers, recorded without a site visit', () => {
   const others = [{ name: 'Rival One', answers: 6 }, { name: 'Rival Two', answers: 4 }];
   const sample = { provider: 'openai', askedAt: '2026-10-12T01:00:00Z', answer: 'Rival One', citations: [] };
-  const ai = (holds: boolean, namedIn = 0) => ({ questions: 12, namedIn, others, sample: { question: 'Q', ...sample }, asked: [{ question: 'Q', answers: 6, namedIn, others, sample }, { question: 'Q2', answers: 6, namedIn: 0, others, sample }], spanMinutes: holds ? 95 : 0, holdsInBothPasses: holds });
+  const ai = (holds: boolean, namedIn = 0, answers = 6) => ({ questions: 6, namedIn, others, sample: { question: 'Q', ...sample }, asked: [{ question: 'Q', answers: 6, namedIn, others, sample, holdsInBothPasses: holds }, { question: 'Q2', answers, namedIn: 0, others, sample, holdsInBothPasses: holds }], lastAskedAt: '2026-10-12T02:30:00.000Z', spanMinutes: holds ? 95 : 0, holdsInBothPasses: holds });
   const business = { id: 1, slug: 'harbour-fixture', name: 'Harbour Fixture Charters' };
   const finding = () => db.prepare("SELECT id, status, reproduced, title, last_verified_at FROM findings WHERE check_id = 'C37_not_named_by_ai'").get() as { id: number; status: string; reproduced: number; title: string; last_verified_at: string | null } | undefined;
   const AT = '2026-10-12T03:00:00.000Z';
 
   it('are recorded with one piece of evidence for each question asked', () => {
     expect(recordAiFinding(db, library, business, 'b', ai(true), AT)).toBe('recorded');
-    expect(finding()).toMatchObject({ status: 'reproduced', reproduced: 1, title: 'Named in 0 of 12 AI answers', last_verified_at: AT });
+    // The finding is as fresh as its newest answer, not as the moment it was recorded.
+    expect(finding()).toMatchObject({ status: 'reproduced', reproduced: 1, title: 'Named in 0 of 12 AI answers', last_verified_at: '2026-10-12T02:30:00.000Z' });
     const ev = db.prepare('SELECT kind, excerpt, captured_at_utc FROM evidence WHERE finding_id = ? ORDER BY id').all(finding()!.id) as { kind: string; excerpt: string; captured_at_utc: string }[];
     expect(ev.map((e) => e.kind)).toEqual(['ai', 'ai']);
     expect(ev[0]!.excerpt).toContain('Question: Q\n');
@@ -247,6 +248,16 @@ describe('findings built from AI answers, recorded without a site visit', () => 
     expect(recordAiFinding(db, library, business, 'b', ai(true, 4), AT)).toBe('dropped');
     expect(finding()).toMatchObject({ status: 'resolved' });
     expect(recordAiFinding(db, library, business, 'b', ai(true, 4), AT)).toBe('none');
+  });
+
+  it('are left as they are when the answers are missing or not all in, whatever their state', () => {
+    recordAiFinding(db, library, business, 'b', ai(true), AT);
+    decide(db, finding()!.id, 'approve', null);
+    // No summary at all: a run that stopped at the budget line, or a homepage that could not be read.
+    expect(recordAiFinding(db, library, business, 'b', null, AT)).toBe('none');
+    // One question still has only its first two answers.
+    expect(recordAiFinding(db, library, business, 'b', ai(true, 0, 2), AT)).toBe('none');
+    expect(finding()).toMatchObject({ status: 'approved', reproduced: 1 });
   });
 
   it('are not recorded when there are no answers or the business is named', () => {
@@ -277,6 +288,15 @@ describe('findings from another tool', () => {
     await recordRunA(db, library, a, 'b', evaluateSite(a, 'tourism', NOW).findings, evidenceRoot);
     await recordRunA(db, library, a, 'b', evaluateSite(a, 'tourism', NOW).findings, evidenceRoot);
     expect(other()).toEqual({ status: 'reproduced' });
+  });
+
+  it('are left alone by run B, which neither reproduces nor touches them', async () => {
+    const a = await troubled(1, '2026-10-10T20:00:00.000Z');
+    await recordRunA(db, library, a, 'b', evaluateSite(a, 'tourism', NOW).findings, evidenceRoot);
+    db.prepare("UPDATE findings SET detail = '{\"kept\":true}' WHERE source = 'crawlmouse'").run();
+    const b = await troubled(2, '2026-10-10T21:15:00.000Z');
+    await recordRunB(db, library, b, 'b', evaluateSite(b, 'tourism', NOW).findings, a.finishedAt, evidenceRoot);
+    expect(db.prepare("SELECT status, detail, last_run_id FROM findings WHERE source = 'crawlmouse'").get()).toEqual({ status: 'reproduced', detail: '{"kept":true}', last_run_id: null });
   });
 
   it('are not marked resolved by a re-check, which cannot measure them', async () => {

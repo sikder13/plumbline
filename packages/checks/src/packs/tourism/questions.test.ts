@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { block, link, page } from '../../testing.ts';
-import { activitiesShown, confirmsActivity, homepageWords, ownActivities, type HomepageWords } from './activities.ts';
+import { activitiesShown, homepageWords, ownActivities, type HomepageWords } from './activities.ts';
 import { questionsFor } from './questions.ts';
 
 const home = (patch: Partial<HomepageWords>): HomepageWords => ({ title: '', description: '', headings: [], nav: [], text: '', ...patch });
@@ -90,14 +90,40 @@ describe('the question a visitor would ask', () => {
     expect(activities(questionsFor(f.business, f.home, { brandQuestions: 0 }))).toEqual(f.expected);
   });
 
-  it('never asks about an activity the homepage does not show', () => {
+  it('never asks about an activity the homepage does not name where it says what it is', () => {
+    // What each activity looks like in a business's own words, written out here by hand.
+    const WORDS: Record<string, RegExp> = {
+      'private tour': /private tours?/i,
+      'boat tour': /boat tours?/i,
+      'snorkelling trip': /snorkell?ing/i,
+      'cellar door wine tasting': /cellar door/i,
+      'winery lunch': /winery and restaurant/i,
+      'kayak tour': /kayak(ing)? tours?/i,
+      'kayak hire': /kayak hire/i,
+      'guided tour': /guided tours?/i,
+    };
     for (const f of Object.values(FIXTURES)) {
-      for (const q of questionsFor(f.business, f.home, { brandQuestions: 0 })) {
-        expect(q.activity, `${f.business.name}: ${q.question}`).toBeTruthy();
-        expect(confirmsActivity(f.home, q.activity!), `${f.business.name}: "${q.activity}" is not on the homepage`).not.toBeNull();
+      const says = [f.home.title, f.home.description, ...f.home.headings, ...f.home.nav].join(' | ');
+      const questions = questionsFor(f.business, f.home, { brandQuestions: 0 });
+      expect(questions.length, f.business.name).toBeGreaterThan(0);
+      for (const q of questions) {
+        expect(WORDS[q.activity!], `no words listed for "${q.activity}"`).toBeDefined();
+        expect(says, `${f.business.name}: "${q.activity}" is not named on the homepage`).toMatch(WORDS[q.activity!]!);
         expect(q.question).toContain(` ${q.activity} with in or near `);
       }
     }
+  });
+
+  it('does not read one activity into the words of another', () => {
+    const shown = (title: string) => ownActivities(home({ title })).activities.map((a) => a.phrase);
+    expect(shown('Boat tours and kayak hire')).toEqual(['boat tour', 'kayak hire']);
+    expect(shown('Bike hire and kayak tours')).toEqual(['bike hire', 'kayak tour']);
+    expect(shown('Jet boat tours on the river')).toEqual(['jet boat ride']);
+    expect(shown('Wine tasting tours of the valley')).toEqual(['wine tour']);
+    expect(shown('3 day horse treks in the high country')).toEqual(['horse trek']);
+    expect(shown('Tours by kayak around the bay')).toEqual(['kayak tour']);
+    expect(shown('Hire a kayak by the hour')).toEqual(['kayak hire']);
+    expect(shown('Sunset cruises of the harbour')).toEqual(['harbour cruise']);
   });
 
   it('does not take the activity from the search category that found the business', () => {
@@ -143,6 +169,20 @@ describe('activities stated for a business', () => {
     expect(r.activities.map((a) => a.phrase)).toEqual(['private tour']);
     expect(r.unconfirmed).toEqual(['fishing charter']);
     expect(activities(questionsFor(f.business, f.home, { stated: ['fishing charter'], brandQuestions: 0 }))).toEqual([]);
+  });
+
+  it('need the same showing as an activity read from the page: named where the business says what it is, or mentioned again and again', () => {
+    // The body mentions a wine tasting once, as a stop on the tour. That does not make this a cellar door.
+    expect(ownActivities(f.home, ['cellar door wine tasting']).unconfirmed).toEqual(['cellar door wine tasting']);
+    // "Private charters" in the menu and "fish" somewhere else do not make a fishing charter.
+    const charters = home({ title: 'Outer Reef Adventures', nav: ['Boat tours', 'Private charters'], text: 'We often see fish from the boat.' });
+    expect(ownActivities(charters, ['fishing charter']).unconfirmed).toEqual(['fishing charter']);
+    // Words outside the list must stand together in one such place.
+    expect(ownActivities(charters, ['private boat charter']).unconfirmed).toEqual(['private boat charter']);
+    expect(ownActivities(home({ title: 'Private boat charters from Tairua' }), ['private boat charter']).activities.map((a) => a.phrase)).toEqual(['private boat charter']);
+    // Three mentions in the body are enough for a known activity.
+    const often = home({ title: 'Shingle Bank', text: 'Our cellar door is open daily. Wine tastings run on the hour. Find the cellar door past the gate.' });
+    expect(ownActivities(often, ['cellar door wine tasting']).activities).toHaveLength(1);
   });
 
   it('are limited to two', () => {

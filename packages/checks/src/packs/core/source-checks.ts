@@ -1,7 +1,7 @@
 import { foldName, normalizeEmail, normalizePhone, type CandidateFinding } from '@plumbline/core';
 import { emailsIn, phonesIn, prices, type ListingData, type SiteData } from '@plumbline/collect';
 import { okHomes, okInner, pagesInOrder, siteFinding } from '../../helpers.ts';
-import type { AiSummary, Check } from '../../types.ts';
+import { ANSWERS_NEEDED, type AiSummary, type Check } from '../../types.ts';
 
 function sitePhones(site: SiteData): Set<string> {
   const out = new Set<string>();
@@ -37,27 +37,40 @@ function comparable(site: SiteData, l: ListingData): boolean {
 
 const namedBy = (list: { name: string; answers: number }[]) => list.map((o) => `${o.name} (${o.answers})`).join(', ');
 
+/** Whether the answers are all in. Until they are, nothing is concluded: not a finding, and not that an earlier finding has gone. */
+export function aiAnswersComplete(ai: AiSummary | null): ai is AiSummary {
+  return !!ai && ai.asked.length > 0 && ai.asked.every((q) => q.answers >= ANSWERS_NEEDED);
+}
+
 /**
- * The finding for a business no AI answer names. Named even once, it is not a finding: a business
- * named in most answers has a strength here, and one named now and then has neither.
+ * The finding for a business no AI answer names: not one answer to any of its questions, while
+ * the answers name others. Named even once, it is not a finding: a business named in most
+ * answers to a question has a strength there, and one named now and then has neither.
  */
 export function aiFinding(business: string, ai: AiSummary | null): CandidateFinding | null {
-  if (!ai || ai.questions < 4 || ai.namedIn > 0) return null;
-  const strong = ai.others.filter((o) => o.answers >= 3);
+  if (!aiAnswersComplete(ai) || ai.asked.some((q) => q.namedIn > 0)) return null;
+  const total = ai.asked.reduce((n, q) => n + q.answers, 0);
+  const named = new Map<string, { name: string; answers: number }>();
+  for (const q of ai.asked) {
+    for (const o of q.others) {
+      const key = foldName(o.name);
+      named.set(key, { name: o.name, answers: (named.get(key)?.answers ?? 0) + o.answers });
+    }
+  }
+  const strong = [...named.values()].filter((o) => o.answers >= 3).sort((x, y) => y.answers - x.answers);
   if (strong.length < 2) return null;
-  const evidence: CandidateFinding['evidence'] = ai.asked.map((q) => ({
-    kind: 'ai',
-    excerpt: [`Question: ${q.question}`, `Named in ${q.namedIn} of ${q.answers} answers. Others named: ${namedBy(q.others.slice(0, 6)) || 'none'}`, ...(q.sample ? [`Provider: ${q.sample.provider}`, `Asked: ${q.sample.askedAt}`, `Answer: ${q.sample.answer}`, `Citations: ${q.sample.citations.join(' ')}`] : [])].join('\n'),
-  }));
   return {
     checkId: 'C37_not_named_by_ai',
     fingerprint: 'ai',
-    title: `Named in ${ai.namedIn} of ${ai.questions} AI answers`,
+    title: `Named in 0 of ${total} AI answers`,
     pageUrl: null,
     viewport: null,
     where: 'homepage_mobile',
-    detail: { namedIn: ai.namedIn, questions: ai.questions, asked: ai.asked.map((q) => q.question), othersNamed: strong.slice(0, 6), business, spanMinutes: Math.round(ai.spanMinutes), reproducedAcrossPasses: ai.holdsInBothPasses },
-    evidence: evidence.length ? evidence : [{ kind: 'ai', excerpt: `Named in ${ai.namedIn} of ${ai.questions} answers. Others named: ${namedBy(strong)}` }],
+    detail: { namedIn: 0, questions: total, asked: ai.asked.map((q) => q.question), othersNamed: strong.slice(0, 6), business, spanMinutes: Math.round(ai.spanMinutes), reproducedAcrossPasses: ai.holdsInBothPasses },
+    evidence: ai.asked.map((q) => ({
+      kind: 'ai',
+      excerpt: [`Question: ${q.question}`, `Named in ${q.namedIn} of ${q.answers} answers. Others named: ${namedBy(q.others.slice(0, 6)) || 'none'}`, ...(q.sample ? [`Provider: ${q.sample.provider}`, `Asked: ${q.sample.askedAt}`, `Answer: ${q.sample.answer}`, `Citations: ${q.sample.citations.join(' ')}`] : [])].join('\n'),
+    })),
   };
 }
 
@@ -66,7 +79,7 @@ export const C37_not_named_by_ai: Check = {
   pack: 'core',
   tier: 'measured',
   evidenceSpec: 'ai',
-  appliesTo: ({ ai }) => !!ai && ai.questions >= 4,
+  appliesTo: ({ ai }) => !!ai && ai.questions >= ANSWERS_NEEDED,
   evaluate({ site, ai }) {
     const f = aiFinding(site.business.name, ai);
     return f ? [f] : [];

@@ -42,44 +42,52 @@ interface Kind {
 
 const TRIP = 'tours?|trips?|adventures?|experiences?|excursions?';
 const DAYS = 'two|three|four|five|2|3|4|5|multi';
+const A = '(?:a |an |our |your |the )?';
 
-/** Either word first, with up to `gap` words between. Written for text already folded to plain lower case words. */
-const near = (a: string, b: string, gap = 2) => `\\b(?:${a})(?: \\w+){0,${gap}} (?:${b})\\b|\\b(?:${b})(?: \\w+){0,${gap}} (?:${a})\\b`;
+/**
+ * Patterns are written for text already folded to plain lower case words. Word order matters:
+ * "boat tours and kayak hire" offers kayak hire, not kayak tours, so the thing comes first and
+ * what is done with it after, with at most `gap` words between. The other order is spelt out
+ * only where people really write it ("tours by kayak", "hire a kayak").
+ */
+const then = (first: string, second: string, gap = 2) => `\\b(?:${first})(?: \\w+){0,${gap}} (?:${second})\\b`;
 const words = (source: string) => `\\b(?:${source})\\b`;
+const either = (...sources: string[]) => sources.join('|');
 const kind = (phrase: string, family: string, source: string, general = false): Kind => ({ phrase, family, shows: new RegExp(source, 'g'), general });
 
-/** Exact activities first, broad words for touring last. The order settles ties. */
+/** Exact activities first, broad words for touring last. */
 const KINDS: Kind[] = [
-  kind('penguin tour', 'wildlife', near('penguins?', 'tours?|colony|encounters?|experiences?')),
+  kind('penguin tour', 'wildlife', then('penguins?', 'tours?|colony|encounters?|experiences?')),
   kind('whale watching tour', 'wildlife', words('whale watch(?:ing)?')),
-  kind('dolphin tour', 'wildlife', near('dolphins?', 'tours?|cruises?|swim(?:s|ming)?|encounters?|watching', 1)),
-  kind('bird watching tour', 'wildlife', `${words('bird ?watch(?:ing|ers?)?|birding')}|${near('birds?|birdlife', 'tours?|walks?')}`),
-  kind('wildlife tour', 'wildlife', near('wildlife', 'tours?|cruises?|encounters?|experiences?')),
+  kind('dolphin tour', 'wildlife', either(then('dolphins?', 'tours?|cruises?|swim(?:s|ming)?|encounters?|watching', 1), words('swim(?:ming)? with (?:the )?dolphins'))),
+  kind('bird watching tour', 'wildlife', either(words('bird ?watch(?:ing|ers?)?|birding'), then('birds?|birdlife', 'tours?|walks?', 1))),
+  kind('wildlife tour', 'wildlife', then('wildlife', 'tours?|cruises?|encounters?|experiences?', 1)),
   kind('glowworm tour', 'glowworm', words('glow ?worms?')),
   kind('stargazing tour', 'stargazing', words('star ?gazing|astronomy tours?|night sky tours?')),
-  kind('kayak tour', 'kayak tour', `${near('(?:sea )?kayak(?:s|ing)?', TRIP)}|${words('guided (?:sea )?kayak(?:s|ing)?')}`),
-  kind('kayak hire', 'kayak hire', `${near('kayaks?|kayaking', 'hire|rentals?')}|${words('freedom kayak(?:s|ing)?')}`),
+  kind('kayak tour', 'kayak tour', either(then('(?:sea )?kayak(?:s|ing)?', TRIP), words('guided (?:sea )?kayak(?:s|ing)?'), words(`(?:tours?|trips?) by (?:sea )?kayak`))),
+  kind('kayak hire', 'kayak hire', either(then('kayaks?|kayaking', 'hire|rentals?'), words(`(?:hire|rent) ${A}(?:sea )?kayaks?`), words('freedom kayak(?:s|ing)?'))),
   kind('guided fly fishing trip', 'fishing', words('fly ?fishing|fishing guides?|guided (?:trout )?fishing')),
-  kind('fishing charter', 'fishing', `${near('fishing|fish', 'charters?')}|${words('fishing trips?')}`),
-  kind('sailing trip', 'sailing', `${near('sailing|sail', `${TRIP}|charters?|cruises?|catamaran`, 3)}|${words('scenic sailing|day sail(?:s|ing)?')}`),
-  kind('harbour cruise', 'cruise', near('harbour', 'cruises?')),
-  kind('lake cruise', 'cruise', near('lake', 'cruises?', 3)),
+  kind('fishing charter', 'fishing', either(then('fishing|fish', 'charters?'), words('fishing trips?|charter fishing'))),
+  kind('sailing trip', 'sailing', either(then('sailing|sail', `${TRIP}|charters?|cruises?|catamaran`, 3), words('scenic sailing|day sail(?:s|ing)?'))),
+  kind('harbour cruise', 'cruise', either(then('harbour', 'cruises?'), words('cruises? (?:of|on|around) (?:the )?(?:\\w+ )?harbour'))),
+  kind('lake cruise', 'cruise', either(then('lake', 'cruises?', 3), words('cruises? (?:of|on|around) (?:the )?(?:\\w+ )?lake'))),
   kind('boat cruise', 'cruise', words('(?:boat|scenic|sightseeing|sunset|dinner|lunch(?:time)?|eco) cruises?')),
-  kind('boat tour', 'cruise', near('boat', 'tours?|trips?', 1)),
+  kind('boat tour', 'cruise', '(?<!\\bjet )\\bboat(?: \\w+){0,1} (?:tours?|trips?)\\b'),
   kind('jet boat ride', 'jet boat', words('jet ?boat(?:s|ing)?')),
   kind('snorkelling trip', 'snorkelling', words('snorkell?ing')),
-  kind('dive trip', 'diving', `${words('scuba')}|${near('dive|diving', 'trips?|charters?|tours?', 1)}`),
+  kind('dive trip', 'diving', either(words('scuba'), then('dive|diving', 'trips?|charters?|tours?', 1))),
   kind('rafting trip', 'rafting', words('rafting')),
   kind('surf lesson', 'surfing', words('surf(?:ing)? (?:lessons?|school)')),
-  kind('horse trek', 'horse', `${near('horses?|horseback', 'treks?|trekking|riding|rides?', 3)}|${words('horse ?back riding')}`),
-  kind('multi-day walk', 'walk', words(`(?:${DAYS}) day (?:\\w+ ){0,2}(?:walks?|tracks?|hikes?|tramps?|treks?)`)),
+  kind('horse trek', 'horse', either(then('horses?|horseback', 'treks?|trekking|riding|rides?', 3), words('horse ?back riding|(?:treks?|rides?) on horse ?back'))),
+  kind('multi-day walk', 'walk', words(`(?:${DAYS}) day (?:\\w+ ){0,2}(?:walks?|hikes?|tramps?)`)),
   kind('guided walk', 'walk', words('guided (?:\\w+ ){0,1}(?:walks?|hikes?|hiking|walking)|(?:walking|hiking) tours?')),
-  kind('bike hire', 'bike hire', near('e ?bikes?|bikes?|bicycles?|cycles?', 'hire|rentals?')),
-  kind('bike tour', 'bike tour', near('bike|biking|cycle|cycling', 'tours?')),
+  kind('bike hire', 'bike hire', either(then('e ?bikes?|bikes?|bicycles?|cycles?', 'hire|rentals?'), words(`(?:hire|rent) ${A}(?:e ?)?(?:bikes?|bicycles?)`))),
+  kind('bike tour', 'bike tour', then('bike|biking|cycle|cycling', 'tours?')),
   kind('wine tour', 'wine tour', words('wine(?:ry)? tours?|vineyard tours?|wine tasting tours?|wine trail')),
-  kind('cellar door wine tasting', 'cellar door', `${words('cellar door|tasting room|wine tastings?')}|${near('tastings?', 'wines?', 3)}`),
-  kind('winery lunch', 'winery lunch', near('winery|vineyard|cellar door', 'restaurant|lunch(?:es)?|bistro|dining', 6)),
-  kind('food tour', 'food tour', words('food(?:ie)? tours?|tasting tours?')),
+  kind('cellar door wine tasting', 'cellar door', either(words('cellar door|tasting room'), '\\bwine tastings?\\b(?! tours?\\b)', then('tastings?', 'wines?', 3))),
+  // A winery with a restaurant is written both ways round: "winery and restaurant", "restaurant at the vineyard".
+  kind('winery lunch', 'winery lunch', either(then('winery|vineyard|cellar door', 'restaurant|lunch(?:es)?|bistro|dining', 6), then('restaurant|lunch(?:es)?|bistro|dining', 'winery|vineyard|cellar door', 6))),
+  kind('food tour', 'food tour', words('food(?:ie)? tours?')),
   kind('scenic flight', 'flight', words('scenic flights?|heli(?:copter)? (?:tours?|flights?)')),
   kind('guided hunting trip', 'hunting', words('guided hunt(?:s|ing)?|hunting (?:trips?|safaris?|guides?)')),
   kind('cultural tour', 'culture', words('cultural (?:tours?|experiences?)')),
@@ -106,6 +114,8 @@ interface Shown extends OwnActivity {
   /** Named in the title, description, a heading or the menu, where a business says what it is. */
   named: boolean;
   mentions: number;
+  /** How early the business names it. Activities shown equally strongly are taken in the order the business gives them. */
+  at: number;
 }
 
 const WEIGHT = { title: 8, description: 6, heading: 5, nav: 4, mention: 1, mentionsCounted: 4 };
@@ -125,6 +135,7 @@ function has(re: RegExp, text: string): boolean {
 
 function shownBy(home: HomepageWords): Shown[] {
   const body = sentences(home.text);
+  const said = foldName([home.title, home.description, ...home.headings, ...home.nav].join(' | '));
   const out: Shown[] = [];
   for (const k of KINDS) {
     const heading = home.headings.find((h) => has(k.shows, h));
@@ -135,9 +146,13 @@ function shownBy(home: HomepageWords): Shown[] {
     const weight = (inTitle ? WEIGHT.title : 0) + (inDescription ? WEIGHT.description : 0) + (heading ? WEIGHT.heading : 0) + (nav ? WEIGHT.nav : 0) + Math.min(mentions, WEIGHT.mentionsCounted) * WEIGHT.mention;
     if (!weight) continue;
     const quote = (inTitle && home.title) || (inDescription && home.description) || heading || nav || body.find((s) => has(k.shows, s)) || '';
-    out.push({ phrase: k.phrase, family: k.family, general: k.general, quote: clip(quote), weight, named: inTitle || inDescription || !!heading || !!nav, mentions });
+    k.shows.lastIndex = 0;
+    const at = said.search(k.shows);
+    out.push({ phrase: k.phrase, family: k.family, general: k.general, quote: clip(quote), weight, named: inTitle || inDescription || !!heading || !!nav, mentions, at: at < 0 ? Infinity : at });
   }
-  return out.sort((a, b) => b.weight - a.weight);
+  // Equal showings: two ways of saying one activity are taken exact one first (the list's order), two activities in the order the business gives them.
+  const order = new Map(KINDS.map((k, i) => [k.phrase, i]));
+  return out.sort((a, b) => b.weight - a.weight || (a.family === b.family ? order.get(a.phrase)! - order.get(b.phrase)! : a.at - b.at));
 }
 
 /** Every activity the homepage shows, strongest first. */
@@ -154,20 +169,22 @@ function stem(word: string): string {
 }
 
 /**
- * Whether the homepage shows an activity. Returns the business's own words that show it, or null.
- * An activity outside the list above is shown when the page uses every word of it.
+ * Whether the homepage shows an activity, by the same measure whoever names it: it is named where
+ * the business says what it is (title, description, a heading or the menu), or the page mentions
+ * it again and again. One passing mention is not enough: a tour that stops at a cellar door is not
+ * a cellar door. Returns the business's own words that show it, or null. An activity outside the
+ * list above is shown when one of those places uses every word of it.
  */
 export function confirmsActivity(home: HomepageWords, phrase: string): string | null {
-  const known = shownBy(home).find((a) => foldName(a.phrase) === foldName(phrase));
-  if (known) return known.quote;
+  if (KINDS.some((k) => foldName(k.phrase) === foldName(phrase))) {
+    const known = shownBy(home).find((a) => foldName(a.phrase) === foldName(phrase));
+    return known && (known.named || known.mentions >= MENTIONS_NEEDED) ? known.quote : null;
+  }
   const wanted = foldName(phrase).split(' ').filter((w) => w.length >= 3 && !SMALL_WORDS.has(w)).map(stem);
   if (!wanted.length) return null;
-  const places = [home.title, home.description, ...home.headings, ...home.nav, ...sentences(home.text)].filter(Boolean);
   const tokens = (s: string) => foldName(s).split(' ');
-  const all = new Set(places.flatMap(tokens));
-  if (!wanted.every((w) => [...all].some((t) => t.startsWith(w)))) return null;
-  const count = (s: string) => wanted.filter((w) => tokens(s).some((t) => t.startsWith(w))).length;
-  return clip(places.reduce((best, s) => (count(s) > count(best) ? s : best)));
+  const place = [home.title, home.description, ...home.headings, ...home.nav].filter(Boolean).find((s) => wanted.every((w) => tokens(s).some((t) => t.startsWith(w))));
+  return place ? clip(place) : null;
 }
 
 export interface OwnActivities {

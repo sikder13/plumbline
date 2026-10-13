@@ -82,7 +82,9 @@ export function repeats<T extends Rankable>(f: T, all: T[]): T | null {
   if (f.check_id === 'CM_no_structured_data') return own.find((x) => x.check_id === 'C31_no_structured_data') ?? null;
   if (f.check_id !== 'CM_missing_page') return null;
   const urls = ((JSON.parse(f.detail || '{}') as { examples?: { url: string }[] }).examples ?? []).map((e) => bare(e.url));
-  return own.find((x) => /^C1[012]_/.test(x.check_id) && urls.some((u) => x.detail.toLowerCase().includes(u))) ?? null;
+  // Whole addresses are compared: /about is not /about-us.
+  const named = (detail: string) => new Set((detail.match(/https?:\/\/[^\s"'<>\\]+/g) ?? []).map(bare));
+  return own.find((x) => /^C1[012]_/.test(x.check_id) && urls.some((u) => named(x.detail).has(u))) ?? null;
 }
 
 export interface Ranked<T> {

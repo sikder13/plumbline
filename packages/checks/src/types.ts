@@ -10,21 +10,28 @@ export interface AskedQuestion {
   others: { name: string; answers: number }[];
   /** One answer that does not name the business, or the first answer when all do. */
   sample: { provider: string; askedAt: string; answer: string; citations: string[] } | null;
+  /** True when this question's answers fall into two groups at least 60 minutes apart, neither names the business and both name others. */
+  holdsInBothPasses: boolean;
 }
 
+/** How many answers a question needs before anything is concluded from it. */
+export const ANSWERS_NEEDED = 4;
+
 export interface AiSummary {
-  /** Answers received to the questions about this business's own activities. */
+  /** Answers to the one question where the business does best. The sample below is from that same question. */
   questions: number;
   /** In how many of those answers the business was named. */
   namedIn: number;
-  /** Other businesses and the number of answers that named each. */
+  /** Other businesses named in those answers, and the number of answers that named each. */
   others: { name: string; answers: number }[];
   sample: { question: string; provider: string; askedAt: string; answer: string; citations: string[] } | null;
-  /** The same answers, question by question. */
+  /** Every question asked about the business's own activities, each with its own count. */
   asked: AskedQuestion[];
+  /** When the newest of all those answers was given. */
+  lastAskedAt: string;
   /** Minutes between the first and the last answer. */
   spanMinutes: number;
-  /** True when the answers fall into two groups at least 60 minutes apart and both show the same picture. */
+  /** True when every question asked has all its answers and holds in both passes. */
   holdsInBothPasses: boolean;
 }
 

@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import type { Db } from '@plumbline/core';
+import { domainOf, foldName, type Db } from '@plumbline/core';
 import type { PageCapture } from '@plumbline/render';
 import { quoteOnPage } from './extract.ts';
-import { setFacts, type NewFact } from './facts.ts';
+import type { NewFact } from './facts.ts';
 import { sameAddress } from './pages.ts';
 
 /**
@@ -86,8 +86,15 @@ export function checkResearch(r: Research, pages: PageCapture[]): string[] {
     else if (!quoteOnPage(page, source.quote)) problems.push(`${where}: the quote is not on ${source.url}: "${source.quote.slice(0, 80)}"`);
   }
   for (const url of r.trading.pages_checked) if (!pageFor(pages, url)) problems.push(`trading: ${url} is listed as checked but has not been read and kept`);
+  // A quote on the page proves nothing unless it carries the fact: the person's name, the price, the place.
+  const has = (quote: string, word: string) => ` ${foldName(quote)} `.includes(` ${foldName(word)} `);
   for (const o of r.people.owners) {
-    if (o.confirmed && new Set(o.sources.map((s) => hostOf(s.url))).size < 2) problems.push(`owner ${o.name}: marked confirmed with sources on one site only`);
+    const names = [o.first_name_used, ...o.name.split(/\s+/)].filter((n): n is string => !!n && n.length >= 3);
+    // A quote may add to what is known of a person without naming them. Only the quotes that name them count towards confirming the name.
+    const naming = o.sources.filter((src) => names.some((n) => has(src.quote, n)));
+    if (!naming.length) problems.push(`owner ${o.name}: no quote names them`);
+    // Two parts of one site are one site.
+    else if (o.confirmed && new Set(naming.map((x) => domainOf(x.url) ?? hostOf(x.url))).size < 2) problems.push(`owner ${o.name}: marked confirmed with sources on one site only`);
   }
   if (r.people.status === 'confirmed' && !r.people.owners.some((o) => o.confirmed)) problems.push('people: status is confirmed but no owner is');
   if (r.people.status === 'owner unknown' && r.people.address_as) problems.push('people: owner unknown, yet a name to address is given');
@@ -96,22 +103,28 @@ export function checkResearch(r: Research, pages: PageCapture[]): string[] {
   if (r.email.source && !r.email.source.quote.toLowerCase().includes(r.email.address.toLowerCase())) problems.push('email: the quote does not contain the address');
   if (r.trading.status !== 'trading' && r.trading.status !== 'unclear' && !r.trading.flags.length) problems.push(`trading: status "${r.trading.status}" without a quoted sign`);
   if (r.booking.link && !r.booking.source) problems.push('booking: a link without the page it was read on');
+  const digits = (t: string) => t.replace(/[^0-9.]/g, '').replace(/\.0+$/, '');
+  const shows = (quote: string, text: string) => digits(text) !== '' && quote.replace(/,/g, '').includes(digits(text));
+  for (const p of r.prices) if (!shows(p.source.quote, p.text)) problems.push(`price "${p.item}": the quote does not show ${p.text}: "${p.source.quote.slice(0, 80)}"`);
+  for (const c of r.price_conflicts) for (const v of c.values) if (!shows(v.source.quote, v.text)) problems.push(`price conflict "${c.item}": the quote does not show ${v.text}: "${v.source.quote.slice(0, 80)}"`);
+  const places = foldName(r.location.town).split(' ').filter((w) => w.length >= 4 && !['near', 'office', 'south', 'north', 'east', 'west'].includes(w));
+  if (!places.some((w) => has(r.location.source.quote, w))) problems.push(`location: the quote does not name the town (${r.location.town}): "${r.location.source.quote.slice(0, 80)}"`);
   return problems;
 }
 
 /** Stores a checked research file as facts, each dated by the reading of its page, and sets the town and region from the business's own address. */
 export function storeResearch(db: Db, business: { id: number }, r: Research, pages: PageCapture[], now: string): void {
   const readAt = (url: string | null | undefined) => (url ? pageFor(pages, url)?.capturedAtUtc : undefined) ?? now;
+  const clear = db.prepare('DELETE FROM facts WHERE business_id = ? AND topic = ?');
+  const insert = db.prepare('INSERT INTO facts (business_id, topic, label, value, source_url, quote, flag, checked_on) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+  // Each fact keeps the day its own page was read.
   const put = (topic: string, facts: (NewFact & { at?: string })[]) => {
-    // Facts of one topic share a write. Each keeps the day its own page was read.
-    const byDay = new Map<string, NewFact[]>();
-    for (const { at, ...f } of facts) byDay.set(at ?? now, [...(byDay.get(at ?? now) ?? []), f]);
-    setFacts(db, business.id, topic, []);
-    const insert = db.prepare('INSERT INTO facts (business_id, topic, label, value, source_url, quote, flag, checked_on) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-    db.transaction(() => {
-      for (const [day, list] of byDay) for (const f of list) insert.run(business.id, topic, f.label ?? '', JSON.stringify(f.value), f.sourceUrl ?? null, f.quote ?? null, f.flag ?? null, day);
-    })();
+    clear.run(business.id, topic);
+    for (const { at, ...f } of facts) insert.run(business.id, topic, f.label ?? '', JSON.stringify(f.value), f.sourceUrl ?? null, f.quote ?? null, f.flag ?? null, at ?? now);
   };
+  // The whole file goes in as one short write, or not at all.
+  db.transaction(() => store())();
+  function store(): void {
   const conflicted = new Set(r.price_conflicts.map((c) => c.item.toLowerCase()));
   put('trading', [
     { label: 'status', value: { status: r.trading.status, pagesChecked: r.trading.pages_checked, note: r.trading.note ?? null }, flag: r.trading.status === 'trading' ? null : r.trading.status, at: readAt(r.trading.pages_checked[0]) },
@@ -133,4 +146,5 @@ export function storeResearch(db: Db, business: { id: number }, r: Research, pag
   put('voice', r.voice.map((v) => ({ value: v.quote, sourceUrl: v.url, quote: v.quote, at: readAt(v.url) })));
   put('unknown', r.unknowns.map((u) => ({ value: u, flag: 'unknown' })));
   db.prepare('UPDATE businesses SET town = ?, region = ? WHERE id = ?').run(r.location.town, r.location.region, business.id);
+  }
 }

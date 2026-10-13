@@ -10,10 +10,12 @@ import { loadLibrary } from '@plumbline/impact';
 import sharp from 'sharp';
 import { settleAi } from './ai.ts';
 import { heroCandidates, heroEligible, measure, mp4Info, photoKind, youtubeInfo, type Photo } from './assets.ts';
-import { claimsIn, crawlmouseFileFor, judge, linkersOf, pageState, storeCrawlmouse, type ExampleState, type SentenceResult } from './crawlmouse.ts';
+import type { Renderer } from '@plumbline/render';
+import { claimsIn, crawlmouseFileFor, judge, loadCrawlmouse, linkersOf, pageState, storeCrawlmouse, verifyCrawlmouse, type ExampleState, type SentenceResult } from './crawlmouse.ts';
 import { factsFor, setFacts, statedActivities } from './facts.ts';
 import { importWave, waveMembers, waves } from './list.ts';
-import { PACK_MAX_LINES, packBusiness, packLines, writePack } from './pack.ts';
+import { ownPages } from './pages.ts';
+import { PACK_MAX_LINES, packBusiness, packLines, packSection, writePack } from './pack.ts';
 import { factCaution, groupOf, rankFindings, repeats, type Rankable } from './rank.ts';
 import { Research, checkResearch, storeResearch } from './research.ts';
 
@@ -215,9 +217,10 @@ describe('the AI check for one business', () => {
     others,
     sample: { question: 'Who should I book a kayak tour with?', ...sample },
     asked: [
-      { question: 'Who should I book a kayak tour with?', answers: 6, namedIn: first, others, sample },
-      { question: 'Who should I book a kayak hire with?', answers: 6, namedIn: second, others, sample },
+      { question: 'Who should I book a kayak tour with?', answers: 6, namedIn: first, others, sample, holdsInBothPasses: first + second === 0 },
+      { question: 'Who should I book a kayak hire with?', answers: 6, namedIn: second, others, sample, holdsInBothPasses: first + second === 0 },
     ],
+    lastAskedAt: '2026-10-12T02:30:00.000Z',
     spanMinutes: 95,
     holdsInBothPasses: first + second === 0,
   });
@@ -234,7 +237,7 @@ describe('the AI check for one business', () => {
       ['Who should I book a kayak tour with?', { answers: 6, namedIn: 5, others: ['Rival One', 'Rival Two'] }, 'strength'],
       ['Who should I book a kayak hire with?', { answers: 6, namedIn: 3, others: ['Rival One', 'Rival Two'] }, null],
     ]);
-    expect(factsFor(db, 1, 'ai')[0]!.checkedOn).toBe('2026-10-12T01:00:00.000Z');
+    expect(factsFor(db, 1, 'ai')[0]!.checkedOn).toBe('2026-10-12T02:30:00.000Z');
     expect(finding(db)).toBeNull();
   });
 
@@ -249,12 +252,12 @@ describe('the AI check for one business', () => {
     expect(finding(db)).toBe('resolved');
   });
 
-  it('stores nothing when no question was answered', () => {
+  it('changes nothing when no answers can be read, so a stopped run does not undo an earlier result', () => {
     const db = memoryDb();
     seed(db, ['alpha']);
-    setFacts(db, 1, 'ai', [{ label: 'old', value: {} }]);
-    expect(settleAi(db, library, business, 'b', null, '2026-10-12T03:00:00.000Z')).toEqual({ finding: 'none', strengths: 0 });
-    expect(stored(db)).toEqual([]);
+    settleAi(db, library, business, 'b', summary(5, 3), '2026-10-12T03:00:00.000Z');
+    expect(settleAi(db, library, business, 'b', null, '2026-10-12T04:00:00.000Z')).toEqual({ finding: 'none', strengths: 0 });
+    expect(stored(db).map((r) => r[2])).toEqual(['strength', null]);
   });
 });
 
@@ -268,6 +271,15 @@ describe('a Crawlmouse summary', () => {
     expect(crawlmouseFileFor('bravo-wine-trail-central-wine-tours', root)).toBe(join(root, 'crawlmouse-inputs', 'crawlmouse', 'wave2', 'crawlmouse', 'bravo-wine-trail.json'));
     expect(crawlmouseFileFor('charlie', root)).toBeNull();
     expect(crawlmouseFileFor('alp', root)).toBeNull();
+  });
+
+  it('is not taken from a file with a shorter name unless its example pages are on the business own site', () => {
+    const root = mkdtempSync(join(tmpdir(), 'plumbline-cm-'));
+    mkdirSync(join(root, 'crawlmouse'), { recursive: true });
+    writeFileSync(join(root, 'crawlmouse', 'alpha.json'), JSON.stringify({ site_score: 1, grade: 'A', findings_plain: [{ text: 'The blog page is nearly empty.', examples: ['https://www.alpha.co.nz/blog'] }] }));
+    expect(loadCrawlmouse('alpha', 'https://alpha.co.nz/', root)?.grade).toBe('A');
+    expect(loadCrawlmouse('alpha-tours', 'https://alpha.co.nz/', root)?.grade).toBe('A');
+    expect(loadCrawlmouse('alpha-tours', 'https://alphatours.co.nz/', root)).toBeNull();
   });
 
   it('says what each sentence claims', () => {
@@ -290,7 +302,7 @@ describe('what a page shows when it is opened again', () => {
     p.meta.description = 'Tours';
     p.meta.h1 = ['Our tours'];
     p.meta.jsonld = ['{"@type":"TouristTrip"}'];
-    expect(pageState(p, '')).toEqual({ url: 'https://fixture.co.nz/tours', status: 200, missing: false, metaDescription: true, mainHeading: true, structuredData: true, words: 11, title: 'Fixture' });
+    expect(pageState(p, '')).toEqual({ url: 'https://fixture.co.nz/tours', status: 200, missing: false, unread: false, metaDescription: true, mainHeading: true, structuredData: true, words: 11, title: 'Fixture' });
     const bare = page('https://fixture.co.nz/x', ['Hello']);
     bare.meta.description = '  ';
     expect(pageState(bare, '<div itemscope itemtype="https://schema.org/Winery"></div>')).toMatchObject({ metaDescription: false, mainHeading: false, structuredData: true, words: 1 });
@@ -304,6 +316,19 @@ describe('what a page shows when it is opened again', () => {
     expect(pageState(soft, '').missing).toBe(true);
     const fine = page('https://fixture.co.nz/404-fishing-club', ['Welcome to the 404 fishing club, where we never miss.']);
     expect(pageState(fine, '').missing).toBe(false);
+  });
+
+  it('tells a page that could not be read from one that is missing', () => {
+    const state = (status: number | null) => pageState(page('https://fixture.co.nz/x', ['Service unavailable'], { status, ok: false }), '');
+    expect(state(404)).toMatchObject({ missing: true, unread: false });
+    expect(state(410)).toMatchObject({ missing: true, unread: false });
+    for (const status of [403, 429, 500, 503, null]) expect(state(status), String(status)).toMatchObject({ missing: false, unread: true });
+  });
+
+  it('keeps only the pages of the business itself, on its own site or a part of it', () => {
+    const pages = ['https://www.fixture.co.nz/about', 'https://shop.fixture.co.nz/', 'https://opencorporates.com/companies/nz/1', 'https://www.regiontourism.nz/listing/fixture'].map((u) => page(u, ['x']));
+    expect(ownPages(pages, 'http://fixture.co.nz/').map((p) => p.finalUrl)).toEqual(['https://www.fixture.co.nz/about', 'https://shop.fixture.co.nz/']);
+    expect(ownPages(pages, null)).toEqual([]);
   });
 
   it('finds which pages link to an address, with the words on the link', () => {
@@ -329,7 +354,7 @@ describe('what a page shows when it is opened again', () => {
 });
 
 describe('whether a Crawlmouse sentence still holds', () => {
-  const state = (patch: Partial<ExampleState>): ExampleState => ({ url: 'https://fixture.co.nz/x', status: 200, missing: false, metaDescription: true, mainHeading: true, structuredData: true, words: 400, title: 'X', linkedFrom: [], ...patch });
+  const state = (patch: Partial<ExampleState>): ExampleState => ({ url: 'https://fixture.co.nz/x', status: 200, missing: false, unread: false, metaDescription: true, mainHeading: true, structuredData: true, words: 400, title: 'X', linkedFrom: [], ...patch });
   const others = [state({ url: 'https://fixture.co.nz/a', metaDescription: false }), state({ url: 'https://fixture.co.nz/b', metaDescription: false }), state({ url: 'https://fixture.co.nz/c' })];
 
   it('confirms a missing page only when one of their own pages links to it', () => {
@@ -349,6 +374,13 @@ describe('whether a Crawlmouse sentence still holds', () => {
         'https://fixture.co.nz/booking answers 404 (not found). The link "Book a wine tasting" on https://fixture.co.nz/visit-us leads to it. https://fixture.co.nz/wine answers 404 (not found). A link with no words on it (a picture or a button) on https://fixture.co.nz/our-wine leads to it. https://fixture.co.nz/buy-wine answers 404 (not found). None of the 3 pages we read links to it.',
     });
     expect(judge(['missing_page'], [unlinked, state({ url: 'https://fixture.co.nz/shop' })], others)).toMatchObject({ confirmed: false, reason: 'https://fixture.co.nz/shop now loads (status 200)' });
+  });
+
+  it('concludes nothing when an example page could not be read', () => {
+    const blocked = state({ status: 503, unread: true });
+    expect(judge(['missing_page'], [blocked], others)).toEqual({ confirmed: false, undecided: true, measured: null, reason: 'https://fixture.co.nz/x could not be read (status 503), so nothing is concluded' });
+    expect(judge(['no_meta_description'], [state({ metaDescription: false }), state({ url: 'https://fixture.co.nz/y', status: null, unread: true })], others)).toMatchObject({ confirmed: false, undecided: true, reason: 'https://fixture.co.nz/y could not be read (status none), so nothing is concluded' });
+    expect(judge(['missing_page'], [state({})], [])).toMatchObject({ confirmed: false, undecided: false });
   });
 
   it('confirms an unlinked page when it loads and none of the pages read links to it', () => {
@@ -378,14 +410,14 @@ describe('whether a Crawlmouse sentence still holds', () => {
 });
 
 describe('Crawlmouse findings in the database', () => {
-  const result = (patch: Partial<SentenceResult>): SentenceResult => ({ text: 'A link to your Contact page leads to a missing page (404).', claims: ['missing_page'], confirmed: true, measured: 'The page answers 404 (not found).', reason: null, caution: null, examples: [], evidence: [{ url: 'https://alpha.co.nz/contact', path: null, excerpt: 'Status 404', capturedAt: '2026-10-12T05:00:00.000Z' }], ...patch });
+  const result = (patch: Partial<SentenceResult>): SentenceResult => ({ text: 'A link to your Contact page leads to a missing page (404).', claims: ['missing_page'], confirmed: true, undecided: false, measured: 'The page answers 404 (not found).', reason: null, caution: null, examples: [], evidence: [{ url: 'https://alpha.co.nz/contact', path: null, excerpt: 'Status 404', capturedAt: '2026-10-12T05:00:00.000Z' }], ...patch });
   const rows = (db: Db) => db.prepare("SELECT check_id, pack, tier, source, status, reproduced, title, severity FROM findings ORDER BY id").all();
 
   it('are stored as measured findings from Crawlmouse, ready for a decision, with their evidence', () => {
     const db = memoryDb();
     seed(db, ['alpha']);
     const n = storeCrawlmouse(db, { id: 1 }, 'b', [result({}), result({ text: 'Dropped one.', confirmed: false, reason: 'now loads' })], { auditedAt: '2026-10-12', checkedAt: '2026-10-12T05:00:00.000Z' });
-    expect(n).toEqual({ stored: 1, dropped: 1 });
+    expect(n).toEqual({ stored: 1, dropped: 1, unread: 0, gone: 0 });
     expect(rows(db)).toEqual([{ check_id: 'CM_missing_page', pack: 'crawlmouse', tier: 'measured', source: 'crawlmouse', status: 'reproduced', reproduced: 1, title: 'A link to your Contact page leads to a missing page (404).', severity: 5 }]);
     expect(db.prepare('SELECT kind, url, excerpt, captured_at_utc FROM evidence').all()).toEqual([{ kind: 'page', url: 'https://alpha.co.nz/contact', excerpt: 'Status 404', captured_at_utc: '2026-10-12T05:00:00.000Z' }]);
   });
@@ -401,7 +433,55 @@ describe('Crawlmouse findings in the database', () => {
     expect((rows(db) as { status: string }[]).map((r) => r.status)).toEqual(['approved', 'resolved']);
     expect(db.prepare('SELECT COUNT(*) AS n FROM findings').get()).toEqual({ n: 2 });
   });
+
+  it('are left as they are when their pages could not be read this time', () => {
+    const db = memoryDb();
+    seed(db, ['alpha']);
+    const meta = { auditedAt: '2026-10-12', checkedAt: '2026-10-12T05:00:00.000Z' };
+    storeCrawlmouse(db, { id: 1 }, 'b', [result({})], meta);
+    db.prepare("UPDATE findings SET status = 'approved'").run();
+    expect(storeCrawlmouse(db, { id: 1 }, 'b', [result({ confirmed: false, undecided: true, reason: 'could not be read' })], meta)).toEqual({ stored: 0, dropped: 0, unread: 1, gone: 0 });
+    expect((rows(db) as { status: string }[]).map((r) => r.status)).toEqual(['approved']);
+  });
+
+  it('are dropped when a new summary no longer carries their sentence, and two sentences that start alike stay apart', () => {
+    const db = memoryDb();
+    seed(db, ['alpha']);
+    const meta = { auditedAt: '2026-10-12', checkedAt: '2026-10-12T05:00:00.000Z' };
+    const long = 'Links from the restaurant, functions and weddings galleries of your site lead to missing pages (404). We counted';
+    storeCrawlmouse(db, { id: 1 }, 'b', [result({ text: `${long} 53.` }), result({ text: `${long} 12 more in the shop.` })], meta);
+    expect(db.prepare('SELECT COUNT(*) AS n FROM findings').get()).toEqual({ n: 2 });
+    db.prepare("UPDATE findings SET status = 'approved'").run();
+    // The next summary counts 54, and says nothing of the shop.
+    expect(storeCrawlmouse(db, { id: 1 }, 'b', [result({ text: `${long} 54.` })], meta)).toEqual({ stored: 1, dropped: 0, unread: 0, gone: 2 });
+    expect((rows(db) as { status: string; title: string }[]).map((r) => [r.status, r.title.slice(long.length + 1)])).toEqual([['resolved', '53.'], ['resolved', '12 more in the shop.'], ['reproduced', '54.']]);
+  });
 });
+
+describe('opening the Crawlmouse example pages again', () => {
+  const summary = (text: string, examples: string[]) => ({ site_score: null, grade: null, findings_plain: [{ text, examples }] });
+  /** A reader that answers from a fixed set of pages, as they are now. */
+  const reader = (now: Record<string, ReturnType<typeof page>>) => ({ render: async ({ url }: { url: string }) => now[url] ?? page(url, ['Not found'], { status: 404, ok: false }) }) as unknown as Renderer;
+  const evidenceRoot = mkdtempSync(join(tmpdir(), 'plumbline-cm-evidence-'));
+
+  it('counts a link to a missing page only when the linking page still carries it today', async () => {
+    const stored = page('https://fixture.co.nz/', ['Home'], { links: [link('https://fixture.co.nz/booking', 'Book now')] });
+    const stillThere = { 'https://fixture.co.nz/': page('https://fixture.co.nz/', ['Home'], { links: [link('https://fixture.co.nz/booking', 'Book now')] }) };
+    const removed = { 'https://fixture.co.nz/': page('https://fixture.co.nz/', ['Home'], { links: [link('https://fixture.co.nz/tours', 'Tours')] }) };
+    const s = summary('A link to your Booking page leads to a missing page (404).', ['https://fixture.co.nz/booking']);
+    const kept = await verifyCrawlmouse(reader(stillThere), 'fixture-cm', s, [stored], evidenceRoot);
+    expect(kept[0]).toMatchObject({ confirmed: true, measured: 'The page answers 404 (not found). The link "Book now" on https://fixture.co.nz/ leads to it.' });
+    const gone = await verifyCrawlmouse(reader(removed), 'fixture-cm', s, [stored], evidenceRoot);
+    expect(gone[0]).toMatchObject({ confirmed: false, undecided: false, reason: 'https://fixture.co.nz/booking is missing, but none of the 1 pages we read links to it' });
+  });
+
+  it('concludes nothing about a page that will not load today', async () => {
+    const down = { 'https://fixture.co.nz/packages': page('https://fixture.co.nz/packages', [''], { status: 503, ok: false }) };
+    const r = await verifyCrawlmouse(reader(down), 'fixture-cm', summary('Your Packages page is not linked from anywhere else on the site.', ['https://fixture.co.nz/packages']), [], evidenceRoot);
+    expect(r[0]).toMatchObject({ confirmed: false, undecided: true });
+  });
+});
+
 
 describe('ranking findings for an owner', () => {
   let next = 0;
@@ -465,6 +545,10 @@ describe('ranking findings for an owner', () => {
     expect(repeats(sameLink, all)?.id).toBe(broken.id);
     expect(repeats(otherLink, all)).toBeNull();
     expect(repeats(structured, all)).toBeNull();
+    // A longer address that merely starts the same way is another page.
+    const about = f('CM_missing_page', { detail: JSON.stringify({ examples: [{ url: 'https://alpha.co.nz/about' }] }) });
+    const aboutUs = f('C12_broken_internal_links', { detail: JSON.stringify({ links: [{ href: 'https://alpha.co.nz/about-us', status: 404 }] }) });
+    expect(repeats(about, [about, aboutUs])).toBeNull();
     const ranked = rankFindings(all);
     expect(ranked.filter((r) => r.repeatOf === null).map((r) => r.finding.id)).toEqual([broken.id, otherLink.id, structured.id]);
     expect(ranked.filter((r) => r.repeatOf !== null).map((r) => [r.finding.id, r.repeatOf, r.kept])).toEqual([[sameData.id, structured.id, false], [sameLink.id, broken.id, false]]);
@@ -531,6 +615,31 @@ describe('a research file', () => {
       'owner Anthony John Smith: marked confirmed with sources on one site only',
       'email: marked published without the page that shows it',
     ]);
+  });
+
+  it('wants each quote to carry the fact it stands behind, and two sites that are really two', () => {
+    const shop = page('https://shop.alpha.co.nz/', ['Anthony John SMITH, director', 'Contact']);
+    const r = base();
+    // A second source on another part of the same site is not a second site.
+    r.people.owners[0]!.sources = [{ url: 'https://alpha.co.nz/about', quote: 'Meet Tony and Lisa Smith, your hosts since 2009.' }, { url: 'https://shop.alpha.co.nz/', quote: 'Anthony John SMITH, director' }];
+    expect(checkResearch(r, [...pages, shop])).toEqual(['owner Anthony John Smith: marked confirmed with sources on one site only']);
+    // A quote that is on the page but does not name the person, give the price or name the place proves nothing.
+    const loose = base();
+    loose.people.owners[0]!.sources[1] = { url: 'https://register.example/alpha-limited', quote: 'Directors:' };
+    loose.prices[0]!.source = { url: 'https://alpha.co.nz/prices', quote: 'Half day trip $130 per adult.' };
+    loose.location.source = { url: 'https://alpha.co.nz/contact', quote: 'Email hello@alpha.co.nz or call us.' };
+    expect(checkResearch(loose, pages)).toEqual([
+      'owner Anthony John Smith: marked confirmed with sources on one site only',
+      'price "Half day trip, adult": the quote does not show $120: "Half day trip $130 per adult."',
+      'location: the quote does not name the town (Paihia): "Email hello@alpha.co.nz or call us."',
+    ]);
+    const nameless = base();
+    nameless.people.owners[0]!.sources = [{ url: 'https://register.example/alpha-limited', quote: 'Directors:' }];
+    expect(checkResearch(nameless, pages)).toEqual(['owner Anthony John Smith: no quote names them']);
+    // A town written with a note beside it passes when the quote names either place.
+    const noted = base();
+    noted.location.town = 'Russell (office at Paihia)';
+    expect(checkResearch(noted, pages)).toEqual([]);
   });
 
   it('wants a quoted sign for a business that is for sale, and no name to address when the owner is unknown', () => {
@@ -678,6 +787,9 @@ describe('the pack for a wave', () => {
       ['Crawlmouse', 'CM_missing_page', 'A link to your Contact page leads to a missing page (404).'],
       ['Plumbline', 'C20_slow_mobile', 'The page is slow on a phone'],
     ]);
+    // A second approved finding of the same check is not put forward twice.
+    db.prepare("INSERT INTO findings (business_id, batch, check_id, pack, tier, severity, status, reproduced, fingerprint, title, visibility_weight, score, detail, first_seen_at, last_verified_at, source) VALUES (1, 'b', 'C20_slow_mobile', 'core', 'measured', 4, 'approved', 1, 'speed-desktop', 'Desktop performance score 40', 1, 3, '{}', 'x', 'x', 'plumbline')").run();
+    expect(packBusiness(db, waveMembers(db, 'wave-2')[0]!, 'b').findings.map((f) => f.measured)).toEqual([p.findings[0]!.measured, 'Mobile performance score 31, main content after 8.2 s']);
     expect(p.findings[0]).toMatchObject({ measured: 'The page answers 404 (not found). The link "Contact Us" on https://alpha.co.nz/faq leads to it.', evidence: ['/data/evidence/alpha/crawlmouse-1.webp'] });
     expect(p.findings[1]!.measured).toBe('Mobile performance score 31, main content after 8.2 s');
     expect(p.people).toMatchObject({ status: 'confirmed', addressAs: 'Tony and Lisa', linkedin: 'https://www.linkedin.com/in/tony' });
@@ -688,8 +800,14 @@ describe('the pack for a wave', () => {
 
   it('writes a section of no more than 70 lines that names every part, with sources and dates', () => {
     const db = prepared();
-    const lines = packLines(packBusiness(db, waveMembers(db, 'wave-2')[0]!, 'b', { googleMeasuredOn: '2026-10-10T22:45:00.000Z' }));
-    expect(lines.length).toBeLessThanOrEqual(PACK_MAX_LINES);
+    const packed = packBusiness(db, waveMembers(db, 'wave-2')[0]!, 'b', { googleMeasuredOn: '2026-10-10T22:45:00.000Z' });
+    const lines = packLines(packed);
+    // With every list as long as it may be, the section still fits before anything is cut.
+    const full = { ...packed, trading: { ...packed.trading, flags: Array.from({ length: 9 }, () => packed.trading.flags[0]!) }, people: { ...packed.people, owners: Array.from({ length: 9 }, () => packed.people.owners[0]!) }, priceConflicts: Array.from({ length: 9 }, () => packed.priceConflicts[0]!), findings: Array.from({ length: 9 }, () => packed.findings[0]!), strengths: { ai: Array.from({ length: 9 }, () => packed.strengths.ai[0]!), other: Array.from({ length: 9 }, () => packed.strengths.other[0]!) }, assets: { ...packed.assets, videos: Array.from({ length: 9 }, () => packed.assets.videos[0]!) }, unknowns: Array.from({ length: 20 }, () => 'One more thing nobody knows.') };
+    expect(packSection(full).length).toBeLessThanOrEqual(PACK_MAX_LINES);
+    expect(packSection(full).length).toBeGreaterThan(lines.length);
+    // A stored value with a line break in it still takes one line.
+    expect(packSection({ ...packed, unknowns: ['First line\nsecond line'] }).filter((l) => l.includes('second line'))).toEqual(['  - First line second line']);
     const text = lines.join('\n');
     expect(lines[0]).toBe('## 3. Alpha Kayaks');
     expect(lines[1]).toContain('Alpha Kayaks, Paihia (Northland), 12 Wharf Road, Paihia 0200. Activity: kayak tour and kayak hire.');

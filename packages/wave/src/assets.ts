@@ -91,17 +91,30 @@ export function heroCandidates(photos: Photo[], count = 3): Photo[] {
   return heroEligible(photos).slice(0, count);
 }
 
+/**
+ * Fetches a file, or a part of one. Every address on the way, redirects included, is checked
+ * against robots.txt and waits its turn for the host. A part is accepted only when the server
+ * really sent a part: one that ignores the range would otherwise send the whole file each time.
+ */
 async function download(polite: Polite, url: string, maxBytes: number, range?: string): Promise<Buffer | null> {
-  const host = hostOf(url);
-  if (!host || !(await polite.robots.allows(url))) return null;
-  await polite.limiter.acquire(host);
+  let at = url;
   try {
-    const res = await fetch(url, { headers: { 'user-agent': userAgent('desktop'), accept: '*/*', ...(range ? { range } : {}) }, signal: AbortSignal.timeout(30_000), redirect: 'follow' });
-    if (!res.ok) return null;
-    const length = Number(res.headers.get('content-length') ?? 0);
-    if (!range && length > maxBytes) return null;
-    const body = Buffer.from(await res.arrayBuffer());
-    return body.length > maxBytes ? null : body;
+    for (let hop = 0; hop < 5; hop++) {
+      const host = hostOf(at);
+      if (!host || !(await polite.robots.allows(at))) return null;
+      await polite.limiter.acquire(host);
+      const res = await fetch(at, { headers: { 'user-agent': userAgent('desktop'), accept: '*/*', ...(range ? { range } : {}) }, signal: AbortSignal.timeout(30_000), redirect: 'manual' });
+      const next = res.status >= 300 && res.status < 400 ? res.headers.get('location') : null;
+      if (next) {
+        at = new URL(next, at).toString();
+        continue;
+      }
+      if (range ? res.status !== 206 : !res.ok) return null;
+      if (Number(res.headers.get('content-length') ?? 0) > maxBytes) return null;
+      const body = Buffer.from(await res.arrayBuffer());
+      return body.length > maxBytes ? null : body;
+    }
+    return null;
   } catch {
     return null;
   }

@@ -1,7 +1,8 @@
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import * as cheerio from 'cheerio';
-import { bothTimes, paths, slugify, type Box, type Db } from '@plumbline/core';
+import { bothTimes, domainOf, paths, slugify, type Box, type Db } from '@plumbline/core';
 import { scoreOf } from '@plumbline/checks';
 import { cropElement, pageShot } from '@plumbline/evidence';
 import type { PageCapture, Renderer } from '@plumbline/render';
@@ -34,9 +35,17 @@ export function crawlmouseFileFor(slug: string, inputsRoot: string = paths.input
   return files.find((f) => name(f) === slug) ?? files.filter((f) => slug.startsWith(`${name(f)}-`)).sort((a, b) => name(b).length - name(a).length)[0] ?? null;
 }
 
-export function loadCrawlmouse(slug: string, inputsRoot?: string): CrawlmouseSummary | null {
+/**
+ * The summary for a business. A file found under a shorter name than the slug is used only when
+ * its example pages are on the business's own site, so one business never gets another's findings.
+ */
+export function loadCrawlmouse(slug: string, website: string | null, inputsRoot?: string): CrawlmouseSummary | null {
   const file = crawlmouseFileFor(slug, inputsRoot);
-  return file ? (JSON.parse(readFileSync(file, 'utf8')) as CrawlmouseSummary) : null;
+  if (!file) return null;
+  const summary = JSON.parse(readFileSync(file, 'utf8')) as CrawlmouseSummary;
+  if (basename(file, '.json') === slug) return summary;
+  const examples = summary.findings_plain.flatMap((f) => f.examples);
+  return examples.length > 0 && examples.every((u) => domainOf(u) === domainOf(website)) ? summary : null;
 }
 
 export type Claim = 'missing_page' | 'orphan_page' | 'no_meta_description' | 'no_main_heading' | 'no_structured_data' | 'thin_page' | 'leftover_page';
@@ -45,7 +54,7 @@ const CLAIMS: [Claim, RegExp][] = [
   ['missing_page', /\b404\b|missing pages?|broken links?|links? (?:are|is) broken/i],
   ['orphan_page', /not linked from anywhere|\bunlinked\b/i],
   ['no_meta_description', /meta description/i],
-  ['no_main_heading', /main heading|\bH1\b/],
+  ['no_main_heading', /main heading|\bh1\b/i],
   ['no_structured_data', /structured data/i],
   ['thin_page', /very little text|nearly empty/i],
   ['leftover_page', /\bleftover\b|still live\b/i],
@@ -59,8 +68,10 @@ export function claimsIn(text: string): Claim[] {
 export interface PageState {
   url: string;
   status: number | null;
-  /** The page answers with an error, or says itself that it was not found. */
+  /** The page is gone: it answers 404 or 410, or says itself that it was not found. */
   missing: boolean;
+  /** The page could not be read this time (no answer, a refusal, a server error), so nothing is known about it. */
+  unread: boolean;
   metaDescription: boolean;
   mainHeading: boolean;
   structuredData: boolean;
@@ -75,10 +86,12 @@ export function pageState(page: PageCapture, html: string): PageState {
   const $ = html ? cheerio.load(html) : null;
   const headings = [...page.meta.h1, ...page.blocks.filter((b) => b.heading === 'h1').map((b) => b.text)].map((h) => h.trim()).filter(Boolean);
   const live = page.status !== null && page.status >= 200 && page.status < 300;
+  const gone = page.status === 404 || page.status === 410;
   return {
     url: page.finalUrl,
     status: page.status,
-    missing: (page.status !== null && page.status >= 400) || (live && NOT_FOUND.test(`${page.meta.title} ${headings.join(' ')}`)),
+    missing: gone || (live && NOT_FOUND.test(`${page.meta.title} ${headings.join(' ')}`)),
+    unread: !live && !gone,
     metaDescription: !!page.meta.description?.trim(),
     mainHeading: headings.length > 0 || (!!$ && $('h1 img[alt]').filter((_, e) => !!$(e).attr('alt')?.trim()).length > 0),
     structuredData: page.meta.jsonld.length > 0 || (!!$ && $('[itemscope], [typeof]').length > 0),
@@ -119,6 +132,8 @@ export interface ExampleState extends PageState {
 
 export interface Verdict {
   confirmed: boolean;
+  /** A page could not be read, so the sentence is neither kept nor dropped this time. */
+  undecided: boolean;
   /** What we measured, in words, when the sentence holds. */
   measured: string | null;
   /** Why it was dropped, when it does not. */
@@ -168,9 +183,11 @@ function shows(claim: Claim, e: ExampleState): { ok: boolean; why: string } {
  * one of them: a page nobody is sent to costs nothing.
  */
 export function judge(claims: Claim[], examples: ExampleState[], others: PageState[]): Verdict {
-  const drop = (reason: string): Verdict => ({ confirmed: false, measured: null, reason });
+  const drop = (reason: string): Verdict => ({ confirmed: false, undecided: false, measured: null, reason });
   if (!claims.length) return drop('opening the example pages cannot prove this');
   if (!examples.length) return drop('no example page was given');
+  const unread = examples.find((e) => e.unread);
+  if (unread) return { confirmed: false, undecided: true, measured: null, reason: `${unread.url} could not be read (status ${unread.status ?? 'none'}), so nothing is concluded` };
   const rest = others.filter((o) => live(o) && !examples.some((e) => sameAddress(e.url, o.url)));
   for (const e of examples) {
     const results = claims.map((c) => shows(c, e));
@@ -200,7 +217,7 @@ export function judge(claims: Claim[], examples: ExampleState[], others: PageSta
       else measured.push(`No ${label} on ${pagesWord(showing.length)}, nor on ${also} of the ${rest.length} other pages we read.`);
     }
   }
-  return { confirmed: true, measured: measured.join(' '), reason: null };
+  return { confirmed: true, undecided: false, measured: measured.join(' '), reason: null };
 }
 
 export interface SentenceEvidence {
@@ -220,27 +237,35 @@ export interface SentenceResult extends Verdict {
 
 const SEVERITY: Record<Claim, number> = { missing_page: 5, orphan_page: 3, leftover_page: 2, thin_page: 2, no_meta_description: 2, no_main_heading: 2, no_structured_data: 2 };
 
+const hashOf = (text: string) => createHash('sha1').update(text).digest('hex').slice(0, 8);
+/** One sentence, one finding: the whole sentence stands behind the mark, so two that start alike stay apart. */
+const fingerprintOf = (text: string) => `${slugify(text).slice(0, 60)}-${hashOf(text)}`;
+
 /**
  * Stores what held as findings from Crawlmouse. Crawlmouse saw each one first and we saw it again
  * on our own visit, so a stored finding is ready for a decision. One that no longer holds is
- * marked resolved, and a decision already made on a finding is kept.
+ * marked resolved, and so is one whose sentence the summary no longer carries. A sentence whose
+ * pages could not be read this time is left exactly as it was. A decision already made is kept.
  */
-export function storeCrawlmouse(db: Db, business: { id: number }, batch: string, results: SentenceResult[], meta: { auditedAt?: string; auditId?: string; pagesRead?: number; coveragePct?: number; confidence?: string; checkedAt: string }): { stored: number; dropped: number } {
+export function storeCrawlmouse(db: Db, business: { id: number }, batch: string, results: SentenceResult[], meta: { auditedAt?: string; auditId?: string; pagesRead?: number; coveragePct?: number; confidence?: string; checkedAt: string }): { stored: number; dropped: number; unread: number; gone: number } {
   const find = db.prepare("SELECT id, status FROM findings WHERE business_id = ? AND batch = ? AND source = 'crawlmouse' AND fingerprint = ?");
   const insert = db.prepare(
     `INSERT INTO findings (business_id, batch, check_id, pack, tier, severity, status, reproduced, fingerprint, title, page_url, viewport, visibility_weight, score, detail, first_seen_at, last_verified_at, source)
      VALUES (?, ?, ?, 'crawlmouse', 'measured', ?, 'reproduced', 1, ?, ?, ?, 'desktop', 0.6, ?, ?, ?, ?, 'crawlmouse')`,
   );
   const evidence = db.prepare("INSERT INTO evidence (finding_id, kind, url, viewport, excerpt, path, captured_at_utc, captured_at_nz) VALUES (?, 'page', ?, 'desktop', ?, ?, ?, ?)");
-  let stored = 0;
-  let dropped = 0;
+  const resolve = db.prepare("UPDATE findings SET status = 'resolved', top3 = 0 WHERE id = ? AND status IN ('candidate', 'reproduced', 'approved')");
+  const count = { stored: 0, dropped: 0, unread: 0, gone: 0 };
   db.transaction(() => {
     for (const r of results) {
-      const fingerprint = slugify(r.text);
-      const row = find.get(business.id, batch, fingerprint) as { id: number; status: string } | undefined;
+      const row = find.get(business.id, batch, fingerprintOf(r.text)) as { id: number; status: string } | undefined;
+      if (r.undecided) {
+        count.unread += 1;
+        continue;
+      }
       if (!r.confirmed) {
-        dropped += 1;
-        if (row && ['candidate', 'reproduced', 'approved'].includes(row.status)) db.prepare("UPDATE findings SET status = 'resolved', top3 = 0 WHERE id = ?").run(row.id);
+        count.dropped += 1;
+        if (row) resolve.run(row.id);
         continue;
       }
       const claim = r.claims[0]!;
@@ -253,17 +278,22 @@ export function storeCrawlmouse(db: Db, business: { id: number }, batch: string,
         crawlmouse: { auditedAt: meta.auditedAt ?? null, auditId: meta.auditId ?? null, pagesRead: meta.pagesRead ?? null, coveragePct: meta.coveragePct ?? null, confidence: meta.confidence ?? null },
       });
       let id = row?.id;
-      if (id === undefined) id = Number(insert.run(business.id, batch, `CM_${claim}`, SEVERITY[claim], fingerprint, r.text, r.examples[0]?.url ?? null, scoreOf(SEVERITY[claim], 'inner', 'measured'), detail, meta.checkedAt, meta.checkedAt).lastInsertRowid);
+      if (id === undefined) id = Number(insert.run(business.id, batch, `CM_${claim}`, SEVERITY[claim], fingerprintOf(r.text), r.text, r.examples[0]?.url ?? null, scoreOf(SEVERITY[claim], 'inner', 'measured'), detail, meta.checkedAt, meta.checkedAt).lastInsertRowid);
       else db.prepare("UPDATE findings SET detail = ?, last_verified_at = ?, reproduced = 1, status = CASE status WHEN 'resolved' THEN 'reproduced' WHEN 'candidate' THEN 'reproduced' ELSE status END WHERE id = ?").run(detail, meta.checkedAt, id);
       db.prepare('DELETE FROM evidence WHERE finding_id = ?').run(id);
       for (const e of r.evidence) {
         const t = bothTimes(new Date(e.capturedAt));
         evidence.run(id, e.url, e.excerpt, e.path, t.utc, t.nz);
       }
-      stored += 1;
+      count.stored += 1;
+    }
+    // A finding whose sentence is no longer in the summary cannot be checked again, so it does not stand.
+    const current = new Set(results.map((r) => fingerprintOf(r.text)));
+    for (const old of db.prepare("SELECT id, fingerprint FROM findings WHERE business_id = ? AND batch = ? AND source = 'crawlmouse' AND status IN ('candidate', 'reproduced', 'approved')").all(business.id, batch) as { id: number; fingerprint: string }[]) {
+      if (!current.has(old.fingerprint)) count.gone += resolve.run(old.id).changes;
     }
   })();
-  return { stored, dropped };
+  return count;
 }
 
 /** Parent addresses of a page, nearest first: the pages most likely to link to it. */
@@ -296,14 +326,15 @@ function siblingGuesses(pages: PageCapture[], target: string): string[] {
 }
 
 function describe(e: ExampleState): string {
-  return [`Status ${e.status ?? 'none'}${e.missing ? ' (not found)' : ''}`, `title "${e.title}"`, `meta description ${e.metaDescription ? 'present' : 'absent'}`, `main heading ${e.mainHeading ? 'present' : 'absent'}`, `structured data ${e.structuredData ? 'present' : 'absent'}`, `${e.words} words`].join(', ');
+  return [`Status ${e.status ?? 'none'}${e.missing ? ' (not found)' : e.unread ? ' (could not be read)' : ''}`, `title "${e.title}"`, `meta description ${e.metaDescription ? 'present' : 'absent'}`, `main heading ${e.mainHeading ? 'present' : 'absent'}`, `structured data ${e.structuredData ? 'present' : 'absent'}`, `${e.words} words`].join(', ');
 }
 
 /**
  * Opens every example page behind each sentence again and judges the sentence on what is there
- * now. For a missing page it looks for the page of theirs that links to it, reading the pages
- * above it when none of the pages already read does. Each example gets a screenshot, and a link
- * to a missing page gets a second one with the link boxed.
+ * now. The pages given must be the business's own. For a missing page it looks for the page of
+ * theirs that links to it, reading the pages above it when none of the pages already held does,
+ * and counts a link only when the linking page, read again now, still carries it. Each example
+ * gets a screenshot, and a link to a missing page gets a second one with the link boxed.
  */
 export async function verifyCrawlmouse(renderer: Renderer, slug: string, summary: CrawlmouseSummary, known: PageCapture[], evidenceRoot: string = paths.evidence): Promise<SentenceResult[]> {
   // The same page can be held twice: read for the wave and again in an audit run. Each counts once.
@@ -315,38 +346,52 @@ export async function verifyCrawlmouse(renderer: Renderer, slug: string, summary
     return states.get(p.finalUrl)!;
   };
   const results: SentenceResult[] = [];
-  let shot = 0;
   for (const f of summary.findings_plain) {
     const claims = claimsIn(f.text);
     const examples: ExampleState[] = [];
     const evidence: SentenceEvidence[] = [];
+    const picture = (n: number) => join(evidenceRoot, slug, `crawlmouse-${hashOf(f.text)}-${n}.webp`);
+    let shot = 0;
     for (const url of claims.length ? f.examples : []) {
       const capture = await readPage(renderer, slug, url, { screenshots: true });
       const state = pageState(capture, savedHtml(capture));
-      let linkedFrom = linkersOf(pages, url);
-      if (claims.includes('missing_page') && state.missing && !linkedFrom.length) {
+      const wantsLinkers = (claims.includes('missing_page') && state.missing) || (claims.includes('orphan_page') && !state.missing && !state.unread);
+      let held = wantsLinkers ? linkersOf(pages, url) : [];
+      if (claims.includes('missing_page') && state.missing && !held.length) {
         for (const likely of [...siblingGuesses(pages, url), ...parents(url)]) {
           if (pages.some((p) => sameAddress(p.finalUrl, likely) || sameAddress(p.url, likely))) continue;
           const p = await readPage(renderer, slug, likely);
           if (p.ok) pages.push(p);
-          linkedFrom = linkersOf(pages, url);
-          if (linkedFrom.length) break;
+          held = linkersOf(pages, url);
+          if (held.length) break;
         }
       }
-      const example = { ...state, url, linkedFrom };
-      examples.push(example);
-      const linker = claims.includes('missing_page') && state.missing ? linkedFrom[0] : undefined;
-      if (linker) {
-        // The link is boxed on a fresh copy of the page it sits on, so the picture and the claim are of the same moment.
+      // A link in a page read days ago may be gone. Each linking page is read again, and only a link still there counts.
+      const linkedFrom: Linker[] = [];
+      let unsure = false;
+      let boxed: { from: PageCapture; linker: Linker } | null = null;
+      for (const linker of held.slice(0, 4)) {
         const from = await readPage(renderer, slug, linker.pageUrl, { screenshots: true });
-        const link = from.links.find((l) => sameAddress(l.href, url) && l.visible);
-        const file = join(evidenceRoot, slug, `crawlmouse-${++shot}.webp`);
-        const crop = link?.box ? await cropElement(from, link.box, file).catch(() => null) : await pageShot(from, file).catch(() => null);
-        evidence.push({ url: linker.pageUrl, path: crop?.file ?? null, excerpt: `${linkWords(linker).replace(` on ${linker.pageUrl} leads to it.`, '')} on this page leads to ${url}`, capturedAt: from.capturedAtUtc });
+        if (!from.ok) {
+          unsure = true;
+          continue;
+        }
+        const now = linkersOf([from], url)[0];
+        if (!now) continue;
+        linkedFrom.push(now);
+        boxed ??= { from, linker: now };
+        if (claims.includes('missing_page')) break;
       }
-      const file = join(evidenceRoot, slug, `crawlmouse-${++shot}.webp`);
-      const picture = capture.tiles.length ? await pageShot(capture, file).catch(() => null) : null;
-      evidence.push({ url, path: picture?.file ?? null, excerpt: describe(example), capturedAt: capture.capturedAtUtc });
+      // An unlinked page is only unlinked if every page said to link to it could be read and no longer does.
+      const example: ExampleState = { ...state, url, linkedFrom, unread: state.unread || (claims.includes('orphan_page') && !linkedFrom.length && unsure) };
+      examples.push(example);
+      if (boxed && claims.includes('missing_page')) {
+        const link = boxed.from.links.find((l) => sameAddress(l.href, url) && l.visible);
+        const crop = link?.box ? await cropElement(boxed.from, link.box, picture(++shot)).catch(() => null) : boxed.from.tiles.length ? await pageShot(boxed.from, picture(++shot)).catch(() => null) : null;
+        evidence.push({ url: boxed.linker.pageUrl, path: crop?.file ?? null, excerpt: `${linkWords(boxed.linker).replace(` on ${boxed.linker.pageUrl} leads to it.`, '')} on this page leads to ${url}`, capturedAt: boxed.from.capturedAtUtc });
+      }
+      const whole = capture.tiles.length ? await pageShot(capture, picture(++shot)).catch(() => null) : null;
+      evidence.push({ url, path: whole?.file ?? null, excerpt: describe(example), capturedAt: capture.capturedAtUtc });
     }
     const others = pages.filter((p) => p.ok).map(stateOf);
     results.push({ text: f.text, claims, caution: f.caution ?? null, examples, evidence, ...judge(claims, examples, others) });

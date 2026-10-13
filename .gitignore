@@ -5,6 +5,10 @@ data/
 reports/
 exports/
 inputs/
+# In a second working copy these are links to the first one's folders
+/data
+/reports
+/inputs
 
 # Dependencies and build output
 node_modules/

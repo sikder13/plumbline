@@ -2,13 +2,12 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Command } from 'commander';
 import pLimit from 'p-limit';
-import { db, paths, utcIso, type Db } from '@plumbline/core';
+import { db, domainOf, paths, utcIso, type Db } from '@plumbline/core';
 import { aiSummary, indexMentions, openAiAsk, perplexityAsk, plan, runPlan } from '@plumbline/ai';
 import { brandDir, captureBrand, saveBrandPack, voiceSamples, type BrandCapture, type BrandColour, type BrandFonts, type BrandImage } from '@plumbline/brand';
 import { limits, loadPrices, record, spent } from '@plumbline/budget';
 import { CHECK_IDS } from '@plumbline/checks';
 import { publishedEmails } from '@plumbline/contacts';
-import { latestBatch } from '@plumbline/export';
 import { loadLibrary } from '@plumbline/impact';
 import { Polite } from '@plumbline/fetch';
 import { allPages, loadSite } from '@plumbline/collect';
@@ -27,6 +26,7 @@ import {
   imageUrlsIn,
   importWave,
   loadCrawlmouse,
+  ownPages,
   pageDir,
   pagePrices,
   readPage,
@@ -55,7 +55,8 @@ import { parseCsv } from './csv.ts';
 
 /** Reads a wave list: one row per business with its order, its status ("wave 2" or "reserve") and its slug. */
 export function readWaveList(text: string): WaveEntry[] {
-  return parseCsv(text).map((r) => ({ slug: r.slug ?? '', position: Number(r.order), status: /^reserve/i.test(r.status ?? '') ? ('reserve' as const) : ('wave' as const) })).filter((e) => e.slug && Number.isFinite(e.position));
+  const status = (raw: string) => (/^reserve/i.test(raw) ? ('reserve' as const) : /^dropped/i.test(raw) ? ('dropped' as const) : ('wave' as const));
+  return parseCsv(text).map((r) => ({ slug: r.slug ?? '', position: Number(r.order), status: status(r.status ?? '') })).filter((e) => e.slug && e.position > 0 && Number.isFinite(e.position));
 }
 
 export function waveImport(d: Db, o: { name: string; file: string }): void {
@@ -63,6 +64,19 @@ export function waveImport(d: Db, o: { name: string; file: string }): void {
   const members = waveMembers(d, o.name, ['wave', 'reserve']);
   console.log(`${o.name}: ${members.filter((m) => m.wave_status === 'wave').length} businesses and ${members.filter((m) => m.wave_status === 'reserve').length} reserves stored.`);
   for (const slug of r.unknown) console.log(`  not in the database: ${slug}`);
+}
+
+/**
+ * The batch a wave's findings belong to: the one named, or else the newest batch in which every
+ * business of the wave has a finished run. Every wave command uses the same one, so the questions,
+ * the Crawlmouse findings, the review app and the pack all speak of the same findings.
+ */
+export function waveBatch(d: Db, list: WaveMember[], named?: string): string {
+  if (named) return named;
+  const rows = d.prepare(`SELECT batch, MAX(id) AS last, COUNT(DISTINCT business_id) AS n FROM runs WHERE status = 'done' AND business_id IN (${list.map(() => '?').join(',') || 'NULL'}) GROUP BY batch ORDER BY last DESC`).all(...list.map((b) => b.id)) as { batch: string; n: number }[];
+  const shared = rows.find((r) => r.n === list.length);
+  if (!shared) throw new Error('no batch holds a finished run for every business of the wave. Name one with --batch.');
+  return shared.batch;
 }
 
 function members(d: Db, wave: string, only?: string, reserves = false): WaveMember[] {
@@ -158,8 +172,7 @@ export async function waveRead(d: Db, o: { business: string; urls: string[]; scr
 export async function waveAi(d: Db, o: { name: string; batch?: string; only?: string; estimate?: boolean; pass?: number; approvedAboveAsk?: boolean }): Promise<void> {
   const list = members(d, o.name, o.only);
   if (!list.length) throw new Error(`no businesses in ${o.name}`);
-  const batch = o.batch ?? latestBatch(d, list[0]!.id);
-  if (!batch) throw new Error(`${list[0]!.slug} has not been audited`);
+  const batch = waveBatch(d, members(d, o.name), o.batch);
   const pass = o.pass === 1 || o.pass === 2 ? o.pass : undefined;
   const p = plan(d, { homepage: (b) => storedHomepage(d, b.id), stated: (b) => statedActivities(d, b.id), businesses: list, batch, brandQuestions: 0, pass });
   for (const b of list) {
@@ -192,20 +205,21 @@ export async function waveAi(d: Db, o: { name: string; batch?: string; only?: st
     const ai = aiSummary(d, b, batch);
     const s = settleAi(d, library, b, batch, ai, utcIso());
     const verdict = s.finding === 'recorded' ? 'finding' : s.strengths ? 'strength' : s.finding === 'dropped' ? 'earlier finding dropped' : 'neither';
-    console.log(`${b.slug}: ${ai ? `named in ${ai.namedIn} of ${ai.questions} answers (${ai.asked.map((q) => `${q.namedIn}/${q.answers}`).join(', ')})` : 'no answers'}: ${verdict}`);
+    console.log(`${b.slug}: ${ai ? `named in ${ai.asked.map((q) => `${q.namedIn} of ${q.answers}`).join(' and ')} answers` : 'no answers'}: ${verdict}`);
   }
 }
 
-/** The pages already held for a business: those read for the wave, and those of its newest audit run. */
-function knownPages(d: Db, businessId: number, slug: string): PageCapture[] {
-  const run = d.prepare("SELECT id FROM runs WHERE business_id = ? AND status = 'done' ORDER BY id DESC LIMIT 1").get(businessId) as { id: number } | undefined;
+/** The business's own pages already held: those read for the wave, and those of its newest audit run. Pages kept from other sites are left out. */
+function knownPages(d: Db, b: WaveMember): PageCapture[] {
+  const run = d.prepare("SELECT id FROM runs WHERE business_id = ? AND status = 'done' ORDER BY id DESC LIMIT 1").get(b.id) as { id: number } | undefined;
   const site = run ? loadSite(run.id) : null;
-  return [...savedPages(slug), ...(site ? allPages(site) : [])];
+  return ownPages([...savedPages(b.slug), ...(site ? allPages(site) : [])], b.website);
 }
 
 /** Opens the example pages behind every Crawlmouse sentence again and stores what still holds as findings. */
 export async function waveCrawlmouse(d: Db, o: { name: string; batch?: string; only?: string }): Promise<void> {
   const list = members(d, o.name, o.only);
+  const batch = waveBatch(d, members(d, o.name), o.batch);
   const renderer = new Renderer(new Polite());
   await renderer.start();
   const limit = pLimit(4);
@@ -213,18 +227,16 @@ export async function waveCrawlmouse(d: Db, o: { name: string; batch?: string; o
     await Promise.all(
       list.map((b) =>
         limit(async () => {
-          const summary = loadCrawlmouse(b.slug);
+          const summary = loadCrawlmouse(b.slug, b.website);
           if (!summary) return void console.log(`${b.slug}: no Crawlmouse summary`);
-          const batch = o.batch ?? latestBatch(d, b.id);
-          if (!batch) return void console.log(`${b.slug}: not audited, so nothing to store its findings with`);
           try {
-            const results = await verifyCrawlmouse(renderer, b.slug, summary, knownPages(d, b.id, b.slug));
+            const results = await verifyCrawlmouse(renderer, b.slug, summary, knownPages(d, b));
             const checkedAt = utcIso();
             mkdirSync(waveDir(b.slug), { recursive: true });
             writeFileSync(join(waveDir(b.slug), 'crawlmouse.json'), JSON.stringify({ checkedAt, summary: { ...summary, findings_plain: undefined }, results }, null, 2));
             const n = storeCrawlmouse(d, b, batch, results, { auditedAt: summary.audited_at, auditId: summary.audit_id, pagesRead: summary.pages_read, coveragePct: summary.coverage_pct, confidence: summary.confidence, checkedAt });
-            console.log(`${b.slug}: ${n.stored} of ${results.length} Crawlmouse sentences hold${summary.note ? ` (note: ${summary.note})` : ''}`);
-            for (const r of results) console.log(r.confirmed ? `  kept "${r.text}"\n       ${r.measured}` : `  dropped "${r.text}"\n       ${r.reason}`);
+            console.log(`${b.slug}: ${n.stored} of ${results.length} Crawlmouse sentences hold${n.unread ? `, ${n.unread} could not be checked` : ''}${n.gone ? `, ${n.gone} earlier finding(s) no longer in the summary` : ''}${summary.note ? ` (note: ${summary.note})` : ''}`);
+            for (const r of results) console.log(r.confirmed ? `  kept "${r.text}"\n       ${r.measured}` : `  ${r.undecided ? 'not checked' : 'dropped'} "${r.text}"\n       ${r.reason}`);
           } catch (e) {
             console.log(`${b.slug}: failed, ${(e as Error).message.slice(0, 200)}`);
           }
@@ -280,7 +292,18 @@ export async function waveHero(d: Db, o: { name: string; only?: string; business
       console.log(`${b.slug}: no photos measured yet. Run plumb wave assets first.`);
       continue;
     }
-    const assets = JSON.parse(readFileSync(file, 'utf8')) as { at: string; photos: Photo[]; heroes: string[] };
+    const held = JSON.parse(readFileSync(file, 'utf8')) as { at: string; photos: Photo[]; heroes: string[]; chosenByHand?: boolean; videos?: (FoundVideo & Record<string, unknown>)[] };
+    // Pictures and videos found on pages of other sites kept for this business are not its own.
+    const own = domainOf(b.website);
+    const assets = { ...held, photos: held.photos.filter((p) => domainOf(p.pageUrl) === own), videos: (held.videos ?? []).filter((v) => domainOf(v.pageUrl) === own) };
+    const outside = held.photos.length - assets.photos.length + ((held.videos ?? []).length - assets.videos.length);
+    if (outside) {
+      const kept = assets.heroes.map((u) => assets.photos.find((p) => p.url === u)).filter((p): p is Photo => !!p);
+      storePhotos(d, b.id, assets.photos, kept, assets.at);
+      setFacts(d, b.id, 'video', assets.videos.map((v) => ({ label: v.url, value: { kind: v.kind, how: v.how, title: v.title ?? null, seconds: v.seconds ?? null, quality: v.quality ?? null, note: v.note ?? null }, sourceUrl: v.pageUrl })), assets.at);
+      writeFileSync(file, JSON.stringify({ ...assets, heroes: kept.map((p) => p.url) }, null, 2));
+      console.log(`${b.slug}: left out ${outside} picture(s) or video(s) found on pages of other sites`);
+    }
     const eligible = heroEligible(assets.photos).slice(0, SHEET);
     if (o.pick !== undefined && o.business) {
       const picked = o.pick.split(',').map((n) => eligible[Number(n) - 1]).filter((p): p is Photo => !!p);
@@ -312,7 +335,8 @@ export async function waveAssets(d: Db, o: { name: string; only?: string; max?: 
               const cap = await renderer.render({ url: b.website!, viewport, onPage: async (page) => void (brand[viewport] = await captureBrand(page, viewport, brandDir(b.slug))) });
               if (cap.ok) live.push(cap);
             }
-            const pages = savedPages(b.slug);
+            // Only the business's own pages count: a photo on a tourism listing or a news article is not theirs.
+            const pages = ownPages(savedPages(b.slug), b.website);
             if (brand.desktop || brand.mobile) saveBrandPack(d, b.id, brand.desktop ?? null, brand.mobile ?? null, voiceSamples([...live, ...pages.filter((p) => /about|story|team|who-we-are/i.test(p.finalUrl))]));
             const pack = d.prepare('SELECT logo_path, logo_source_url, colors, fonts, hero_images FROM brand_packs WHERE business_id = ?').get(b.id) as { logo_path: string | null; logo_source_url: string | null; colors: string; fonts: string; hero_images: string } | undefined;
 
@@ -321,8 +345,12 @@ export async function waveAssets(d: Db, o: { name: string; only?: string; max?: 
             const home = pages.filter((p) => new URL(p.finalUrl).pathname === '/');
             for (const p of [...home, ...pages.filter((x) => !home.includes(x))]) for (const f of imageUrlsIn(savedHtml(p), p.finalUrl)) add(f);
             for (const i of JSON.parse(pack?.hero_images ?? '[]') as BrandImage[]) if (/^https?:/.test(i.url)) add({ url: fullSize(i.url), asFound: i.url, alt: i.alt, pageUrl: b.website! });
-            const photos = await collectPhotos(polite, [...found.values()], join(waveDir(b.slug), 'photos'), { max: o.max ?? 80 });
-            const heroes = heroCandidates(photos, 3);
+            const max = o.max ?? 80;
+            const photos = await collectPhotos(polite, [...found.values()], join(waveDir(b.slug), 'photos'), { max });
+            // Photos a person chose earlier stay chosen, as long as they are still on the site.
+            const before = existsSync(join(waveDir(b.slug), 'assets.json')) ? (JSON.parse(readFileSync(join(waveDir(b.slug), 'assets.json'), 'utf8')) as { heroes?: string[]; chosenByHand?: boolean }) : {};
+            const chosen = before.chosenByHand ? (before.heroes ?? []).map((u) => photos.find((p) => p.url === u)).filter((p): p is Photo => !!p) : [];
+            const heroes = before.chosenByHand ? chosen : heroCandidates(photos, 3);
             const sheet = await contactSheet(heroEligible(photos).slice(0, SHEET), join(waveDir(b.slug), 'hero-check.jpg'));
 
             const videos = new Map<string, FoundVideo>();
@@ -337,7 +365,8 @@ export async function waveAssets(d: Db, o: { name: string; only?: string; max?: 
             setFacts(d, b.id, 'colour', (JSON.parse(pack?.colors ?? '[]') as BrandColour[]).map((c) => ({ label: c.role, value: { hex: c.hex, share: c.share }, sourceUrl: b.website })), at);
             const fonts = (JSON.parse(pack?.fonts ?? '{}') as { desktop?: BrandFonts | null; mobile?: BrandFonts | null }).desktop ?? (JSON.parse(pack?.fonts ?? '{}') as { mobile?: BrandFonts | null }).mobile;
             setFacts(d, b.id, 'font', fonts ? [{ value: { headings: fonts.headings, body: fonts.body, buttons: fonts.buttons, webFonts: fonts.webFonts }, sourceUrl: b.website }] : [], at);
-            writeFileSync(join(waveDir(b.slug), 'assets.json'), JSON.stringify({ at, photos, heroes: heroes.map((h) => h.url), videos: details, sheet }, null, 2));
+            writeFileSync(join(waveDir(b.slug), 'assets.json'), JSON.stringify({ at, photos, heroes: heroes.map((h) => h.url), chosenByHand: !!before.chosenByHand, videos: details, sheet }, null, 2));
+            if (found.size > max) console.log(`${b.slug}: ${found.size - max} more pictures were found and not fetched (the limit is ${max}; raise it with --max)`);
             const big = photos.filter((p) => p.kind === 'photo' && p.width >= 1800).length;
             console.log(`${b.slug}: ${photos.length} pictures measured, ${big} photos at least 1800 px wide, ${heroes.length} hero picks${heroes.length ? ` (${heroes.map((h) => `${h.width}x${h.height}`).join(', ')})` : ''}; ${details.length} videos${details.length ? ` (${details.map((v) => `${v.kind}${v.seconds ? ` ${v.seconds}s` : ''}${v.quality ? ` ${v.quality}` : ''}`).join(', ')})` : ''}; logo ${pack?.logo_path ? 'kept' : 'not found'}`);
           } catch (e) {
@@ -355,8 +384,7 @@ export async function waveAssets(d: Db, o: { name: string; only?: string; max?: 
 export function wavePack(d: Db, o: { name: string; batch?: string; file?: string }): void {
   const list = members(d, o.name);
   if (!list.length) throw new Error(`no businesses in ${o.name}`);
-  const batch = o.batch ?? latestBatch(d, list[0]!.id);
-  if (!batch) throw new Error(`${list[0]!.slug} has not been audited`);
+  const batch = waveBatch(d, list, o.batch);
   // LinkedIn addresses are filled in by hand in the list itself.
   const rows = o.file && existsSync(o.file) ? parseCsv(readFileSync(o.file, 'utf8')) : [];
   const measured = (d.prepare("SELECT MAX(at) AS at FROM ledger WHERE provider = 'google_places'").get() as { at: string | null }).at;
@@ -401,7 +429,7 @@ export function registerWave(program: Command): void {
     .command('ai')
     .description("Ask AI tools who to book each business's own activities with. Shows the cost estimate first.")
     .requiredOption('--name <name>', 'wave name')
-    .option('--batch <name>', 'batch the findings belong to (the newest one by default)')
+    .option('--batch <name>', 'batch the findings belong to (by default the newest one every business of the wave has a run in)')
     .option('--only <slugs>', 'comma separated slugs')
     .option('--estimate', 'show the questions and the estimate, and stop')
     .option('--pass <n>', '1 asks each question once; 2, at least 60 minutes later, asks the remaining runs', (v) => Number(v))
@@ -412,7 +440,7 @@ export function registerWave(program: Command): void {
     .command('crawlmouse')
     .description('Open the example pages behind each Crawlmouse sentence again and store what still holds as findings')
     .requiredOption('--name <name>', 'wave name')
-    .option('--batch <name>', 'batch the findings belong to (the newest one by default)')
+    .option('--batch <name>', 'batch the findings belong to (by default the newest one every business of the wave has a run in)')
     .option('--only <slugs>', 'comma separated slugs')
     .action((o: { name: string; batch?: string; only?: string }) => waveCrawlmouse(db(), o));
 
@@ -436,7 +464,7 @@ export function registerWave(program: Command): void {
     .command('pack')
     .description('Write the pack for a wave: one section for each business, from the stored facts and the approved findings')
     .requiredOption('--name <name>', 'wave name')
-    .option('--batch <name>', 'batch the findings belong to (the newest one by default)')
+    .option('--batch <name>', 'batch the findings belong to (by default the newest one every business of the wave has a run in)')
     .option('--file <path>', 'the wave list, for the LinkedIn addresses filled in by hand')
     .action((o: { name: string; batch?: string; file?: string }) => wavePack(db(), o));
 

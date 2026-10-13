@@ -71,8 +71,9 @@ export function packBusiness(db: Db, b: WaveMember, batch: string, extras: PackE
 
   const rows = db.prepare("SELECT id, check_id, source, status, severity, score, title, detail, last_verified_at FROM findings WHERE business_id = ? AND batch = ? AND status = 'approved'").all(b.id, batch) as { id: number; check_id: string; source: string; status: string; severity: number; score: number; title: string; detail: string; last_verified_at: string | null }[];
   const evidence = db.prepare('SELECT path FROM evidence WHERE finding_id = ? AND path IS NOT NULL ORDER BY id');
+  // Of the approved findings, those put forward: one for each check, the first three to five in the owner's order.
   const findings = rankFindings(rows)
-    .filter((r) => r.repeatOf === null)
+    .filter((r) => r.kept)
     .map((r) => {
       const f = r.finding;
       const crawlmouse = f.source === 'crawlmouse';
@@ -134,11 +135,20 @@ export function packBusiness(db: Db, b: WaveMember, batch: string, extras: PackE
 
 /** The most lines one business may take in the pack. */
 export const PACK_MAX_LINES = 70;
-const short = (s: string, n = 240) => (s.length > n ? `${s.slice(0, n - 3).trim()}...` : s);
+/** One line of plain text, however the value was stored. */
+const short = (s: string, n = 240) => {
+  const line = s.replace(/\s+/g, ' ').trim();
+  return line.length > n ? `${line.slice(0, n - 3).trim()}...` : line;
+};
 const length = (seconds: number | null) => (seconds === null ? 'length not read' : seconds >= 60 ? `${Math.floor(seconds / 60)} min ${seconds % 60} s` : `${seconds} s`);
 
-/** One business's section of the pack: what to say, to whom, and what stands behind it. */
+/** One business's section of the pack, never longer than the limit. */
 export function packLines(p: PackBusiness): string[] {
+  return packSection(p).slice(0, PACK_MAX_LINES);
+}
+
+/** One business's section of the pack: what to say, to whom, and what stands behind it. Each list is short enough that the whole fits the limit. */
+export function packSection(p: PackBusiness): string[] {
   const out: string[] = [`## ${p.position}. ${p.name}`];
   out.push(`- **Business:** ${p.name}, ${p.town ?? 'town not set'} (${p.region ?? 'region not set'})${p.address?.text ? `, ${p.address.text}` : ''}. Activity: ${p.activities.join(' and ') || 'none shown on the homepage'}. Website: ${p.website ?? 'none'}. Trading status: ${p.trading.status}${p.trading.note ? ` (${short(p.trading.note, 160)})` : ''}.`);
   for (const f of p.trading.flags.slice(0, 3)) out.push(`  - Flag, ${f.kind}: "${short(f.quote, 200)}" (${f.url}, checked ${day(p.trading.checkedOn)})`);
@@ -148,13 +158,13 @@ export function packLines(p: PackBusiness): string[] {
   out.push(p.email ? `- **Email:** ${p.email.address}. ${p.email.published ? `Shown on ${p.email.sourceUrl}, checked ${day(p.email.checkedOn)}.` : 'NOT published any more: do not email it.'}${p.email.note ? ` ${short(p.email.note, 160)}` : ''}` : '- **Email:** not checked.');
   out.push(p.google ? `- **Google:** ${p.google.rating.toFixed(1)} from ${p.google.reviews} reviews, measured ${day(p.google.measuredOn)}.` : '- **Google:** no rating stored.');
   out.push(p.booking ? `- **Booking:** ${p.booking.system ?? 'no online booking'}${p.booking.link ? `, ${p.booking.link}` : ''}${p.booking.sourceUrl ? ` (read on ${p.booking.sourceUrl})` : ''}.${p.booking.note ? ` ${short(p.booking.note, 160)}` : ''}` : '- **Booking:** not checked.');
-  for (const x of p.prices.slice(0, 6)) out.push(`  - Price, ${x.item}: ${x.text}${x.conflict ? ' (conflicts, see below)' : ''} (${x.sourceUrl})`);
-  for (const c of p.priceConflicts.slice(0, 2)) out.push(`  - PRICE CONFLICT, ${c.item}: ${c.values.map((v) => `${v.text} on ${v.sourceUrl}`).join(' but ')}. We do not pick one.`);
+  for (const x of p.prices.slice(0, 6)) out.push(`  - Price, ${short(x.item, 120)}: ${short(x.text, 40)}${x.conflict ? ' (conflicts, see below)' : ''} (${x.sourceUrl})`);
+  for (const c of p.priceConflicts.slice(0, 2)) out.push(`  - PRICE CONFLICT, ${short(c.item, 120)}: ${c.values.slice(0, 3).map((v) => `${short(v.text, 40)} on ${v.sourceUrl}`).join(' but ')}. We do not pick one.`);
   out.push(`- **Approved findings, ranked:**${p.findings.length ? '' : ' none approved.'}`);
-  for (const [i, f] of p.findings.slice(0, 5).entries()) out.push(`  ${i + 1}. [#${f.id}, ${f.source}] ${f.sentence.replace(/\.$/, '')}. Measured: ${short(f.measured, 260)} Evidence: ${f.evidence[0] ?? 'the stored answers (no screenshot)'}. Verified ${day(f.verifiedOn)}.`);
+  for (const [i, f] of p.findings.slice(0, 5).entries()) out.push(`  ${i + 1}. [#${f.id}, ${f.source}] ${short(f.sentence, 240).replace(/\.$/, '')}. Measured: ${short(f.measured, 260)} Evidence: ${f.evidence[0] ?? 'the stored answers (no screenshot)'}. Verified ${day(f.verifiedOn)}.`);
   out.push('- **Strengths:**');
-  for (const a of p.strengths.ai.slice(0, 2)) out.push(`  - AI check${a.strength ? ' (a strength)' : ''}: named in ${a.namedIn} of ${a.answers} answers to "${a.question}" (asked ${day(a.askedOn)})`);
-  if (!p.strengths.ai.length) out.push('  - AI check: no question could be asked (the homepage shows no activity to ask about).');
+  for (const a of p.strengths.ai.slice(0, 2)) out.push(`  - AI check${a.strength ? ' (a strength)' : ''}: named in ${a.namedIn} of ${a.answers} answers to "${short(a.question, 200)}" (asked ${day(a.askedOn)})`);
+  if (!p.strengths.ai.length) out.push('  - AI check: no question has been asked and settled for this business.');
   for (const s of p.strengths.other.slice(0, 4)) out.push(`  - ${s.kind}: ${short(s.text, 140)} (${s.sourceUrl})`);
   out.push('- **Assets:**');
   const heroes = p.assets.photos.filter((x) => x.hero !== null).sort((a, b) => a.hero! - b.hero!);
@@ -174,7 +184,7 @@ export function packLines(p: PackBusiness): string[] {
   ];
   for (const r of risks.slice(0, 8)) out.push(`  - ${short(r, 260)}`);
   if (!risks.length) out.push('  - None found.');
-  return out.slice(0, PACK_MAX_LINES);
+  return out;
 }
 
 /** Writes the pack for a wave: one section for each business in list order, and the same data as a file for each. */

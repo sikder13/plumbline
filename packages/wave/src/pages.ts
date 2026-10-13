@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { paths, slugify, type Viewport } from '@plumbline/core';
+import { domainOf, paths, slugify, type Viewport } from '@plumbline/core';
 import type { PageCapture, Renderer } from '@plumbline/render';
 
 /** Pages read for a wave are kept here, outside the repository, so every fact can be traced to what was on the page. */
@@ -55,4 +55,13 @@ export function savedPage(slug: string, url: string): PageCapture | null {
 export function savedHtml(page: PageCapture): string {
   const file = page.dir ? join(page.dir, 'page.html') : null;
   return file && existsSync(file) ? readFileSync(file, 'utf8') : '';
+}
+
+/**
+ * The pages that are the business's own: on its site or a part of it. Pages kept from other sites,
+ * such as a register or a tourism listing, say things about the business but are not its pages.
+ */
+export function ownPages(pages: PageCapture[], website: string | null): PageCapture[] {
+  const own = domainOf(website);
+  return own ? pages.filter((p) => domainOf(p.finalUrl) === own) : [];
 }

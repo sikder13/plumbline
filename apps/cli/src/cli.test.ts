@@ -144,9 +144,10 @@ describe('calibration', () => {
 
 describe('a wave list', () => {
   it('reads the order, the slug and whether a row is in the wave or a reserve', () => {
-    const csv = 'order,status,slug,name,town\n1,wave 2,fixture-kayakers,Fixture Kayakers,"Paihia, Northland"\n21,reserve,second-charters,Second Charters,Taupō\n,wave 2,,No slug,\n';
+    const csv = 'order,status,slug,name,town\n1,wave 2,fixture-kayakers,Fixture Kayakers,"Paihia, Northland"\n2,dropped,third-tours,Third Tours,Napier\n21,reserve,second-charters,Second Charters,Taupō\n,wave 2,,No slug,\n';
     expect(readWaveList(csv)).toEqual([
       { slug: 'fixture-kayakers', position: 1, status: 'wave' },
+      { slug: 'third-tours', position: 2, status: 'dropped' },
       { slug: 'second-charters', position: 21, status: 'reserve' },
     ]);
   });
