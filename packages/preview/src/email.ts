@@ -112,13 +112,17 @@ export interface EmailIssue {
 const HYPE = ['amazing', 'incredible', 'stunning', 'game-changing', 'game changer', 'revolutionary', 'skyrocket', 'supercharge', 'guaranteed', 'best-in-class', 'next level', 'seamless', 'effortless'];
 export const EMAIL_WORDS = { min: 120, max: 170 };
 
+/** The line a letter ends on. What stands under it, the signature and the footer, is the same in every email and is not counted for length. */
+const SIGN_OFF = /^(kind regards|best regards|warm regards|regards|many thanks|thanks|cheers|ngā mihi|yours sincerely|yours faithfully),?$/i;
+
 /**
- * The writing rules for an email, checked. The body runs 120 to 170 words. No dash, and no hyphen
- * inside a sentence. No exclamation mark and no hype. The subject is under 60 characters and asks
- * nothing. The demo link stands on a line of its own without a trailing slash, and when the
- * business's own page is given, that is the link it must be: any other address has to be one the
- * shared wording holds. Every number in the subject and the body is one we hold a source for. And
- * the email numbers as many lines as the draft lists findings.
+ * The writing rules for an email, checked. The body runs 120 to 170 words, counted from the
+ * greeting to the call to action. No dash, and no hyphen inside a sentence. No exclamation mark
+ * and no hype. The subject is under 60 characters and asks nothing. The demo link stands on a line
+ * of its own without a trailing slash, and when the business's own page is given, that is the link
+ * it must be: any other address has to be one the shared wording holds. Every number in the
+ * subject and the body is one we hold a source for. And the email numbers as many lines as the
+ * draft lists findings.
  */
 export function scanEmail(draft: Draft, known: Set<string>, opts: { demoLink?: string; shared?: string } = {}): EmailIssue[] {
   const out: EmailIssue[] = [];
@@ -143,8 +147,10 @@ export function scanEmail(draft: Draft, known: Set<string>, opts: { demoLink?: s
   const count = (n: number, what: string) => `${n} ${what}${n === 1 ? '' : 's'}`;
   if (numbered !== draft.findings.length) out.push({ kind: 'findings', text: `the email numbers ${count(numbered, 'line')} and lists ${count(draft.findings.length, 'finding')}` });
   // What is read as copy: the body without the link lines and without the numbers that only order the list.
-  const copy = lines.filter((l) => !/https?:\/\//.test(l)).map((l) => l.replace(/^\s*\d+\.\s+/, '')).join('\n');
-  const words = copy.split(/\s+/).filter((w) => /[A-Za-z0-9]/.test(w)).length;
+  const read = (some: string[]) => some.filter((l) => !/https?:\/\//.test(l)).map((l) => l.replace(/^\s*\d+\.\s+/, '')).join('\n');
+  const copy = read(lines);
+  const signOff = lines.findIndex((l) => SIGN_OFF.test(l.trim()));
+  const words = read(signOff < 0 ? lines : lines.slice(0, signOff)).split(/\s+/).filter((w) => /[A-Za-z0-9]/.test(w)).length;
   if (!waiting.length && (words < EMAIL_WORDS.min || words > EMAIL_WORDS.max)) out.push({ kind: 'length', text: `${words} words; ${EMAIL_WORDS.min} to ${EMAIL_WORDS.max} are wanted` });
   const everything = `${draft.subject}\n${copy}`;
   for (const m of everything.matchAll(/[‐‒–—―−]|(?<=\s)-(?=\s)/g)) out.push({ kind: 'dash', text: everything.slice(Math.max(0, m.index - 30), m.index + 30).replace(/\s+/g, ' ') });

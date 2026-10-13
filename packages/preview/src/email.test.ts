@@ -203,3 +203,20 @@ describe('the link and the subject of an email', () => {
     expect(scanEmail(subject, known).filter((i) => i.kind === 'number').map((i) => i.text)).toEqual(['9']);
   });
 });
+
+describe('the length of an email', () => {
+  const known = new Set<string>();
+  const letter = (above: number, below: string) =>
+    parseDraft(`Status: ready\nBatch: A\nFindings used:\n1. #735 | The phone link is broken\n---\nTo: info@alpha.co.nz\nSubject: Your phone link does not dial\n\nHi Jack,\n\n1. ${'word '.repeat(above - 2).trim()}\n\nhttps://nahltech.com/demo/alpha-abc123\n\nKind regards,\n\n${below}\n`);
+  const signature = 'name '.repeat(60).trim();
+
+  it('is counted from the greeting to the call to action, and not through the signature and the footer under it', () => {
+    expect(scanEmail(letter(150, signature), known)).toEqual([]);
+    expect(scanEmail(letter(180, 'Udaay'), known).map((i) => i.text)).toEqual(['180 words; 120 to 170 are wanted']);
+    expect(scanEmail(letter(100, signature), known).map((i) => i.text)).toEqual(['100 words; 120 to 170 are wanted']);
+  });
+
+  it('leaves the signature and the footer to every other rule', () => {
+    expect(scanEmail(letter(150, 'An amazing team!'), known).map((i) => i.kind)).toEqual(['exclamation', 'banned']);
+  });
+});
