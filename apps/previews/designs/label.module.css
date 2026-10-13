@@ -1,39 +1,39 @@
 .root {
   --bone: #f4f1ea;
-  --schist: #62666a;
+  --paper: #fbfaf6;
+  --schist: #5c6064;
   --ink: #1b1a18;
   --rule: #c9c4b8;
-  --sticky-bg: var(--bone);
-  --sticky-main-bg: var(--ink);
-  --sticky-call-ink: var(--ink);
-  --sticky-radius: 2px;
+  --ease: cubic-bezier(0.3, 0, 0.1, 1);
+  --float-bg: rgba(27, 26, 24, 0.9);
+  --float-font: 'Open Sans', system-ui, sans-serif;
   font-family: 'Open Sans', system-ui, sans-serif;
-  font-size: 16px;
-  line-height: 1.7;
+  font-size: 17px;
+  line-height: 1.5;
   color: var(--ink);
   background: var(--bone);
+  position: relative;
 }
 
 .root h1,
 .root h2,
 .root h3,
 .name,
-.root blockquote,
-.frame figcaption {
+.footName,
+.root blockquote {
+  margin: 0;
   font-family: 'Newsreader', Georgia, serif;
   font-weight: 400;
   letter-spacing: -0.01em;
+  line-height: 1.04;
 }
 
-.root h1,
-.root h2,
-.root h3 {
-  margin: 0;
-  line-height: 1.08;
+.root h2 {
+  font-size: clamp(40px, 5.4vw, 72px);
 }
 
 .root p {
-  margin: 0 0 1em;
+  margin: 0;
 }
 
 .root :where(a) {
@@ -48,265 +48,10 @@
   outline-offset: 3px;
 }
 
-/* Masthead: centred, ruled above and below. */
-.mast {
-  padding: 22px 20px 0;
-  text-align: center;
-}
-
-.place {
-  margin: 0 0 6px !important;
-  font-size: 12px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+.lead {
+  max-width: 40ch;
+  margin-top: 16px !important;
   color: var(--schist);
-}
-
-.name {
-  display: inline-block;
-  font-size: 30px;
-  line-height: 1.1;
-  text-decoration: none;
-}
-
-.nav {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0 18px;
-  margin-top: 14px;
-  border-top: 1px solid var(--rule);
-  border-bottom: 1px solid var(--rule);
-}
-
-.nav a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  text-decoration: none;
-}
-
-.nav a:hover {
-  color: var(--red);
-}
-
-/* Hero: words first, then the photograph in a frame, like a label over a bottle. */
-.hero {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 34px 20px 0;
-  text-align: center;
-}
-
-.hero h1 {
-  max-width: 12ch;
-  margin: 0 auto;
-  font-size: clamp(44px, 11vw, 104px);
-  line-height: 0.96;
-  text-wrap: balance;
-}
-
-.intro {
-  max-width: 46ch;
-  margin: 18px auto 22px !important;
-  color: var(--schist);
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 8px 22px;
-  margin-bottom: 30px;
-}
-
-.primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 50px;
-  padding: 0 28px;
-  border: 1px solid var(--red);
-  background: var(--red);
-  color: #fff !important;
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: background 0.25s ease, color 0.25s ease;
-}
-
-.primary:hover {
-  background: transparent;
-  color: var(--red) !important;
-}
-
-.text {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  font-weight: 600;
-  text-underline-offset: 5px;
-}
-
-.frame {
-  position: relative;
-  margin: 0;
-  padding: 8px;
-  border: 1px solid var(--ink);
-}
-
-.pan {
-  overflow: hidden;
-  aspect-ratio: 4 / 3;
-}
-
-.pan img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.frame figcaption {
-  position: absolute;
-  left: 50%;
-  bottom: -1px;
-  transform: translate(-50%, 50%);
-  padding: 4px 18px;
-  background: var(--bone);
-  font-size: clamp(20px, 3.4vw, 34px);
-  font-style: italic;
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
-.section {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 80px 20px 0;
-  scroll-margin-top: var(--bar-h);
-}
-
-.head {
-  max-width: 620px;
-  margin: 0 auto 36px;
-  text-align: center;
-}
-
-.root h2 {
-  font-size: clamp(34px, 6vw, 56px);
-}
-
-.head p {
-  margin: 14px 0 0;
-  color: var(--schist);
-}
-
-/* The wines, set as four labels. */
-.labels {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 16px;
-}
-
-.wine {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 26px 20px 24px;
-  border: 1px solid var(--ink);
-  outline: 1px solid var(--ink);
-  outline-offset: -6px;
-  background: #fbfaf6;
-  text-align: center;
-}
-
-.no {
-  font-size: 11px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--schist);
-}
-
-.wine h3 {
-  margin: 14px 0 4px;
-  font-size: 40px;
-  color: var(--red);
-}
-
-.kind {
-  margin: 0 0 16px !important;
-  padding-bottom: 14px;
-  width: 100%;
-  border-bottom: 1px solid var(--rule);
-  font-size: 12px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-
-.note {
-  margin: 0 0 10px !important;
-  font-size: 15px;
-  line-height: 1.6;
-}
-
-.by {
-  margin: 0 !important;
-  font-size: 13px;
-  color: var(--schist);
-}
-
-.price {
-  margin: 18px 0 0 !important;
-  font-family: 'Newsreader', Georgia, serif;
-  font-size: 26px;
-  line-height: 1;
-}
-
-.foot {
-  max-width: 54ch;
-  margin: 28px auto 0 !important;
-  text-align: center;
-  font-size: 14px;
-  color: var(--schist);
-}
-
-/* Cellar door. */
-.cellar {
-  display: grid;
-  gap: 36px;
-}
-
-.cellarText h2 {
-  margin-bottom: 20px;
-}
-
-.hours {
-  margin: 24px 0 12px;
-  border-top: 1px solid var(--ink);
-}
-
-.hours div {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--rule);
-}
-
-.hours dt {
-  font-weight: 600;
-}
-
-.hours dd {
-  margin: 0;
 }
 
 .small {
@@ -314,60 +59,508 @@
   color: var(--schist);
 }
 
-.cellarSide {
+/* The menu: one frosted button that opens the sections as a list. */
+/* On a phone the button belongs to the opening photograph and scrolls away with it. On a large screen it stays. */
+.menu {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  z-index: 40;
   display: grid;
-  gap: 24px;
+  justify-items: end;
+  gap: 8px;
+  transition: top 0.6s var(--ease);
 }
 
-.glasses img {
-  width: 60%;
-  max-width: 300px;
-  aspect-ratio: 3 / 4;
+.menu button {
+  min-height: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(27, 26, 24, 0.44);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  backdrop-filter: blur(20px) saturate(1.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.22);
+  color: #fff;
+  font: 600 15px/1 'Open Sans', system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.menu nav {
+  display: grid;
+  min-width: 220px;
+  padding: 8px;
+  border-radius: 20px;
+  background: rgba(27, 26, 24, 0.72);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  backdrop-filter: blur(24px) saturate(1.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.menu nav:not([hidden]) {
+  animation: unfold 0.5s var(--ease) both;
+}
+
+.menu nav a {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
+  color: #fff;
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 22px;
+  text-decoration: none;
+}
+
+/* Hero: the terrace, full bleed, with the headline low over a scrim. */
+.hero {
+  position: relative;
+  min-height: calc(100svh - var(--bar-h));
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  color: #fff;
+  background: var(--ink);
+}
+
+.heroPhoto {
+  position: absolute;
+  inset: 0;
+}
+
+.heroPhoto picture,
+.heroPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.heroPhoto img {
   object-fit: cover;
-  margin: 0 auto;
+}
+
+.heroPhoto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(27, 26, 24, 0.5) 0%, rgba(27, 26, 24, 0) 24%, rgba(27, 26, 24, 0.2) 46%, rgba(27, 26, 24, 0.9) 100%);
+}
+
+.name {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  z-index: 2;
+  font-size: 24px;
+  color: #fff;
+  text-decoration: none;
+}
+
+.heroText {
+  position: relative;
+  z-index: 2;
+  padding: 0 24px 40px;
+}
+
+.place {
+  margin-bottom: 12px !important;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.hero h1 {
+  max-width: 9ch;
+  font-size: clamp(54px, 14.4vw, 148px);
+  line-height: 0.94;
+}
+
+.word {
+  display: inline-block;
+  overflow: hidden;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+  margin-right: 0.22em;
+  vertical-align: top;
+}
+
+.word > span {
+  display: inline-block;
+}
+
+.heroRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 24px;
+  margin-top: 28px;
+}
+
+.heroRow p {
+  max-width: 24ch;
+  font-size: 15px;
+}
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 30px;
+  border-radius: 999px;
+  background: var(--bone);
+  color: var(--ink) !important;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 28px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 0.5s var(--ease), color 0.5s var(--ease);
+}
+
+/* The four wines: one label held in the middle while its contents turn and the ground changes colour. */
+.wines {
+  position: relative;
+  height: calc(var(--steps) * 70svh + 100svh);
+}
+
+.wines [data-frame] {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 24px 96px;
+  overflow: hidden;
+  background: var(--g0);
+  color: var(--on0);
+  transition: background-color 1.2s var(--ease), color 0.8s var(--ease);
+}
+
+.wines[data-active='1'] [data-frame] {
+  background: var(--g1);
+  color: var(--on1);
+}
+
+.wines[data-active='2'] [data-frame] {
+  background: var(--g2);
+  color: var(--on2);
+}
+
+.wines[data-active='3'] [data-frame] {
+  background: var(--g3);
+  color: var(--on3);
+}
+
+.winesHead {
+  width: 100%;
+  text-align: center;
+}
+
+.winesHead p {
+  margin-top: 8px;
+  font-size: 15px;
+}
+
+.bottleLabel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 400px);
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 520px;
+  margin: 24px 0 auto;
+  padding: 24px 24px 20px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  text-align: center;
+}
+
+.maker {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule);
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 17px;
+}
+
+.turn {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+.turn article {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* A wine waiting its turn is wiped out of sight, not faded, so it stays readable to a screen reader. */
+  clip-path: inset(100% 0 0 0);
+  transform: translateY(20px);
+  transition: clip-path 0.9s var(--ease), transform 1s var(--ease);
+  pointer-events: none;
+}
+
+.turn article[data-state='on'] {
+  clip-path: inset(0 0 0 0);
+  transform: none;
+  transition-delay: 0.15s;
+}
+
+.turn article[data-state='done'] {
+  clip-path: inset(0 0 100% 0);
+  transform: translateY(-20px);
+}
+
+.turn h3 {
+  overflow: hidden;
+  padding-bottom: 0.1em;
+  font-size: clamp(60px, 9vw, 84px);
+  color: var(--red);
+}
+
+.turn h3 span {
+  display: block;
+  transform: translateY(110%);
+  transition: transform 1.1s var(--ease);
+}
+
+.turn article[data-state='on'] h3 span {
+  transform: none;
+  transition-delay: 0.25s;
+}
+
+.turn article[data-state='done'] h3 span {
+  transform: translateY(-110%);
+}
+
+.kind {
+  margin-top: 4px !important;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.note {
+  max-width: 26ch;
+  margin-top: 20px !important;
+  font-size: 16px;
+}
+
+.by {
+  margin-top: 8px !important;
+  font-size: 13px;
+  color: var(--schist);
+}
+
+.price {
+  margin-top: 20px !important;
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 44px;
+  line-height: 1;
+}
+
+.ticks {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--rule);
+}
+
+.ticks li {
+  width: 16px;
+  height: 2px;
+  background: var(--rule);
+  transition: width 0.8s var(--ease), background-color 0.6s var(--ease);
+}
+
+.ticks li[data-state='on'] {
+  width: 40px;
+  background: var(--red);
+}
+
+.ticks li[data-state='done'] {
+  background: var(--ink);
+}
+
+/* Wines, vines and views: a short row of their photographs. */
+.views {
+  padding: 72px 0;
+}
+
+.viewsHead {
+  padding: 0 24px 32px;
+  font-style: italic;
+}
+
+.side [data-side-wrap] {
+  position: relative;
+}
+
+.side [data-side-track] {
+  display: flex;
+  gap: 12px;
+  padding: 0 24px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 24px;
+  scrollbar-width: none;
+}
+
+.side [data-side-track]::-webkit-scrollbar {
+  display: none;
+}
+
+.side [data-side-cue] {
+  display: none;
+}
+
+.view {
+  flex: 0 0 68vw;
+  max-width: 360px;
+  margin: 0;
+  overflow: hidden;
+  scroll-snap-align: start;
+}
+
+.view picture,
+.view img {
+  display: block;
+  width: 100%;
+}
+
+.view img {
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  transition: transform 1.4s var(--ease);
+}
+
+/* Cellar door: the fee as a number, the hours as a table, the form with nothing that can overflow. */
+.cellar {
+  display: grid;
+  gap: 40px;
+  padding: 72px 24px;
+  background: var(--paper);
+  scroll-margin-top: 8px;
+}
+
+.fee {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-top: 32px !important;
+}
+
+.fee b {
+  font-family: 'Newsreader', Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(88px, 12vw, 152px);
+  line-height: 0.8;
+  color: var(--red);
+}
+
+.fee span {
+  max-width: 10ch;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.hours {
+  width: 100%;
+  margin: 32px 0 12px;
+  border-collapse: collapse;
+  border-top: 1px solid var(--ink);
+}
+
+.hours th,
+.hours td {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+  font-weight: 400;
+  text-align: left;
+}
+
+.hours th {
+  font-weight: 600;
+}
+
+.hours td {
+  text-align: right;
 }
 
 .form {
   display: grid;
   gap: 16px;
-  padding: 26px 22px;
+  min-width: 0;
+  padding: 28px 24px;
   border: 1px solid var(--ink);
-  background: #fbfaf6;
-  scroll-margin-top: calc(var(--bar-h) + 16px);
+  background: var(--bone);
+  scroll-margin-top: 24px;
+}
+
+.form > * {
+  min-width: 0;
 }
 
 .form h3 {
-  font-size: 30px;
+  font-size: 34px;
+}
+
+.form label {
+  display: block;
 }
 
 .form label span,
 .form legend {
   display: block;
   margin-bottom: 6px;
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .form input[type='date'],
 .form select {
+  display: block;
+  box-sizing: border-box;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: 48px;
+  margin: 0;
   padding: 0 12px;
   border: 1px solid var(--schist);
   border-radius: 0;
   background: #fff;
   color: var(--ink);
   font: inherit;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .form fieldset {
-  margin: 0;
-  padding: 0;
-  border: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 4px 24px;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 
 .form legend {
@@ -385,8 +578,7 @@
 .form fieldset label span {
   margin: 0;
   font-size: 16px;
-  letter-spacing: 0;
-  text-transform: none;
+  font-weight: 400;
 }
 
 .form input[type='radio'] {
@@ -397,139 +589,148 @@
 
 .form button {
   min-height: 52px;
-  border: 1px solid var(--ink);
+  border: 0;
+  border-radius: 999px;
   background: var(--ink);
   color: #fff;
-  font: 600 14px/1 'Open Sans', system-ui, sans-serif;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font: 700 16px/1 'Open Sans', system-ui, sans-serif;
   cursor: pointer;
-  transition: background 0.25s ease;
-}
-
-.form button:hover {
-  background: var(--red);
-  border-color: var(--red);
 }
 
 .form p {
-  margin: 0;
   font-size: 13px;
   color: var(--schist);
 }
 
-.band {
-  margin-top: 80px;
+/* Stay: one small photograph a room, and the price as the large thing. */
+.stay {
+  padding: 72px 24px;
+  scroll-margin-top: 8px;
 }
 
-.band img {
-  width: 100%;
-  height: clamp(140px, 24vw, 320px);
-  object-fit: cover;
-}
-
-/* Stay. */
 .rooms {
   display: grid;
-  gap: 36px;
+  margin: 32px 0;
+  border-top: 1px solid var(--ink);
 }
 
-.room img {
+.room {
+  display: grid;
+  grid-template-columns: 34vw 1fr;
+  gap: 20px;
+  align-items: center;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.roomPhoto {
+  overflow: hidden;
+}
+
+.roomPhoto picture,
+.roomPhoto img {
+  display: block;
   width: 100%;
-  aspect-ratio: 3 / 2;
+}
+
+.roomPhoto img {
+  aspect-ratio: 1;
   object-fit: cover;
 }
 
 .room h3 {
-  margin: 18px 0 8px;
-  font-size: 30px;
+  font-size: 28px;
+}
+
+.room p {
+  margin-top: 6px;
+  font-size: 15px;
 }
 
 .rate {
-  margin: 0 !important;
-  padding-top: 12px;
-  border-top: 1px solid var(--rule);
   color: var(--schist);
 }
 
 .rate b {
+  display: block;
   font-family: 'Newsreader', Georgia, serif;
-  font-size: 28px;
   font-weight: 400;
+  font-size: 48px;
+  line-height: 1;
   color: var(--ink);
 }
 
-.center {
-  margin: 36px 0 0 !important;
-  text-align: center;
-}
-
-/* People. */
+/* Paul and Sue. */
 .people {
   display: grid;
   gap: 32px;
+  padding: 72px 24px;
+  background: var(--paper);
+  scroll-margin-top: 8px;
 }
 
 .portrait {
   margin: 0;
 }
 
+.portrait picture {
+  display: block;
+  overflow: hidden;
+}
+
 .portrait img {
+  display: block;
   width: 100%;
 }
 
 .portrait figcaption {
   margin-top: 10px;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--schist);
 }
 
+.peopleText h2 {
+  font-size: 17px;
+  font-family: 'Open Sans', system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
 .people blockquote {
-  margin: 20px 0 22px;
-  padding-left: 18px;
-  border-left: 2px solid var(--red);
-  font-size: clamp(22px, 3vw, 30px);
+  margin: 16px 0 24px;
+  font-size: clamp(30px, 4vw, 54px);
   font-style: italic;
-  line-height: 1.3;
+  line-height: 1.12;
+}
+
+.peopleText p {
+  max-width: 40ch;
+  color: var(--schist);
 }
 
 /* Contact. */
 .contact {
-  padding-bottom: 80px;
-}
-
-.contact h2 {
-  margin-bottom: 26px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--ink);
-}
-
-.contactGrid {
-  display: grid;
-  gap: 28px;
+  padding: 72px 24px;
+  scroll-margin-top: 8px;
 }
 
 .contact address {
+  margin: 24px 0;
   font-style: normal;
   font-family: 'Newsreader', Georgia, serif;
-  font-size: 24px;
-  line-height: 1.3;
+  font-size: 26px;
+  line-height: 1.25;
 }
 
 .contact address span {
   display: block;
 }
 
-.contact address .small {
-  margin-top: 10px;
-  font-family: 'Open Sans', system-ui, sans-serif;
-  font-size: 14px;
-}
-
 .phones {
   list-style: none;
   margin: 0;
   padding: 0;
+  border-top: 1px solid var(--ink);
 }
 
 .phones li {
@@ -537,14 +738,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  min-height: 48px;
+  min-height: 52px;
   border-bottom: 1px solid var(--rule);
 }
 
 .phones span {
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  font-size: 14px;
   color: var(--schist);
 }
 
@@ -556,97 +755,252 @@
   overflow-wrap: anywhere;
 }
 
-.vines img {
-  width: 100%;
-  aspect-ratio: 3 / 2;
-  object-fit: cover;
-}
-
 .footer {
-  padding: 36px 20px 40px;
+  padding: 40px 24px 104px;
   border-top: 1px solid var(--ink);
-  text-align: center;
 }
 
-.footer .name {
-  margin: 0 0 6px;
-  font-size: 24px;
+.footName {
+  margin-bottom: 8px !important;
+  font-size: 26px;
+}
+
+@keyframes unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .view:hover img {
+    transform: scale(1.05);
+  }
+  .outline:hover {
+    background: var(--ink);
+    color: var(--bone);
+  }
 }
 
 @media (min-width: 900px) {
-  .mast {
-    padding-top: 34px;
+  .menu {
+    position: fixed;
+    top: calc(var(--bar-h) + 12px);
+    right: 32px;
+  }
+  :global([data-strip-away]) .menu {
+    top: 12px;
+  }
+  /* On a wide screen the people in the photograph sit low and centre, so the headline goes above them and the action below. */
+  .hero {
+    justify-content: space-between;
+  }
+  .heroPhoto::after {
+    background: linear-gradient(180deg, rgba(27, 26, 24, 0.66) 0%, rgba(27, 26, 24, 0.3) 34%, rgba(27, 26, 24, 0) 56%, rgba(27, 26, 24, 0.72) 100%);
+  }
+  .heroText {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    padding: 104px 56px 72px;
+  }
+  .heroRow {
+    margin-top: auto;
   }
   .name {
-    font-size: 40px;
+    top: 28px;
+    left: 56px;
+    font-size: 30px;
   }
-  .nav {
-    max-width: 1040px;
-    margin: 20px auto 0;
-    gap: 0 44px;
+  .hero h1 {
+    max-width: 14ch;
+    font-size: clamp(72px, 7.6vw, 124px);
   }
-  .hero {
-    padding-top: 64px;
+  .heroRow p {
+    font-size: 17px;
   }
-  .pan {
-    aspect-ratio: 16 / 8;
+  .wines {
+    height: calc(var(--steps) * 80vh + 100vh);
   }
-  .frame {
-    padding: 12px;
+  .wines [data-frame] {
+    height: 100vh;
+    flex-direction: row;
+    align-items: center;
+    gap: 96px;
+    padding: 0 56px;
   }
-  .section {
-    padding-top: 136px;
+  .winesHead {
+    flex: 1 1 0;
+    text-align: left;
   }
-  .labels {
-    grid-template-columns: repeat(4, 1fr);
+  .winesHead h2 {
+    font-size: clamp(64px, 7vw, 112px);
   }
-  .wine {
-    min-height: 430px;
-    padding: 40px 22px 30px;
+  .winesHead p {
+    margin-top: 20px;
+    font-size: 19px;
+  }
+  .bottleLabel {
+    flex: 0 0 500px;
+    height: min(78vh, 680px);
+    max-height: none;
+    margin: 0 8vw 0 0;
+    padding: 36px 36px 28px;
+  }
+  .maker {
+    font-size: 20px;
+  }
+  .turn h3 {
+    font-size: 112px;
+  }
+  .kind {
+    font-size: 17px;
+  }
+  .note {
+    max-width: 24ch;
+    font-size: 19px;
+  }
+  .by {
+    font-size: 15px;
   }
   .price {
-    margin-top: auto !important;
-    padding-top: 18px;
+    font-size: 60px;
+  }
+  .views {
+    padding: 120px 0;
+  }
+  .viewsHead {
+    padding: 0 56px 40px;
+  }
+  .side [data-side-track] {
+    gap: 20px;
+    padding: 0 56px;
+    scroll-padding-left: 56px;
+    cursor: grab;
+    user-select: none;
+  }
+  .side [data-side-track][data-dragging] {
+    cursor: grabbing;
+    scroll-snap-type: none;
+  }
+  .view {
+    flex: 0 0 360px;
+  }
+  .side [data-side-cue] {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background: rgba(251, 250, 246, 0.84);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    box-shadow: inset 0 1px 0 #fff, 0 0 0 1px rgba(27, 26, 24, 0.16);
+    font-weight: 700;
+    font-size: 15px;
+    pointer-events: none;
+    transform: translateY(-50%);
+    transition: opacity 0.6s var(--ease), transform 0.8s var(--ease);
+  }
+  .side[data-dragged] [data-side-cue] {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.8);
   }
   .cellar {
     grid-template-columns: 1.1fr 0.9fr;
-    gap: 72px;
+    gap: 96px;
+    align-items: center;
+    padding: 120px 56px;
+  }
+  .form {
+    padding: 40px;
+  }
+  .stay {
+    display: grid;
+    grid-template-columns: 0.8fr 1.2fr;
+    column-gap: 96px;
     align-items: start;
-  }
-  .glasses {
-    display: none;
-  }
-  .band {
-    margin-top: 136px;
+    padding: 120px 56px;
   }
   .rooms {
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
+    grid-row: span 2;
+    margin: 0;
+  }
+  .room {
+    grid-template-columns: 220px 1fr;
+    gap: 32px;
+    padding: 28px 0;
+  }
+  .rate b {
+    font-size: 64px;
+  }
+  .stay .outline {
+    justify-self: start;
+    margin-top: 32px;
   }
   .people {
-    grid-template-columns: 420px 1fr;
-    gap: 72px;
+    grid-template-columns: 400px 1fr;
+    gap: 96px;
     align-items: center;
+    padding: 120px 56px;
   }
   .contact {
-    padding-bottom: 136px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 96px;
+    padding: 120px 56px;
   }
-  .contactGrid {
-    grid-template-columns: 1fr 1fr 320px;
-    gap: 56px;
+  .contact h2 {
+    grid-column: 1 / -1;
+  }
+  .footer {
+    padding: 48px 56px;
   }
 }
 
+/* The opening: the picture settles and keeps drifting in, and the headline is revealed a word at a time. */
 @media (prefers-reduced-motion: no-preference) {
-  .pan img {
-    animation: pan 60s linear infinite alternate;
+  .heroPhoto {
+    animation: settle 1.6s var(--ease) both;
   }
-  @keyframes pan {
+  .heroPhoto picture {
+    animation: push-in 26s ease-in-out 1.6s infinite alternate;
+  }
+  .word > span {
+    animation: rise 1s var(--ease) both;
+    animation-delay: calc(var(--i) * 60ms + 150ms);
+  }
+  .place,
+  .heroRow,
+  .name {
+    animation: arrive 0.7s var(--ease) both;
+    animation-delay: 0.65s;
+  }
+  .heroRow {
+    animation-delay: 0.8s;
+  }
+  @keyframes settle {
     from {
-      transform: scale(1.12) translate3d(-4%, 0, 0);
+      transform: scale(1.08);
     }
+  }
+  @keyframes push-in {
     to {
-      transform: scale(1.12) translate3d(4%, 0, 0);
+      transform: scale(1.06) translate3d(1%, 0, 0);
+    }
+  }
+  @keyframes rise {
+    from {
+      transform: translateY(108%);
+    }
+  }
+  @keyframes arrive {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
     }
   }
 }
