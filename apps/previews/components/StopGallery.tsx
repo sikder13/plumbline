@@ -9,10 +9,11 @@ interface Item {
 }
 
 /**
- * Photographs shown one at a time along a line of stops. On a phone they are swiped edge to edge,
- * and the stop the visitor has reached is marked on the line beneath. On a wide screen the stops
- * are a list beside the photograph, and choosing one brings its photograph up. How the two are
- * laid out is each design's own: the photographs either sit in a row that scrolls, or are stacked.
+ * Photographs shown one at a time along a line of stops, each stop with its name and a few words.
+ * On a phone the photographs are swiped edge to edge, and the stop reached is marked on the line
+ * beneath with its words under it. On a wide screen the stops are a list beside the photograph,
+ * and choosing one brings its photograph up. How the two are laid out is each design's own: the
+ * photographs either sit in a row that scrolls, or are stacked.
  */
 export function StopGallery({ items, label, className }: { items: Item[]; label: string; className?: string }) {
   const track = useRef<HTMLOListElement>(null);
@@ -48,10 +49,6 @@ export function StopGallery({ items, label, className }: { items: Item[]; label:
         {items.map((it, i) => (
           <li key={it.name} data-on={i === active ? '' : undefined}>
             {it.picture}
-            <div data-gallery-words>
-              <h3>{it.name}</h3>
-              <p>{it.text}</p>
-            </div>
           </li>
         ))}
       </ol>
@@ -59,9 +56,6 @@ export function StopGallery({ items, label, className }: { items: Item[]; label:
         {items.map((it, i) => (
           <button key={it.name} type="button" aria-pressed={i === active} onClick={() => go(i)}>
             <i aria-hidden="true" />
-            <span data-no aria-hidden="true">
-              {String(i + 1).padStart(2, '0')}
-            </span>
             <b>{it.name}</b>
             <span data-text>{it.text}</span>
           </button>

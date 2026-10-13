@@ -110,36 +110,36 @@ function Demo({ data }: { data: PageData }) {
             <span key={w}>{w}</span>
           ))}
         </a>
-        <div className={s.heroText}>
-          <p className={s.kicker}>{c.hero.kicker}</p>
-          <h1 aria-label={c.hero.lines.join(' ')}>
-            {c.hero.lines.map((l, i) => (
-              <span key={l} className={s.line} aria-hidden="true">
-                <span style={{ '--i': i } as CSSProperties}>{l}</span>
-              </span>
+        <h1 aria-label={c.hero.lines.join(' ')}>
+          {c.hero.lines.map((l, i) => (
+            <span key={l} className={s.line} aria-hidden="true">
+              <span style={{ '--i': i } as CSSProperties}>{l}</span>
+            </span>
+          ))}
+        </h1>
+        <div className={s.route}>
+          <span className={s.rail} aria-hidden="true" />
+          <svg className={s.bend} viewBox="0 0 28 46" aria-hidden="true" focusable="false">
+            <path d="M0 1H5Q27 1 27 23V46" pathLength={1} />
+          </svg>
+          <span className={s.drop} aria-hidden="true" />
+          <ol className={s.stops}>
+            {c.hero.stops.map((st, i) => (
+              <li key={st.time} style={{ '--i': i } as CSSProperties}>
+                <i aria-hidden="true" />
+                <b>{st.time}</b>
+                <span>{st.place}</span>
+              </li>
             ))}
-          </h1>
-          <p className={s.sub}>{c.hero.sub}</p>
-          <div className={s.route}>
-            <span className={s.rail} aria-hidden="true" />
-            <svg className={s.bend} viewBox="0 0 28 46" aria-hidden="true" focusable="false">
-              <path d="M0 1H5Q27 1 27 23V46" pathLength={1} />
-            </svg>
-            <span className={s.drop} aria-hidden="true" />
-            <ol className={s.stops}>
-              {c.hero.stops.map((st, i) => (
-                <li key={st.time} style={{ '--i': i } as CSSProperties}>
-                  <i aria-hidden="true" />
-                  <b>{st.time}</b>
-                  <span>{st.place}</span>
-                </li>
-              ))}
-            </ol>
-            <a className={s.go} data-press data-magnetic {...book}>
-              {c.book.label}
-              <Arrow />
-            </a>
+          </ol>
+          <div className={s.lede}>
+            <p className={s.kicker}>{c.hero.kicker}</p>
+            <p className={s.sub}>{c.hero.sub}</p>
           </div>
+          <a className={s.go} data-press data-magnetic {...book}>
+            {c.book.label}
+            <Arrow />
+          </a>
         </div>
       </section>
 

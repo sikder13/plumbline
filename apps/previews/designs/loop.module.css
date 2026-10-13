@@ -106,13 +106,12 @@
   display: none;
 }
 
-/* Hero: the photograph above, the headline across its foot, and a route that draws itself to the action. */
+/* Hero: the headline in two corners of the photograph, and under it a route that draws itself to the action. */
 .hero {
   position: relative;
   min-height: calc(100svh - var(--bar-h));
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   overflow: hidden;
   color: #fff;
   background: var(--night);
@@ -121,7 +120,7 @@
 .heroMedia {
   position: absolute;
   inset: 0 0 auto 0;
-  height: 66%;
+  height: 68%;
   overflow: hidden;
 }
 
@@ -143,7 +142,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(19, 24, 36, 0.42) 0%, rgba(19, 24, 36, 0) 20%, rgba(19, 24, 36, 0) 46%, rgba(19, 24, 36, 0.78) 80%, #131824 100%);
+  background: linear-gradient(180deg, rgba(19, 24, 36, 0.62) 0%, rgba(19, 24, 36, 0.14) 30%, rgba(19, 24, 36, 0.1) 50%, rgba(19, 24, 36, 0.8) 84%, #131824 100%);
 }
 
 .mark {
@@ -169,18 +168,15 @@
   background: #fff;
 }
 
-.heroText {
+/* The first line sits at the top left and the second at the bottom right, with the photograph between them. */
+.hero h1 {
   position: relative;
   z-index: 2;
-  padding: 0 var(--pad) 28px;
-}
-
-.hero .kicker {
-  margin-bottom: 14px;
-  animation: fade 0.8s var(--ease) 0.1s both;
-}
-
-.hero h1 {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 60px var(--pad) 24px;
   font-size: clamp(44px, 13.4vw, 58px);
   line-height: 0.96;
 }
@@ -191,26 +187,23 @@
   padding-bottom: 0.08em;
 }
 
+.line:last-child {
+  align-self: flex-end;
+}
+
 .line > span {
   display: block;
   animation: rise 1s var(--ease) both;
-  animation-delay: calc(0.12s + var(--i) * 0.1s);
-}
-
-.sub {
-  max-width: 33ch;
-  margin: 14px 0 26px !important;
-  font-size: 17px;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.9);
-  animation: fade 0.9s var(--ease) 0.45s both;
+  animation-delay: calc(0.12s + var(--i) * 0.16s);
 }
 
 .route {
   position: relative;
+  z-index: 2;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 28px 34px;
-  grid-template-rows: 12px auto auto;
+  grid-template-rows: 12px auto auto auto;
+  padding: 0 var(--pad) 28px;
 }
 
 .rail {
@@ -226,7 +219,7 @@
 
 .bend {
   grid-column: 2;
-  grid-row: 1 / span 2;
+  grid-row: 1 / span 3;
   width: 28px;
   height: 46px;
   margin-top: 5px;
@@ -243,13 +236,13 @@
 
 .drop {
   grid-column: 2;
-  grid-row: 1 / span 2;
+  grid-row: 1 / span 3;
   justify-self: end;
   width: 2px;
   margin-top: 50px;
   background: var(--red);
   transform-origin: 50% 0;
-  animation: draw-y 0.3s cubic-bezier(0.2, 0.5, 0.3, 1) 1.82s both;
+  animation: draw-y 0.34s cubic-bezier(0.2, 0.5, 0.3, 1) 1.82s both;
 }
 
 .stops {
@@ -258,7 +251,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   margin: 0;
-  padding: 0 0 14px;
+  padding: 0 0 18px;
   list-style: none;
 }
 
@@ -295,11 +288,29 @@
   color: rgba(255, 255, 255, 0.84);
 }
 
+.lede {
+  grid-column: 1;
+  grid-row: 3;
+  padding: 0 10px 22px 0;
+  animation: fade 0.9s var(--ease) 0.5s both;
+}
+
+.lede .kicker {
+  margin-bottom: 10px;
+}
+
+.sub {
+  max-width: 30ch;
+  font-size: 16.5px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .route .go {
   grid-column: 1 / -1;
-  grid-row: 3;
+  grid-row: 4;
   justify-self: end;
-  animation: arrive 0.8s var(--ease) 1.9s both;
+  animation: arrive 0.8s var(--ease) 1.95s both;
 }
 
 /* The loop: the afternoon as a line held in view, a stop to each step of the scroll. */
@@ -1280,47 +1291,22 @@
   object-fit: cover;
 }
 
-.gallery [data-gallery-track] li::after {
-  content: '';
-  position: absolute;
-  inset: 40% 0 0 0;
-  background: linear-gradient(180deg, rgba(19, 24, 36, 0), rgba(19, 24, 36, 0.9));
-}
-
-.gallery [data-gallery-words] {
-  position: absolute;
-  inset: auto var(--pad) 26px var(--pad);
-  z-index: 1;
-  color: #fff;
-}
-
-.gallery [data-gallery-words] h3 {
-  font-size: clamp(32px, 9.4vw, 40px);
-  line-height: 1;
-}
-
-.gallery [data-gallery-words] p {
-  max-width: 32ch;
-  margin-top: 10px;
-  font-size: 16px;
-  line-height: 1.4;
-  color: rgba(255, 255, 255, 0.92);
-}
-
-/* The stops: four markers on one line, the reached one in red. */
+/* The stops: four markers on one line, the reached one in red, and under them the name and words of the stop reached. */
 .gallery [data-gallery-stops] {
   position: relative;
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
+  min-height: 206px;
   margin: 0 var(--pad);
-  padding-top: 22px;
+  padding-top: 8px;
 }
 
+/* A button sets what it holds at its middle, and the line runs through there. */
 .gallery [data-gallery-stops]::before {
   content: '';
   position: absolute;
-  top: 27px;
+  top: 29px;
   left: calc(-1 * var(--pad));
   right: calc(-1 * var(--pad));
   height: 2px;
@@ -1328,22 +1314,20 @@
 }
 
 .gallery [data-gallery-stops] button {
-  position: relative;
-  display: grid;
-  justify-items: start;
-  gap: 8px;
-  min-height: 56px;
+  display: block;
+  height: 44px;
   padding: 0;
   border: 0;
   background: none;
   color: var(--ink);
-  font: 500 12px/1 var(--mono);
   text-align: left;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
 .gallery [data-gallery-stops] i {
+  position: relative;
+  display: block;
   width: 12px;
   height: 12px;
   border: 2px solid var(--ink);
@@ -1359,27 +1343,34 @@
   box-shadow: 0 0 0 6px rgba(226, 19, 27, 0.16);
 }
 
-.gallery [data-gallery-stops] [data-no] {
-  opacity: 0.74;
-  transition: opacity 0.4s var(--ease);
-}
-
-.gallery [data-gallery-stops] button[aria-pressed='true'] [data-no] {
-  opacity: 1;
-}
-
-/* On a phone the photograph carries the name and the words, so the stop keeps its name for a screen reader only. */
-.gallery [data-gallery-stops] b {
+.gallery [data-gallery-stops] b,
+.gallery [data-gallery-stops] [data-text] {
   position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.35s var(--ease), transform 0.6s var(--ease);
+  pointer-events: none;
+}
+
+.gallery [data-gallery-stops] b {
+  top: 64px;
+  font: 700 clamp(30px, 8.8vw, 38px)/1 var(--wide);
+  letter-spacing: -0.03em;
 }
 
 .gallery [data-gallery-stops] [data-text] {
-  display: none;
+  top: 114px;
+  max-width: 34ch;
+  font: 400 16.5px/1.42 var(--text);
+}
+
+.gallery [data-gallery-stops] button[aria-pressed='true'] b,
+.gallery [data-gallery-stops] button[aria-pressed='true'] [data-text] {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.12s;
 }
 
 /* Trust: the family, and a pass that carries the rating and the year. */
@@ -1718,7 +1709,17 @@
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
     backdrop-filter: blur(20px) saturate(1.4);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 0 0 1px rgba(255, 255, 255, 0.16);
-    transition: top 0.5s var(--ease);
+    /* The first screen is left to the photograph, the headline and the route. The menu comes once it has gone by. */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-12px);
+    transition: top 0.5s var(--ease), opacity 0.4s var(--ease), transform 0.5s var(--ease), visibility 0.4s;
+  }
+
+  :global([data-past-hero]) .nav {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
   }
 
   :global([data-strip-away]) .nav {
@@ -1783,7 +1784,7 @@
   }
 
   .heroMedia::after {
-    background: linear-gradient(90deg, rgba(19, 24, 36, 0.52) 0%, rgba(19, 24, 36, 0) 64%), linear-gradient(180deg, rgba(19, 24, 36, 0.4) 0%, rgba(19, 24, 36, 0) 22%, rgba(19, 24, 36, 0.1) 42%, rgba(19, 24, 36, 0.9) 100%);
+    background: linear-gradient(180deg, rgba(19, 24, 36, 0.58) 0%, rgba(19, 24, 36, 0.16) 30%, rgba(19, 24, 36, 0.3) 56%, rgba(19, 24, 36, 0.93) 100%);
   }
 
   .mark {
@@ -1791,41 +1792,21 @@
     font-size: 15px;
   }
 
-  .heroText {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 400px);
-    align-items: end;
-    column-gap: 56px;
-    padding: 0 var(--pad) 52px;
-  }
-
   .hero h1 {
-    grid-column: 1;
-    font-size: clamp(84px, 8.8vw, 160px);
+    padding: 96px var(--pad) 40px;
+    font-size: clamp(88px, 9.6vw, 176px);
     line-height: 0.92;
   }
 
-  .hero .kicker {
-    grid-column: 1 / -1;
-    margin-bottom: 22px;
-  }
-
-  .sub {
-    grid-column: 2;
-    max-width: none;
-    margin: 0 0 16px !important;
-    font-size: 21px;
-  }
-
   .route {
-    grid-column: 1 / -1;
     grid-template-columns: minmax(0, 1fr) 28px 44px;
-    margin-top: 48px;
+    grid-template-rows: 12px auto auto;
+    padding: 0 var(--pad) 48px;
   }
 
   .stops {
     grid-template-columns: repeat(3, 190px);
-    padding-bottom: 6px;
+    padding-bottom: 26px;
   }
 
   .stops b {
@@ -1836,7 +1817,23 @@
     font-size: 14px;
   }
 
+  .lede {
+    max-width: 440px;
+    padding-bottom: 4px;
+  }
+
+  .lede .kicker {
+    margin-bottom: 14px;
+  }
+
+  .sub {
+    max-width: none;
+    font-size: 20px;
+  }
+
   .route .go {
+    grid-row: 3;
+    align-self: end;
     min-height: 64px;
     padding: 0 28px 0 32px;
     font-size: 19px;
@@ -2135,18 +2132,18 @@
     transform: none;
   }
 
-  .gallery [data-gallery-track] li::after,
-  .gallery [data-gallery-words] {
-    display: none;
-  }
-
   .gallery [data-gallery-stops] {
     grid-auto-flow: row;
     grid-auto-columns: auto;
     align-content: center;
-    gap: 0;
+    min-height: 0;
     margin: 0;
     padding: 0;
+  }
+
+  .gallery [data-gallery-stops] i {
+    align-self: start;
+    margin-top: 0.42em;
   }
 
   .gallery [data-gallery-stops]::before {
@@ -2159,31 +2156,29 @@
   }
 
   .gallery [data-gallery-stops] button {
-    grid-template-columns: 18px auto minmax(0, 1fr);
-    align-items: baseline;
-    column-gap: 18px;
-    row-gap: 0;
-    min-height: 0;
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: center;
+    column-gap: 26px;
+    height: auto;
     padding: 22px 0;
-    font-size: 13px;
   }
 
   .gallery [data-gallery-stops] i {
-    align-self: center;
     width: 18px;
     height: 18px;
     border-width: 2.5px;
   }
 
-  .gallery [data-gallery-stops] b {
+  .gallery [data-gallery-stops] b,
+  .gallery [data-gallery-stops] [data-text] {
     position: static;
-    width: auto;
-    height: auto;
-    overflow: visible;
-    clip-path: none;
-    white-space: normal;
-    font: 700 clamp(30px, 2.9vw, 46px)/1 var(--wide);
-    letter-spacing: -0.03em;
+    transform: none;
+    pointer-events: auto;
+  }
+
+  .gallery [data-gallery-stops] b {
+    font-size: clamp(30px, 2.9vw, 46px);
     opacity: 0.6;
     transition: opacity 0.5s var(--ease);
   }
@@ -2195,20 +2190,18 @@
 
   /* The words of the stop that is showing open under its name. */
   .gallery [data-gallery-stops] [data-text] {
-    grid-column: 3;
-    display: block;
+    grid-column: 2;
     max-width: 34ch;
     max-height: 0;
     overflow: hidden;
-    font: 400 18px/1.45 var(--text);
-    opacity: 0;
+    font-size: 18px;
+    line-height: 1.45;
     transition: max-height 0.7s var(--ease), opacity 0.5s var(--ease), margin-top 0.7s var(--ease);
   }
 
   .gallery [data-gallery-stops] button[aria-pressed='true'] [data-text] {
     max-height: 120px;
     margin-top: 14px;
-    opacity: 1;
   }
 
   .trust {
