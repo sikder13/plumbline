@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { reviewFinding } from '@/app/actions';
-import { business, currentBatch, findingsFor, neighbours, nzTime, type Finding } from '@/lib/data';
+import { business, currentBatch, currentWave, facts, findingsFor, neighbours, nzTime, rankedFindings, waveLabel, type Finding } from '@/lib/data';
 import { ReviewKeys } from './keys';
 
 const BASIS: Record<string, string> = {
@@ -9,16 +9,80 @@ const BASIS: Record<string, string> = {
   OUR_VIEW: 'Our view: plain reasoning, not a statistic',
 };
 
-function Card({ f }: { f: Finding }) {
+interface Place {
+  place: number;
+  group: string;
+  kept: boolean;
+  /** The finding this one repeats, when it was left out of the order for that reason. */
+  repeatOf: string | null;
+}
+
+interface CrawlmouseDetail {
+  measured?: string | null;
+  caution?: string | null;
+  examples?: { url: string; status: number | null; linkedFrom?: { pageUrl: string; text: string; where: string }[] }[];
+  crawlmouse?: { auditedAt?: string | null; pagesRead?: number | null; coveragePct?: number | null; confidence?: string | null };
+}
+
+function Crawlmouse({ f }: { f: Finding }) {
+  const d = JSON.parse(f.detail || '{}') as CrawlmouseDetail;
+  const c = d.crawlmouse ?? {};
+  return (
+    <>
+      <blockquote>
+        <strong>Crawlmouse says.</strong> {f.title}
+      </blockquote>
+      <blockquote>
+        <strong>We measured.</strong> {d.measured}
+      </blockquote>
+      {d.caution ? <p className="tag candidate">Caution from Crawlmouse: {d.caution}</p> : null}
+      <div className="small">
+        <ul className="plain">
+          {(d.examples ?? []).map((e, i) => (
+            <li key={i}>
+              <a href={e.url} target="_blank" rel="noreferrer noopener">
+                {e.url}
+              </a>{' '}
+              answers {e.status ?? 'nothing'}
+              {(e.linkedFrom ?? []).map((l, j) => (
+                <span key={j}>
+                  {j ? '; ' : '. Linked from '}
+                  <a href={l.pageUrl} target="_blank" rel="noreferrer noopener">
+                    {l.pageUrl}
+                  </a>{' '}
+                  ({l.where === 'page' ? 'link' : `${l.where} link`} &ldquo;{l.text}&rdquo;)
+                </span>
+              ))}
+            </li>
+          ))}
+        </ul>
+        <span className="muted">
+          Crawlmouse audit {c.auditedAt ?? 'date not given'}
+          {c.pagesRead ? `, ${c.pagesRead} pages read` : ''}
+          {c.coveragePct ? `, ${c.coveragePct}% of the site` : ''}
+          {c.confidence ? `, confidence ${c.confidence}` : ''}. A count in its sentence is Crawlmouse&rsquo;s own; we opened the pages listed here.
+        </span>
+      </div>
+    </>
+  );
+}
+
+function Card({ f, place }: { f: Finding; place?: Place }) {
   const open = f.status === 'reproduced';
+  const fromCrawlmouse = f.source === 'crawlmouse';
   return (
     <section className={`card ${open ? '' : 'done'}`} data-finding={f.id} data-open={open ? 'yes' : 'no'}>
       <h2 style={{ marginTop: 0 }}>
-        {f.check_id.split('_')[0]} {f.checkTitle} <span className={`tag ${f.status}`}>{f.status === 'candidate' ? 'seen in one run only' : f.status}</span>
-        {f.top3 ? <span className="tag approved">top three</span> : null}
+        {fromCrawlmouse ? 'Crawlmouse' : f.check_id.split('_')[0]} {f.checkTitle} <span className={`tag ${f.status}`}>{f.status === 'candidate' ? 'seen in one run only' : f.status}</span>{' '}
+        {fromCrawlmouse ? <span className="tag">source: Crawlmouse</span> : null} {f.top3 ? <span className="tag approved">top three</span> : null}{' '}
+        {place?.kept ? <span className="tag yes">put forward, place {place.place}</span> : null}
+        {place && !place.kept && !place.repeatOf ? <span className="tag">place {place.place}, not put forward</span> : null}
+        {place?.repeatOf ? <span className="tag no">repeats {place.repeatOf}</span> : null}
       </h2>
       <div className="small muted">
-        {f.title} · {f.tier} · severity {f.severity} · score {f.score.toFixed(2)}
+        {fromCrawlmouse ? '' : `${f.title} · `}
+        {f.tier} · severity {f.severity} · score {f.score.toFixed(2)}
+        {place ? ` · ${place.group}` : ''}
         {f.last_verified_at ? ` · last verified ${nzTime(f.last_verified_at)}` : ''}
         {f.page_url ? (
           <>
@@ -29,7 +93,9 @@ function Card({ f }: { f: Finding }) {
           </>
         ) : null}
       </div>
-      {f.entry ? (
+      {fromCrawlmouse ? (
+        <Crawlmouse f={f} />
+      ) : f.entry ? (
         <>
           <blockquote>
             <strong>Impact.</strong> {f.entry.impact}
@@ -93,19 +159,71 @@ function Card({ f }: { f: Finding }) {
   );
 }
 
-export default async function BusinessPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ batch?: string }> }) {
+function FactsTable({ businessId }: { businessId: number }) {
+  const list = facts(businessId);
+  if (!list.length) return null;
+  const show = (v: unknown) => (typeof v === 'string' ? v : JSON.stringify(v));
+  return (
+    <details style={{ margin: '10px 0' }}>
+      <summary className="small">Facts stored for this business ({list.length}), each with its source and the day it was checked</summary>
+      <table style={{ marginTop: 8 }}>
+        <thead>
+          <tr>
+            <th>Fact</th>
+            <th>Value</th>
+            <th>Source</th>
+            <th>Checked</th>
+          </tr>
+        </thead>
+        <tbody>
+          {list.map((x) => (
+            <tr key={x.id}>
+              <td className="small">
+                {x.topic}
+                {x.label ? `: ${x.label}` : ''} {x.flag ? <span className="tag candidate">{x.flag}</span> : null}
+              </td>
+              <td className="small" style={{ overflowWrap: 'anywhere' }}>
+                {show(x.value)}
+                {x.quote ? <div className="muted">&ldquo;{x.quote}&rdquo;</div> : null}
+              </td>
+              <td className="small" style={{ overflowWrap: 'anywhere' }}>
+                {x.sourceUrl ? (
+                  <a href={x.sourceUrl} target="_blank" rel="noreferrer noopener">
+                    {x.sourceUrl}
+                  </a>
+                ) : null}
+              </td>
+              <td className="small">{nzTime(x.checkedOn)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </details>
+  );
+}
+
+export default async function BusinessPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ batch?: string; wave?: string }> }) {
   const { slug } = await params;
-  const { batch: requested } = await searchParams;
+  const { batch: requested, wave: requestedWave } = await searchParams;
   const b = business(slug);
   const batch = currentBatch(requested);
   if (!b || !batch) notFound();
+  const wave = currentWave(requestedWave);
   const findings = findingsFor(b.id, batch);
-  const { prev, next } = neighbours(batch, slug);
-  const q = `?batch=${encodeURIComponent(batch)}`;
+  // In a wave the findings come in the order they would matter to the owner, the ones put forward first.
+  const ranked = wave ? rankedFindings(b.id, batch) : [];
+  const name = (id: number) => {
+    const x = findings.find((f) => f.id === id);
+    return x ? `${x.check_id.split('_')[0]} ${x.checkTitle}` : `finding ${id}`;
+  };
+  const places = new Map(ranked.map((r) => [r.finding.id, { place: r.place, group: r.group, kept: r.kept, repeatOf: r.repeatOf === null ? null : name(r.repeatOf) }]));
+  const ordered = wave ? [...ranked.map((r) => r.finding), ...findings.filter((f) => !places.has(f.id))] : findings;
+  const { prev, next } = neighbours(batch, slug, wave);
+  const q = `?batch=${encodeURIComponent(batch)}${wave ? `&wave=${encodeURIComponent(wave)}` : ''}`;
   return (
     <>
       <div className="row small">
-        <a href={`/${q}`}>&larr; {batch}</a>
+        <a href={`/${q}`}>&larr; {wave ? waveLabel(wave) : batch}</a>
         {prev && <a href={`/business/${prev}${q}`}>Previous business</a>}
         {next && (
           <a href={`/business/${next}${q}`} id="next-business">
@@ -125,9 +243,15 @@ export default async function BusinessPage({ params, searchParams }: { params: P
           </a>
         )}
       </div>
+      {wave ? <FactsTable businessId={b.id} /> : null}
+      {wave && ranked.length > 0 ? (
+        <p className="small muted">
+          {ranked.filter((r) => r.kept).length} of {ranked.filter((r) => r.repeatOf === null).length} findings are put forward for this business, ranked for the owner. The rest follow, then findings seen once, rejected or no longer true.
+        </p>
+      ) : null}
       {findings.length === 0 && <p className="muted">No findings for this business in this batch.</p>}
-      {findings.map((f) => (
-        <Card key={f.id} f={f} />
+      {ordered.map((f) => (
+        <Card key={f.id} f={f} place={places.get(f.id)} />
       ))}
       <ReviewKeys />
     </>

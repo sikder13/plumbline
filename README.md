@@ -91,6 +91,26 @@ On a finding card the library's impact sentence is shown without any sentence th
 
 Each page reports a visit to `https://nahltech.com/api/demo-visit` only after it has been on screen for three seconds, which a link scanner never reaches. It sends the page token and one of `view`, `tab_findings` or `cta_click`, and nothing else. A visitor with Do Not Track or Global Privacy Control set is not counted.
 
+**Waves**
+
+A wave is a hand-picked list of businesses prepared for outreach together. For each one the facts we would put in front of its owner are stored one by one, each with the page it was read on, the words that state it and the day it was checked.
+
+| Command | What it does |
+|---|---|
+| `wave import --name <wave> --file <csv>` | Stores the list: order, status ("wave" or "reserve") and slug for each row. |
+| `wave collect --name <wave>` | Reads the homepage and the pages that say who runs each business, how to reach it and what it costs. Reports signs of a sale or closure, agency credits, published emails, booking links, prices and videos. |
+| `wave read --business <slug> <urls...>` | Reads further pages for one business, such as its page on the company register. |
+| `wave facts --name <wave>` | Stores each business's research file. Refuses a file unless every quote in it is on the saved copy of its page, each confirmed name has sources on two sites, and a published email names the page that shows it. `--check` stores nothing. |
+| `wave assets --name <wave>` | Measures every photo, picks the best three for the top of a page (at least 1800 px wide, crisp, not a logo, map or screenshot), and looks up videos, logo, colours and fonts. |
+| `wave ai --name <wave>` | Asks AI tools who to book each business's own activities with, both providers, three runs each. Shows the questions and the estimate first; `--estimate` stops there. `--pass 1`, then `--pass 2` an hour later, lets a finding count as reproduced. |
+| `wave crawlmouse --name <wave>` | Opens the example pages behind every Crawlmouse sentence again, finds which page links to a missing one, and stores what still holds as findings with the source "crawlmouse". |
+
+What is read for a wave is kept under `data/wave/<slug>/`: `pages/` (the source, the visible text and, for evidence, screenshots of each page), `collected.json`, the research file `facts.json`, `photos/` and `crawlmouse.json`.
+
+The question put to AI tools comes from the business's own homepage: "Who should I book a <activity> with in or near <town>, New Zealand? Name specific operators." A business with two clear activities gets a question for each. The stored category is never used, because for a business found by search it is only the search that found it. No answer naming the business, while the answers name others, is a finding. Most answers naming it is a strength.
+
+In the review app, "Wave 2 only" shows the businesses of a wave in list order. Each business's findings are ranked for its owner (lost bookings and broken contact first, then speed, then security, then search and AI) and the three to five put forward are marked. Crawlmouse findings sit beside Plumbline's own, each with Crawlmouse's sentence, what we measured when we opened the pages again, and the screenshots. A re-check of Plumbline's findings leaves findings from another tool alone.
+
 **Housekeeping**
 
 | Command | What it does |
@@ -134,6 +154,7 @@ packages/ai/         AI answer runs
 packages/report/     the batch report
 packages/export/     per-business bundle for preview pages
 packages/preview/    preview page data, images, corrected AI questions, gates and visits
+packages/wave/       a hand-picked list: facts with their sources, Crawlmouse findings, ranking
 impact/library.yaml  client-facing impact and fix sentences
 calibration/         truth file and calibration report for the first 20
 fixtures/            pages used by the tests
