@@ -1,4 +1,5 @@
 import { BANNED_WORDS } from '@plumbline/impact';
+import { sameSpeed, speedIn } from '@plumbline/wave';
 import { numbersIn } from './copy.ts';
 
 /**
@@ -49,10 +50,12 @@ export const RECHECK_EDIT = 'needs edit (recheck)';
 /**
  * Where a draft stands once its findings have been checked again. Any numbered line whose finding
  * no longer reproduces, reads differently now, or was not checked in the last 24 hours is named,
- * and so is a list of findings that cannot be read. A draft held as weak stays held, and a status
- * a person wrote (sent, or an edit they asked for) is kept as it is.
+ * and so is a list of findings that cannot be read. A speed line whose figures a new run has only
+ * nudged still holds, and the new figures are set beside the status. A draft held as weak stays
+ * held, and a status a person wrote (sent, or an edit they asked for) is kept as it is.
  */
-export function draftAfterRecheck(draft: Draft, now: Map<number, FindingNow>, at: Date): { status: 'ready' | 'needs edit' | 'HOLD' | 'kept'; notes: string[] } {
+export function draftAfterRecheck(draft: Draft, now: Map<number, FindingNow>, at: Date): { status: 'ready' | 'needs edit' | 'HOLD' | 'kept'; notes: string[]; asides: string[] } {
+  const asides: string[] = [];
   const notes: string[] = draft.unread.map((l) => `"${l}" under "Findings used" could not be read`);
   if (!draft.findings.length && !draft.unread.length) notes.push('no finding is listed under "Findings used"');
   for (const f of draft.findings) {
@@ -60,12 +63,16 @@ export function draftAfterRecheck(draft: Draft, now: Map<number, FindingNow>, at
     if (!current) notes.push(`line ${f.line}: finding #${f.id} is not on file`);
     else if (current.status !== 'approved') notes.push(`line ${f.line}: finding #${f.id} no longer reproduces`);
     else if (!current.verifiedAt || at.getTime() - new Date(current.verifiedAt).getTime() > DAY) notes.push(`line ${f.line}: finding #${f.id} was last checked more than 24 hours ago`);
-    else if (current.sentence !== f.sentence) notes.push(`line ${f.line}: finding #${f.id} now reads "${current.sentence}"`);
+    else if (current.sentence !== f.sentence) {
+      const speed = sameSpeed(f.sentence, current.sentence) ? speedIn(current.sentence) : null;
+      if (speed) asides.push(`line ${f.line}: finding #${f.id} now measures ${speed.performance} out of 100 and ${(speed.lcpMs / 1000).toFixed(1)} s, which agrees with the draft`);
+      else notes.push(`line ${f.line}: finding #${f.id} now reads "${current.sentence}"`);
+    }
   }
-  if (draft.status === 'HOLD') return { status: 'HOLD', notes };
+  if (draft.status === 'HOLD') return { status: 'HOLD', notes, asides };
   const ours = draft.status === 'ready' || draft.statusLine.toLowerCase().startsWith(RECHECK_EDIT);
-  if (!ours) return { status: 'kept', notes };
-  return { status: notes.length ? 'needs edit' : 'ready', notes };
+  if (!ours) return { status: 'kept', notes, asides };
+  return { status: notes.length ? 'needs edit' : 'ready', notes, asides };
 }
 
 /**

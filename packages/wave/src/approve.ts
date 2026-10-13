@@ -4,7 +4,7 @@
  * the first few are approved. Every decision carries the rule that made it.
  */
 
-import { statedSentence, steadySpeed, type SpeedRun } from './stated.ts';
+import { speedIn, statedSentence, steadySpeed, type SpeedRun } from './stated.ts';
 
 export interface ApprovalFinding {
   id: number;
@@ -171,10 +171,23 @@ const PLACE: Record<string, [OwnerTier, number]> = {
 /** A speed finding counts as a speed problem only past these marks. Short of them it ranks with the rest. */
 export const SPEED_BAR = { lcpMs: 4000, performance: 50 };
 
+const slow = (m: SpeedRun) => m.lcpMs > SPEED_BAR.lcpMs || m.performance < SPEED_BAR.performance;
+
+/**
+ * Whether two speed sentences say the same thing: their figures agree as two runs of one page
+ * would, and both stand on the same side of the marks that make a page slow. Every new run nudges
+ * the median, and a sentence that has only been nudged has not changed.
+ */
+export function sameSpeed(a: string, b: string): boolean {
+  const x = speedIn(a);
+  const y = speedIn(b);
+  return !!x && !!y && !disagree(x, y) && slow(x) === slow(y);
+}
+
 export function tierOf(f: ApprovalFinding, ctx: ApprovalContext): { tier: OwnerTier; place: number } {
   if (f.checkId === 'C20_slow_mobile') {
     const m = steadySpeed(ctx.speedRuns) ?? { performance: Number(f.detail.performance ?? 100), lcpMs: Number(f.detail.lcpMs ?? 0) };
-    return m.lcpMs > SPEED_BAR.lcpMs || m.performance < SPEED_BAR.performance ? { tier: 'speed', place: 1 } : { tier: 'other', place: 1 };
+    return slow(m) ? { tier: 'speed', place: 1 } : { tier: 'other', place: 1 };
   }
   // A price missing from the homepage but shown on another page costs far less than no price anywhere.
   if (f.checkId === 'C14_no_price_visible' && ((f.detail.pricesFoundOn as unknown[] | undefined) ?? []).length) return { tier: 'other', place: 2 };

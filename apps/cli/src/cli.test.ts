@@ -166,6 +166,14 @@ describe('a kept verdict of the independent check', () => {
     // A verdict kept without its sentence speaks for the finding as a whole.
     expect(verdictStands({ verdict: 'ok', reason: '' }, 'anything')).toBe(true);
   });
+
+  it('holds for a speed sentence while a new run has only nudged its figures', () => {
+    const passed = { verdict: 'ok' as const, reason: '', sentence: 'Mobile speed score 30 out of 100, main content after 6.0 s' };
+    expect(verdictStands(passed, 'Mobile speed score 34 out of 100, main content after 5.8 s')).toBe(true);
+    expect(verdictStands(passed, 'Mobile speed score 55 out of 100, main content after 3.1 s')).toBe(false);
+    const worded = { verdict: 'flag' as const, reason: 'say it scored about 30', scope: 'sentence' as const, sentence: 'Mobile speed score 30 out of 100, main content after 6.0 s' };
+    expect(verdictStands(worded, 'Mobile speed score 34 out of 100, main content after 5.8 s')).toBe(true);
+  });
 });
 
 describe('a business that must not be built for or written to', () => {

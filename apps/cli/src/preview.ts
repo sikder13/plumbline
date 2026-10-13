@@ -121,7 +121,8 @@ export async function previewRecheckBatch(d: Db, o: { wave: string; batch: strin
     const draft = parseDraft(text);
     const r = draftAfterRecheck(draft, findingsNow(d, b.id, findingsBatch), now);
     // A hold, and a status a person wrote, are kept, with what the recheck found set beside them.
-    const line = r.status === 'ready' ? `ready, rechecked ${nzTime(now)}. Send within 24 hours.` : r.status === 'needs edit' ? `${RECHECK_EDIT}: ${r.notes.join('; ')}` : `${draft.statusLine.split(' | ')[0]}${r.notes.length ? ` | ${r.notes.join('; ')}` : ''}`;
+    const found = [...r.notes, ...r.asides].join('; ');
+    const line = r.status === 'ready' ? `ready, rechecked ${nzTime(now)}. Send within 24 hours.${found ? ` ${found}.` : ''}` : r.status === 'needs edit' ? `${RECHECK_EDIT}: ${found}` : `${draft.statusLine.split(' | ')[0]}${found ? ` | ${found}` : ''}`;
     writeFileSync(file, withStatus(text, line));
     console.log(`${b.slug}: ${line}`);
   }

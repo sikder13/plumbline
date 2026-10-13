@@ -16,6 +16,7 @@ import {
   ownPages,
   readSuppression,
   savedHtml,
+  sameSpeed,
   savedPages,
   speedRuns,
   statedSentence,
@@ -88,10 +89,11 @@ export type StoredVerdicts = Record<string, { verdict: 'ok' | 'flag'; reason: st
 /**
  * Whether a kept verdict still speaks for a finding. A pass holds only for the sentence that was
  * passed. A flag against the finding itself holds however it is reworded, and a flag against the
- * wording alone lapses once the wording has changed.
+ * wording alone lapses once the wording has changed. A speed sentence whose figures a new run has
+ * only nudged is the same sentence.
  */
 export function verdictStands(v: StoredVerdicts[string], sentence: string): boolean {
-  if (v.sentence === undefined || v.sentence === sentence) return true;
+  if (v.sentence === undefined || v.sentence === sentence || sameSpeed(v.sentence, sentence)) return true;
   return v.verdict === 'flag' && v.scope !== 'sentence';
 }
 

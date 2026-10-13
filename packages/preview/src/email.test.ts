@@ -49,17 +49,24 @@ describe('a draft after its findings are checked again', () => {
 
   it('is ready when every finding still holds as it was written', () => {
     const r = draftAfterRecheck(d, new Map([holds(735, 'The phone link is broken'), holds(739, 'Mobile speed score 30 out of 100, main content after 6.0 s')]), now);
-    expect(r).toEqual({ status: 'ready', notes: [] });
+    expect(r).toEqual({ status: 'ready', notes: [], asides: [] });
   });
 
   it('needs an edit, with the line named, when a finding no longer reproduces, has changed its figures or was not checked in time', () => {
     const gone = draftAfterRecheck(d, new Map([[735, { status: 'resolved', sentence: 'The phone link is broken', verifiedAt: '2026-10-14T01:00:00Z' }], holds(739, 'Mobile speed score 30 out of 100, main content after 6.0 s')]), now);
-    expect(gone).toEqual({ status: 'needs edit', notes: ['line 1: finding #735 no longer reproduces'] });
-    const moved = draftAfterRecheck(d, new Map([holds(735, 'The phone link is broken'), holds(739, 'Mobile speed score 34 out of 100, main content after 5.8 s')]), now);
-    expect(moved).toEqual({ status: 'needs edit', notes: ['line 2: finding #739 now reads "Mobile speed score 34 out of 100, main content after 5.8 s"'] });
+    expect(gone).toEqual({ status: 'needs edit', notes: ['line 1: finding #735 no longer reproduces'], asides: [] });
+    const moved = draftAfterRecheck(d, new Map([holds(735, 'The phone link is broken'), holds(739, 'Mobile speed score 55 out of 100, main content after 3.1 s')]), now);
+    expect(moved).toEqual({ status: 'needs edit', notes: ['line 2: finding #739 now reads "Mobile speed score 55 out of 100, main content after 3.1 s"'], asides: [] });
+    const reworded = draftAfterRecheck(d, new Map([holds(735, 'The Call us link does not dial'), holds(739, 'Mobile speed score 30 out of 100, main content after 6.0 s')]), now);
+    expect(reworded.notes).toEqual(['line 1: finding #735 now reads "The Call us link does not dial"']);
     const stale = draftAfterRecheck(d, new Map([holds(735, 'The phone link is broken'), [739, { status: 'approved', sentence: 'Mobile speed score 30 out of 100, main content after 6.0 s', verifiedAt: '2026-10-12T01:00:00Z' }]]), now);
-    expect(stale).toEqual({ status: 'needs edit', notes: ['line 2: finding #739 was last checked more than 24 hours ago'] });
+    expect(stale).toEqual({ status: 'needs edit', notes: ['line 2: finding #739 was last checked more than 24 hours ago'], asides: [] });
     expect(draftAfterRecheck(d, new Map([holds(735, 'The phone link is broken')]), now).notes).toEqual(['line 2: finding #739 is not on file']);
+  });
+
+  it('is still ready when a new speed run has only nudged the figures, and says what they now are', () => {
+    const nudged = draftAfterRecheck(d, new Map([holds(735, 'The phone link is broken'), holds(739, 'Mobile speed score 34 out of 100, main content after 5.8 s')]), now);
+    expect(nudged).toEqual({ status: 'ready', notes: [], asides: ['line 2: finding #739 now measures 34 out of 100 and 5.8 s, which agrees with the draft'] });
   });
 
   it('stays on hold when it was held as weak, whatever the recheck finds', () => {
@@ -142,14 +149,14 @@ describe('a draft whose bookkeeping cannot be read', () => {
   it('is not called ready when a line under "Findings used" does not read as a finding', () => {
     const slip = parseDraft(DRAFT.replace('1. #735 |', '1. 735 |'));
     expect(slip.unread).toEqual(['1. 735 | The phone link is broken']);
-    expect(draftAfterRecheck(slip, all, now)).toEqual({ status: 'needs edit', notes: ['"1. 735 | The phone link is broken" under "Findings used" could not be read'] });
+    expect(draftAfterRecheck(slip, all, now)).toEqual({ status: 'needs edit', notes: ['"1. 735 | The phone link is broken" under "Findings used" could not be read'], asides: [] });
     expect(scanEmail(slip, new Set(['30', '100', '6.0', '4.8', '594'])).map((i) => i.kind)).toContain('findings');
   });
 
   it('is not called ready when it lists no finding at all', () => {
     const none = parseDraft(DRAFT.replace(/^\d\. #.*\n/gm, ''));
     expect(none.findings).toEqual([]);
-    expect(draftAfterRecheck(none, all, now)).toEqual({ status: 'needs edit', notes: ['no finding is listed under "Findings used"'] });
+    expect(draftAfterRecheck(none, all, now)).toEqual({ status: 'needs edit', notes: ['no finding is listed under "Findings used"'], asides: [] });
   });
 
   it('is told when the email numbers more lines than it lists findings', () => {
@@ -164,7 +171,7 @@ describe('a status the recheck did not write', () => {
   const all = new Map([holds(735, 'The phone link is broken'), holds(739, 'Mobile speed score 30 out of 100, main content after 6.0 s')]);
 
   it('is kept: a draft marked sent is not made ready again', () => {
-    expect(draftAfterRecheck(parseDraft(withStatus(DRAFT, 'sent 14 October')), all, now)).toEqual({ status: 'kept', notes: [] });
+    expect(draftAfterRecheck(parseDraft(withStatus(DRAFT, 'sent 14 October')), all, now)).toEqual({ status: 'kept', notes: [], asides: [] });
   });
 
   it('is kept when a person asked for an edit, and replaced when the recheck asked for it', () => {

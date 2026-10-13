@@ -31,6 +31,12 @@ export function speedSeen(runs: SpeedRun[]): string | null {
   return `Measured on ${last.length} separate runs. Scores: ${listed(last.map((r) => String(Math.round(r.performance))))} out of 100. Main content after ${listed(last.map((r) => `${(r.lcpMs / 1000).toFixed(1)} s`))}.`;
 }
 
+/** The figures a speed sentence gives, or null when the sentence is about something else. */
+export function speedIn(sentence: string): SpeedRun | null {
+  const m = /^Mobile speed score (\d+) out of 100, main content after (\d+(?:\.\d+)?) s$/.exec(sentence.trim());
+  return m ? { performance: Number(m[1]), lcpMs: Math.round(Number(m[2]) * 1000) } : null;
+}
+
 function place(url: string): string {
   try {
     const u = new URL(url);

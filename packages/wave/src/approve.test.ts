@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decideFindings, isWeak, needsThirdSpeedRun, ownerOrder, rejectionFor, tierOf, type ApprovalContext, type ApprovalFinding } from './approve.ts';
+import { decideFindings, isWeak, needsThirdSpeedRun, ownerOrder, rejectionFor, sameSpeed, tierOf, type ApprovalContext, type ApprovalFinding } from './approve.ts';
 
 const NOW = new Date('2026-10-13T08:00:00Z');
 let next = 0;
@@ -216,5 +216,26 @@ describe('two findings about broken addresses', () => {
     expect(picks([missing, elsewhere])).toEqual(['CM_missing_page', 'C12_broken_internal_links']);
     const same = finding('C12_broken_internal_links', { detail: { links: [{ url: 'https://www.alpha.co.nz/booking/', status: 404, foundOn: 'https://alpha.co.nz/' }] } });
     expect(picks([missing, same])).toEqual(['CM_missing_page']);
+  });
+});
+
+describe('two speed sentences', () => {
+  const speed = (score: number, seconds: string) => `Mobile speed score ${score} out of 100, main content after ${seconds} s`;
+
+  it('say the same thing when their figures agree as two runs would, on the same side of the bar', () => {
+    expect(sameSpeed(speed(30, '6.0'), speed(34, '5.8'))).toBe(true);
+    expect(sameSpeed(speed(30, '6.0'), speed(30, '6.0'))).toBe(true);
+  });
+
+  it('do not when a figure has moved by more than runs may disagree, or the page is no longer slow', () => {
+    expect(sameSpeed(speed(30, '6.0'), speed(55, '6.0'))).toBe(false);
+    expect(sameSpeed(speed(30, '6.0'), speed(30, '9.5'))).toBe(false);
+    // 48 and 3.9 s is past the bar; 52 and 3.8 s is not.
+    expect(sameSpeed(speed(48, '3.9'), speed(52, '3.8'))).toBe(false);
+  });
+
+  it('are never the same as a sentence about something else', () => {
+    expect(sameSpeed(speed(30, '6.0'), 'The phone link is broken')).toBe(false);
+    expect(sameSpeed('The phone link is broken', 'The phone link is broken')).toBe(false);
   });
 });
