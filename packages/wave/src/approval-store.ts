@@ -23,8 +23,9 @@ function cells(line: string): string[] {
 
 /**
  * The suppression list: slugs, email addresses and domains that must not be built for or written
- * to. A sheet with headings is read by them, so a date or a reason is never taken for an entry.
- * A bare list is read whole. One cell may hold several entries, set apart by semicolons or spaces.
+ * to. A sheet with headings is read by them, so a date or a reason is never taken for an entry,
+ * though an address is read wherever it stands. A bare list is read whole. One cell may hold
+ * several entries, set apart by semicolons or spaces.
  */
 export function readSuppression(text: string): Set<string> {
   const rows = text.replace(/^\uFEFF/, '').split(/\r?\n/).map(cells).filter((r) => r.some(Boolean));
@@ -33,8 +34,9 @@ export function readSuppression(text: string): Set<string> {
   const out = new Set<string>();
   for (const row of headed ? rows.slice(1) : rows) {
     row.forEach((cell, i) => {
-      if (headed && !NAMES.test(head[i] ?? '')) return;
-      for (const entry of cell.split(/[;\s]+/)) if (entry) out.add(entry);
+      // An address is an entry wherever it stands: one set apart by a comma lands under the next heading.
+      const named = !headed || NAMES.test(head[i] ?? '');
+      for (const entry of cell.split(/[;\s]+/)) if (entry && (named || entry.includes('@'))) out.add(entry);
     });
   }
   return out;

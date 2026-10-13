@@ -116,6 +116,12 @@ describe('a suppression entry for a whole domain', () => {
     expect(isSuppressed(list, 'delta-treks', [], 'delta.co.nz')).toBe(true);
   });
 
+  it('still reads an address that has slipped into the wrong column, as when two addresses are set apart by a comma', () => {
+    const list = readSuppression('domain,emails,date,reason\ndelta.co.nz,lucy@delta.co.nz,lucyp@echo.nz,2026-10-13,replied no thanks\n');
+    expect([...list].sort()).toEqual(['delta.co.nz', 'lucy@delta.co.nz', 'lucyp@echo.nz']);
+    expect(isSuppressed(list, 'echo-tours', ['lucyp@echo.nz'])).toBe(true);
+  });
+
   it('leaves alone a business whose name only ends the same way', () => {
     const list = readSuppression(sheet);
     expect(isSuppressed(list, 'other', ['info@notdelta.co.nz'], 'https://notdelta.co.nz/')).toBe(false);
