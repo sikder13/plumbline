@@ -15,7 +15,9 @@ interface Spot {
 
 interface Props {
   viewBox: string;
-  paths: string[];
+  /** The mainland as one closed shape, and each island as its own. */
+  land: string;
+  islands: string[];
   spots: Spot[];
   credit: string;
   /** The section's heading, held in view with the map. */
@@ -28,7 +30,7 @@ interface Props {
  * lights the next dot and opens what the business says about it. A tap on a dot or on the list
  * goes straight to that spot.
  */
-export function CoastMap({ viewBox, paths, spots, credit, head, className }: Props) {
+export function CoastMap({ viewBox, land, islands, spots, credit, head, className }: Props) {
   const outer = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const [seen, setSeen] = useState(false);
@@ -65,18 +67,21 @@ export function CoastMap({ viewBox, paths, spots, credit, head, className }: Pro
     <div ref={outer} className={className} data-seen={seen ? '' : undefined} style={{ ['--steps' as string]: spots.length }}>
       <div data-frame>
         {head}
-        <div data-map style={{ aspectRatio: `${w} / ${h}` }}>
-          <svg viewBox={viewBox} aria-hidden="true" focusable="false">
-            {paths.map((d) => (
-              <path key={d} d={d} pathLength={1} />
+        <div data-chart>
+          <div data-map style={{ aspectRatio: `${w} / ${h}` }}>
+            <svg viewBox={viewBox} preserveAspectRatio="none" aria-hidden="true" focusable="false">
+              <path d={land} />
+              {islands.map((d) => (
+                <path key={d} d={d} />
+              ))}
+            </svg>
+            {spots.map((s, i) => (
+              <button key={s.id} type="button" data-side={s.side} data-state={i === active ? 'on' : i < active ? 'done' : 'off'} aria-pressed={i === active} aria-label={s.name} onClick={() => go(i)} style={{ left: `${((s.x - x0) / w) * 100}%`, top: `${((s.y - y0) / h) * 100}%` }}>
+                <i aria-hidden="true" />
+                <span aria-hidden="true">{s.name}</span>
+              </button>
             ))}
-          </svg>
-          {spots.map((s, i) => (
-            <button key={s.id} type="button" data-side={s.side} data-state={i === active ? 'on' : i < active ? 'done' : 'off'} aria-pressed={i === active} onClick={() => go(i)} style={{ left: `${((s.x - x0) / w) * 100}%`, top: `${((s.y - y0) / h) * 100}%` }}>
-              <i aria-hidden="true" />
-              <span>{s.name}</span>
-            </button>
-          ))}
+          </div>
           <p data-credit>{credit}</p>
         </div>
         <ol data-legend>

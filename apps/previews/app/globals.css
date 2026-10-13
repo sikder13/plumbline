@@ -463,3 +463,10 @@ img {
     transform: none;
   }
 }
+
+/* On a phone the strip's link already opens the findings, so the tab pill is left to larger screens. */
+@media (max-width: 759px) {
+  .tab-pill {
+    display: none;
+  }
+}

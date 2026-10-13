@@ -213,7 +213,7 @@
   height: 100svh;
   display: flex;
   flex-direction: column;
-  padding: 20px 24px 84px;
+  padding: 20px 24px 88px;
   overflow: hidden;
 }
 
@@ -225,11 +225,17 @@
   display: none;
 }
 
+/* The map and its credit are one block, so nothing below can ride up over them. */
+.story [data-chart] {
+  flex: 0 0 auto;
+  margin: 12px -24px 12px;
+}
+
 .story [data-map] {
   position: relative;
-  flex: 0 1 auto;
-  height: 36svh;
-  margin: 12px auto 8px 0;
+  width: 100%;
+  overflow: hidden;
+  counter-reset: dot;
 }
 
 .story svg {
@@ -237,24 +243,23 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  overflow: visible;
 }
 
 .story path {
-  fill: none;
+  fill: var(--cream);
   stroke: var(--ink);
-  stroke-width: 0.5;
+  stroke-width: 1.5px;
   stroke-linejoin: round;
-  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
 }
 
 .story [data-map] button {
   position: absolute;
   display: flex;
   align-items: center;
-  width: 32px;
-  height: 32px;
-  margin: -16px 0 0 -16px;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
   padding: 0;
   border: 0;
   background: none;
@@ -263,26 +268,18 @@
   cursor: pointer;
 }
 
-.story ol {
-  counter-reset: spot;
-}
-
-.story [data-map] {
-  counter-reset: dot;
-}
-
 .story [data-map] button i {
   counter-increment: dot;
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
-  margin: 0 7px;
+  width: 28px;
+  height: 28px;
+  margin: 0 8px;
   border-radius: 50%;
   background: var(--cream);
   box-shadow: 0 0 0 1.5px var(--ink);
-  font: normal 700 10px/1 'Karla', system-ui, sans-serif;
+  font: normal 700 14px/1 'Karla', system-ui, sans-serif;
   transition: transform 0.5s var(--ease), background-color 0.3s var(--ease), color 0.3s var(--ease), box-shadow 0.5s var(--ease);
 }
 
@@ -298,39 +295,23 @@
 .story [data-map] button[data-state='on'] i {
   background: var(--red);
   color: #fff;
-  transform: scale(1.45);
+  transform: scale(1.22);
   box-shadow: 0 0 0 1.5px var(--red), 0 0 0 9px rgba(178, 50, 50, 0.22);
 }
 
+/* The name of the lit spot is shown on the map on large screens only. On a phone the list below carries it. */
 .story [data-map] button span {
-  position: absolute;
-  left: 36px;
-  white-space: nowrap;
-  opacity: 0;
-  transform: translateX(-6px);
-  transition: opacity 0.35s var(--ease), transform 0.5s var(--ease);
-  pointer-events: none;
-  /* A soft halo in the colour of the sea keeps the name clear of the coastline behind it. */
-  text-shadow: 0 0 3px var(--sea), 0 0 6px var(--sea), 0 0 10px var(--sea);
-}
-
-.story [data-map] button[data-side='left'] span {
-  left: auto;
-  right: 36px;
-  transform: translateX(6px);
-}
-
-.story [data-map] button[data-state='on'] span {
-  opacity: 1;
-  transform: none;
+  display: none;
 }
 
 .story [data-credit] {
-  position: absolute;
-  right: 0;
-  bottom: -4px;
+  margin: 6px 24px 0 !important;
   font-size: 11px;
-  opacity: 0.7;
+  color: #454a52;
+}
+
+.story ol {
+  counter-reset: spot;
 }
 
 .story [data-legend] {
@@ -354,18 +335,17 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--ink);
+  color: #454a52;
   font: 700 16px/1.2 'Karla', system-ui, sans-serif;
   text-align: left;
   cursor: pointer;
-  color: #454a52;
   transition: color 0.3s var(--ease);
 }
 
 .story [data-legend] button::before {
   content: counter(spot);
   flex: 0 0 16px;
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .story [data-legend] li[data-state='on'] button {
@@ -429,6 +409,10 @@
   max-width: 34ch;
 }
 
+.side [data-side-wrap] {
+  position: relative;
+}
+
 .side [data-side-track] {
   display: flex;
   gap: 12px;
@@ -440,6 +424,10 @@
 }
 
 .side [data-side-track]::-webkit-scrollbar {
+  display: none;
+}
+
+.side [data-side-cue] {
   display: none;
 }
 
@@ -672,27 +660,10 @@
   font-size: 16px;
 }
 
-.meet {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.provided {
   padding: 16px 0 24px;
   border-top: 1px solid rgba(34, 34, 35, 0.25);
-}
-
-.meet picture {
-  flex: 0 0 72px;
-}
-
-.meet img {
-  width: 72px;
-  height: 72px;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
-.meet p {
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .bookRow {
@@ -769,12 +740,13 @@
   :global([data-strip-away]) .nav {
     top: 14px;
   }
-  .nav > a:first-child {
+  .navName {
     color: #fff;
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 19px;
+    line-height: 1;
     text-decoration: none;
-  }
-  .nav .wordmark {
-    font-size: 10px;
+    white-space: nowrap;
   }
   .navLinks {
     display: flex;
@@ -829,11 +801,11 @@
   .story [data-frame] {
     height: 100vh;
     display: grid;
-    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
     grid-template-rows: auto 1fr;
-    column-gap: 72px;
+    column-gap: 64px;
     align-content: center;
-    padding: 96px 56px 56px;
+    padding: 96px 56px 56px 0;
   }
   .storyHead {
     grid-column: 2;
@@ -846,18 +818,46 @@
     margin-top: 16px;
     font-size: 19px;
   }
-  .story [data-map] {
+  .story [data-chart] {
     grid-column: 1;
     grid-row: 1 / span 2;
     align-self: center;
-    justify-self: center;
-    height: min(74vh, 720px);
     margin: 0;
   }
+  .story [data-map] button i {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+  }
   .story [data-map] button span {
+    display: block;
+    position: absolute;
+    left: 54px;
+    white-space: nowrap;
     font-family: 'DM Serif Display', Georgia, serif;
     font-weight: 400;
-    font-size: 22px;
+    font-size: 24px;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity 0.35s var(--ease), transform 0.5s var(--ease);
+    pointer-events: none;
+    text-shadow: 0 0 3px var(--sea), 0 0 6px var(--sea), 0 0 10px var(--sea);
+  }
+  .story [data-map] button[data-side='left'] span {
+    left: auto;
+    right: 54px;
+    transform: translateX(6px);
+  }
+  /* Where a name beside the marker would run into a neighbour, the list alone carries it. */
+  .story [data-map] button[data-side='none'] span {
+    display: none;
+  }
+  .story [data-map] button[data-state='on'] span {
+    opacity: 1;
+    transform: none;
+  }
+  .story [data-credit] {
+    margin: 8px 0 0 56px !important;
   }
   .story [data-legend] {
     grid-column: 2;
@@ -876,7 +876,7 @@
     line-height: 1.5;
   }
   .trips {
-    padding: 0;
+    padding: 120px 0;
   }
   .tripsHead {
     grid-template-columns: auto 1fr auto;
@@ -884,32 +884,46 @@
     gap: 40px;
     padding: 0 56px 40px;
   }
-  .side [data-side-frame] {
-    padding: 120px 0;
-  }
-  .side[data-pinned] [data-side-frame] {
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 72px 0 40px;
-    overflow: hidden;
-  }
+  /* The row starts with its first panel whole at the content's left edge, and runs off the right. */
   .side [data-side-track] {
     gap: 20px;
     padding: 0 56px;
+    scroll-padding-left: 56px;
+    cursor: grab;
+    user-select: none;
   }
-  .side[data-pinned] [data-side-track] {
-    width: max-content;
-    overflow: visible;
-    will-change: transform;
+  .side [data-side-track][data-dragging] {
+    cursor: grabbing;
+    scroll-snap-type: none;
+  }
+  .side [data-side-cue] {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: rgba(255, 243, 228, 0.82);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 0 1px rgba(34, 34, 35, 0.14);
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 15px;
+    pointer-events: none;
+    transform: translateY(-50%);
+    transition: opacity 0.5s var(--ease), transform 0.6s var(--ease);
+  }
+  .side[data-dragged] [data-side-cue] {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.8);
   }
   .panel {
-    flex: 0 0 46vw;
+    flex: 0 0 44vw;
     min-height: 0;
-    height: min(64vh, 640px);
+    height: min(66vh, 660px);
   }
   .panelBody {
     padding: 40px;
@@ -969,13 +983,19 @@
   .heroText .red {
     animation-delay: 0.78s;
   }
-  .story path {
-    stroke-dasharray: 1;
-    stroke-dashoffset: 1;
-    transition: stroke-dashoffset 1.8s cubic-bezier(0.65, 0, 0.35, 1);
+  .story [data-map] svg {
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 1.4s cubic-bezier(0.65, 0, 0.35, 1);
   }
-  .story[data-seen] path {
-    stroke-dashoffset: 0;
+  .story[data-seen] [data-map] svg {
+    clip-path: inset(0 0 0 0);
+  }
+  .story [data-map] button {
+    opacity: 0;
+    transition: opacity 0.5s var(--ease) 0.9s;
+  }
+  .story[data-seen] [data-map] button {
+    opacity: 1;
   }
   @keyframes settle {
     from {

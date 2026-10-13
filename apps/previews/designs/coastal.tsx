@@ -17,8 +17,8 @@ interface Content {
   email: string;
   hero: { place: string; lines: string[]; line: string };
   intro: { text: string; ratingLabel: string; ratingUnit: string; ratingSource: string };
-  coast: { heading: string; lead: string } & Pick<Parameters<typeof CoastMap>[0], 'viewBox' | 'paths' | 'spots' | 'credit'>;
-  trips: { heading: string; lead: string; items: { image: string; name: string; duration: string; text: string; prices: { who: string; price: string }[]; note?: string }[] };
+  coast: { heading: string; lead: string } & Pick<Parameters<typeof CoastMap>[0], 'viewBox' | 'land' | 'islands' | 'spots' | 'credit'>;
+  trips: { heading: string; lead: string; cue: string; items: { image: string; name: string; duration: string; text: string; prices: { who: string; price: string }[]; note?: string }[] };
   us: { heading: string; statement: string; caption: string; people: { name: string; text: string }[] };
   book_section: { heading: string; steps: { title: string; text: string }[]; provided: string };
 }
@@ -44,8 +44,8 @@ function Demo({ data }: { data: PageData }) {
   return (
     <div className={s.root}>
       <nav className={s.nav} aria-label="Sections">
-        <a href="#top" aria-label={data.name}>
-          <Wordmark lines={c.wordmark} />
+        <a className={s.navName} href="#top">
+          {data.name}
         </a>
         <span className={s.navLinks}>
           {c.nav.map((n) => (
@@ -102,7 +102,8 @@ function Demo({ data }: { data: PageData }) {
           <CoastMap
             className={s.story}
             viewBox={c.coast.viewBox}
-            paths={c.coast.paths}
+            land={c.coast.land}
+            islands={c.coast.islands}
             spots={c.coast.spots}
             credit={c.coast.credit}
             head={
@@ -118,6 +119,7 @@ function Demo({ data }: { data: PageData }) {
           <SideScroll
             className={s.side}
             label={c.trips.heading}
+            cue={c.trips.cue}
             head={
               <header className={s.tripsHead}>
                 <h2 id="trips-h">{c.trips.heading}</h2>
@@ -188,10 +190,7 @@ function Demo({ data }: { data: PageData }) {
                 </li>
               ))}
             </ol>
-            <div className={s.meet}>
-              <Pic pic={pic(data, 'sign')} sizes="96px" />
-              <p>{c.book_section.provided}</p>
-            </div>
+            <p className={s.provided}>{c.book_section.provided}</p>
             <div className={s.bookRow}>
               <a className={s.red} data-press data-magnetic {...book}>
                 {c.book.label}
