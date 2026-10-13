@@ -146,7 +146,7 @@ export async function previewBuild(d: Db, opts: { only?: string; draft?: boolean
   cpSync(join(app, 'out'), served, { recursive: true });
   const assets = join(previewPaths.out, 'assets');
   for (const page of readdirSync(previewPaths.data).map((f) => JSON.parse(readFileSync(join(previewPaths.data, f), 'utf8')) as PageData)) {
-    if (existsSync(join(assets, page.path))) cpSync(join(assets, page.path), join(served, page.path), { recursive: true });
+    if (existsSync(join(assets, page.path))) cpSync(join(assets, page.path), join(served, page.path), { recursive: true, filter: (from) => !from.endsWith('.made') });
     const html = join(served, page.path, 'index.html');
     writeFileSync(html, scriptsAfterPaint(readFileSync(html, 'utf8')));
   }

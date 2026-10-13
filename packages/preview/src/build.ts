@@ -64,7 +64,10 @@ export async function buildPicture(source: string, outDir: string, urlBase: stri
   const meta = await base().toBuffer({ resolveWithObject: true });
   const full = { width: meta.info.width, height: meta.info.height };
   const widths = [...new Set((spec.widths ?? DEFAULT_WIDTHS).map((w) => Math.min(w, full.width)))].sort((a, b) => a - b);
-  const sourceTime = statSync(source).mtimeMs;
+  // What the stored versions were made from. A key that now points at another photo, or another crop of it, is made again.
+  const made = `${source}|${JSON.stringify(crop ?? null)}|${statSync(source).mtimeMs}`;
+  const madeFile = join(outDir, `${key}.made`);
+  const current = existsSync(madeFile) && readFileSync(madeFile, 'utf8') === made;
   const formats = [
     { ext: 'avif', type: 'image/avif', write: (img: Sharp) => img.avif({ quality: 48, effort: 5 }) },
     { ext: 'webp', type: 'image/webp', write: (img: Sharp) => img.webp({ quality: 70, effort: 5 }) },
@@ -75,11 +78,12 @@ export async function buildPicture(source: string, outDir: string, urlBase: stri
     for (const w of widths) {
       const name = `${key}-${w}.${f.ext}`;
       const file = join(outDir, name);
-      if (!existsSync(file) || statSync(file).mtimeMs < sourceTime) await f.write(base().resize({ width: w, withoutEnlargement: true })).toFile(file);
+      if (!current || !existsSync(file)) await f.write(base().resize({ width: w, withoutEnlargement: true })).toFile(file);
       parts.push(`${urlBase}/${name} ${w}w`);
     }
     sources.push({ type: f.type, srcset: parts.join(', ') });
   }
+  writeFileSync(madeFile, made);
   const { channels } = await sharp(meta.data).stats();
   const mid = widths[Math.min(1, widths.length - 1)]!;
   return {
