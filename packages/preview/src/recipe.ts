@@ -10,7 +10,7 @@ const item = z.object({ image: text.optional(), name: text, meta: text.optional(
 const image = z.object({ file: text, alt: z.string(), widths: z.array(z.number()).optional(), position: text.optional(), quality: z.number().min(20).max(60).optional(), crop: z.object({ left: z.number(), top: z.number(), width: z.number(), height: z.number() }).optional() });
 
 const section = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('hero'), variant: z.enum(HERO_VARIANTS), place: text, lines: z.array(text).min(1).max(4), sub: text.optional(), note: text.optional(), align: z.enum(['low', 'high', 'centre']).optional(), panel: z.enum(['arch', 'strip', 'tall', 'round']).optional(), ambience: z.enum(['film', 'drift', 'still']).optional(), ground: z.enum(['paper', 'soft', 'deep']).optional(), scale: z.number().min(0.6).max(1.3).optional(), scaleWide: z.number().min(0.6).max(1.3).optional(), treat: z.enum(['duotone']).optional() }),
+  z.object({ kind: z.literal('hero'), variant: z.enum(HERO_VARIANTS), place: text, lines: z.array(text).min(1).max(4), sub: text.optional(), note: text.optional(), noteSource: text.optional(), align: z.enum(['low', 'high', 'centre']).optional(), panel: z.enum(['arch', 'strip', 'tall', 'round']).optional(), ambience: z.enum(['film', 'drift', 'still']).optional(), ground: z.enum(['paper', 'soft', 'deep']).optional(), scale: z.number().min(0.6).max(1.3).optional(), scaleWide: z.number().min(0.6).max(1.3).optional(), treat: z.enum(['duotone']).optional() }),
   z.object({ kind: z.literal('story'), variant: z.enum(['wipe', 'stack', 'rail', 'words']), id: text.optional(), subject: text, heading: text, steps: z.array(z.object({ image: text.optional(), label: text, text })).min(3, 'a pinned story has three to five steps').max(5, 'a pinned story has three to five steps') }),
   z.object({ kind: z.literal('rows'), variant: z.enum(['tall', 'wide', 'plain', 'round']), id: text.optional(), heading: text, lead: text.optional(), button: text.optional(), cue: text, items: z.array(item).min(1) }),
   z.object({ kind: z.literal('wipes'), variant: z.enum(['pair', 'band', 'trio']), images: z.array(text).min(1).max(3), heading: text.optional(), text: text.optional() }),
@@ -59,6 +59,40 @@ function imagesIn(s: Section): string[] {
   return [];
 }
 
+/** A figure taken from Google says so beside it, with the month it was measured. */
+const GOOGLE_SOURCE = /^Google, (January|February|March|April|May|June|July|August|September|October|November|December) \d{4}$/;
+const GOOGLE = /\bgoogle\b/i;
+const GOOGLE_RATING = /\bgoogle\b.*\b(reviews?|ratings?|rated?|stars?)\b|\b(reviews?|ratings?|rated?|stars?)\b.*\bgoogle\b/i;
+
+/** Every line of words under a value, however deep. */
+function wordsUnder(value: unknown): string[] {
+  if (typeof value === 'string') return [value];
+  if (Array.isArray(value)) return value.flatMap(wordsUnder);
+  return value && typeof value === 'object' ? Object.values(value).flatMap(wordsUnder) : [];
+}
+
+/**
+ * Where a page shows a Google rating, "Google" and the month it was measured stand beside it. Only
+ * the note under the action and a figure have a place for that, so a rating in running text is refused.
+ */
+function googleProblems(s: Section): string[] {
+  const out: string[] = [];
+  const needs = 'needs "Google, <month> <year>" as its source';
+  let running: unknown = s;
+  if (s.kind === 'hero') {
+    const { note, noteSource, ...rest } = s;
+    running = rest;
+    if (GOOGLE.test(`${note ?? ''} ${noteSource ?? ''}`) && !GOOGLE_SOURCE.test(noteSource ?? '')) out.push(`the note under the action speaks of Google and ${needs}`);
+  }
+  if (s.kind === 'numbers') {
+    const { items, ...rest } = s;
+    running = rest;
+    for (const x of items) if (GOOGLE.test(`${x.label} ${x.source ?? ''}`) && !GOOGLE_SOURCE.test(x.source ?? '')) out.push(`the figure "${x.value} ${x.label}" comes from Google and ${needs}`);
+  }
+  if (wordsUnder(running).some((line) => GOOGLE_RATING.test(line))) out.push(`${s.kind} speaks of a Google rating in running text; it belongs in the note under the action or among the figures, with its source`);
+  return out;
+}
+
 /** Everything wrong with a recipe, in words. An empty list means it can be built. */
 export function checkRecipe(input: unknown): string[] {
   const parsed = schema.safeParse(input);
@@ -79,6 +113,7 @@ export function checkRecipe(input: unknown): string[] {
     if (n > 5) out.push(`the headline is ${n} words; five at most`);
   }
   if (r.sections.filter((s) => s.kind === 'story').length > 1) out.push('one pinned story a page');
+  for (const s of r.sections) out.push(...googleProblems(s));
   if (!r.images.hero) out.push('no image called "hero"');
   for (const s of r.sections) for (const key of imagesIn(s)) if (!r.images[key]) out.push(`${s.kind} names an image "${key}" that the recipe does not list`);
   const ids = new Set(['top', ...r.sections.flatMap((s) => ('id' in s && s.id ? [s.id] : []))]);

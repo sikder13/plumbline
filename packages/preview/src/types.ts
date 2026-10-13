@@ -111,6 +111,8 @@ export interface HeroSection {
   sub?: string;
   /** One small line under the action, such as an award shown on their site. */
   note?: string;
+  /** Where the note's figure comes from and when it was measured, as in "Google, October 2026". */
+  noteSource?: string;
   /** Where the headline sits on a full photograph. */
   align?: 'low' | 'high' | 'centre';
   /** The shape of the photograph beside a typographic headline. */

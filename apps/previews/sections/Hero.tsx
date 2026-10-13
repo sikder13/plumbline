@@ -71,7 +71,12 @@ export function Hero({ section: h, data, recipe }: Ctx & { section: HeroSection 
           {h.sub && <p className={s.sub}>{h.sub}</p>}
           <div className={s.heroAct}>
             <ActionLink recipe={recipe} tone={tone} />
-            {h.note && <span className={s.note}>{h.note}</span>}
+            {h.note && (
+              <span className={s.note}>
+                {h.note}
+                {h.noteSource && <small>{h.noteSource}</small>}
+              </span>
+            )}
           </div>
         </div>
       </div>

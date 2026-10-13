@@ -260,6 +260,13 @@
   opacity: 0.9;
 }
 
+/* Where the note's figure comes from, on a line of its own. */
+.note small {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .heroMedia {
   overflow: hidden;
   isolation: isolate;

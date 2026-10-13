@@ -52,6 +52,30 @@ describe('a page recipe', () => {
     expect(checkRecipe(recipe({ palette: { ...recipe().palette, ink: '#8a9aa0' } })).join(' | ')).toContain('ink on paper');
   });
 
+  it('is refused when a figure from Google does not say so, with the month it was measured', () => {
+    const problems = (r: unknown) => checkRecipe(r).join(' | ');
+    const figures = (...items: { value: string; label: string; source?: string }[]): Section => ({ kind: 'numbers', variant: 'row', items });
+    expect(problems(recipe({ sections: [hero(), figures({ value: '4.9', label: 'On Google', source: '120 reviews' })] }))).toContain('the figure "4.9 On Google" comes from Google and needs "Google, <month> <year>" as its source');
+    expect(problems(recipe({ sections: [hero(), figures({ value: '52', label: 'Google reviews' })] }))).toContain('the figure "52 Google reviews" comes from Google');
+    expect(problems(recipe({ sections: [hero(), figures({ value: '4.8', label: 'Rating', source: '310 Google reviews, October 2026' })] }))).toContain('the figure "4.8 Rating" comes from Google');
+    expect(problems(recipe({ sections: [{ ...hero(), note: '4.9 from 240 Google reviews' } as Section] }))).toContain('the note under the action speaks of Google and needs "Google, <month> <year>" as its source');
+    expect(problems(recipe({ sections: [{ ...hero(), note: '4.9 from 240 reviews', noteSource: 'Google' } as Section] }))).toContain('the note under the action speaks of Google');
+  });
+
+  it('passes when a figure from Google carries its source', () => {
+    const sections: Section[] = [
+      { ...hero(), note: '4.9 from 240 reviews', noteSource: 'Google, October 2026' } as Section,
+      { kind: 'numbers', variant: 'row', items: [{ value: '5.0', label: 'From 180 Google reviews', source: 'Google, October 2026' }, { value: '25', label: 'Years guiding' }] },
+      { kind: 'visit', variant: 'plain', heading: 'Find us', address: ['1 Cove Road'], notes: ['Search for us on Google Maps.'] },
+    ];
+    expect(checkRecipe(recipe({ sections, nav: [] }))).toEqual([]);
+  });
+
+  it('is refused when a Google rating sits in running text, where no source can stand beside it', () => {
+    const sections: Section[] = [hero(), { kind: 'words', variant: 'quote', paragraphs: ['Our guests rate us 4.9 on Google.'] }];
+    expect(checkRecipe(recipe({ sections })).join(' | ')).toContain('words speaks of a Google rating in running text; it belongs in the note under the action or among the figures, with its source');
+  });
+
   it('becomes a content file for the recipe design, with its sections as the page', () => {
     const c = recipeContent(recipe({ name: 'Alpha Penguins', video: { file: 'film/hero.mp4' } }));
     expect(c.design).toBe('recipe');
