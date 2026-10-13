@@ -33,6 +33,7 @@ import {
   savedHtml,
   savedPages,
   setFacts,
+  setWaveStatus,
   settleAi,
   statedActivities,
   storeCrawlmouse,
@@ -49,7 +50,9 @@ import {
   type Photo,
   type WaveEntry,
   type WaveMember,
+  type WaveStatus,
 } from '@plumbline/wave';
+import { approveWave } from './approve.ts';
 import { storedHomepage } from './commands.ts';
 import { parseCsv } from './csv.ts';
 
@@ -476,4 +479,41 @@ export function registerWave(program: Command): void {
     .option('--business <slug>', 'one business, with --pick')
     .option('--pick <numbers>', 'the chosen photos by their number on the sheet, best first, such as 4,1,7. Empty for none.')
     .action((o: { name: string; only?: string; business?: string; pick?: string }) => waveHero(db(), o));
+
+  wave
+    .command('set')
+    .description('Record a decision on one row of a wave: drop it with the reason, or bring a reserve in')
+    .requiredOption('--name <name>', 'wave name')
+    .requiredOption('--business <slug>', 'business slug')
+    .requiredOption('--status <status>', 'wave, reserve or dropped')
+    .option('--note <text>', 'the reason, kept with the row')
+    .action((o: { name: string; business: string; status: string; note?: string }) => {
+      if (!['wave', 'reserve', 'dropped'].includes(o.status)) throw new Error('status must be wave, reserve or dropped');
+      setWaveStatus(db(), o.name, o.business, o.status as WaveStatus, o.note ?? null);
+      console.log(`${o.business}: ${o.status}${o.note ? ` (${o.note})` : ''}`);
+    });
+
+  wave
+    .command('approve')
+    .description('Decide every finding of a wave by rule and write the decisions to data/wave/<wave>-approvals.csv')
+    .requiredOption('--name <name>', 'wave name')
+    .option('--batch <name>', 'batch the findings belong to (by default the newest one every business of the wave has a run in)')
+    .option('--only <slugs>', 'comma separated slugs')
+    .option('--apply', 'store the decisions: rejections at once, approvals once the independent check has passed them')
+    .action((o: { name: string; batch?: string; only?: string; apply?: boolean }) => {
+      const d = db();
+      const all = members(d, o.name);
+      const r = approveWave(d, o.name, members(d, o.name, o.only), waveBatch(d, all, o.batch), { apply: o.apply });
+      const count = (pick: (x: (typeof r.decisions)[number]) => boolean) => r.decisions.filter(pick).length;
+      const rules = new Map<string, number>();
+      for (const x of r.decisions) rules.set(`${x.decision} | ${x.rule}`, (rules.get(`${x.decision} | ${x.rule}`) ?? 0) + 1);
+      console.log(`${count((x) => x.decision === 'approve')} approved, ${count((x) => x.decision === 'reject')} rejected. ${r.toReview} approved finding(s) still to go to the independent check.`);
+      for (const [rule, n] of [...rules.entries()].sort()) console.log(`  ${String(n).padStart(3)}  ${rule}`);
+      if (r.stored) console.log(`Stored: ${r.stored.approved} approved, ${r.stored.rejected} rejected, ${r.stored.waiting} waiting for the independent check.`);
+      if (r.suppressed.length) console.log(`On the suppression list, skipped: ${r.suppressed.join(', ')}`);
+      if (r.weak.length) console.log(`Weak (fewer than two approved): ${r.weak.join(', ')}`);
+      if (r.needSpeedRun.length) console.log(`Speed runs disagree, a third run is needed: ${r.needSpeedRun.join(',')}`);
+      console.log(`Decisions: ${r.csv}`);
+      console.log(`For the independent check: ${r.packet}`);
+    });
 }

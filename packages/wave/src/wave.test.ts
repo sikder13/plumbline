@@ -13,7 +13,7 @@ import { heroCandidates, heroEligible, measure, mp4Info, photoKind, youtubeInfo,
 import type { Renderer } from '@plumbline/render';
 import { claimsIn, crawlmouseFileFor, judge, loadCrawlmouse, linkersOf, pageState, storeCrawlmouse, verifyCrawlmouse, type ExampleState, type SentenceResult } from './crawlmouse.ts';
 import { factsFor, setFacts, statedActivities } from './facts.ts';
-import { importWave, waveMembers, waves } from './list.ts';
+import { importWave, setWaveStatus, waveMembers, waves } from './list.ts';
 import { ownPages } from './pages.ts';
 import { PACK_MAX_LINES, packBusiness, packLines, packSection, writePack } from './pack.ts';
 import { factCaution, groupOf, rankFindings, repeats, type Rankable } from './rank.ts';
@@ -45,6 +45,19 @@ describe('a wave list', () => {
     importWave(db, 'wave-2', [{ slug: 'alpha', position: 1, status: 'wave' }, { slug: 'bravo', position: 2, status: 'reserve' }]);
     importWave(db, 'wave-2', [{ slug: 'alpha', position: 1, status: 'dropped', note: 'for sale' }, { slug: 'bravo', position: 2, status: 'wave', note: 'replaces alpha' }]);
     expect(waveMembers(db, 'wave-2', ['wave', 'reserve', 'dropped']).map((b) => [b.slug, b.wave_status, b.wave_note])).toEqual([['alpha', 'dropped', 'for sale'], ['bravo', 'wave', 'replaces alpha']]);
+  });
+});
+
+describe('a decision on a row of a wave', () => {
+  it('drops a row with its reason and brings a reserve in, keeping both in the list', () => {
+    const db = memoryDb();
+    seed(db, ['alpha', 'bravo', 'charlie']);
+    importWave(db, 'wave-2', [{ slug: 'alpha', position: 1, status: 'wave' }, { slug: 'bravo', position: 2, status: 'wave' }, { slug: 'charlie', position: 21, status: 'reserve' }]);
+    setWaveStatus(db, 'wave-2', 'bravo', 'dropped', 'sold, owner unknown');
+    setWaveStatus(db, 'wave-2', 'charlie', 'wave', 'replaces bravo');
+    expect(waveMembers(db, 'wave-2').map((b) => [b.slug, b.wave_note])).toEqual([['alpha', null], ['charlie', 'replaces bravo']]);
+    expect(waveMembers(db, 'wave-2', ['dropped']).map((b) => [b.slug, b.wave_note])).toEqual([['bravo', 'sold, owner unknown']]);
+    expect(() => setWaveStatus(db, 'wave-2', 'nobody', 'dropped', 'x')).toThrow('nobody is not in wave-2');
   });
 });
 

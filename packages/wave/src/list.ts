@@ -46,3 +46,9 @@ export function waveMembers(db: Db, wave: string, statuses: WaveStatus[] = ['wav
 export function waves(db: Db): string[] {
   return (db.prepare('SELECT DISTINCT wave FROM waves ORDER BY wave').all() as { wave: string }[]).map((r) => r.wave);
 }
+
+/** Records a decision on one row: dropped with its reason, or a reserve brought in. The row stays in the list either way. */
+export function setWaveStatus(db: Db, wave: string, slug: string, status: WaveStatus, note: string | null): void {
+  const r = db.prepare('UPDATE waves SET status = ?, note = ? WHERE wave = ? AND business_id = (SELECT id FROM businesses WHERE slug = ?)').run(status, note, wave, slug);
+  if (!r.changes) throw new Error(`${slug} is not in ${wave}`);
+}

@@ -108,11 +108,15 @@ A wave is a hand-picked list of businesses prepared for outreach together. For e
 | `wave assets --name <wave>` | Measures every photo, picks the best three for the top of a page (at least 1800 px wide, crisp, not a logo, map or screenshot), and looks up videos, logo, colours and fonts. |
 | `wave ai --name <wave>` | Asks AI tools who to book each business's own activities with, both providers, three runs each. Shows the questions and the estimate first; `--estimate` stops there. `--pass 1`, then `--pass 2` an hour later, lets a finding count as reproduced. |
 | `wave crawlmouse --name <wave>` | Opens the example pages behind every Crawlmouse sentence again, finds which page links to a missing one, and stores what still holds as findings with the source "crawlmouse". |
+| `wave set --name <wave> --business <slug> --status <status> --note <reason>` | Records a decision on one row: "dropped" with the reason, or a reserve brought in as "wave". The row stays in the list. |
+| `wave approve --name <wave>` | Decides every finding of the wave by rule and writes each decision, with the rule and the reason, to `data/wave/<wave>-approvals.csv`. `--apply` stores them. |
 | `wave pack --name <wave> --file <csv>` | Writes `reports/<batch>/<WAVE>-PACK.md`, one section of at most 70 lines for each business in list order, and the same data as `reports/<batch>/<wave>/<slug>.json`. Only findings approved in the review app go in. |
 
 What is read for a wave is kept under `data/wave/<slug>/`: `pages/` (the source, the visible text and, for evidence, screenshots of each page), `collected.json`, the research file `facts.json`, `photos/` and `crawlmouse.json`.
 
 The question put to AI tools comes from the business's own homepage: "Who should I book a <activity> with in or near <town>, New Zealand? Name specific operators." A business with two clear activities gets a question for each. The stored category is never used, because for a business found by search it is only the search that found it. No answer naming the business, while the answers name others, is a finding. Most answers naming it is a strength.
+
+Findings of a wave are approved by rule, not one by one. A finding is rejected when it did not reproduce in the last 24 hours or has no screenshot; when it says the site takes no booking or gives no way to get in touch and a booking system, a booking or enquiry form, a contact form or a booking page exists anywhere on the site; when it names whoever built the site; when it rests on an inference (a judgment, a first screen that was an age question, a count our own reading did not bear out); when it is a broken link no page sends visitors to, or an unlinked page visitors do not need; when its speed runs disagree by more than 30% and a third run does not settle them; or when another finding has the same cause. What is left is ranked: lost bookings or contact, then speed (main content after 4 s or a score under 50), then security and trust, then search and AI. The top three are approved, and a fourth and fifth when they cost bookings or speed. Every approved finding then goes, with its evidence, to a reviewer who has not seen the reasoning: put the verdicts in `data/wave/<wave>-review-verdicts.json` (`{"<finding id>": {"verdict": "ok" or "flag", "reason": "..."}}`) and run the command again. A flagged finding is rejected and the next one moves up, to be checked in turn. An approval is stored only once it has passed that check. A business left with fewer than two approved findings is marked weak. Slugs and addresses listed in `data/suppression.csv` are skipped.
 
 In the review app, "Wave 2 only" shows the businesses of a wave in list order. Each business's findings are ranked for its owner (lost bookings and broken contact first, then speed, then security, then search and AI) and the three to five put forward are marked. Crawlmouse findings sit beside Plumbline's own, each with Crawlmouse's sentence, what we measured when we opened the pages again, and the screenshots. A re-check of Plumbline's findings leaves findings from another tool alone.
 
@@ -159,7 +163,7 @@ packages/ai/         AI answer runs
 packages/report/     the batch report
 packages/export/     per-business bundle for preview pages
 packages/preview/    preview page data, images, corrected AI questions, gates and visits
-packages/wave/       a hand-picked list: facts with their sources, Crawlmouse findings, ranking
+packages/wave/       a hand-picked list: facts with their sources, Crawlmouse findings, ranking, approval by rule
 impact/library.yaml  client-facing impact and fix sentences
 calibration/         truth file and calibration report for the first 20
 fixtures/            pages used by the tests
