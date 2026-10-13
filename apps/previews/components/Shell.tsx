@@ -11,7 +11,7 @@ const TABS: { id: Tab; label: string }[] = [
 ];
 
 /** The slim bar at the top and the two tabs under it. Both tabs are in the page; one is shown. */
-export function Shell({ line, demo, found }: { line: string; demo: ReactNode; found: ReactNode }) {
+export function Shell({ lead, sender, demo, found }: { lead: string; sender: { name: string; href: string }; demo: ReactNode; found: ReactNode }) {
   const [tab, setTab] = useState<Tab>('demo');
   // Until this component is awake, a small script in the page answers the tabs. This tells it to stand down.
   const [live, setLive] = useState(false);
@@ -38,7 +38,12 @@ export function Shell({ line, demo, found }: { line: string; demo: ReactNode; fo
   return (
     <>
       <header className="bar">
-        <p className="bar-line">{line}</p>
+        <p className="bar-line">
+          {lead}{' '}
+          <a href={sender.href} target="_blank" rel="noopener">
+            {sender.name}
+          </a>
+        </p>
         <div className="bar-tabs" role="tablist" aria-label="Sections of this page">
           {TABS.map((t) => (
             <button key={t.id} type="button" role="tab" id={`tab-${t.id}`} aria-selected={tab === t.id} aria-controls={t.id} data-live={live ? '' : undefined} tabIndex={tab === t.id ? 0 : -1} onClick={() => show(t.id)}>

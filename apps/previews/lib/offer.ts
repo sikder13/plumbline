@@ -37,8 +37,11 @@ export const TOOLS_LINK = { label: 'crawlmouse.com', href: 'https://crawlmouse.c
 
 export const REMOVAL = 'This private demo is removed after 30 days, or sooner on request.';
 
-export function barLine(business: string): string {
-  return `Design demo prepared for ${business} by ${SENDER}`;
+export const SENDER_SITE = 'https://nahltech.com';
+
+/** The words before our name in the bar at the top. Our name follows them as a link to our own site. */
+export function barLead(business: string): string {
+  return `Design demo prepared for ${business} by`;
 }
 
 export function demoNote(domain: string): string {

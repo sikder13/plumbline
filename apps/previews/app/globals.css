@@ -63,6 +63,22 @@ img {
   text-wrap: balance;
 }
 
+.bar-line a {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.bar-line a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.bar-line a:focus-visible {
+  outline: 2px solid #8ab4ff;
+  outline-offset: 2px;
+}
+
 .bar-tabs {
   display: flex;
   gap: 4px;

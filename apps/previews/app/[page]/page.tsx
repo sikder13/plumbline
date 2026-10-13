@@ -5,7 +5,7 @@ import { Motion } from '@/components/Motion';
 import { Shell } from '@/components/Shell';
 import { DESIGNS } from '@/designs';
 import { allPages, pageByPath, pic } from '@/lib/data';
-import { BASE, barLine } from '@/lib/offer';
+import { BASE, SENDER, SENDER_SITE, barLead } from '@/lib/offer';
 import { Visits } from '@/components/Visits';
 
 export const dynamicParams = false;
@@ -32,7 +32,7 @@ export default async function Page({ params }: { params: Promise<{ page: string 
   const Demo = design.Demo;
   return (
     <>
-      <Shell line={barLine(data.name)} demo={<Demo data={data} />} found={<Found data={data} />} />
+      <Shell lead={barLead(data.name)} sender={{ name: SENDER, href: SENDER_SITE }} demo={<Demo data={data} />} found={<Found data={data} />} />
       <Motion />
       <Visits token={data.path} />
     </>
