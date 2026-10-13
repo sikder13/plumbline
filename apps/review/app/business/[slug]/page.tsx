@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { reviewFinding } from '@/app/actions';
-import { business, currentBatch, currentWave, facts, findingsFor, neighbours, nzTime, rankedFindings, waveLabel, type Finding } from '@/lib/data';
+import { business, cautions, currentBatch, currentWave, facts, findingsFor, neighbours, nzTime, rankedFindings, waveLabel, type Finding } from '@/lib/data';
 import { ReviewKeys } from './keys';
 
 const BASIS: Record<string, string> = {
@@ -71,7 +71,7 @@ function Crawlmouse({ f }: { f: Finding }) {
   );
 }
 
-function Card({ f, place }: { f: Finding; place?: Place }) {
+function Card({ f, place, caution }: { f: Finding; place?: Place; caution?: string }) {
   const open = f.status === 'reproduced';
   const fromCrawlmouse = f.source === 'crawlmouse';
   return (
@@ -97,6 +97,7 @@ function Card({ f, place }: { f: Finding; place?: Place }) {
           </>
         ) : null}
       </div>
+      {caution ? <p className="tag rejected" style={{ whiteSpace: 'normal' }}>{caution}</p> : null}
       {fromCrawlmouse ? (
         <Crawlmouse f={f} />
       ) : f.entry ? (
@@ -227,6 +228,7 @@ export default async function BusinessPage({ params, searchParams }: { params: P
   };
   const places = new Map(ranked.map((r) => [r.finding.id, { place: r.place, group: r.group, kept: r.kept, repeatOf: r.repeatOf === null ? null : name(r.repeatOf) }]));
   const ordered = wave ? [...ranked.map((r) => r.finding), ...findings.filter((f) => !places.has(f.id))] : findings;
+  const warnings = wave ? cautions(b.id, findings) : new Map<number, string>();
   const { prev, next } = neighbours(batch, slug, wave);
   const q = `?batch=${encodeURIComponent(batch)}${wave ? `&wave=${encodeURIComponent(wave)}` : ''}`;
   return (
@@ -260,7 +262,7 @@ export default async function BusinessPage({ params, searchParams }: { params: P
       ) : null}
       {findings.length === 0 && <p className="muted">No findings for this business in this batch.</p>}
       {ordered.map((f) => (
-        <Card key={f.id} f={f} place={places.get(f.id)} />
+        <Card key={f.id} f={f} place={places.get(f.id)} caution={warnings.get(f.id)} />
       ))}
       <ReviewKeys />
     </>

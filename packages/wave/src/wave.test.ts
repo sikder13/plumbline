@@ -14,7 +14,7 @@ import { claimsIn, crawlmouseFileFor, judge, linkersOf, pageState, storeCrawlmou
 import { factsFor, setFacts, statedActivities } from './facts.ts';
 import { importWave, waveMembers, waves } from './list.ts';
 import { PACK_MAX_LINES, packBusiness, packLines, writePack } from './pack.ts';
-import { groupOf, rankFindings, repeats, type Rankable } from './rank.ts';
+import { factCaution, groupOf, rankFindings, repeats, type Rankable } from './rank.ts';
 import { Research, checkResearch, storeResearch } from './research.ts';
 
 function seed(db: Db, slugs: string[]) {
@@ -468,6 +468,23 @@ describe('ranking findings for an owner', () => {
     const ranked = rankFindings(all);
     expect(ranked.filter((r) => r.repeatOf === null).map((r) => r.finding.id)).toEqual([broken.id, otherLink.id, structured.id]);
     expect(ranked.filter((r) => r.repeatOf !== null).map((r) => [r.finding.id, r.repeatOf, r.kept])).toEqual([[sameData.id, structured.id, false], [sameLink.id, broken.id, false]]);
+  });
+});
+
+describe('a finding that the stored facts speak against', () => {
+  it('is marked when the facts name a booking system the check did not see', () => {
+    expect(factCaution('T01_no_online_booking', { system: 'Eveve', link: 'https://alpha.co.nz/reservations.html', sourceUrl: 'https://alpha.co.nz/' })).toBe('Our reading of their pages found a way to book online: Eveve, https://alpha.co.nz/reservations.html (read on https://alpha.co.nz/). Check this finding before approving it.');
+    expect(factCaution('T03_platform_dependency', { system: 'Rezdy', link: 'https://alpha.rezdy.com/', sourceUrl: null })).toContain('Rezdy, https://alpha.rezdy.com/.');
+  });
+
+  it('is marked more gently when bookings go through their own form', () => {
+    expect(factCaution('T01_no_online_booking', { system: 'their own form', link: 'https://alpha.co.nz/book', sourceUrl: 'https://alpha.co.nz/book' })).toBe('Their site takes bookings or enquiries through its own form: https://alpha.co.nz/book. Check that "no online booking" is fair before approving it.');
+  });
+
+  it('is left alone when the facts agree, or the finding is about something else', () => {
+    expect(factCaution('T01_no_online_booking', { system: null, link: null, sourceUrl: null })).toBeNull();
+    expect(factCaution('T01_no_online_booking', null)).toBeNull();
+    expect(factCaution('C20_slow_mobile', { system: 'Rezdy', link: 'https://alpha.rezdy.com/', sourceUrl: null })).toBeNull();
   });
 });
 

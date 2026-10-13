@@ -5,7 +5,7 @@ import { top3Eligible } from '@plumbline/checks/review';
 import { readEntries, type ImpactEntry } from '@plumbline/impact';
 import { factsFor, type Fact } from '@plumbline/wave/facts';
 import { waveMembers, waves as storedWaves } from '@plumbline/wave/list';
-import { CRAWLMOUSE_TITLES, rankFindings, type Ranked } from '@plumbline/wave/rank';
+import { CRAWLMOUSE_TITLES, factCaution, rankFindings, type Ranked } from '@plumbline/wave/rank';
 
 export { nzTime };
 
@@ -205,4 +205,17 @@ export function contactRows(batch: string | null): ContactRow[] {
   const sql = `SELECT c.*, b.slug, b.name AS business FROM contacts c JOIN businesses b ON b.id = c.business_id ${batch ? 'JOIN batch_members m ON m.business_id = b.id AND m.batch = ?' : ''}
      ORDER BY b.name, CASE c.role WHEN 'owner' THEN 0 WHEN 'second' THEN 1 ELSE 2 END, c.id`;
   return (batch ? db().prepare(sql).all(batch) : db().prepare(sql).all()) as ContactRow[];
+}
+
+/** Cautions for findings that the stored facts speak against, by finding id. */
+export function cautions(businessId: number, list: Finding[]): Map<number, string> {
+  const fact = factsFor(db(), businessId, 'booking')[0];
+  const value = fact?.value as { system: string | null; link: string | null } | undefined;
+  const booking = fact && value ? { system: value.system, link: value.link, sourceUrl: fact.sourceUrl } : null;
+  const out = new Map<number, string>();
+  for (const f of list) {
+    const c = factCaution(f.check_id, booking);
+    if (c) out.set(f.id, c);
+  }
+  return out;
 }

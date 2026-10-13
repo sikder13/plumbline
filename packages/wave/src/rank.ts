@@ -129,3 +129,16 @@ export function rankFindings<T extends Rankable>(findings: T[]): Ranked<T>[] {
   for (const f of live) if (repeated.get(f.id) !== null) out.push({ finding: f, group: groupOf(f), place: out.length + 1, kept: false, repeatOf: repeated.get(f.id)! });
   return out;
 }
+
+const BOOKING_CHECKS = new Set(['T01_no_online_booking', 'T03_platform_dependency']);
+
+/**
+ * A word of caution for a finding that the facts read from the business's own pages speak against.
+ * A check that found no way to book online is doubtful when a person reading the same site found
+ * one. The decision stays with whoever reviews the finding.
+ */
+export function factCaution(checkId: string, booking: { system: string | null; link: string | null; sourceUrl: string | null } | null): string | null {
+  if (!BOOKING_CHECKS.has(checkId) || !booking?.system || !booking.link) return null;
+  if (/\bown form\b/i.test(booking.system)) return `Their site takes bookings or enquiries through its own form: ${booking.link}. Check that "no online booking" is fair before approving it.`;
+  return `Our reading of their pages found a way to book online: ${booking.system}, ${booking.link}${booking.sourceUrl ? ` (read on ${booking.sourceUrl})` : ''}. Check this finding before approving it.`;
+}
