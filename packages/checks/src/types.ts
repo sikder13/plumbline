@@ -1,14 +1,27 @@
 import type { CandidateFinding, Tier } from '@plumbline/core';
 import type { SiteData } from '@plumbline/collect';
 
+/** How the answers to one question treated a business. */
+export interface AskedQuestion {
+  question: string;
+  answers: number;
+  /** In how many of those answers the business was named. */
+  namedIn: number;
+  others: { name: string; answers: number }[];
+  /** One answer that does not name the business, or the first answer when all do. */
+  sample: { provider: string; askedAt: string; answer: string; citations: string[] } | null;
+}
+
 export interface AiSummary {
-  /** Core questions asked for this business (the shared area and town questions). */
+  /** Answers received to the questions about this business's own activities. */
   questions: number;
-  /** In how many of those questions the business was named at least once. */
+  /** In how many of those answers the business was named. */
   namedIn: number;
   /** Other businesses and the number of answers that named each. */
   others: { name: string; answers: number }[];
   sample: { question: string; provider: string; askedAt: string; answer: string; citations: string[] } | null;
+  /** The same answers, question by question. */
+  asked: AskedQuestion[];
   /** Minutes between the first and the last answer. */
   spanMinutes: number;
   /** True when the answers fall into two groups at least 60 minutes apart and both show the same picture. */

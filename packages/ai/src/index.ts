@@ -339,9 +339,9 @@ export async function runPlan(db: Db, p: AiPlan, opts: RunOptions): Promise<RunR
   return result;
 }
 
-/** Works out, for every stored answer in a batch, which businesses it names. */
-export function indexMentions(db: Db, batch: string): number {
-  const links = db.prepare('SELECT l.business_id, l.question_key FROM ai_question_links l WHERE l.batch = ?').all(batch) as { business_id: number; question_key: string }[];
+/** Works out, for every stored answer in a batch, which businesses it names. Given some businesses, only the answers to their questions are gone through. */
+export function indexMentions(db: Db, batch: string, businessIds?: number[]): number {
+  const links = (db.prepare('SELECT l.business_id, l.question_key FROM ai_question_links l WHERE l.batch = ?').all(batch) as { business_id: number; question_key: string }[]).filter((l) => !businessIds || businessIds.includes(l.business_id));
   const all = db.prepare("SELECT id, name, domain, town, region FROM businesses WHERE status != 'excluded' OR exclude_reason LIKE 'large_group%'").all() as { id: number; name: string; domain: string | null; town: string | null; region: string | null }[];
   const keys = [...new Set(links.map((l) => l.question_key))];
   const answers = db.prepare(`SELECT id, question_key, answer, citations FROM ai_answers WHERE question_key IN (${keys.map(() => '?').join(',') || "''"})`).all(...keys) as { id: number; question_key: string; answer: string; citations: string }[];
@@ -376,47 +376,61 @@ export function indexMentions(db: Db, batch: string): number {
 }
 
 /**
- * How a business fares in the shared questions asked about its place. Each question has several
- * answers (runs times providers). The figure reported is from the question where the business does
- * best, so the finding only fires when it is absent everywhere it was looked for.
+ * How a business fares in the questions asked about its own activities. Every answer to every one
+ * of those questions counts (runs times providers, for each question), so the finding built on
+ * this fires only when the business is absent everywhere it was looked for.
  */
 export function aiSummary(db: Db, business: Pick<Business, 'id' | 'name'>, batch: string): AiSummary | null {
-  const keys = (db.prepare("SELECT question_key FROM ai_question_links WHERE business_id = ? AND batch = ? AND kind != 'brand'").all(business.id, batch) as { question_key: string }[]).map((r) => r.question_key);
-  let best: AiSummary | null = null;
+  const keys = (db.prepare("SELECT question_key FROM ai_question_links WHERE business_id = ? AND batch = ? AND kind != 'brand' ORDER BY rowid").all(business.id, batch) as { question_key: string }[]).map((r) => r.question_key);
+  type Row = { id: number; question: string; provider: string; asked_at: string; answer: string; citations: string };
+  const tally = () => new Map<string, { name: string; answers: Set<number> }>();
+  const count = (into: ReturnType<typeof tally>, m: { answer_id: number; business_id: number | null; name: string }) => {
+    const k = m.business_id ? `b${m.business_id}` : foldName(m.name);
+    const e = into.get(k) ?? { name: m.name, answers: new Set<number>() };
+    e.answers.add(m.answer_id);
+    into.set(k, e);
+  };
+  const ranked = (from: ReturnType<typeof tally>) => [...from.values()].map((o) => ({ name: o.name, answers: o.answers.size, ids: o.answers })).sort((x, y) => y.answers - x.answers);
+  const sampleOf = (a: Row) => ({ provider: a.provider, askedAt: a.asked_at, answer: a.answer, citations: (JSON.parse(a.citations) as Citation[]).map((c) => c.url) });
+
+  const all: Row[] = [];
+  const named = new Set<number>();
+  const others = tally();
+  const asked: AiSummary['asked'] = [];
   for (const key of keys) {
-    const answers = db.prepare('SELECT id, question, provider, asked_at, answer, citations FROM ai_answers WHERE question_key = ? ORDER BY provider, run_index').all(key) as { id: number; question: string; provider: string; asked_at: string; answer: string; citations: string }[];
-    if (answers.length < 4) continue;
+    const answers = db.prepare('SELECT id, question, provider, asked_at, answer, citations FROM ai_answers WHERE question_key = ? ORDER BY provider, run_index').all(key) as Row[];
+    if (!answers.length) continue;
     const ids = answers.map((a) => a.id);
-    const mentions = db.prepare(`SELECT answer_id, business_id, name, confirmed FROM ai_mentions WHERE answer_id IN (${ids.map(() => '?').join(',')}) AND (confirmed IS NULL OR confirmed = 1)`).all(...ids) as { answer_id: number; business_id: number | null; name: string }[];
-    const namedIn = new Set(mentions.filter((m) => m.business_id === business.id).map((m) => m.answer_id)).size;
-    const others = new Map<string, { name: string; answers: Set<number> }>();
+    const mentions = db.prepare(`SELECT answer_id, business_id, name FROM ai_mentions WHERE answer_id IN (${ids.map(() => '?').join(',')}) AND (confirmed IS NULL OR confirmed = 1)`).all(...ids) as { answer_id: number; business_id: number | null; name: string }[];
+    const here = new Set(mentions.filter((m) => m.business_id === business.id).map((m) => m.answer_id));
+    const theirs = tally();
     for (const m of mentions) {
       if (m.business_id === business.id) continue;
-      const k = m.business_id ? `b${m.business_id}` : foldName(m.name);
-      const e = others.get(k) ?? { name: m.name, answers: new Set<number>() };
-      e.answers.add(m.answer_id);
-      others.set(k, e);
+      count(theirs, m);
+      count(others, m);
     }
-    const withoutTarget = answers.find((a) => !mentions.some((m) => m.answer_id === a.id && m.business_id === business.id)) ?? answers[0]!;
-    // Split the answers into those asked within an hour of the first, and those asked later.
-    const times = answers.map((a) => new Date(a.asked_at).getTime());
-    const first = Math.min(...times);
-    const early = new Set(answers.filter((a) => new Date(a.asked_at).getTime() - first < 60 * 60_000).map((a) => a.id));
-    const late = new Set(answers.filter((a) => !early.has(a.id)).map((a) => a.id));
-    const otherList = [...others.values()].map((o) => ({ name: o.name, answers: o.answers.size, ids: o.answers })).sort((x, y) => y.answers - x.answers);
-    const strong = otherList.filter((o) => o.answers >= 3);
-    const targetAnswers = new Set(mentions.filter((m) => m.business_id === business.id).map((m) => m.answer_id));
-    const namedLess = (ids: Set<number>) => [...ids].filter((id) => targetAnswers.has(id)).length <= 1;
-    const othersIn = (ids: Set<number>) => strong.filter((o) => [...o.ids].some((id) => ids.has(id))).length >= 2;
-    const summary: AiSummary = {
-      questions: answers.length,
-      namedIn,
-      others: otherList.map(({ name, answers: n }) => ({ name, answers: n })).slice(0, 12),
-      sample: { question: withoutTarget.question, provider: withoutTarget.provider, askedAt: withoutTarget.asked_at, answer: withoutTarget.answer, citations: (JSON.parse(withoutTarget.citations) as Citation[]).map((c) => c.url) },
-      spanMinutes: (Math.max(...times) - first) / 60_000,
-      holdsInBothPasses: late.size > 0 && early.size > 0 && namedLess(early) && namedLess(late) && othersIn(early) && othersIn(late),
-    };
-    if (!best || summary.namedIn / summary.questions > best.namedIn / best.questions) best = summary;
+    for (const id of here) named.add(id);
+    all.push(...answers);
+    asked.push({ question: answers[0]!.question, answers: answers.length, namedIn: here.size, others: ranked(theirs).map(({ name, answers: n }) => ({ name, answers: n })).slice(0, 12), sample: sampleOf(answers.find((a) => !here.has(a.id)) ?? answers[0]!) });
   }
-  return best;
+  if (all.length < 4) return null;
+  // Split the answers into those asked within an hour of the first, and those asked later.
+  const times = all.map((a) => new Date(a.asked_at).getTime());
+  const first = Math.min(...times);
+  const early = new Set(all.filter((a) => new Date(a.asked_at).getTime() - first < 60 * 60_000).map((a) => a.id));
+  const late = new Set(all.filter((a) => !early.has(a.id)).map((a) => a.id));
+  const otherList = ranked(others);
+  const strong = otherList.filter((o) => o.answers >= 3);
+  const unnamedIn = (ids: Set<number>) => ![...ids].some((id) => named.has(id));
+  const othersIn = (ids: Set<number>) => strong.filter((o) => [...o.ids].some((id) => ids.has(id))).length >= 2;
+  const without = all.find((a) => !named.has(a.id)) ?? all[0]!;
+  return {
+    questions: all.length,
+    namedIn: named.size,
+    others: otherList.map(({ name, answers: n }) => ({ name, answers: n })).slice(0, 12),
+    sample: { question: without.question, ...sampleOf(without) },
+    asked,
+    spanMinutes: (Math.max(...times) - first) / 60_000,
+    holdsInBothPasses: late.size > 0 && early.size > 0 && unnamedIn(early) && unnamedIn(late) && othersIn(early) && othersIn(late),
+  };
 }

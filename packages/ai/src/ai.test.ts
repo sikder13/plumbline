@@ -168,7 +168,29 @@ describe('planning and running', () => {
     expect(r2.asked).toBeLessThan(more.toRun.length);
   });
 
-  it('summarises how often a business is named against others, from the question where it does best', async () => {
+  it('adds up the answers to every activity question of a business, and keeps each question apart', async () => {
+    const db = memoryDb();
+    seed(db, list);
+    const both: HomepageWords = { ...kayaks, title: 'Guided kayak tours and kayak hire' };
+    const p = plan(db, { homepage: (b) => (b.id === 1 ? both : kayaks), businesses: list.slice(0, 2), batch: 'b', brandQuestions: 0 });
+    expect(p.items.map((i) => i.question.activity)).toEqual(['kayak tour', 'kayak hire']);
+    const ask = async (question: string): Promise<Answer> => ({ text: question.includes('kayak hire') ? 'Try **Rival One** or **Rival Two**.' : 'Try **Coastal Kayakers**, **Rival One** or **Rival Two**.', citations: [], model: 'm', usage: {}, costUsd: 0 });
+    await runPlan(db, p, { asks: { openai: ask, perplexity: ask }, log: () => undefined });
+    indexMentions(db, 'b');
+    const coastal = aiSummary(db, list[0]!, 'b')!;
+    expect(coastal).toMatchObject({ questions: 12, namedIn: 6 });
+    expect(coastal.asked.map((q) => [q.question, q.answers, q.namedIn])).toEqual([
+      ['Who should I book a kayak tour with in or near Paihia, New Zealand? Name specific operators.', 6, 6],
+      ['Who should I book a kayak hire with in or near Paihia, New Zealand? Name specific operators.', 6, 0],
+    ]);
+    expect(coastal.asked[1]!.others.map((o) => o.name)).toEqual(['Rival One', 'Rival Two']);
+    expect(coastal.asked[1]!.sample!.answer).toBe('Try **Rival One** or **Rival Two**.');
+    expect(coastal.others.find((o) => o.name === 'Rival One')!.answers).toBe(12);
+    // The other business offers tours only, so it is judged on that question alone.
+    expect(aiSummary(db, list[1]!, 'b')).toMatchObject({ questions: 6, namedIn: 0 });
+  });
+
+  it('summarises how often a business is named against others', async () => {
     const db = memoryDb();
     seed(db, list);
     const p = plan(db, { homepage, businesses: list, batch: 'b', brandQuestions: 0 });
@@ -183,6 +205,18 @@ describe('planning and running', () => {
     // All six answers were asked together, so nothing has been shown twice over time.
     expect(coastal.holdsInBothPasses).toBe(false);
     expect(coastal.spanMinutes).toBeLessThan(1);
+  });
+
+  it('indexes the answers of the businesses it is given and leaves the rest of the batch alone', async () => {
+    const db = memoryDb();
+    seed(db, list);
+    const p = plan(db, { homepage, businesses: list, batch: 'b', brandQuestions: 0 });
+    await runPlan(db, p, { asks: { openai: async () => ({ text: 'Try **Bay Paddle Co**.', citations: [], model: 'm', usage: {}, costUsd: 0 }) }, log: () => undefined });
+    const answersWithMentions = () => (db.prepare('SELECT DISTINCT a.question_key FROM ai_mentions m JOIN ai_answers a ON a.id = m.answer_id ORDER BY 1').all() as { question_key: string }[]).map((r) => r.question_key);
+    indexMentions(db, 'b', [3]);
+    expect(answersWithMentions()).toEqual(['activity:opononi:kayak-tour']);
+    indexMentions(db, 'b');
+    expect(answersWithMentions()).toEqual(['activity:opononi:kayak-tour', 'activity:paihia:kayak-tour']);
   });
 
   it('asks each question once in pass 1 and twice more in pass 2, and sees agreement across the two', async () => {

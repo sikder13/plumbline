@@ -239,7 +239,7 @@ ${rest.length ? `<div class="card"><ul class="plain">${rest.map((f) => `<li>${es
 <h2>AI answers</h2>
 <div class="card">${
       ai
-        ? `<p>Named in <strong>${ai.namedIn} of ${ai.questions}</strong> answers to the question about its place where it did best.</p>
+        ? `<p>Named in <strong>${ai.namedIn} of ${ai.questions}</strong> answers to the questions about its own activity and town.</p>
 ${ai.others.length ? `<p class="small">Others named: ${ai.others.map((o) => `${esc(o.name)} (${o.answers})`).join(', ')}. Names taken from answer text are candidates until UD confirms them.</p>` : ''}
 ${ai.sample ? `<p class="small muted">Example: ${esc(ai.sample.provider)}, ${esc(ai.sample.askedAt)} UTC (${esc(nzTime(ai.sample.askedAt))})</p><p class="small"><strong>${esc(ai.sample.question)}</strong></p><pre class="excerpt">${esc(ai.sample.answer)}</pre><div class="small muted">${ai.sample.citations.map((c) => link(c)).join(' · ')}</div>` : ''}`
         : '<span class="muted">No AI answers have been collected for this business.</span>'

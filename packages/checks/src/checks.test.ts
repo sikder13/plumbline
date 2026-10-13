@@ -292,13 +292,19 @@ describe('technical checks', () => {
 describe('cross-source checks', () => {
   const listing = (patch: Partial<SiteData['listings'][number]> = {}): SiteData['listings'][number] => ({ url: 'https://www.newzealand.com/nz/plan/business/harbour-fixture-charters/', platform: 'newzealand.com', kind: 'directory', status: 'fetched', name: 'Harbour Fixture Charters', phones: ['+64 9 402 8105'], emails: ['hello@fixture.co.nz'], prices: [{ amount: 450, text: '$450', context: 'Half day $450' }], rating: null, reviewCount: null, ...patch });
 
-  it('C37 fires when AI answers name others and not this business', () => {
-    const ai: AiSummary = { questions: 6, namedIn: 1, others: [{ name: 'Rival One', answers: 5 }, { name: 'Rival Two', answers: 3 }, { name: 'Minor', answers: 1 }], sample: { question: 'Q', provider: 'openai', askedAt: '2026-10-10T20:00:00Z', answer: 'Rival One and Rival Two', citations: ['https://rival.one/'] }, spanMinutes: 95, holdsInBothPasses: true };
+  it('C37 fires only when no AI answer names the business and the answers name others', () => {
+    const others = [{ name: 'Rival One', answers: 5 }, { name: 'Rival Two', answers: 3 }, { name: 'Minor', answers: 1 }];
+    const sample = { provider: 'openai', askedAt: '2026-10-10T20:00:00Z', answer: 'Rival One and Rival Two', citations: ['https://rival.one/'] };
+    const ai: AiSummary = { questions: 6, namedIn: 0, others, sample: { question: 'Q', ...sample }, asked: [{ question: 'Q', answers: 6, namedIn: 0, others, sample }], spanMinutes: 95, holdsInBothPasses: true };
     const f = one(healthySite(), 'C37_not_named_by_ai', ai);
+    expect(f.title).toBe('Named in 0 of 6 AI answers');
+    expect(f.evidence).toHaveLength(1);
     expect(f.evidence[0]).toMatchObject({ kind: 'ai' });
     expect(f.evidence[0]!.excerpt).toContain('Question: Q');
-    expect(f.detail).toMatchObject({ reproducedAcrossPasses: true, spanMinutes: 95 });
-    expect(ids(healthySite(), { ...ai, namedIn: 2 })).not.toContain('C37_not_named_by_ai');
+    expect(f.evidence[0]!.excerpt).toContain('Named in 0 of 6 answers');
+    expect(f.detail).toMatchObject({ reproducedAcrossPasses: true, spanMinutes: 95, questions: 6, asked: ['Q'] });
+    // Named even once is not a finding.
+    expect(ids(healthySite(), { ...ai, namedIn: 1 })).not.toContain('C37_not_named_by_ai');
     expect(ids(healthySite(), { ...ai, others: [{ name: 'Rival One', answers: 5 }] })).not.toContain('C37_not_named_by_ai');
     expect(ids(healthySite())).not.toContain('C37_not_named_by_ai');
   });

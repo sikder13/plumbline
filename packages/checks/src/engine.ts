@@ -5,6 +5,7 @@ import type { ImpactEntry } from '@plumbline/impact';
 import type { PageCapture } from '@plumbline/render';
 import { join } from 'node:path';
 import { CHECKS } from './ids.ts';
+import { aiFinding } from './packs/core/source-checks.ts';
 import { checkById, checksFor } from './registry.ts';
 import type { AiSummary } from './types.ts';
 
@@ -257,6 +258,51 @@ export async function applyCheckToStoredRuns(db: Db, library: Map<string, Impact
     }
   }
   return result;
+}
+
+/**
+ * Records the finding built from AI answers straight from the answers, without a visit to the site.
+ * It appears when no answer names the business, and is dropped when a later round of answers does.
+ * It counts as reproduced only when the answers came in two passes that agree. A decision UD has
+ * already made on it is kept.
+ */
+export function recordAiFinding(db: Db, library: Map<string, ImpactEntry>, business: { id: number; name: string }, batch: string, ai: AiSummary | null, verifiedAt: string): 'recorded' | 'dropped' | 'none' {
+  const f = aiFinding(business.name, ai);
+  const row = db.prepare('SELECT id, status FROM findings WHERE business_id = ? AND batch = ? AND check_id = ? AND fingerprint = ?').get(business.id, batch, 'C37_not_named_by_ai', 'ai') as { id: number; status: string } | undefined;
+  if (!f) {
+    if (!row || !['candidate', 'reproduced', 'approved'].includes(row.status)) return 'none';
+    db.prepare("UPDATE findings SET status = 'resolved', top3 = 0 WHERE id = ?").run(row.id);
+    return 'dropped';
+  }
+  const m = meta(f.checkId);
+  const severity = library.get(f.checkId)?.severity ?? 1;
+  const holds = f.detail.reproducedAcrossPasses === true;
+  db.transaction(() => {
+    let id = row?.id;
+    if (id === undefined) {
+      id = Number(
+        db
+          .prepare(
+            `INSERT INTO findings (business_id, batch, check_id, pack, tier, severity, status, reproduced, fingerprint, title, page_url, viewport, visibility_weight, score, detail, first_seen_at)
+             VALUES (?, ?, ?, ?, ?, ?, 'candidate', 0, ?, ?, NULL, NULL, ?, ?, ?, ?)`,
+          )
+          .run(business.id, batch, f.checkId, m.pack, m.tier, severity, f.fingerprint, f.title, config.score.visibility[f.where], scoreOf(severity, f.where, m.tier), JSON.stringify(f.detail), verifiedAt).lastInsertRowid,
+      );
+    } else {
+      // A finding dropped earlier comes back as a candidate. Any other status is a state or a decision to keep.
+      db.prepare("UPDATE findings SET title = ?, detail = ?, status = CASE status WHEN 'resolved' THEN 'candidate' ELSE status END WHERE id = ?").run(f.title, JSON.stringify(f.detail), id);
+    }
+    if (holds) db.prepare("UPDATE findings SET status = CASE status WHEN 'candidate' THEN 'reproduced' ELSE status END, reproduced = 1, last_verified_at = ? WHERE id = ?").run(verifiedAt, id);
+    else db.prepare("UPDATE findings SET status = 'candidate', reproduced = 0 WHERE id = ? AND status IN ('candidate', 'reproduced')").run(id);
+    db.prepare('DELETE FROM evidence WHERE finding_id = ?').run(id);
+    const insert = db.prepare("INSERT INTO evidence (finding_id, kind, excerpt, captured_at_utc, captured_at_nz) VALUES (?, 'ai', ?, ?, ?)");
+    for (const [i, e] of f.evidence.entries()) {
+      const asked = ai!.asked[i]?.sample?.askedAt;
+      const times = bothTimes(new Date(asked ?? verifiedAt));
+      insert.run(id, e.excerpt, times.utc, times.nz);
+    }
+  })();
+  return 'recorded';
 }
 
 export { decide, refreshTop3, top3Eligible } from './review.ts';
