@@ -14,6 +14,8 @@ export interface PackBusiness {
   website: string | null;
   town: string | null;
   region: string | null;
+  /** The address as the business writes it, with the page it was read on. */
+  address: { text: string | null; sourceUrl: string | null } | null;
   activities: string[];
   trading: { status: string; flags: { kind: string; quote: string; url: string | null }[]; checkedOn: string | null; note: string | null };
   people: { status: string; addressAs: string | null; note: string | null; owners: { name: string; firstNameUsed: string | null; role: string; confirmed: boolean; sources: { url: string; quote: string; checkedOn: string }[] }[]; linkedin: string | null; linkedinNotes: string | null };
@@ -93,6 +95,8 @@ export function packBusiness(db: Db, b: WaveMember, batch: string, extras: PackE
     return { url: f.label, width: v.width, height: v.height, kind: v.kind, file: v.file, pageUrl: f.sourceUrl, hero: f.flag?.startsWith('hero ') ? Number(f.flag.slice(5)) : null };
   });
   const fonts = one<{ headings: string | null; body: string | null }>(facts, 'font');
+  const locationFact = of('location')[0];
+  const location = locationFact?.value as { address: string | null } | undefined;
   const agency = one<{ name: string | null; note: string | null }>(facts, 'agency', 'summary');
   return {
     position: b.position,
@@ -101,6 +105,7 @@ export function packBusiness(db: Db, b: WaveMember, batch: string, extras: PackE
     website: b.website,
     town: b.town,
     region: b.region,
+    address: location && locationFact ? { text: location.address, sourceUrl: locationFact.sourceUrl } : null,
     activities: of('activity').map((f) => String(f.value)),
     trading: { status: trading?.status ?? 'not checked', flags: of('trading').filter((f) => f.label !== 'status').map((f) => ({ kind: f.label, quote: f.quote ?? '', url: f.sourceUrl })), checkedOn: tradingFact?.checkedOn ?? null, note: trading?.note ?? null },
     people: { status: people?.status ?? 'not checked', addressAs: people?.addressAs ?? null, note: people?.note ?? null, owners: [...owners.values()], linkedin: extras.linkedin || null, linkedinNotes: extras.linkedinNotes || null },
@@ -135,7 +140,7 @@ const length = (seconds: number | null) => (seconds === null ? 'length not read'
 /** One business's section of the pack: what to say, to whom, and what stands behind it. */
 export function packLines(p: PackBusiness): string[] {
   const out: string[] = [`## ${p.position}. ${p.name}`];
-  out.push(`- **Business:** ${p.name}, ${p.town ?? 'town not set'} (${p.region ?? 'region not set'}). Activity: ${p.activities.join(' and ') || 'none shown on the homepage'}. Website: ${p.website ?? 'none'}. Trading status: ${p.trading.status}${p.trading.note ? ` (${short(p.trading.note, 160)})` : ''}.`);
+  out.push(`- **Business:** ${p.name}, ${p.town ?? 'town not set'} (${p.region ?? 'region not set'})${p.address?.text ? `, ${p.address.text}` : ''}. Activity: ${p.activities.join(' and ') || 'none shown on the homepage'}. Website: ${p.website ?? 'none'}. Trading status: ${p.trading.status}${p.trading.note ? ` (${short(p.trading.note, 160)})` : ''}.`);
   for (const f of p.trading.flags.slice(0, 3)) out.push(`  - Flag, ${f.kind}: "${short(f.quote, 200)}" (${f.url}, checked ${day(p.trading.checkedOn)})`);
   out.push(`- **People:** ${p.people.addressAs ? `address as ${p.people.addressAs}` : 'no name to address'}. Status: ${p.people.status}.${p.people.note ? ` ${short(p.people.note, 220)}` : ''}`);
   for (const o of p.people.owners.slice(0, 3)) out.push(`  - ${o.name}${o.firstNameUsed && o.firstNameUsed !== o.name ? ` (uses "${o.firstNameUsed}")` : ''}, ${o.role}: ${o.confirmed ? 'confirmed' : 'not confirmed'}. Sources: ${o.sources.map((s) => s.url).join(' ; ')}`);

@@ -632,6 +632,7 @@ describe('the pack for a wave', () => {
     setFacts(db, 1, 'people', [{ label: 'who to address', value: { status: 'confirmed', addressAs: 'Tony and Lisa', note: null } }], at);
     setFacts(db, 1, 'owner', [{ label: 'Anthony John Smith', value: { firstNameUsed: 'Tony', role: 'owner', confirmed: true }, sourceUrl: 'https://alpha.co.nz/about', quote: 'Meet Tony' }, { label: 'Anthony John Smith', value: { firstNameUsed: 'Tony', role: 'owner', confirmed: true }, sourceUrl: 'https://opencorporates.com/companies/nz/1', quote: 'AJ Smith' }], at);
     setFacts(db, 1, 'email', [{ label: 'hello@alpha.co.nz', value: { address: 'hello@alpha.co.nz', published: true, note: null }, sourceUrl: 'https://alpha.co.nz/contact', quote: 'hello@alpha.co.nz' }], at);
+    setFacts(db, 1, 'location', [{ label: 'address', value: { town: 'Paihia', region: 'Northland', address: '12 Wharf Road, Paihia 0200' }, sourceUrl: 'https://alpha.co.nz/contact', quote: '12 Wharf Road, Paihia 0200' }], at);
     setFacts(db, 1, 'booking', [{ label: 'Rezdy', value: { system: 'Rezdy', link: 'https://alpha.rezdy.com/', note: null }, sourceUrl: 'https://alpha.co.nz/' }], at);
     setFacts(db, 1, 'price', Array.from({ length: 9 }, (_, i) => ({ label: `Trip ${i + 1}`, value: { text: `$${100 + i}`, amount: 100 + i }, sourceUrl: 'https://alpha.co.nz/prices', flag: i === 0 ? 'conflict' : null })), at);
     setFacts(db, 1, 'price_conflict', [{ label: 'Trip 1', value: '$100', sourceUrl: 'https://alpha.co.nz/prices' }, { label: 'Trip 1', value: '$110', sourceUrl: 'https://alpha.co.nz/tours' }], at);
@@ -674,6 +675,7 @@ describe('the pack for a wave', () => {
     expect(lines.length).toBeLessThanOrEqual(PACK_MAX_LINES);
     const text = lines.join('\n');
     expect(lines[0]).toBe('## 3. Alpha Kayaks');
+    expect(lines[1]).toContain('Alpha Kayaks, Paihia (Northland), 12 Wharf Road, Paihia 0200. Activity: kayak tour and kayak hire.');
     for (const part of ['**Business:**', '**People:**', '**Email:**', '**Google:**', '**Booking:**', '**Approved findings, ranked:**', '**Strengths:**', '**Assets:**', '**Risks and unknowns:**']) expect(text).toContain(part);
     expect(text).toContain('Flag, closed: "NOW CLOSED Re-open September 28th 2026" (https://alpha.co.nz/, checked 2026-10-13)');
     expect(text).toContain('address as Tony and Lisa. Status: confirmed.');
