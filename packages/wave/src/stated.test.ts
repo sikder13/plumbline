@@ -25,6 +25,14 @@ describe('the sentence put to an owner', () => {
     expect(statedSentence(f('C13_no_action_above_fold', 'The first phone screen has no way to book or get in touch'), [])).toBe('The first phone screen has no button to book, call or email');
   });
 
+  it('says of a phone link without its plus sign only what was measured, which is less than broken', () => {
+    const detail = { kind: 'tel', href: 'tel:6435550142', linkText: '+64 3 555 0142', problem: 'The phone link holds "6435550142", a country code with no plus sign, so it will not dial from overseas.' };
+    expect(statedSentence(f('C10_broken_contact_links', 'The phone link is broken', detail), [])).toBe('The phone link behind "+64 3 555 0142" has no plus sign before its country code, so it will not dial from overseas');
+    expect(statedSentence(f('C10_broken_contact_links', 'The phone link is broken', { ...detail, linkText: '' }), [])).toBe('A phone link has no plus sign before its country code, so it will not dial from overseas');
+    // Any other fault in a contact link stands as it was measured.
+    expect(statedSentence(f('C10_broken_contact_links', 'The phone link is broken', { kind: 'tel', href: 'tel:', linkText: 'Call us', problem: 'The phone link holds no number.' }), [])).toBe('The phone link is broken');
+  });
+
   it('states a missing page by the link that leads to it, and leaves out one nothing links to', () => {
     const examples = [
       { url: 'https://www.alpha.co.nz/buy-wine', linkedFrom: [] },

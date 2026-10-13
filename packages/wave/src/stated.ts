@@ -61,9 +61,10 @@ interface Example {
 
 /**
  * A finding in the words it is put to the owner in. Most findings stand as they were measured.
- * Three kinds are restated: phone speed, which is given as the median of the last three runs and
+ * Four kinds are restated: phone speed, which is given as the median of the last three runs and
  * not the newest one; the first phone screen, which is said to lack what was looked for and no
- * more; and a sentence that came from Crawlmouse, which is said in terms of what we read ourselves.
+ * more; a phone link without its plus sign, which is said to fail from overseas and not to be
+ * broken; and a sentence that came from Crawlmouse, which is said in terms of what we read ourselves.
  */
 export function statedSentence(f: { checkId: string; title: string; detail: Record<string, unknown> }, runs: SpeedRun[]): string {
   const examples = (f.detail.examples as Example[] | undefined) ?? [];
@@ -73,6 +74,11 @@ export function statedSentence(f: { checkId: string; title: string; detail: Reco
     return s ? `Mobile speed score ${Math.round(s.performance)} out of 100, main content after ${(s.lcpMs / 1000).toFixed(1)} s` : f.title;
   }
   if (f.checkId === 'C13_no_action_above_fold') return 'The first phone screen has no button to book, call or email';
+  if (f.checkId === 'C10_broken_contact_links' && f.detail.kind === 'tel' && /country code with no plus sign/.test(String(f.detail.problem ?? ''))) {
+    // The number is right and the link dials at home. What was measured is that it cannot be dialled from abroad.
+    const words = String(f.detail.linkText ?? '').trim();
+    return `${words ? `The phone link behind "${words}"` : 'A phone link'} has no plus sign before its country code, so it will not dial from overseas`;
+  }
   if (f.checkId === 'CM_missing_page') {
     const linked = examples.filter((e) => e.linkedFrom?.length);
     if (!linked.length) return f.title;
