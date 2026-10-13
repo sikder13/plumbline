@@ -18,7 +18,7 @@ const MACRON_RANGE = 'U+0100-0101,U+0112-0113,U+012A-012B,U+014C-014D,U+016A-016
 // Everything a page here can ask of the Latin file: printable ASCII, Latin-1, and the usual punctuation.
 const LATIN_TEXT = [...Array(95).keys()].map((i) => String.fromCodePoint(32 + i)).join('') + [...Array(96).keys()].map((i) => String.fromCodePoint(160 + i)).join('') + '‘’“”–—…•·→€™';
 
-/** [family, package, file stem, axis, weight range, styles, the one weight to keep when a design uses no other] */
+/** [family, package, file stem, axis, weight range, styles, what to hold still: the one weight a design uses, or another axis by name] */
 const FONTS = [
   ['Figtree', '@fontsource-variable/figtree', 'figtree', 'wght', '300 900', ['normal']],
   ['Newsreader', '@fontsource-variable/newsreader', 'newsreader', 'wght', '200 800', ['normal', 'italic'], 400],
@@ -30,31 +30,37 @@ const FONTS = [
   ['DM Serif Display', '@fontsource/dm-serif-display', 'dm-serif-display', '400', '400', ['normal', 'italic']],
   ['Bebas Neue', '@fontsource/bebas-neue', 'bebas-neue', '400', '400', ['normal']],
   ['Shadows Into Light', '@fontsource/shadows-into-light', 'shadows-into-light', '400', '400', ['normal']],
+  ['Archivo', '@fontsource-variable/archivo', 'archivo', 'wght', '100 900', ['normal']],
+  // The same face held at its widest, for headlines. The weight is left free.
+  ['Archivo Expanded', '@fontsource-variable/archivo', 'archivo', 'wdth', '100 900', ['normal'], { wdth: 125 }],
+  ['Chivo Mono', '@fontsource-variable/chivo-mono', 'chivo-mono', 'wght', '100 900', ['normal']],
 ];
 
 mkdirSync(out, { recursive: true });
 
 /** Writes a cut-down copy of a font. It is made afresh each time, so a changed rule here is never masked by an older file. */
-async function cut(from, to, text, pin) {
-  const options = { targetFormat: 'woff2', ...(pin ? { variationAxes: { wght: pin } } : {}) };
+async function cut(from, to, text, held) {
+  const options = { targetFormat: 'woff2', ...(held ? { variationAxes: held } : {}) };
   writeFileSync(to, await subsetFont(readFileSync(from), text, options));
 }
 
 let css = '/* Written by scripts/fonts.mjs. */\n';
 for (const [family, pkg, stem, axis, range, styles, pin] of FONTS) {
-  const weight = pin ? String(pin) : range;
+  const held = typeof pin === 'number' ? { wght: pin } : pin;
+  const weight = typeof pin === 'number' ? String(pin) : range;
   for (const style of styles) {
     const files = join(app, 'node_modules', pkg, 'files');
     const latin = join(files, `${stem}-latin-${axis}-${style}.woff2`);
     const extended = join(files, `${stem}-latin-ext-${axis}-${style}.woff2`);
     if (!existsSync(latin)) continue;
     const name = `${stem}-latin-${axis}-${style}.woff2`;
-    if (pin) await cut(latin, join(out, name), LATIN_TEXT, pin);
+    if (held) await cut(latin, join(out, name), LATIN_TEXT, held);
     else copyFileSync(latin, join(out, name));
     css += `@font-face{font-family:'${family}';font-style:${style};font-weight:${weight};font-display:swap;src:url(/demo/fonts/${name}) format('woff2');unicode-range:${LATIN}}\n`;
     if (!existsSync(extended)) continue;
-    const macrons = `${stem}-macrons-${style}.woff2`;
-    await cut(extended, join(out, macrons), MACRONS, pin);
+    // Two cuts of one face each keep macrons of their own.
+    const macrons = `${stem}-macrons-${axis === 'wdth' ? 'wdth-' : ''}${style}.woff2`;
+    await cut(extended, join(out, macrons), MACRONS, held);
     css += `@font-face{font-family:'${family}';font-style:${style};font-weight:${weight};font-display:swap;src:url(/demo/fonts/${macrons}) format('woff2');unicode-range:${MACRON_RANGE}}\n`;
   }
 }
