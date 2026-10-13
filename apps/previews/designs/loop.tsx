@@ -30,7 +30,7 @@ interface Content {
     first: string;
     later: string;
     lead: string;
-    departures: (Stop & { where?: string })[];
+    departures: Stop[];
     trailLabel: string;
     trail: { name: string; note?: string }[];
     laterText: string;
@@ -175,6 +175,7 @@ function Demo({ data }: { data: PageData }) {
                     {c.loop.placesLabel}
                   </text>
                 </g>
+                <path className={s.halo} d={LOOP} pathLength={1} />
                 <path className={s.bus} d={LOOP} pathLength={1} />
                 <path className={s.busCore} d={LOOP} pathLength={1} />
               </svg>
@@ -232,7 +233,7 @@ function Demo({ data }: { data: PageData }) {
               {c.bike.first} {c.bike.later}
             </h2>
             <div className={s.scene} data-scene="bike">
-              <Pic pic={pic(data, 'bike')} sizes="100vw" />
+              <Pic pic={pic(data, 'bike')} phone={data.images.bikePhone} sizes="100vw" />
               <div className={s.sceneText}>
                 <p className={s.kicker}>{c.bike.kicker}</p>
                 <p className={s.sceneTitle} aria-hidden="true">
@@ -265,7 +266,7 @@ function Demo({ data }: { data: PageData }) {
               </div>
             </div>
             <div className={s.scene} data-scene="wine">
-              <Pic pic={pic(data, 'pour')} sizes="100vw" />
+              <Pic pic={pic(data, 'pour')} phone={data.images.pourPhone} sizes="100vw" />
               <div className={s.sceneText}>
                 <p className={s.kicker}>{c.bike.kicker}</p>
                 <p className={s.sceneTitle} aria-hidden="true">
@@ -332,21 +333,21 @@ function Demo({ data }: { data: PageData }) {
             <p className={s.trustLine} data-reveal>
               {c.trust.text}
             </p>
-            <dl className={s.figures}>
+            <div className={s.figures}>
               {data.rating && (
-                <div data-reveal>
-                  <dd data-count>{data.rating.value}</dd>
-                  <dt>
+                <p data-reveal>
+                  <b data-count>{data.rating.value}</b>
+                  <span>
                     {c.trust.ratingLabel} <span data-count>{String(data.rating.count)}</span> {c.trust.ratingUnit}
                     <small>{c.trust.ratingSource}</small>
-                  </dt>
-                </div>
+                  </span>
+                </p>
               )}
-              <div data-reveal>
-                <dd>{c.trust.year}</dd>
-                <dt>{c.trust.yearLabel}</dt>
-              </div>
-            </dl>
+              <p data-reveal>
+                <b>{c.trust.year}</b>
+                <span>{c.trust.yearLabel}</span>
+              </p>
+            </div>
           </div>
         </section>
 

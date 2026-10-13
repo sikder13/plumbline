@@ -239,7 +239,7 @@
   stroke: var(--red);
   stroke-width: 2px;
   stroke-dasharray: 1;
-  animation: draw 0.34s linear 1.5s both;
+  animation: draw 0.34s cubic-bezier(0.3, 0.3, 0.6, 0.9) 1.5s both;
 }
 
 .drop {
@@ -324,7 +324,7 @@
 }
 
 .story[data-active='3'] {
-  --t: 0.5;
+  --t: 0.61;
 }
 
 .story[data-active='4'] {
@@ -350,7 +350,7 @@
 
 .chart {
   flex: 0 0 auto;
-  margin: 18px -6px 22px;
+  margin: 4.4svh -6px 4.4svh;
 }
 
 .chart svg {
@@ -378,6 +378,7 @@
 }
 
 /* A dash of no length with a round end is a dot, and its offset is where on the line it sits. */
+.halo,
 .bus,
 .busCore {
   fill: none;
@@ -385,6 +386,19 @@
   stroke-dasharray: 0 1;
   stroke-dashoffset: calc(0 - var(--t));
   transition: stroke-dashoffset 1.2s var(--ease);
+}
+
+/* A ring spreads from the dot three times when it reaches a stop, and then it is still. Two names for one movement, so that each arrival starts it again. */
+.halo {
+  stroke: var(--red);
+  stroke-width: 22px;
+  stroke-opacity: 0;
+  animation: halo-a 1.6s cubic-bezier(0.3, 0, 0.3, 1) 0.9s 3;
+}
+
+.story[data-active='1'] .halo,
+.story[data-active='3'] .halo {
+  animation-name: halo-b;
 }
 
 .bus {
@@ -490,7 +504,7 @@
 }
 
 .when {
-  font: 700 clamp(36px, 10.4vw, 44px)/1 var(--wide);
+  font: 700 clamp(40px, 11.8vw, 50px)/1 var(--wide);
   letter-spacing: -0.03em;
   color: var(--red);
 }
@@ -510,14 +524,14 @@
 
 .count {
   position: absolute;
-  left: var(--pad);
-  bottom: 34px;
+  top: calc(var(--bar-h) + 44px);
+  right: var(--pad);
   display: flex;
-  gap: 6px;
+  gap: 5px;
 }
 
 .count i {
-  width: 22px;
+  width: 18px;
   height: 3px;
   border-radius: 2px;
   background: var(--ink);
@@ -532,6 +546,20 @@
 .count i[data-state='on'] {
   background: var(--red);
   opacity: 1;
+}
+
+@media (max-height: 720px) {
+  .story [data-frame] {
+    padding-top: calc(var(--bar-h) + 12px);
+  }
+
+  .storyHead p {
+    display: none;
+  }
+
+  .chart {
+    margin: 10px 14px 12px;
+  }
 }
 
 /* Build your day: places to tap, and a card that fills in the order chosen. */
@@ -875,7 +903,7 @@
 }
 
 .flaps [data-board-head] span:first-child {
-  flex: 0 0 38.4%;
+  flex: 0 0 calc(38.4% - 12px);
 }
 
 .flaps ol {
@@ -928,7 +956,7 @@
 }
 
 .flaps [data-tile][data-turning] {
-  animation: flap 0.07s linear both;
+  animation: flap 0.07s cubic-bezier(0.3, 0, 0.2, 1) both;
 }
 
 .flaps [data-gap] {
@@ -1008,7 +1036,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(19, 24, 36, 0.5) 0%, rgba(19, 24, 36, 0.12) 26%, rgba(19, 24, 36, 0.5) 52%, rgba(19, 24, 36, 0.94) 100%);
+  background: linear-gradient(180deg, rgba(19, 24, 36, 0.5) 0%, rgba(19, 24, 36, 0.1) 24%, rgba(19, 24, 36, 0.62) 52%, rgba(19, 24, 36, 0.95) 100%);
 }
 
 .scene[data-scene='wine'] {
@@ -1377,7 +1405,7 @@
   margin: 40px 0 0;
 }
 
-.figures div {
+.figures p {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: end;
@@ -1386,13 +1414,12 @@
   border-top: 1.5px solid rgba(27, 33, 48, 0.42);
 }
 
-.figures dd {
-  margin: 0;
+.figures b {
   font: 700 clamp(64px, 19vw, 84px)/0.84 var(--wide);
   letter-spacing: -0.045em;
 }
 
-.figures dt {
+.figures p > span {
   padding-bottom: 4px;
   font-weight: 600;
   line-height: 1.3;
@@ -1540,6 +1567,28 @@
   }
 }
 
+@keyframes halo-a {
+  from {
+    stroke-width: 22px;
+    stroke-opacity: 0.4;
+  }
+  to {
+    stroke-width: 46px;
+    stroke-opacity: 0;
+  }
+}
+
+@keyframes halo-b {
+  from {
+    stroke-width: 22px;
+    stroke-opacity: 0.4;
+  }
+  to {
+    stroke-width: 46px;
+    stroke-opacity: 0;
+  }
+}
+
 @keyframes slot {
   from {
     opacity: 0;
@@ -1574,7 +1623,7 @@
     gap: 30px;
     padding: 7px 7px 7px 26px;
     border-radius: 999px;
-    background: rgba(19, 24, 36, 0.5);
+    background: rgba(19, 24, 36, 0.74);
     -webkit-backdrop-filter: blur(20px) saturate(1.4);
     backdrop-filter: blur(20px) saturate(1.4);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 0 0 1px rgba(255, 255, 255, 0.16);
@@ -1704,6 +1753,10 @@
     margin: 0;
   }
 
+  .inside text[data-label] {
+    font-size: 8.5px;
+  }
+
   .station text {
     font-size: 10.5px;
   }
@@ -1736,6 +1789,7 @@
     position: static;
     grid-column: 2;
     grid-row: 3;
+    gap: 6px;
   }
 
   .count i {
@@ -1983,7 +2037,7 @@
     margin-top: 56px;
   }
 
-  .figures dd {
+  .figures b {
     font-size: clamp(88px, 8vw, 132px);
   }
 
