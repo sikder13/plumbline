@@ -102,8 +102,9 @@ const MIN_KEPT = 3;
 const WORTH_ADDING = 3;
 
 /**
- * Ranks the findings that can be put to an owner: those reproduced or approved. The top three
- * are kept, and a fourth and fifth when they are severe enough to earn the place.
+ * Ranks the findings that can be put to an owner: those reproduced or approved. The first three
+ * of different checks are put forward, and a fourth and fifth when they are severe enough to earn
+ * the place.
  */
 export function rankFindings<T extends Rankable>(findings: T[]): Ranked<T>[] {
   const live = findings.filter((f) => f.status === 'reproduced' || f.status === 'approved');
@@ -112,10 +113,19 @@ export function rankFindings<T extends Rankable>(findings: T[]): Ranked<T>[] {
     .filter((f) => repeated.get(f.id) === null)
     .map((f) => ({ finding: f, group: groupOf(f) }))
     .sort((a, b) => ORDER.indexOf(a.group) - ORDER.indexOf(b.group) || b.finding.severity - a.finding.severity || b.finding.score - a.finding.score || a.finding.id - b.finding.id);
-  const out: Ranked<T>[] = ordered.map((r, i) => ({ ...r, place: i + 1, kept: i < MIN_KEPT || (i < MAX_KEPT && r.finding.severity >= WORTH_ADDING), repeatOf: null }));
-  // A fifth is kept only when the fourth is: the kept findings are always the first few in order.
-  const firstLeftOut = out.findIndex((r) => !r.kept);
-  if (firstLeftOut >= 0) for (const r of out.slice(firstLeftOut)) r.kept = false;
+  // One finding is put forward for each check: a second broken link of the same kind adds nothing for the owner.
+  const checks = new Set<string>();
+  let kept = 0;
+  let open = true;
+  const out: Ranked<T>[] = ordered.map((r, i) => {
+    const first = !checks.has(r.finding.check_id);
+    checks.add(r.finding.check_id);
+    // Once a finding is too slight to add, nothing after it is put forward either.
+    if (first && open && kept >= MIN_KEPT && r.finding.severity < WORTH_ADDING) open = false;
+    const keep = first && open && kept < MAX_KEPT;
+    if (keep) kept += 1;
+    return { ...r, place: i + 1, kept: keep, repeatOf: null };
+  });
   for (const f of live) if (repeated.get(f.id) !== null) out.push({ finding: f, group: groupOf(f), place: out.length + 1, kept: false, repeatOf: repeated.get(f.id)! });
   return out;
 }

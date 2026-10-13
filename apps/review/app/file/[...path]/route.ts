@@ -1,3 +1,4 @@
+import { realpathSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { resolve, sep } from 'node:path';
 import { db, paths } from '@plumbline/core';
@@ -10,8 +11,14 @@ export async function GET(_req: Request, { params }: { params: Promise<{ path: s
   const id = Number(path[0]);
   const row = Number.isInteger(id) ? (db().prepare('SELECT path FROM evidence WHERE id = ?').get(id) as { path: string | null } | undefined) : undefined;
   if (!row?.path) return new Response('Not found', { status: 404 });
-  const file = resolve(row.path);
-  if (!file.startsWith(resolve(paths.evidence) + sep)) return new Response('Not found', { status: 404 });
+  // The data folder can be reached by more than one path, so both sides are compared as the real path on disk.
+  let file: string;
+  try {
+    file = realpathSync(resolve(row.path));
+    if (!file.startsWith(realpathSync(resolve(paths.evidence)) + sep)) return new Response('Not found', { status: 404 });
+  } catch {
+    return new Response('Not found', { status: 404 });
+  }
   try {
     const ext = file.split('.').pop()!.toLowerCase();
     return new Response(new Uint8Array(await readFile(file)), { headers: { 'content-type': TYPES[ext] ?? 'application/octet-stream', 'cache-control': 'no-store' } });

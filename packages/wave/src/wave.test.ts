@@ -430,6 +430,19 @@ describe('ranking findings for an owner', () => {
     expect(kept([f('C31_no_structured_data', { severity: 1 }), f('C02_stale_copyright', { severity: 1 })])).toEqual(['C31_no_structured_data', 'C02_stale_copyright']);
   });
 
+  it('puts forward one finding for each check, so two broken links of the same kind take one place', () => {
+    const ranked = rankFindings([f('C10_broken_contact_links', { severity: 5, title: 'first' }), f('C10_broken_contact_links', { severity: 5, title: 'second' }), f('C16_booking_hard_to_reach', { severity: 4 }), f('C12_broken_internal_links'), f('C20_slow_mobile', { severity: 4 }), f('C41_outdated_platform', { severity: 4 }), f('C37_not_named_by_ai', { severity: 4 })]);
+    expect(ranked.map((r) => [r.finding.title, r.kept])).toEqual([
+      ['first', true],
+      ['second', false],
+      ['C16_booking_hard_to_reach', true],
+      ['C12_broken_internal_links', true],
+      ['C20_slow_mobile', true],
+      ['C41_outdated_platform', true],
+      ['C37_not_named_by_ai', false],
+    ]);
+  });
+
   it('ranks only findings that are reproduced or approved', () => {
     const ranked = rankFindings([f('C10_broken_contact_links', { status: 'rejected' }), f('C20_slow_mobile', { status: 'candidate' }), f('C41_outdated_platform', { status: 'resolved' }), f('C13_no_action_above_fold', { status: 'approved' })]);
     expect(ranked.map((r) => r.finding.check_id)).toEqual(['C13_no_action_above_fold']);
