@@ -22,20 +22,26 @@ export function MotionLayer() {
 
     void import('motion').then(({ animate, inView, scroll }) => {
       if (stopped) return;
-      const below = (el: Element) => el.getBoundingClientRect().top > window.innerHeight * 0.9;
+      // Everything is measured first and changed afterwards. Measuring one element, restyling it and
+      // measuring the next makes the browser lay the page out again each time.
+      const all = (selector: string) => [...document.querySelectorAll<HTMLElement>(selector)];
+      const edge = window.innerHeight * 0.9;
+      const waiting = (els: HTMLElement[]) => els.filter((el) => el.getBoundingClientRect().top > edge);
+      const reveals = waiting(all('[data-reveal]'));
+      const wipes = waiting(all('[data-wipe]'));
+      const counts = waiting(all('[data-count]'));
 
-      for (const el of document.querySelectorAll<HTMLElement>('[data-reveal]')) {
-        if (!below(el)) continue;
+      for (const el of reveals) {
         el.style.opacity = '0';
         el.style.transform = 'translateY(16px)';
         undo.push(inView(el, () => void animate(el, { opacity: 1, y: [16, 0] }, { duration: 0.6, ease: EASE }), { amount: 0.2 }));
       }
 
-      for (const el of document.querySelectorAll<HTMLElement>('[data-wipe]')) {
+      for (const el of wipes) {
         // The frame is watched and the picture inside it is wiped: a fully clipped element never counts as in view.
         const inner = el.querySelector<HTMLElement>('picture');
         const img = el.querySelector('img');
-        if (!inner || !below(el)) continue;
+        if (!inner) continue;
         inner.style.clipPath = 'inset(0 0 100% 0)';
         undo.push(
           inView(
@@ -49,9 +55,9 @@ export function MotionLayer() {
         );
       }
 
-      for (const el of document.querySelectorAll<HTMLElement>('[data-count]')) {
+      for (const el of counts) {
         const m = /^(\D*)(\d+(?:\.\d+)?)(.*)$/.exec(el.textContent ?? '');
-        if (!m || !below(el)) continue;
+        if (!m) continue;
         const [, before, number, after] = m as unknown as [string, string, string, string];
         const places = number.split('.')[1]?.length ?? 0;
         el.style.fontVariantNumeric = 'tabular-nums';
