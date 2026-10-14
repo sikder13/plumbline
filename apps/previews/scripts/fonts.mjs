@@ -1,6 +1,10 @@
 // Prepares the font files the designs use from the installed font packages and writes the
 // @font-face rules for them. The fonts are served from our own address, so no page calls a font host.
 //
+// The rules for the faces every page may need go into app/fonts.css, which every page loads. The rules for
+// the faces only a page made to order uses go into app/faces.css, which no page loads: such a page sets the
+// rules for its own faces inline (lib/styles.ts), so the shared stylesheet does not grow with each new page.
+//
 // Two things keep them small. A face a design sets at one weight only is cut down to that weight.
 // And Māori macrons, which live in each family's large extended file, are lifted out into a file of
 // their own that holds just those ten letters.
@@ -34,7 +38,8 @@ const FONTS = [
   // The same face held at its widest, for headlines. The weight is left free.
   ['Archivo Expanded', '@fontsource-variable/archivo', 'archivo', 'wdth', '100 900', ['normal'], { wdth: 125 }],
   ['Chivo Mono', '@fontsource-variable/chivo-mono', 'chivo-mono', 'wght', '100 900', ['normal']],
-  // Faces added for the wave 3 pages, each made to order.
+  // From here on, faces set only by a page made to order. Their rules go into app/faces.css.
+  'MADE TO ORDER',
   ['Fraunces', '@fontsource-variable/fraunces', 'fraunces', 'wght', '100 900', ['normal', 'italic']],
   ['Instrument Sans', '@fontsource-variable/instrument-sans', 'instrument-sans', 'wght', '400 700', ['normal']],
   ['Bricolage Grotesque', '@fontsource-variable/bricolage-grotesque', 'bricolage-grotesque', 'wght', '200 800', ['normal']],
@@ -106,7 +111,14 @@ async function cut(from, to, text, held) {
 }
 
 let css = '/* Written by scripts/fonts.mjs. */\n';
-for (const [family, pkg, stem, axis, range, styles, pin] of FONTS) {
+let shared = '';
+for (const row of FONTS) {
+  if (row === 'MADE TO ORDER') {
+    shared = css;
+    css = '/* Written by scripts/fonts.mjs. The faces of pages made to order, set inline by each page. */\n';
+    continue;
+  }
+  const [family, pkg, stem, axis, range, styles, pin] = row;
   const held = typeof pin === 'number' ? { wght: pin } : pin;
   const weight = typeof pin === 'number' ? String(pin) : range;
   for (const style of styles) {
@@ -126,4 +138,5 @@ for (const [family, pkg, stem, axis, range, styles, pin] of FONTS) {
     css += `@font-face{font-family:'${family}';font-style:${style};font-weight:${weight};font-display:swap;src:url(/demo/fonts/${macrons}) format('woff2');unicode-range:${MACRON_RANGE}}\n`;
   }
 }
-writeFileSync(join(app, 'app', 'fonts.css'), css);
+writeFileSync(join(app, 'app', 'fonts.css'), shared || css);
+writeFileSync(join(app, 'app', 'faces.css'), shared ? css : '/* Written by scripts/fonts.mjs. */\n');

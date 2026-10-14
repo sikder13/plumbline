@@ -35,3 +35,4 @@ apps/previews/out/
 apps/previews/public/
 apps/previews/next-env.d.ts
 apps/previews/app/fonts.css
+apps/previews/app/faces.css
