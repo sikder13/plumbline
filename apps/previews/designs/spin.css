@@ -1,0 +1,1810 @@
+.root {
+  --ink: #0a1c1e;
+  --ink-2: #163435;
+  --river: #7fd3cd;
+  --river-2: #c4f0eb;
+  --hull: #3dc44e;
+  --hull-deep: #11742a;
+  --spray: #edf3f0;
+  --white: #f5faf8;
+  --soft: rgba(245, 250, 248, 0.84);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --snap: cubic-bezier(0.34, 1.5, 0.64, 1);
+  --display: 'DM Sans', 'Arial Black', system-ui, sans-serif;
+  --text: 'Instrument Sans', 'Helvetica Neue', Arial, system-ui, sans-serif;
+  --pad: 20px;
+  --float-bg: rgba(61, 196, 78, 0.95);
+  --float-ink: #0a1c1e;
+  --float-call-bg: rgba(245, 250, 248, 0.95);
+  --float-call-ink: #0a1c1e;
+  --float-font: 'Instrument Sans', system-ui, sans-serif;
+  font-family: var(--text);
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--white);
+  background: var(--ink);
+  overflow-x: clip;
+}
+
+.root h1,
+.root h2,
+.root h3,
+.root p,
+.root ul,
+.root ol {
+  margin: 0;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 3px solid var(--hull);
+  outline-offset: 3px;
+}
+
+.root :global(.float-main) {
+  font-weight: 700;
+}
+
+/* The one action: the hull green with the river's ink. */
+.go,
+.goDark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 24px 0 28px;
+  border-radius: 999px;
+  background: var(--hull);
+  color: var(--ink);
+  font: 700 17px/1 var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.goDark {
+  min-height: 64px;
+  padding: 0 28px 0 32px;
+  background: var(--ink);
+  color: var(--hull);
+  font-size: 19px;
+}
+
+.go svg,
+.goDark svg {
+  transition: transform 0.5s var(--ease);
+}
+
+.go:hover svg,
+.goDark:hover svg {
+  transform: translateX(5px);
+}
+
+.kicker {
+  font: 600 12px/1.3 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hull-deep);
+}
+
+/* ---------- Opening: the headline, then the photograph held in the gorge ---------- */
+
+.hero {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto minmax(250px, 1fr) auto;
+  min-height: calc(100svh - var(--bar-h));
+  overflow: hidden;
+  color: var(--white);
+  background: var(--ink);
+}
+
+.heroLines {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 0;
+  width: 58%;
+  height: 62%;
+  pointer-events: none;
+  animation: drift-in 1.6s var(--ease) 0.1s both;
+}
+
+.heroLines svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(-1);
+}
+
+.heroLines path {
+  fill: none;
+  stroke: var(--river);
+  stroke-opacity: 0.2;
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.heroTop {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px var(--pad) 0;
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--white);
+  font: italic 900 19px/1 var(--display);
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  animation: fade 0.7s var(--ease) 0.05s both;
+}
+
+.markHull {
+  width: 28px;
+  height: 16px;
+  fill: var(--hull);
+}
+
+.place {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font: 600 11.5px/1.4 var(--text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--river);
+  animation: fade 0.7s var(--ease) 0.15s both;
+}
+
+.title {
+  padding: 12px var(--pad) 8px;
+  position: relative;
+  z-index: 1;
+  font: italic 900 clamp(76px, 25vw, 118px) / 0.84 var(--display);
+  letter-spacing: -0.055em;
+  color: var(--white);
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0.04em 0.14em 0.2em 0;
+  margin-bottom: -0.2em;
+}
+
+.line > span {
+  display: block;
+  animation: rise 1s var(--ease) both;
+  animation-delay: calc(0.04s + var(--i) * 0.1s);
+}
+
+.line + .line > span {
+  color: var(--hull);
+}
+
+.channel {
+  position: relative;
+  margin-top: 4px;
+  background: var(--ink-2);
+  clip-path: polygon(0 9%, 100% 0, 100% 91%, 0 100%);
+  animation: open 0.95s var(--ease) both;
+}
+
+.channel picture,
+.channel img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.channel img {
+  object-fit: cover;
+  animation: surge 1.8s var(--ease) both;
+}
+
+.flash {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(104deg, transparent 32%, rgba(245, 250, 248, 0.5) 47%, transparent 62%);
+  transform: translateX(-120%);
+  animation: flash 1.1s var(--ease) 0.4s both;
+  pointer-events: none;
+}
+
+.heroFoot {
+  display: grid;
+  gap: 14px;
+  padding: 14px var(--pad) 22px;
+}
+
+.sub {
+  font: 600 18px/1.3 var(--text);
+  animation: up 0.8s var(--ease) 0.62s both;
+}
+
+.heroFares {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 18px;
+  animation: up 0.8s var(--ease) 0.74s both;
+}
+
+.faresLabel {
+  flex-basis: 100%;
+  font: 500 14px/1.6 var(--text);
+  color: var(--river);
+}
+
+.fare {
+  font: 500 14px/1 var(--text);
+  color: var(--soft);
+  white-space: nowrap;
+}
+
+.fare b {
+  margin-right: 2px;
+  font: italic 900 30px/1.1 var(--display);
+  letter-spacing: -0.03em;
+  color: var(--white);
+}
+
+.heroFoot .go {
+  justify-self: start;
+  animation: up 0.8s var(--ease) 0.86s both;
+}
+
+/* ---------- The run: the river from above, held while the visitor scrolls ---------- */
+
+.run {
+  --gap: 30;
+  position: relative;
+  height: 300svh;
+  color: var(--white);
+  background: var(--ink);
+}
+
+.run[data-active='1'] {
+  --gap: 10;
+}
+
+.run[data-active='2'] {
+  --gap: 40;
+}
+
+.runFrame {
+  position: sticky;
+  top: var(--bar-h);
+  height: calc(100svh - var(--bar-h));
+  overflow: hidden;
+}
+
+.runScene,
+.runScene svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.runScene::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 48%;
+  background: linear-gradient(180deg, var(--ink) 0%, rgba(10, 28, 30, 0.9) 48%, rgba(10, 28, 30, 0) 100%);
+  pointer-events: none;
+}
+
+.rvLine {
+  fill: none;
+  stroke: var(--river);
+  stroke-width: 1.3;
+  vector-effect: non-scaling-stroke;
+}
+
+.rvLines use {
+  stroke-opacity: calc(0.6 - var(--k) * 0.021);
+  transform: translateX(calc(var(--side) * (46 + var(--k) * var(--gap)) * 1px));
+  transition: transform 1.1s var(--ease);
+}
+
+.rvBed {
+  fill: none;
+  stroke: rgba(127, 211, 205, 0.2);
+  stroke-width: 150;
+  stroke-linecap: round;
+}
+
+.rvBody {
+  fill: none;
+  stroke: var(--river);
+  stroke-width: 66;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rvShine {
+  fill: none;
+  stroke: var(--river-2);
+  stroke-width: 3;
+  stroke-dasharray: 2 26;
+  stroke-linecap: round;
+}
+
+.rvIsle {
+  fill: var(--ink-2);
+}
+
+.rvRapid {
+  fill: none;
+  stroke: var(--white);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rvTrack {
+  fill: none;
+  stroke: var(--white);
+  stroke-width: 2.4;
+  stroke-dasharray: 0.5 8;
+  stroke-linecap: round;
+}
+
+.rvWharf {
+  fill: var(--white);
+}
+
+.rvLabel {
+  fill: var(--river);
+  font: 600 12.5px/1 var(--text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.rvSpinner {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.run[data-spun] .rvSpinner {
+  animation: whirl 1.15s cubic-bezier(0.5, 0, 0.18, 1) both;
+}
+
+.rvRing {
+  fill: none;
+  stroke: var(--white);
+  stroke-width: 3;
+  stroke-dasharray: 1 9;
+  stroke-linecap: round;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.run[data-spun] .rvRing {
+  animation: ring 1.3s cubic-bezier(0.2, 0.7, 0.3, 1) 0.2s both;
+}
+
+.rvWake {
+  fill: none;
+  stroke: var(--white);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+
+.rvHull {
+  fill: var(--hull);
+}
+
+.rvBoat {
+  will-change: transform;
+}
+
+.runCopy {
+  position: absolute;
+  z-index: 2;
+  inset: 18px var(--pad) auto;
+}
+
+.runHead {
+  margin-bottom: 14px;
+  font: 600 12px/1.3 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--river);
+}
+
+.runSteps {
+  position: relative;
+  min-height: 200px;
+  padding: 0;
+  list-style: none;
+}
+
+.runSteps li {
+  position: absolute;
+  inset: 0 0 auto 0;
+  transition: opacity 0.5s var(--ease), transform 0.8s var(--ease);
+}
+
+.runSteps li[data-state='off'] {
+  opacity: 0;
+  transform: translateY(40px);
+  transition-duration: 0.22s, 0.5s;
+}
+
+.runSteps li[data-state='done'] {
+  opacity: 0;
+  transform: translateY(-40px);
+  transition-duration: 0.22s, 0.5s;
+}
+
+.runSteps li[data-state='on'] {
+  transition-delay: 0.14s;
+}
+
+.runSteps h3 {
+  font: italic 900 clamp(56px, 17vw, 76px) / 0.9 var(--display);
+  letter-spacing: -0.05em;
+  color: var(--white);
+}
+
+.runSteps p {
+  max-width: 30ch;
+  margin-top: 12px;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--soft);
+}
+
+.turn {
+  position: absolute;
+  z-index: 2;
+  right: var(--pad);
+  bottom: 7%;
+  text-align: right;
+  opacity: 0;
+  transform: translateY(24px) scale(0.9);
+  transition: opacity 0.4s var(--ease), transform 0.8s var(--snap);
+}
+
+.run[data-spun] .turn {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.35s;
+}
+
+.turnValue {
+  display: block;
+  font: italic 900 clamp(80px, 26vw, 220px) / 0.85 var(--display);
+  letter-spacing: -0.05em;
+  color: var(--hull);
+}
+
+.turnLabel {
+  font: 600 12px/1.3 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--river);
+}
+
+/* ---------- River or land: one stage, split by a slanted seam ---------- */
+
+.choose {
+  padding: 76px var(--pad) 64px;
+  color: var(--ink);
+  background: var(--spray);
+}
+
+.chooseHead h2 {
+  font: italic 900 clamp(60px, 18vw, 180px) / 0.86 var(--display);
+  letter-spacing: -0.055em;
+}
+
+.chooseHead p {
+  max-width: 30ch;
+  margin-top: 14px;
+  font-size: 18px;
+}
+
+.chooser {
+  margin-top: 26px;
+}
+
+.pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pick button {
+  min-height: 48px;
+  padding: 0 20px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  color: var(--ink);
+  background: transparent;
+  font: 700 16px/1 var(--text);
+  cursor: pointer;
+  transition: background-color 0.35s var(--ease), color 0.35s var(--ease);
+}
+
+.pick button[aria-pressed='true'] {
+  color: var(--spray);
+  background: var(--ink);
+}
+
+.stage {
+  position: relative;
+  height: clamp(300px, 86vw, 560px);
+  margin-top: 16px;
+  overflow: hidden;
+  background: var(--ink);
+  clip-path: polygon(0 4%, 100% 0, 100% 96%, 0 100%);
+}
+
+.landSide {
+  position: absolute;
+  inset: 0;
+  transform: translateX(calc((var(--split) - 0.3) * 100%));
+  transition: transform 1s var(--ease);
+}
+
+.landSide::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(200deg, rgba(10, 28, 30, 0.62) 0%, rgba(10, 28, 30, 0) 42%);
+  pointer-events: none;
+}
+
+.shot {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s var(--ease);
+}
+
+.shot[data-shown] {
+  opacity: 1;
+}
+
+.shot picture,
+.shot img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.shot img {
+  object-fit: cover;
+}
+
+.drawnSide {
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  clip-path: polygon(0 0, calc(var(--split) * 100% + 7%) 0, calc(var(--split) * 100% - 7%) 100%, 0 100%);
+  transition: clip-path 1s var(--ease);
+}
+
+.drawnSide svg {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 78%;
+  height: 100%;
+}
+
+.miniLines path {
+  --mg: 22;
+  fill: none;
+  stroke: var(--river);
+  stroke-width: 1.3;
+  stroke-opacity: calc(0.62 - var(--k) * 0.055);
+  vector-effect: non-scaling-stroke;
+  transform: translateX(calc(var(--side) * (38 + var(--k) * var(--mg)) * 1px));
+  transition: transform 1.1s var(--ease);
+}
+
+.chooser[data-on='river'] .miniLines path {
+  --mg: 11;
+}
+
+.miniBody {
+  fill: none;
+  stroke: var(--river);
+  stroke-width: 54;
+  stroke-linecap: round;
+}
+
+.miniBoat path:first-child {
+  fill: none;
+  stroke: var(--white);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  opacity: 0.75;
+}
+
+.miniBoat path:last-child {
+  fill: var(--hull);
+}
+
+.sideWord {
+  position: absolute;
+  z-index: 2;
+  top: 26px;
+  font: italic 900 clamp(42px, 12vw, 104px) / 0.9 var(--display);
+  letter-spacing: -0.05em;
+  color: var(--white);
+  transition: opacity 0.5s var(--ease);
+}
+
+.sideWord[data-side='near'] {
+  left: 18px;
+}
+
+.sideWord[data-side='far'] {
+  right: 18px;
+}
+
+.chooser[data-on='land'] .sideWord[data-side='near'],
+.chooser[data-on='river'] .sideWord[data-side='far'] {
+  opacity: 0;
+}
+
+.seam {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform: translateX(calc(var(--split) * 100%));
+  transition: transform 1s var(--ease);
+}
+
+.seam::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -7%;
+  width: 14%;
+  background: linear-gradient(to bottom right, transparent calc(50% - 2px), var(--hull) calc(50% - 2px), var(--hull) calc(50% + 2px), transparent calc(50% + 2px));
+}
+
+.info {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+  animation: up 0.55s var(--ease) both;
+}
+
+.info h3 {
+  font: italic 900 clamp(36px, 10vw, 64px) / 0.95 var(--display);
+  letter-spacing: -0.045em;
+}
+
+.info p {
+  max-width: 44ch;
+  font-size: 17px;
+}
+
+.infoPrices {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 20px;
+}
+
+.root .infoPrices span {
+  font: 500 15px/1 var(--text);
+  color: #2c4446;
+  white-space: nowrap;
+}
+
+.infoPrices b {
+  margin-right: 2px;
+  font: italic 900 36px/1.15 var(--display);
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.root .also {
+  font-size: 15px;
+  color: #34494b;
+}
+
+.info .go {
+  justify-self: start;
+  margin-top: 6px;
+}
+
+.source {
+  margin-top: 22px;
+  font-size: 13px;
+  color: #3f5557;
+}
+
+/* ---------- The family: a sentence that builds ---------- */
+
+.family {
+  padding: 30px var(--pad) 96px;
+  color: var(--ink);
+  background: var(--spray);
+}
+
+.sentence {
+  margin-top: 16px;
+}
+
+.lead {
+  max-width: 28ch;
+  font: 600 19px/1.35 var(--text);
+}
+
+.sentence h2 {
+  margin-top: 6px;
+  font: italic 900 clamp(54px, 15.6vw, 168px) / 0.88 var(--display);
+  letter-spacing: -0.055em;
+}
+
+.many {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 0.22em;
+  margin-top: 18px;
+  font: italic 800 26px/1.15 var(--display);
+  letter-spacing: -0.03em;
+  color: var(--hull-deep);
+}
+
+.paren {
+  font-weight: 500;
+  opacity: 0.6;
+}
+
+.manyWord {
+  display: inline-flex;
+  align-items: baseline;
+  font-size: calc(26px + var(--i) * 8px);
+}
+
+.tail {
+  font-size: 26px;
+}
+
+.dots {
+  display: inline-block;
+  width: calc(12px + var(--i) * 14px);
+  height: 6px;
+  margin-left: 0.16em;
+  background: radial-gradient(circle, currentColor 2px, transparent 2.6px) 0 50% / 9px 6px repeat-x;
+  transform-origin: left center;
+}
+
+.sentence[data-armed] .manyWord,
+.sentence[data-armed] .tail {
+  opacity: 0;
+  transform: translateY(0.4em);
+}
+
+.sentence[data-armed] .dots {
+  transform: scaleX(0);
+}
+
+.sentence[data-go] .manyWord,
+.sentence[data-go] .tail {
+  animation: pop 0.6s var(--snap) both;
+  animation-delay: calc(0.1s + var(--i) * 0.26s);
+}
+
+.sentence[data-go] .dots {
+  animation: stretch 0.5s var(--ease) both;
+  animation-delay: calc(0.28s + var(--i) * 0.26s);
+}
+
+.yearRow {
+  display: grid;
+  gap: 8px;
+  margin-top: 64px;
+}
+
+.before {
+  max-width: 24ch;
+  font: 600 19px/1.35 var(--text);
+}
+
+.year {
+  margin-left: -0.03em;
+  font: italic 900 clamp(120px, 38vw, 380px) / 0.8 var(--display);
+  letter-spacing: -0.06em;
+  color: var(--ink);
+}
+
+.after {
+  max-width: 13ch;
+  font: italic 800 clamp(32px, 8.6vw, 68px) / 0.96 var(--display);
+  letter-spacing: -0.04em;
+  color: var(--hull-deep);
+}
+
+.yearRow[data-armed] .year {
+  clip-path: inset(0 100% 0 0);
+}
+
+.yearRow[data-go] .year {
+  animation: wipe 1.2s var(--ease) 0.1s both;
+}
+
+.yearRow[data-armed] .after {
+  opacity: 0;
+}
+
+.yearRow[data-go] .after {
+  animation: up 0.8s var(--ease) 0.7s both;
+}
+
+.personal {
+  display: grid;
+  gap: 22px;
+  margin-top: 72px;
+}
+
+.personalPic {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.personalPic picture,
+.personalPic img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.personalPic img {
+  object-fit: cover;
+}
+
+.personalText h3 {
+  font: italic 900 clamp(42px, 11.6vw, 96px) / 0.9 var(--display);
+  letter-spacing: -0.05em;
+}
+
+.personalText p {
+  max-width: 34ch;
+  margin-top: 14px;
+  font-size: 18px;
+}
+
+/* ---------- Safety: twin engines, and what others say of it ---------- */
+
+.safety {
+  display: grid;
+  gap: 34px;
+  padding: 92px var(--pad) 84px;
+  color: var(--white);
+  background: var(--ink);
+}
+
+.safetyText {
+  min-width: 0;
+}
+
+.safety .kicker {
+  color: var(--river);
+}
+
+.twin {
+  margin-top: 14px;
+  font: italic 900 clamp(46px, 12.4vw, 118px) / 0.92 var(--display);
+  letter-spacing: -0.05em;
+}
+
+.twin span {
+  display: block;
+}
+
+.twin span + span {
+  color: var(--hull);
+}
+
+.safetyHead[data-armed] .twin span {
+  opacity: 0;
+  transform: translateX(-60px) skewX(-12deg);
+}
+
+.safetyHead[data-armed] .twin span + span {
+  transform: translateX(60px) skewX(-12deg);
+}
+
+.safetyHead[data-go] .twin span {
+  animation: from-left 0.9s var(--ease) 0.05s both;
+}
+
+.safetyHead[data-go] .twin span + span {
+  animation: from-right 0.9s var(--ease) 0.2s both;
+}
+
+.safetyHead[data-armed] .forLine {
+  opacity: 0;
+}
+
+.safetyHead[data-go] .forLine {
+  animation: up 0.7s var(--ease) 0.5s both;
+}
+
+.forLine {
+  margin-top: 16px;
+  font: italic 800 26px/1.1 var(--display);
+  letter-spacing: -0.02em;
+  color: var(--river);
+}
+
+.safetyLine {
+  max-width: 40ch;
+  margin-top: 14px;
+  font-size: 18px;
+  color: var(--soft);
+}
+
+.safetyPic {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.safetyPic picture,
+.safetyPic img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.safetyPic img {
+  object-fit: cover;
+}
+
+.proof ul {
+  display: grid;
+  gap: 22px;
+  padding: 0;
+  list-style: none;
+}
+
+.proof li {
+  display: grid;
+  gap: 6px;
+}
+
+.proof b {
+  font: italic 900 clamp(36px, 10vw, 80px) / 0.92 var(--display);
+  letter-spacing: -0.045em;
+}
+
+.proof li:first-child b {
+  color: var(--hull);
+}
+
+.proof span {
+  font: 600 12px/1.3 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--river);
+}
+
+.proof[data-armed] li {
+  opacity: 0;
+  transform: translateX(70px) skewX(-12deg);
+}
+
+.proof[data-go] li {
+  animation: streak 0.85s var(--ease) both;
+  animation-delay: calc(0.1s + var(--i) * 0.15s);
+}
+
+/* ---------- The booking: the gorge opens onto the green ---------- */
+
+.end {
+  position: relative;
+  overflow: hidden;
+  padding: 100px var(--pad) 76px;
+  color: var(--ink);
+  background: var(--hull);
+}
+
+.wall {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 3;
+  width: 54%;
+  background: var(--ink);
+  pointer-events: none;
+}
+
+.wall svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.wall path {
+  fill: none;
+  stroke: var(--river);
+  stroke-opacity: 0.32;
+  stroke-width: 1.3;
+  vector-effect: non-scaling-stroke;
+}
+
+.wall[data-side='left'] {
+  left: 0;
+  clip-path: polygon(0 0, 100% 0, 90% 18%, 98% 41%, 86% 63%, 95% 82%, 88% 100%, 0 100%);
+  transform: translateX(-102%);
+}
+
+.wall[data-side='right'] {
+  right: 0;
+  clip-path: polygon(12% 0, 100% 0, 100% 100%, 6% 100%, 15% 79%, 3% 58%, 13% 36%, 4% 15%);
+  transform: translateX(102%);
+}
+
+.wall[data-side='right'] svg {
+  transform: scaleX(-1);
+}
+
+.end[data-armed] .wall {
+  transform: none;
+}
+
+.end[data-go] .wall[data-side='left'] {
+  animation: part-left 1.35s cubic-bezier(0.7, 0, 0.2, 1) 0.1s both;
+}
+
+.end[data-go] .wall[data-side='right'] {
+  animation: part-right 1.35s cubic-bezier(0.7, 0, 0.2, 1) 0.1s both;
+}
+
+.endInner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 24px;
+}
+
+.endHead {
+  padding-bottom: 0.16em;
+  font: italic 900 clamp(78px, 25vw, 280px) / 0.84 var(--display);
+  letter-spacing: -0.055em;
+}
+
+.endFares {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 22px;
+}
+
+.endFares .faresLabel {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.endFares .fare {
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.endFares .fare b {
+  font-size: clamp(42px, 11.4vw, 92px);
+  color: var(--ink);
+}
+
+.goDark {
+  justify-self: start;
+}
+
+.news {
+  display: grid;
+  gap: 8px;
+  max-width: 46ch;
+  font-size: 18px;
+}
+
+.see {
+  margin-top: 4px;
+  font: italic 800 28px/1.1 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.reach {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.reach a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 20px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  color: var(--ink);
+  text-decoration: none;
+  font: 600 17px/1 var(--text);
+  transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.reach a:hover {
+  color: var(--hull);
+  background: var(--ink);
+}
+
+.reach span {
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.reach b {
+  font-weight: 700;
+}
+
+/* ---------- Footer: their own slogan, running ---------- */
+
+.foot {
+  padding: 0 0 96px;
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--hull);
+}
+
+.ticker {
+  overflow: hidden;
+  padding: 6px 0 18px;
+}
+
+.tickerTrack {
+  display: flex;
+  width: max-content;
+  animation: tick 28s linear infinite;
+}
+
+.tickerTrack span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28em;
+  padding-right: 0.42em;
+  font: italic 900 clamp(64px, 18vw, 190px) / 1 var(--display);
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+}
+
+.tickerHull {
+  width: 0.62em;
+  height: 0.34em;
+  fill: var(--ink);
+}
+
+.footNote {
+  padding: 0 var(--pad);
+}
+
+/* ---------- The river down the edge of a large screen ---------- */
+
+.trail {
+  display: none;
+}
+
+.trailBase {
+  fill: none;
+  stroke: var(--river);
+  stroke-opacity: 0.55;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.trailDone {
+  fill: none;
+  stroke: var(--hull);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+}
+
+.trailBoat {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  width: 15px;
+  height: 27px;
+  margin-left: -7.5px;
+  will-change: transform;
+}
+
+.trailBoat svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  fill: var(--hull);
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+@media (min-width: 1100px) {
+  .trail {
+    position: fixed;
+    z-index: 30;
+    top: calc(var(--bar-h) + 15vh);
+    right: 8px;
+    display: block;
+    width: 40px;
+    height: 66vh;
+    pointer-events: none;
+    animation: fade 1s var(--ease) 1.2s both;
+  }
+
+  .trail > svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+}
+
+/* ---------- Larger screens ---------- */
+
+@media (min-width: 900px) {
+  .root {
+    --pad: 48px;
+  }
+
+  .heroTop {
+    padding-top: 14px;
+  }
+
+  .place {
+    flex-direction: row;
+    gap: 28px;
+  }
+
+  .title {
+    display: flex;
+    gap: 0 0.2em;
+    padding-top: 2px;
+    font-size: clamp(120px, 14vw, 230px);
+  }
+
+  .line {
+    flex: none;
+  }
+
+  .heroFoot {
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 44px;
+    padding: 20px var(--pad) 26px;
+  }
+
+  .sub {
+    max-width: 22ch;
+    font-size: 22px;
+  }
+
+  .heroFares {
+    gap: 2px 24px;
+  }
+
+  .fare b {
+    font-size: 36px;
+  }
+
+  .heroFoot .go {
+    justify-self: end;
+    min-height: 62px;
+    padding: 0 30px 0 34px;
+    font-size: 18px;
+  }
+
+  .runScene::after {
+    inset: 0 auto 0 0;
+    width: 56%;
+    height: auto;
+    background: linear-gradient(90deg, var(--ink) 0%, rgba(10, 28, 30, 0.88) 52%, rgba(10, 28, 30, 0) 100%);
+  }
+
+  .runCopy {
+    inset: 50% auto auto var(--pad);
+    width: min(44vw, 660px);
+    transform: translateY(-50%);
+  }
+
+  .runSteps {
+    min-height: 320px;
+  }
+
+  .runSteps h3 {
+    font-size: clamp(80px, 7.6vw, 136px);
+  }
+
+  .runSteps p {
+    font-size: 20px;
+  }
+
+  .turn {
+    top: 50%;
+    right: 6vw;
+    bottom: auto;
+    transform: translateY(-30%) scale(0.9);
+  }
+
+  .run[data-spun] .turn {
+    transform: translateY(-50%);
+  }
+
+  .choose {
+    padding: 128px var(--pad) 96px;
+  }
+
+  .chooseHead {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    align-items: end;
+    gap: 48px;
+  }
+
+  .chooseHead p {
+    padding-bottom: 12px;
+    font-size: 21px;
+  }
+
+  .chooser {
+    display: grid;
+    margin-top: 40px;
+  }
+
+  .pick {
+    justify-self: end;
+  }
+
+  .stage {
+    height: min(560px, 64vh);
+    margin-top: 18px;
+  }
+
+  .drawnSide svg {
+    width: 70%;
+  }
+
+  .sideWord {
+    top: 34px;
+  }
+
+  .sideWord[data-side='near'] {
+    left: 34px;
+  }
+
+  .sideWord[data-side='far'] {
+    right: 34px;
+  }
+
+  .info {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) auto;
+    grid-template-areas:
+      'title prices go'
+      'line also go';
+    align-items: end;
+    gap: 10px 48px;
+    margin-top: 30px;
+  }
+
+  .info h3 {
+    grid-area: title;
+    font-size: clamp(40px, 3.7vw, 60px);
+  }
+
+  .info > p:first-of-type {
+    grid-area: line;
+    align-self: start;
+  }
+
+  .infoPrices {
+    grid-area: prices;
+  }
+
+  .also {
+    grid-area: also;
+    align-self: start;
+  }
+
+  .info .go {
+    grid-area: go;
+    align-self: center;
+    min-height: 62px;
+  }
+
+  .family {
+    padding: 40px var(--pad) 130px;
+  }
+
+  .lead {
+    font-size: 22px;
+  }
+
+  .many {
+    font-size: 34px;
+  }
+
+  .manyWord {
+    font-size: calc(34px + var(--i) * 14px);
+  }
+
+  .tail {
+    font-size: 34px;
+  }
+
+  .yearRow {
+    grid-template-columns: auto 1fr;
+    align-items: end;
+    column-gap: 48px;
+    margin-top: 96px;
+  }
+
+  .before {
+    grid-column: 1 / -1;
+    font-size: 22px;
+  }
+
+  .after {
+    padding-bottom: 0.3em;
+  }
+
+  .personal {
+    grid-template-columns: 1.15fr 1fr;
+    align-items: center;
+    gap: 64px;
+    margin-top: 110px;
+  }
+
+  .personalText p {
+    font-size: 20px;
+  }
+
+  .safety {
+    grid-template-columns: 1.05fr 1fr;
+    align-items: start;
+    column-gap: 64px;
+    row-gap: 48px;
+    padding: 130px var(--pad) 120px;
+  }
+
+  .safetyHead {
+    grid-column: 1 / -1;
+  }
+
+  .twin {
+    font-size: clamp(64px, 6.9vw, 124px);
+  }
+
+  .safetyPic {
+    grid-column: 1;
+    grid-row: 2 / span 2;
+    margin-top: 8px;
+  }
+
+  .safetyText {
+    grid-column: 2;
+  }
+
+  .safetyLine {
+    margin-top: 0;
+    margin-bottom: 14px;
+    font-size: 20px;
+  }
+
+  .proof {
+    grid-column: 2;
+  }
+
+  .proof ul {
+    gap: 26px;
+  }
+
+  .proof b {
+    font-size: clamp(40px, 3.9vw, 66px);
+  }
+
+  .end {
+    padding: 140px var(--pad) 100px;
+  }
+
+  .endInner {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    column-gap: 56px;
+    row-gap: 34px;
+  }
+
+  .endHead {
+    grid-column: 1 / -1;
+    font-size: clamp(110px, 14.4vw, 250px);
+    white-space: nowrap;
+  }
+
+  .endFares {
+    grid-column: 1;
+  }
+
+  .goDark {
+    grid-column: 2;
+    justify-self: end;
+    min-height: 72px;
+    padding: 0 36px 0 40px;
+    font-size: 21px;
+  }
+
+  .news {
+    grid-column: 1;
+    font-size: 20px;
+  }
+
+  .reach {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1300px) {
+  .root {
+    --pad: 64px;
+  }
+}
+
+/* ---------- Reduced motion: every state shows, nothing is held ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .root *,
+  .root *::before,
+  .root *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .run {
+    height: auto;
+  }
+
+  .runFrame {
+    position: relative;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
+
+  .runCopy {
+    position: relative;
+    inset: auto;
+    order: -1;
+    width: auto;
+    padding: 64px var(--pad) 28px;
+    transform: none;
+  }
+
+  .runSteps {
+    display: grid;
+    gap: 30px;
+    min-height: 0;
+  }
+
+  .runSteps li {
+    position: static;
+  }
+
+  .runSteps li[data-state] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .runScene {
+    position: relative;
+    height: 64svh;
+  }
+
+  .runScene::after {
+    display: none;
+  }
+
+  .turn {
+    position: relative;
+    inset: auto;
+    padding: 24px var(--pad) 56px;
+    text-align: left;
+    opacity: 1;
+    transform: none;
+  }
+
+  .tickerTrack {
+    transform: none;
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(104%) skewX(-6deg);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@keyframes open {
+  from {
+    clip-path: polygon(0 52%, 100% 44%, 100% 56%, 0 64%);
+  }
+}
+
+@keyframes surge {
+  from {
+    transform: scale(1.16) translate3d(2.5%, 0, 0);
+  }
+}
+
+@keyframes flash {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes whirl {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ring {
+  0% {
+    opacity: 0.95;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(0.4em) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes stretch {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes wipe {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes streak {
+  from {
+    opacity: 0;
+    transform: translateX(80px) skewX(-14deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes part-left {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translateX(-102%);
+  }
+}
+
+@keyframes part-right {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translateX(102%);
+  }
+}
+
+@keyframes drift-in {
+  from {
+    opacity: 0;
+    transform: translateX(12%);
+  }
+}
+
+@keyframes from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-60px) skewX(-12deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes from-right {
+  from {
+    opacity: 0;
+    transform: translateX(60px) skewX(-12deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes tick {
+  to {
+    transform: translateX(-50%);
+  }
+}

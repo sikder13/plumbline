@@ -1,0 +1,2004 @@
+.root {
+  --ink: #0d1110;
+  --ink2: #18201c;
+  --bone: #f2f4f1;
+  --sage: #87a28a;
+  --sage-deep: #4f6a55;
+  --blue: #3aa0dc;
+  --blue-d: #13649e;
+  --mute: #9aa59e;
+  --mute-d: #56605a;
+  --rule: rgba(255, 255, 255, 0.16);
+  --rule-d: rgba(13, 17, 16, 0.18);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring: cubic-bezier(0.34, 1.4, 0.5, 1);
+  --display: 'Italiana', 'Didot', 'Bodoni 72', 'Times New Roman', serif;
+  --text: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --pad: 20px;
+  --float-bg: #3aa0dc;
+  --float-ink: #0d1110;
+  --float-font: 'Instrument Sans', system-ui, sans-serif;
+  --float-call-bg: #f2f4f1;
+  --float-call-ink: #0d1110;
+  font-family: var(--text);
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--ink);
+  overflow-x: clip;
+}
+
+.root h1,
+.root h2,
+.root h3 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.root h2 {
+  font-size: clamp(44px, 12.4vw, 54px);
+  line-height: 0.98;
+}
+
+.root p,
+.root figure,
+.root blockquote {
+  margin: 0;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 3px;
+}
+
+.root :global(.float-main) {
+  border-radius: 3px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.root :global(.float-call) {
+  border-radius: 3px;
+}
+
+/* A section's small label: a hairline and spaced capitals. */
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font: 600 12px/1.3 var(--text);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.kicker::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+/* The one action: a split button, the words in lake blue and the arrow in its own square. */
+.go {
+  display: inline-flex;
+  align-items: stretch;
+  min-height: 58px;
+  border-radius: 3px;
+  overflow: hidden;
+  color: var(--ink);
+  font: 600 18px/1 var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.go span {
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  background: var(--blue);
+}
+
+.go i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  background: #8fcaf0;
+}
+
+.go svg {
+  transition: transform 0.5s var(--ease);
+}
+
+.go:hover svg {
+  transform: translateX(4px);
+}
+
+/* ---------- The compass ---------- */
+
+.dialSvg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.dialRing {
+  fill: var(--ink);
+  stroke: rgba(255, 255, 255, 0.7);
+  stroke-width: 1;
+  stroke-dasharray: 1px 1px;
+}
+
+.dialTicks {
+  stroke: rgba(255, 255, 255, 0.42);
+  stroke-width: 1;
+}
+
+.dialMajor {
+  stroke: #fff;
+  stroke-width: 1.6;
+}
+
+.dialPoints text {
+  fill: #fff;
+  font: 600 15px var(--text);
+  letter-spacing: 0.04em;
+}
+
+.dialNeedle {
+  transform-box: view-box;
+  transform-origin: 100px 100px;
+  transform: rotate(var(--aim, -90deg));
+  transition: transform 1.1s var(--spring);
+}
+
+.dialTip {
+  fill: var(--blue);
+}
+
+.dialTail {
+  fill: rgba(255, 255, 255, 0.55);
+}
+
+.dialHub {
+  fill: var(--ink);
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
+/* ---------- Hero: "All about", the compass with a lake in its face, "you." ---------- */
+
+.hero {
+  position: relative;
+  min-height: calc(100svh - var(--bar-h));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 30px;
+  color: #fff;
+  text-align: center;
+  background: var(--ink);
+  overflow: hidden;
+}
+
+.top {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px var(--pad) 0;
+  animation: fade 0.7s var(--ease) 0.1s both;
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  color: #fff;
+  font: 600 15px/1 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.mark svg {
+  color: var(--blue);
+}
+
+.where {
+  font: 500 12px/1 var(--text);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.nav {
+  display: none;
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 8px !important;
+  line-height: 0.9;
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+  white-space: nowrap;
+}
+
+.line > span {
+  display: block;
+  animation: rise 1.05s var(--ease) both;
+  animation-delay: calc(0.12s + var(--i) * 0.5s);
+}
+
+.line[data-line='first'] {
+  font-size: 17.5vw;
+}
+
+.line[data-line='last'] {
+  font-size: 33vw;
+  line-height: 0.8;
+}
+
+.heroDial {
+  --aim: 180deg;
+  position: relative;
+  display: block;
+  width: min(78vw, 330px);
+  aspect-ratio: 1;
+  margin: 26px 0 8px;
+}
+
+.heroFace {
+  position: absolute;
+  inset: 11.5%;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #24323a;
+}
+
+.heroFace picture,
+.heroFace img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.heroFace img {
+  object-fit: cover;
+  animation: drift 2.6s var(--ease) both;
+}
+
+.heroDial .dialSvg {
+  position: absolute;
+  inset: 0;
+}
+
+.heroDial .dialRing {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.75);
+  animation: draw 1.4s var(--ease) 0.15s both;
+}
+
+.heroDial .dialTicks,
+.heroDial .dialMajor,
+.heroDial .dialPoints {
+  transform-box: view-box;
+  transform-origin: 100px 100px;
+  animation: card 1.7s var(--ease) 0.2s both;
+}
+
+.heroDial .dialPoints text {
+  font-size: 11px;
+  fill: var(--mute);
+}
+
+.heroDial .dialTip,
+.heroDial .dialTail {
+  stroke: var(--ink);
+  stroke-width: 0.8;
+}
+
+.heroDial .dialTail {
+  fill: #fff;
+}
+
+.heroDial .dialNeedle {
+  animation: settle 1.5s cubic-bezier(0.22, 0.7, 0.3, 1) 0.35s backwards;
+}
+
+.heroText {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 20px var(--pad) 0;
+}
+
+.heroText .kicker {
+  color: var(--blue);
+  font-size: 16px;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  animation: fade 0.8s var(--ease) 0.7s both;
+}
+
+.heroText .kicker::before {
+  display: none;
+}
+
+.sub {
+  max-width: 30ch;
+  font-size: 18px;
+  line-height: 1.4;
+  color: #dfe4e1;
+  animation: fade 0.8s var(--ease) 0.75s both;
+}
+
+.heroText .go {
+  margin-top: 4px;
+  animation: lift 0.9s var(--ease) 0.8s both;
+}
+
+/* ---------- Directly with your guide: the layers slide off, and his story runs along a bearing line. ---------- */
+
+.direct {
+  position: relative;
+  display: grid;
+  gap: 30px;
+  padding: 84px var(--pad) 80px;
+  background: var(--bone);
+  color: var(--ink);
+}
+
+.directHead {
+  display: grid;
+  gap: 16px;
+}
+
+.directHead .kicker {
+  color: var(--blue-d);
+}
+
+.directLead {
+  max-width: 30ch;
+  font: 500 21px/1.38 var(--text);
+}
+
+.portrait {
+  position: relative;
+  margin: 0 calc(var(--pad) * -1);
+  overflow: hidden;
+}
+
+.portrait picture,
+.portrait img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.portraitName {
+  padding: 16px var(--pad) 0;
+  font: 400 46px/1 var(--display);
+}
+
+.layers {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: repeat(5, 1fr);
+  pointer-events: none;
+}
+
+.layers i {
+  display: block;
+  margin: -1px 0;
+  background: var(--ink);
+  transform: translateX(-102%);
+}
+
+.layers i:nth-child(2) {
+  background: var(--sage-deep);
+  transform: translateX(102%);
+}
+
+.layers i:nth-child(3) {
+  background: var(--ink2);
+}
+
+.layers i:nth-child(4) {
+  background: var(--sage);
+  transform: translateX(102%);
+}
+
+.portrait[data-seen='0'] .layers i {
+  transform: none;
+  transition: none;
+}
+
+.portrait[data-seen='1'] .layers i {
+  transition: transform 1.05s var(--ease);
+  transition-delay: calc(0.15s + var(--i) * 0.11s);
+}
+
+.portrait[data-seen='0'] img {
+  transform: scale(1.08);
+}
+
+.portrait[data-seen='1'] img {
+  transition: transform 1.8s var(--ease) 0.3s;
+}
+
+/* His story as a bearing line: a ruled scale, a marker at each fact, the line filling as it is read. */
+.life {
+  position: relative;
+  display: grid;
+  gap: 30px;
+  margin: 0;
+  padding: 4px 0 4px 44px;
+  list-style: none;
+}
+
+.life::before,
+.life::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 10px;
+}
+
+.life::before {
+  width: 12px;
+  background:
+    linear-gradient(var(--ink), var(--ink)) 0 0 / 1.5px 100% no-repeat,
+    repeating-linear-gradient(180deg, rgba(13, 17, 16, 0.45) 0 1px, transparent 1px 11px) 0 0 / 8px 100% no-repeat;
+}
+
+.life::after {
+  width: 3px;
+  margin-left: -0.75px;
+  background: var(--blue-d);
+  transform-origin: top;
+}
+
+@supports (animation-timeline: view()) {
+  .life::after {
+    animation: grow linear both;
+    animation-timeline: view();
+    animation-range: entry 30% cover 65%;
+  }
+}
+
+.life li {
+  position: relative;
+  transition: opacity 0.8s var(--ease), transform 0.8s var(--ease);
+}
+
+.life li::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: -30px;
+  border: 8px solid transparent;
+  border-right: 11px solid var(--blue-d);
+  border-left: 0;
+}
+
+.life li[data-seen='0'] {
+  opacity: 0.2;
+  transform: translateX(14px);
+}
+
+.life li[data-seen='1'] {
+  transition-delay: calc(var(--i) * 0.08s);
+}
+
+.lifeTag {
+  display: block;
+  margin-bottom: 6px;
+  font: 600 13px/1.3 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--blue-d);
+}
+
+.life p {
+  font: 600 22px/1.3 var(--text);
+  letter-spacing: -0.005em;
+}
+
+.lifeLine {
+  display: none;
+}
+
+.team {
+  max-width: 44ch;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule-d);
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--mute-d);
+}
+
+/* ---------- Who Beau can call: one large dial turns as the visitor scrolls, carrying the places round to the marker. ---------- */
+
+.calls {
+  background: var(--ink);
+  color: #fff;
+}
+
+.story {
+  --now: var(--a0, 0);
+  --dial-w: 188px;
+  --orbit: 160px;
+  --sat-w: 118px;
+  --big: 1.76;
+  position: relative;
+  height: calc(var(--steps) * 34svh + 100svh);
+}
+
+.story[data-active='1'] {
+  --now: var(--a1, 0);
+}
+
+.story[data-active='2'] {
+  --now: var(--a2, 0);
+}
+
+.story[data-active='3'] {
+  --now: var(--a3, 0);
+}
+
+.story[data-active='4'] {
+  --now: var(--a4, 0);
+}
+
+.story [data-frame] {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.storyHead {
+  position: absolute;
+  top: calc(var(--bar-h) + 10px);
+  left: var(--pad);
+  right: var(--pad);
+  z-index: 3;
+  display: grid;
+  gap: 8px;
+}
+
+.storyHead .kicker {
+  color: var(--blue);
+}
+
+.storyHead h2 {
+  font-size: clamp(36px, 10.6vw, 46px);
+  white-space: nowrap;
+}
+
+.storyLead {
+  max-width: 30ch;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--mute);
+}
+
+/* A point with no size at the dial's centre: the dial, the marker and the photographs hang from it. */
+.wheel {
+  position: absolute;
+  top: clamp(392px, 50%, 450px);
+  left: 50%;
+  width: 0;
+  height: 0;
+}
+
+.bigDial {
+  position: absolute;
+  top: calc(var(--dial-w) / -2);
+  left: calc(var(--dial-w) / -2);
+  width: var(--dial-w);
+  transform: rotate(calc(var(--now) * -1deg));
+  transition: transform 1.15s var(--ease);
+}
+
+.bigDial .dialRing {
+  fill: var(--ink2);
+}
+
+.bigDial .dialPoints text {
+  font-size: 22px;
+}
+
+.marker {
+  position: absolute;
+  top: calc(var(--dial-w) / -2 - 4px);
+  left: 0;
+  z-index: 4;
+  width: 0;
+  height: 0;
+}
+
+.marker i {
+  position: absolute;
+  top: -2px;
+  left: -8px;
+  border: 8px solid transparent;
+  border-top: 12px solid var(--blue);
+  border-bottom: 0;
+}
+
+.marker b {
+  display: none;
+}
+
+.orbit {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Each photograph rides the dial to its bearing and stays upright: turn, move out, turn back. */
+.sat {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  transform: rotate(calc((var(--at) - var(--now)) * 1deg)) translateY(calc(var(--orbit) * -1)) rotate(calc((var(--at) - var(--now)) * -1deg));
+  transition: transform 1.15s var(--ease);
+}
+
+.sat[data-state='on'] {
+  z-index: 2;
+}
+
+.satIn {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: var(--sat-w);
+  transform: translate(-50%, -50%) scale(var(--s, 1));
+  opacity: 0.42;
+  transition: transform 1s var(--ease), opacity 0.8s var(--ease);
+}
+
+.sat[data-state='on'] .satIn {
+  --s: var(--big);
+  opacity: 1;
+}
+
+.satIn picture,
+.satIn img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.reads {
+  position: absolute;
+  right: var(--pad);
+  bottom: 86px;
+  left: var(--pad);
+  z-index: 3;
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.read {
+  grid-area: 1 / 1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  align-items: end;
+  column-gap: 14px;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.45s var(--ease), transform 0.8s var(--ease);
+}
+
+.read[data-state='on'] {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.3s;
+}
+
+.bear {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  font: 400 60px/0.78 var(--display);
+  color: var(--blue);
+}
+
+.kind {
+  grid-column: 2;
+  grid-row: 1;
+  margin-bottom: 4px !important;
+  font: 600 12px/1.3 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.read h3 {
+  grid-column: 2;
+  grid-row: 2;
+  font-size: 30px;
+  line-height: 1;
+}
+
+.readText {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  max-width: 40ch;
+  margin-top: 10px !important;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #dfe4e1;
+}
+
+/* ---------- Mark your map: day trips at their bearing, on the ring of their length. ---------- */
+
+.mapSection {
+  display: grid;
+  gap: 26px;
+  padding: 84px var(--pad) 88px;
+  background: var(--sage);
+  color: var(--ink);
+}
+
+.mapHead {
+  display: grid;
+  gap: 14px;
+}
+
+.mapLead {
+  font: 500 22px/1.3 var(--text);
+}
+
+.hint {
+  max-width: 40ch;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.map {
+  display: grid;
+  gap: 30px;
+}
+
+.chart {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 1;
+  margin: 8px auto 0;
+}
+
+.chartSvg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.spoke {
+  stroke: rgba(13, 17, 16, 0.2);
+  stroke-width: 1;
+}
+
+.ringLine {
+  fill: none;
+  stroke: rgba(13, 17, 16, 0.55);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+}
+
+.ringLabel {
+  fill: var(--ink);
+  font: 700 13px var(--text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.point {
+  fill: var(--ink);
+  font: 600 16px var(--text);
+}
+
+.mapNeedle {
+  transform-box: view-box;
+  transform-origin: 200px 200px;
+  transform: rotate(var(--aim));
+  transition: transform 0.95s var(--spring);
+}
+
+.mapNeedle path {
+  stroke: var(--ink);
+  stroke-width: 2;
+  fill: none;
+}
+
+.mapNeedle .mapNeedleTip {
+  fill: var(--ink);
+  stroke: none;
+}
+
+.chart[data-sweep='1'] .mapNeedle {
+  transition: transform 1.4s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+}
+
+.dotCore {
+  fill: var(--sage);
+  stroke: var(--ink);
+  stroke-width: 2;
+  transition: fill 0.3s var(--ease);
+}
+
+.dot[data-on] .dotCore {
+  fill: var(--ink);
+}
+
+.ping,
+.pulse {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.chart[data-sweep] .ping {
+  animation: ping 0.9s var(--ease) var(--d) both;
+}
+
+.pulse {
+  animation: ping 0.9s var(--ease) both;
+}
+
+.centreDot {
+  fill: var(--ink);
+}
+
+.centre {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, 10px);
+  font: 700 11px/1 var(--text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.place {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: 600 13px/1.1 var(--text);
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.place span {
+  padding: 3px 5px;
+  border-radius: 2px;
+  transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.place:hover span {
+  background: rgba(13, 17, 16, 0.12);
+}
+
+.place[aria-pressed='true'] span {
+  background: var(--ink);
+  color: var(--bone);
+}
+
+.place[data-side='right'] {
+  transform: translate(8px, -50%);
+}
+
+.place[data-side='left'] {
+  transform: translate(calc(-100% - 8px), -50%);
+}
+
+.place[data-side='top'] {
+  transform: translate(-50%, calc(-100% - 4px));
+}
+
+.place[data-side='bottom'] {
+  transform: translate(-50%, 4px);
+}
+
+.panel {
+  display: grid;
+  gap: 18px;
+}
+
+.focus {
+  display: grid;
+  gap: 4px;
+  min-height: 92px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(13, 17, 16, 0.4);
+  animation: lift 0.6s var(--ease) both;
+}
+
+.focus i {
+  font: 600 12px/1.3 var(--text);
+  font-style: normal;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.focus b {
+  font: 600 24px/1.2 var(--text);
+}
+
+.focus span {
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+/* The request writes itself from the marks: one button, the sentence on it. */
+.send {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 68px;
+  padding: 16px 20px 16px 22px;
+  border-radius: 3px;
+  background: var(--ink);
+  color: var(--bone);
+  font: 600 19px/1.3 var(--text);
+  text-decoration: none;
+}
+
+.send svg {
+  flex: 0 0 auto;
+  color: var(--blue);
+  transition: transform 0.5s var(--ease);
+}
+
+.send:hover svg {
+  transform: translateX(4px);
+}
+
+/* ---------- Guests: one large quote at a time, the needle swinging to where they came from. ---------- */
+
+.guestsSection {
+  padding: 88px var(--pad) 84px;
+  background: var(--bone);
+  color: var(--ink);
+}
+
+.guestsHead {
+  display: grid;
+  gap: 14px;
+}
+
+.guestsHead .kicker {
+  color: var(--blue-d);
+}
+
+.guestsLead {
+  max-width: 30ch;
+  font: 500 21px/1.38 var(--text);
+}
+
+.guests {
+  display: grid;
+  gap: 26px;
+  margin-top: 40px;
+}
+
+.guestDial {
+  position: relative;
+  justify-self: center;
+  width: 196px;
+}
+
+.guestDial .dialRing {
+  fill: var(--ink);
+}
+
+.guestBearing {
+  margin-top: 10px !important;
+  font: 600 15px/1 var(--text);
+  letter-spacing: 0.2em;
+  text-align: center;
+  color: var(--blue-d);
+  animation: fade 0.6s var(--ease) both;
+}
+
+.says {
+  display: grid;
+}
+
+.say {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s var(--ease), transform 0.9s var(--ease);
+}
+
+.say[data-state='on'] {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.2s;
+}
+
+.say blockquote {
+  margin: 0;
+}
+
+.say p {
+  font: 400 clamp(42px, 11.4vw, 50px)/1.02 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.say figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 18px;
+  font: 600 17px/1.3 var(--text);
+}
+
+.say figcaption span {
+  color: var(--mute-d);
+  font-weight: 500;
+}
+
+.nextGuest {
+  position: relative;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 20px;
+  overflow: hidden;
+  border: 1.5px solid var(--ink);
+  border-radius: 3px;
+  background: none;
+  color: var(--ink);
+  font: 600 16px/1 var(--text);
+  cursor: pointer;
+}
+
+.nextGuest i {
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  background: var(--blue-d);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.guests[data-running] .nextGuest i {
+  animation: grow-x 3.4s linear both;
+}
+
+/* Qualmark Gold, set as a mark: the name, a gold plate, the year. */
+.award {
+  display: grid;
+  gap: 12px;
+  margin-top: 56px;
+  padding-top: 26px;
+  border-top: 1px solid var(--rule-d);
+}
+
+.awardMark {
+  display: inline-flex;
+  align-items: stretch;
+  justify-self: start;
+  border: 1.5px solid var(--ink);
+}
+
+.awardMark span,
+.awardMark i {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font: 600 15px/1 var(--text);
+  font-style: normal;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.awardMark b {
+  display: flex;
+  align-items: center;
+  padding: 8px 20px 10px;
+  border-right: 1.5px solid var(--ink);
+  border-left: 1.5px solid var(--ink);
+  background: #d9b65e;
+  font: 400 46px/1 var(--display);
+}
+
+.awardLine {
+  max-width: 40ch;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--mute-d);
+}
+
+/* ---------- The end: an invitation, then a compass whose points are the ways to reach him. ---------- */
+
+.end {
+  display: grid;
+  background: var(--ink);
+  color: #fff;
+}
+
+.endPic {
+  overflow: hidden;
+}
+
+.endPic picture,
+.endPic img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.invite {
+  padding: 34px var(--pad) 0;
+}
+
+.invite p {
+  font: 500 24px/1.38 var(--text);
+}
+
+.invite footer {
+  margin-top: 14px;
+  font: 600 13px/1 var(--text);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+
+.endMain {
+  display: grid;
+  gap: 16px;
+  padding: 72px var(--pad) 0;
+}
+
+.endMain > .kicker {
+  color: var(--blue);
+}
+
+.compass {
+  position: relative;
+  margin-top: 22px;
+}
+
+/* Four quarters of a compass rose, the dial at the crossing and the needle pointing into the one in hand. */
+.ways {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+}
+
+.way {
+  background: var(--ink);
+}
+
+.way[data-point='NW'] {
+  grid-area: 1 / 1;
+}
+
+.way[data-point='NE'] {
+  grid-area: 1 / 2;
+}
+
+.way[data-point='SW'] {
+  grid-area: 2 / 1;
+}
+
+.way[data-point='SE'] {
+  grid-area: 2 / 2;
+}
+
+.way a,
+.way p {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100%;
+  min-height: 172px;
+  padding: 16px 14px;
+  color: #fff;
+  text-decoration: none;
+  transition: background-color 0.35s var(--ease), color 0.35s var(--ease);
+}
+
+.way[data-point='NE'] a,
+.way[data-point='NE'] p,
+.way[data-point='SE'] a,
+.way[data-point='SE'] p {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.way[data-point='SE'] a,
+.way[data-point='SE'] p,
+.way[data-point='SW'] a,
+.way[data-point='SW'] p {
+  justify-content: flex-end;
+}
+
+.way i {
+  font: 400 30px/0.9 var(--display);
+  font-style: normal;
+  color: var(--mute);
+  transition: color 0.35s var(--ease);
+}
+
+.way b {
+  font: 600 12px/1.3 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.way span {
+  max-width: 13ch;
+  font-size: 16px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.way[data-on] i {
+  color: var(--blue);
+}
+
+.way[data-point='NE'] a {
+  background: var(--blue);
+  color: var(--ink);
+}
+
+.way[data-point='NE'] i,
+.way[data-point='NE'] b {
+  color: var(--ink);
+}
+
+.way[data-point='NE'] span {
+  font: 400 24px/1.05 var(--display);
+}
+
+.way a:hover {
+  background: var(--ink2);
+}
+
+.way[data-point='NE'] a:hover {
+  background: #57b2e8;
+}
+
+.dialBox {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  width: 112px;
+  margin: -56px 0 0 -56px;
+  pointer-events: none;
+}
+
+.dialBox .dialPoints text {
+  font-size: 17px;
+}
+
+.agents {
+  max-width: 44ch;
+  margin-top: 18px !important;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--mute);
+}
+
+.endFoot {
+  margin-top: 36px;
+  padding: 18px 0 96px;
+  border-top: 1px solid var(--rule);
+  color: var(--mute);
+}
+
+.endFoot :global(.demo-foot-note) {
+  font-size: 14px;
+}
+
+/* ---------- Keyframes ---------- */
+
+@keyframes rise {
+  from {
+    transform: translateY(108%);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes lift {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1px;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* A compass needle finding north: it overshoots, comes back, and settles. */
+@keyframes settle {
+  0% {
+    transform: rotate(calc(var(--aim, -90deg) + 210deg));
+  }
+  42% {
+    transform: rotate(calc(var(--aim, -90deg) - 24deg));
+  }
+  62% {
+    transform: rotate(calc(var(--aim, -90deg) + 11deg));
+  }
+  78% {
+    transform: rotate(calc(var(--aim, -90deg) - 4deg));
+  }
+  90% {
+    transform: rotate(calc(var(--aim, -90deg) + 1.5deg));
+  }
+  100% {
+    transform: rotate(var(--aim, -90deg));
+  }
+}
+
+@keyframes ping {
+  0% {
+    opacity: 0.9;
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+@keyframes fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* The compass card swings in and settles under the needle. */
+@keyframes card {
+  from {
+    opacity: 0;
+    transform: rotate(-70deg);
+  }
+}
+
+@keyframes grow {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* ---------- Wider screens ---------- */
+
+@media (min-width: 600px) {
+  .root {
+    --pad: 36px;
+  }
+
+  .way a,
+  .way p {
+    min-height: 190px;
+    padding: 22px;
+  }
+
+  .way span {
+    max-width: none;
+  }
+
+  .dialBox {
+    width: 140px;
+    margin: -70px 0 0 -70px;
+  }
+
+  .say p {
+    font-size: 54px;
+  }
+}
+
+@media (min-width: 900px) {
+  .root {
+    --pad: 56px;
+  }
+
+  .root h2 {
+    font-size: clamp(64px, 6.4vw, 104px);
+    line-height: 0.95;
+  }
+
+  /* "All about", the compass, "you." on one line, the action centred beneath. */
+  .hero {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    align-items: center;
+    justify-items: stretch;
+  }
+
+  .top {
+    justify-content: flex-start;
+    gap: 28px;
+    padding-top: 22px;
+  }
+
+  .where {
+    margin-right: auto;
+  }
+
+  .nav {
+    display: flex;
+    gap: 24px;
+  }
+
+  .nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: #dfe4e1;
+    font: 500 15px/1 var(--text);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .nav a:hover {
+    color: var(--blue);
+  }
+
+  .title {
+    flex-direction: row;
+    justify-content: center;
+    gap: 3.4vw;
+    margin: 0 !important;
+    padding: 0 var(--pad);
+  }
+
+  .line[data-line='first'] {
+    font-size: 7.2vw;
+  }
+
+  .line[data-line='last'] {
+    font-size: 14.6vw;
+    line-height: 0.86;
+  }
+
+  .heroDial {
+    --aim: 90deg;
+    width: min(30vw, 56vh);
+    margin: 0;
+  }
+
+  .heroDial .dialPoints text {
+    font-size: 10px;
+  }
+
+  .heroText {
+    padding-top: 0;
+    gap: 12px;
+  }
+
+  .sub {
+    max-width: 44ch;
+    font-size: 20px;
+  }
+
+  /* The guide in the middle, his story along a line that crosses behind him. */
+  .direct {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 420px) minmax(0, 1fr);
+    grid-template-areas: 'head head head' 'f1 pic f3' 'f2 pic f4' 'team team team';
+    column-gap: 64px;
+    row-gap: 0;
+    padding: 128px var(--pad) 120px;
+  }
+
+  .directHead {
+    grid-area: head;
+    justify-items: center;
+    margin-bottom: 64px;
+    text-align: center;
+  }
+
+  .directLead {
+    max-width: 40ch;
+    font-size: 24px;
+  }
+
+  .portrait {
+    grid-area: pic;
+    z-index: 1;
+    margin: 0;
+    background: var(--bone);
+  }
+
+  .portraitName {
+    padding: 18px 0 0;
+    font-size: 54px;
+    text-align: center;
+  }
+
+  .lifeLine {
+    display: block;
+    position: relative;
+    grid-row: 2 / 4;
+    grid-column: 1 / -1;
+    align-self: center;
+    height: 14px;
+    margin-top: -40px;
+    background:
+      linear-gradient(var(--ink), var(--ink)) 0 50% / 100% 1.5px no-repeat,
+      repeating-linear-gradient(90deg, rgba(13, 17, 16, 0.45) 0 1px, transparent 1px 12px) 0 50% / 100% 8px no-repeat;
+  }
+
+  .lifeLine::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 3px;
+    margin-top: -1.5px;
+    background: var(--blue-d);
+    transform-origin: left;
+  }
+
+  @supports (animation-timeline: view()) {
+    .lifeLine::after {
+      animation: grow-x linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 55%;
+    }
+  }
+
+  .life {
+    display: contents;
+  }
+
+  .life::before,
+  .life::after {
+    display: none;
+  }
+
+  .life li {
+    align-self: end;
+    padding-bottom: 76px;
+    text-align: right;
+  }
+
+  .life li:nth-child(1) {
+    grid-area: f1;
+  }
+
+  .life li:nth-child(2) {
+    grid-area: f2;
+  }
+
+  .life li:nth-child(3) {
+    grid-area: f3;
+  }
+
+  .life li:nth-child(4) {
+    grid-area: f4;
+  }
+
+  .life li:nth-child(2),
+  .life li:nth-child(4) {
+    align-self: start;
+    padding: 36px 0 0;
+  }
+
+  .life li:nth-child(3),
+  .life li:nth-child(4) {
+    text-align: left;
+  }
+
+  .life li::before {
+    top: auto;
+    bottom: 54px;
+    left: auto;
+    right: 0;
+    border: 8px solid transparent;
+    border-top: 11px solid var(--blue-d);
+    border-bottom: 0;
+  }
+
+  .life li:nth-child(3)::before {
+    right: auto;
+    left: 0;
+  }
+
+  .life li:nth-child(2)::before,
+  .life li:nth-child(4)::before {
+    display: none;
+  }
+
+  .life li[data-seen='0'] {
+    transform: translateY(14px);
+  }
+
+  .life p {
+    font-size: 25px;
+  }
+
+  .team {
+    grid-area: team;
+    justify-self: center;
+    margin-top: 64px;
+    padding-top: 0;
+    border-top: 0;
+    text-align: center;
+  }
+
+  /* The dial on the right of centre, its places orbiting; the words on the left. */
+  .story {
+    --dial-w: 400px;
+    --orbit: 300px;
+    --sat-w: 240px;
+    --big: 1.55;
+    height: calc(var(--steps) * 30svh + 100svh);
+  }
+
+  .storyHead {
+    top: calc(var(--bar-h) + 26px);
+    right: auto;
+    width: 400px;
+  }
+
+  .storyHead h2 {
+    font-size: clamp(60px, 5.4vw, 84px);
+    white-space: normal;
+  }
+
+  .storyLead {
+    font-size: 18px;
+  }
+
+  .wheel {
+    top: 56%;
+    left: 61%;
+  }
+
+  .bigDial .dialPoints text {
+    font-size: 14px;
+  }
+
+  .reads {
+    right: auto;
+    bottom: 56px;
+    width: 400px;
+  }
+
+  .bear {
+    font-size: 120px;
+  }
+
+  .read h3 {
+    font-size: 48px;
+  }
+
+  .readText {
+    font-size: 18px;
+  }
+
+  .mapSection {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 72px;
+    row-gap: 32px;
+    padding: 120px var(--pad);
+  }
+
+  .mapHead {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  .mapLead {
+    font-size: 26px;
+  }
+
+  .map {
+    display: contents;
+  }
+
+  .chart {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: start;
+    margin: 0 auto;
+  }
+
+  .panel {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+  }
+
+  .place {
+    font-size: 15px;
+  }
+
+  .place span {
+    padding: 4px 7px;
+  }
+
+  .guestsSection {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    column-gap: 80px;
+    padding: 128px var(--pad) 112px;
+  }
+
+  .guestsHead {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .guestsLead {
+    font-size: 24px;
+  }
+
+  .guests {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    column-gap: 80px;
+    align-items: center;
+    margin-top: 64px;
+  }
+
+  .guestDial {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    width: 300px;
+  }
+
+  .says {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .nextGuest {
+    grid-column: 2;
+    grid-row: 2;
+    margin-top: 6px;
+  }
+
+  .say p {
+    font-size: clamp(60px, 5.6vw, 88px);
+  }
+
+  .award {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .end {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 80px;
+    padding: 120px var(--pad) 40px;
+  }
+
+  .endPic {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .invite {
+    grid-column: 1;
+    grid-row: 2;
+    padding: 36px 0 0;
+  }
+
+  .invite p {
+    font-size: 28px;
+  }
+
+  .endMain {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-content: start;
+    padding: 0;
+  }
+
+  .way a,
+  .way p {
+    min-height: 220px;
+    padding: 26px 28px;
+  }
+
+  .way span {
+    font-size: 19px;
+  }
+
+  .way[data-point='NE'] span {
+    font-size: 32px;
+  }
+
+  .dialBox {
+    width: 168px;
+    margin: -84px 0 0 -84px;
+  }
+
+  .endFoot {
+    padding-bottom: 8px;
+  }
+}
+
+@media (min-width: 900px) and (max-height: 820px) {
+  .story {
+    --dial-w: 330px;
+    --orbit: 255px;
+    --sat-w: 200px;
+  }
+
+  .bear {
+    font-size: 96px;
+  }
+
+  .read h3 {
+    font-size: 40px;
+  }
+}
+
+@media (min-width: 1400px) {
+  .root {
+    --pad: 72px;
+  }
+}
+
+/* ---------- Reduced motion: every state simply shows, and the held story is a plain sequence. ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .line > span,
+  .top,
+  .heroFace img,
+  .heroDial .dialRing,
+  .heroDial .dialTicks,
+  .heroDial .dialMajor,
+  .heroDial .dialPoints,
+  .heroDial .dialNeedle,
+  .heroText .kicker,
+  .heroText .go,
+  .sub,
+  .life::after,
+  .lifeLine::after {
+    animation: none !important;
+  }
+
+  .layers {
+    display: none;
+  }
+
+  .life li {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .story {
+    --now: 0 !important;
+    height: auto !important;
+  }
+
+  .story [data-frame] {
+    position: static;
+    height: auto;
+    display: grid;
+    padding: 84px 0;
+  }
+
+  .storyHead,
+  .reads {
+    position: static;
+    width: auto;
+    padding: 0 var(--pad);
+  }
+
+  .wheel {
+    position: relative;
+    top: auto;
+    left: 50%;
+    margin: calc(var(--orbit) + 110px) 0;
+  }
+
+  .bigDial,
+  .sat,
+  .satIn {
+    transition: none !important;
+  }
+
+  .satIn {
+    --s: 1 !important;
+    opacity: 1 !important;
+  }
+
+  .reads {
+    gap: 30px;
+  }
+
+  .read {
+    grid-area: auto;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .say {
+    transition: none;
+  }
+}
+

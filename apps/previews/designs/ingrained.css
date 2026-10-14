@@ -1,0 +1,1810 @@
+/* Ingrained: a fishing family's water, handed down. Three grounds (the sea of their drone photograph
+   taken deep, their own mint, and one safety orange from three generations of their photographs). */
+
+.root {
+  --sea: #0e4542;
+  --deep: #062628;
+  --deep-2: #0b3436;
+  --mint: #eaf2f0;
+  --ink: #0a1c1d;
+  --ink-2: #3a4f50;
+  --orange: #ff6a2a;
+  --foam: #f2f7f6;
+  --dim: rgba(242, 247, 246, 0.78);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --disp: 'Cormorant Garamond', 'Cormorant', Georgia, 'Times New Roman', serif;
+  --text: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --pad: 18px;
+  --float-bg: rgba(255, 106, 42, 0.96);
+  --float-ink: #0a1c1d;
+  --float-call-bg: rgba(242, 247, 246, 0.95);
+  --float-call-ink: #0a1c1d;
+  --float-font: 'Sora', system-ui, sans-serif;
+  position: relative;
+  font-family: var(--text);
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--deep);
+  overflow-x: clip;
+  font-variant-numeric: lining-nums;
+}
+
+:where(.root) :where(h1, h2, h3, p, ul, ol, figure, blockquote) {
+  margin: 0;
+}
+
+:where(.root) :where(ul) {
+  padding: 0;
+  list-style: none;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 3px solid var(--orange);
+  outline-offset: 3px;
+}
+
+.root h2 {
+  font-family: var(--disp);
+  font-weight: 600;
+  font-size: clamp(48px, 13.6vw, 64px);
+  line-height: 0.9;
+  letter-spacing: -0.025em;
+}
+
+/* The small label over each section, marked with the page's one device: a frame with an older one in its corner. */
+.kicker {
+  font: italic 500 20px/1.2 var(--disp);
+  letter-spacing: 0;
+  color: var(--dim);
+}
+
+/* The page's action: a square block that carries what it costs, never a pill. */
+.block {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  padding: 14px 18px 15px;
+  color: var(--ink);
+  background: var(--orange);
+  text-decoration: none;
+}
+
+.block b {
+  font: 600 17px/1.15 var(--text);
+}
+
+.block span {
+  font: 500 12.5px/1.35 var(--text);
+}
+
+/* ---------- Hero: today's boat inside the family's frames ---------- */
+
+.hero {
+  --big: clamp(86px, 26vw, 124px);
+  position: relative;
+  min-height: calc(100svh - var(--bar-h));
+  display: flex;
+  flex-direction: column;
+  padding: 14px var(--pad) 18px;
+  color: var(--foam);
+  background: var(--deep);
+  overflow: hidden;
+}
+
+/* The name hangs on the frame like a tab on a file. */
+.heroTab {
+  align-self: flex-start;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding: 8px 12px 9px;
+  color: var(--ink);
+  background: var(--orange);
+  font: 600 13px/1.1 var(--text);
+  text-decoration: none;
+  transform-origin: 0 100%;
+  animation: tab 0.5s var(--ease) both;
+}
+
+.heroTab span {
+  font-weight: 400;
+}
+
+.heroFrame {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 330px;
+}
+
+.heroFrame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--orange);
+  pointer-events: none;
+}
+
+.heroMedia {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  animation: open 0.95s var(--ease) 0.42s both;
+}
+
+.heroMedia picture,
+.heroMedia img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.heroMedia img {
+  object-fit: cover;
+  object-position: 96% 50% !important;
+  animation: settle 2s var(--ease) both;
+}
+
+.heroMedia::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 38, 40, 0.18) 0%, rgba(6, 38, 40, 0) 30%, rgba(6, 38, 40, 0) 58%, rgba(6, 38, 40, 0.86) 100%);
+}
+
+.heroNest {
+  position: absolute;
+  inset: 0;
+}
+
+/* Each earlier frame shares the photograph's top corner; it draws out of that corner on load. */
+.heroRing {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: calc(10 - var(--i));
+  border-right: 2px solid var(--orange);
+  border-bottom: 2px solid var(--orange);
+  animation: ring 0.7s var(--ease) both;
+  animation-delay: calc(0.04s + var(--i) * 0.11s);
+}
+
+.heroNestLabel,
+.heroNow {
+  position: absolute;
+  padding: 4px 7px 5px;
+  color: var(--ink);
+  background: var(--orange);
+  font: 600 10px/1 var(--text);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.heroNestLabel {
+  left: 0;
+  bottom: 0;
+}
+
+.heroNow {
+  top: 0;
+  right: 0;
+  animation: fade 0.5s var(--ease) 0.9s both;
+}
+
+/* The line rises under the frame, its last word over the frame's edge. */
+.heroText {
+  position: relative;
+  z-index: 2;
+  margin-top: calc(-0.42 * var(--big) - 54px);
+}
+
+.heroKicker {
+  max-width: 21ch;
+  padding-left: 14px;
+  font: 400 14.5px/1.4 var(--text);
+  color: var(--foam);
+  animation: fade 0.7s var(--ease) 0.7s both;
+}
+
+.title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.16em;
+  margin-top: 6px;
+  font-family: var(--disp);
+  font-style: italic;
+  font-weight: 500;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.line {
+  display: block;
+  flex: none;
+  overflow: hidden;
+  padding: 0.12em 0.14em 0.1em 0;
+  margin: -0.12em -0.14em -0.1em 0;
+}
+
+.line > span {
+  display: block;
+  animation: rise 1s var(--ease) both;
+  animation-delay: calc(0.78s + var(--i) * 0.1s);
+}
+
+.line:first-child {
+  padding-left: 14px;
+  font-size: calc(var(--big) * 0.4);
+}
+
+.line:last-child {
+  font-size: var(--big);
+}
+
+.heroSub {
+  margin-top: 12px;
+  max-width: 34ch;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--dim);
+  animation: fade 0.7s var(--ease) 0.95s both;
+}
+
+.heroText .block {
+  margin-top: 16px;
+  animation: fade 0.7s var(--ease) 1.05s both;
+}
+
+.endNest {
+  position: relative;
+  aspect-ratio: 4 / 3;
+}
+
+.endNest svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.endNest rect {
+  fill: none;
+  stroke: var(--orange);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+
+.nestLabel {
+  position: absolute;
+  left: 7px;
+  margin-top: 6px;
+  font: 600 9.5px/1 var(--text);
+  letter-spacing: 0.1em;
+  color: var(--foam);
+  white-space: nowrap;
+}
+
+/* ---------- The story: zooming out through the family's frames ---------- */
+
+.story {
+  color: var(--foam);
+  background: var(--deep);
+}
+
+.nest {
+  position: relative;
+  height: 250svh;
+}
+
+.storyFrame {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 20px;
+  padding: calc(var(--bar-h) + 24px) var(--pad) 88px;
+  overflow: hidden;
+}
+
+.storyHead h2 {
+  margin-top: 12px;
+}
+
+.quote {
+  margin-top: 14px;
+  max-width: 23ch;
+  font: italic 500 24px/1.14 var(--disp);
+}
+
+.quote span {
+  opacity: clamp(0.5, calc(var(--p) * 1.5 * var(--n) - var(--i)), 1);
+}
+
+.stage {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  container-type: size;
+}
+
+.frame {
+  --ar: 1;
+  --F: min(92cqw, calc((100cqh - 120px) * var(--ar)), 640px);
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: calc(20 - var(--k));
+  width: calc(var(--F) * 1.5);
+  margin: 0;
+  transform: scale(var(--s));
+  transform-origin: 0 100%;
+  visibility: var(--v);
+  will-change: transform;
+}
+
+.framePic {
+  position: relative;
+  aspect-ratio: var(--ar);
+  overflow: hidden;
+  background: var(--deep-2);
+  clip-path: inset(calc((1 - var(--c)) * 100%) calc((1 - var(--c)) * 100%) 0 0);
+}
+
+.framePic picture,
+.framePic img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.framePic img {
+  object-fit: cover;
+}
+
+.framePic::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 3px solid var(--orange);
+  pointer-events: none;
+}
+
+/* Each caption rides on top of its own frame, so it shrinks into the corner with it. It is set at the frame's full size. */
+.cap {
+  position: absolute;
+  left: 0;
+  bottom: 100%;
+  display: grid;
+  gap: 8px;
+  padding-bottom: 16px;
+  opacity: var(--o);
+  text-shadow: 0 1px 14px rgba(6, 38, 40, 0.9);
+}
+
+.cap b {
+  font: italic 500 60px/0.9 var(--disp);
+  letter-spacing: -0.02em;
+  color: var(--foam);
+}
+
+.cap span {
+  max-width: 28ch;
+  font: 500 19.5px/1.35 var(--text);
+  color: var(--dim);
+}
+
+/* The last frame is the whole stage: an orange field with the family's frames in its corner. */
+.you {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  color: var(--ink);
+  background: var(--orange);
+  visibility: var(--v);
+  clip-path: inset(calc((1 - var(--c)) * 72%) calc((1 - var(--c)) * 72%) 0 0);
+}
+
+.youText {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  padding: 16px 18px 0;
+  opacity: var(--o);
+}
+
+.youWho {
+  font: italic 500 clamp(84px, 27vw, 150px)/0.78 var(--disp);
+  letter-spacing: -0.035em;
+}
+
+.youLine {
+  max-width: 22ch;
+  font: 500 15px/1.4 var(--text);
+}
+
+.youGo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 50px;
+  margin-top: 4px;
+  padding: 0 22px;
+  color: var(--foam);
+  background: var(--ink);
+  font: 600 15px/1 var(--text);
+  text-decoration: none;
+}
+
+/* ---------- The boat ---------- */
+
+.boat {
+  padding: 76px var(--pad) 70px;
+  color: var(--ink);
+  background: var(--mint);
+}
+
+.boat .kicker,
+.guests .kicker {
+  color: var(--ink-2);
+}
+
+.boatHead h2 {
+  margin-top: 14px;
+  font-size: clamp(60px, 19vw, 92px);
+}
+
+.boatLead {
+  margin-top: 14px;
+  max-width: 30ch;
+  font-size: 16px;
+  color: var(--ink-2);
+}
+
+.boatPic {
+  position: relative;
+  margin: 30px calc(-1 * var(--pad)) 0;
+  overflow: hidden;
+}
+
+/* The boat rolls a little across its frame as the page passes. */
+.boatMove {
+  position: relative;
+  transform: translate3d(calc(var(--t) * -3.5%), 0, 0) scale(1.08);
+  will-change: transform;
+}
+
+.boatPic picture,
+.boatPic img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.boatPic[data-armed] picture {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1.3s var(--ease);
+}
+
+.boatPic[data-seen] picture {
+  clip-path: inset(0 0 0 0);
+}
+
+.dim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.dim path {
+  fill: none;
+  stroke: var(--orange);
+  stroke-width: 2.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+.boatPic[data-armed] .dim path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1.1s var(--ease) 0.7s;
+}
+
+.boatPic[data-seen] .dim path {
+  stroke-dashoffset: 0;
+}
+
+.dimLabel {
+  position: absolute;
+  left: 54.9%;
+  top: 83.5%;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 12px 6px;
+  border-radius: 999px;
+  transform: translateX(-50%);
+  color: var(--ink);
+  background: var(--orange);
+  font: 600 11.5px/1 var(--text);
+  white-space: nowrap;
+}
+
+.dimLabel b {
+  font: italic 600 20px/0.8 var(--disp);
+}
+
+.boatPic[data-armed] .dimLabel {
+  opacity: 0;
+  transition: opacity 0.6s var(--ease) 1.4s;
+}
+
+.boatPic[data-seen] .dimLabel {
+  opacity: 1;
+}
+
+.kit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 14px;
+  margin-top: 30px;
+}
+
+.kit li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font: 600 21px/1.15 var(--disp);
+}
+
+.kit li::before {
+  content: '+';
+  flex: none;
+  font: 600 16px/1 var(--text);
+  color: var(--orange);
+}
+
+.kit[data-armed] li {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 0.5s var(--ease),
+    transform 0.7s var(--ease);
+  transition-delay: calc(var(--i) * 70ms);
+}
+
+.kit[data-seen] li {
+  opacity: 1;
+  transform: none;
+}
+
+.skipper {
+  display: grid;
+  gap: 6px;
+  margin-top: 28px;
+  max-width: 30ch;
+  font: italic 500 22px/1.2 var(--disp);
+}
+
+.skipper span {
+  font: 600 11px/1.2 var(--text);
+  font-style: normal;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* ---------- Plan: three panels of water; the one chosen widens and colours the section ---------- */
+
+.plan {
+  position: relative;
+}
+
+.planRoot {
+  --tone: #0b6b6e;
+  --fish-eye: var(--tone);
+  padding: 76px var(--pad) 96px;
+  color: var(--foam);
+  background: var(--tone);
+  transition: background-color 0.9s var(--ease);
+}
+
+.planRoot[data-tone='inner'] {
+  --tone: #1b5a3c;
+}
+
+.planRoot[data-tone='strait'] {
+  --tone: #0c2e4e;
+}
+
+.planRoot .kicker {
+  color: rgba(242, 247, 246, 0.92);
+}
+
+.planHeading {
+  margin-top: 10px;
+}
+
+.waters {
+  display: flex;
+  gap: 8px;
+  height: 320px;
+  margin-top: 28px;
+}
+
+.water {
+  --wt: #0c787c;
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  margin: 0;
+  padding: 14px 12px;
+  border: 0;
+  color: var(--foam);
+  background: var(--wt);
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+  cursor: pointer;
+  transition:
+    flex-grow 0.8s var(--ease),
+    box-shadow 0.4s var(--ease);
+}
+
+.water[data-tone='inner'] {
+  --wt: #24704a;
+}
+
+.water[data-tone='strait'] {
+  --wt: #153f6a;
+}
+
+.water[aria-pressed='true'] {
+  flex-grow: 2.7;
+  box-shadow: inset 0 0 0 3px var(--orange);
+}
+
+/* A band of light where the water's surface catches the sun. */
+.surface {
+  position: absolute;
+  top: 16%;
+  left: -40%;
+  width: 180%;
+  height: 26px;
+  background: repeating-radial-gradient(ellipse 22px 9px at 50% 100%, rgba(242, 247, 246, 0) 0 60%, rgba(242, 247, 246, 0.28) 66%, rgba(242, 247, 246, 0) 74%);
+  background-size: 44px 26px;
+  animation: swell 5s ease-in-out infinite alternate;
+}
+
+.waterName {
+  font: italic 500 25px/1 var(--disp);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+}
+
+.water[aria-pressed='true'] .waterName {
+  writing-mode: horizontal-tb;
+  transform: none;
+  white-space: normal;
+  font-size: 32px;
+  animation: swap 0.6s var(--ease) both;
+}
+
+.waterOpen {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+  animation: swap 0.7s var(--ease) 0.1s both;
+}
+
+.cod {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 10px;
+}
+
+.cod svg {
+  grid-row: 1 / span 2;
+  color: rgba(242, 247, 246, 0.7);
+}
+
+.cod[data-keep] svg {
+  color: var(--orange);
+}
+
+.cod > span {
+  font: 500 12px/1.3 var(--text);
+}
+
+.codSay {
+  font: italic 600 22px/1.05 var(--disp);
+}
+
+.panelPrice {
+  display: grid;
+  gap: 2px;
+}
+
+.panelPrice b {
+  font: italic 500 40px/0.9 var(--disp);
+  letter-spacing: -0.02em;
+}
+
+.panelPrice small {
+  font-size: 12px;
+}
+
+.controls {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.switch {
+  display: flex;
+  border: 1.5px solid rgba(242, 247, 246, 0.55);
+}
+
+.switch button {
+  flex: 1 1 0;
+  min-height: 50px;
+  margin: 0;
+  border: 0;
+  color: var(--foam);
+  background: transparent;
+  font: 600 14px/1.2 var(--text);
+  cursor: pointer;
+  transition:
+    background-color 0.4s var(--ease),
+    color 0.4s var(--ease);
+}
+
+.switch button[aria-pressed='true'] {
+  color: var(--ink);
+  background: var(--foam);
+}
+
+.counter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1.5px solid rgba(242, 247, 246, 0.55);
+}
+
+.counter button {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  min-height: 56px;
+  margin: 0;
+  border: 0;
+  color: var(--foam);
+  background: transparent;
+  cursor: pointer;
+}
+
+.counter button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.counter p {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.counter b {
+  font: italic 500 42px/1 var(--disp);
+  animation: swap 0.5s var(--ease) both;
+}
+
+.counter span {
+  font-size: 13.5px;
+}
+
+.result {
+  display: grid;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.option {
+  font: 600 17px/1.3 var(--text);
+  animation: swap 0.6s var(--ease) both;
+}
+
+.optText {
+  max-width: 40ch;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: rgba(242, 247, 246, 0.92);
+}
+
+.prices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.prices li {
+  display: grid;
+  gap: 3px;
+  min-width: 132px;
+  padding: 10px 14px 11px;
+  border-left: 3px solid rgba(242, 247, 246, 0.3);
+  transition:
+    border-color 0.4s var(--ease),
+    background-color 0.4s var(--ease);
+}
+
+.prices li[data-on] {
+  border-color: var(--orange);
+  background: rgba(4, 18, 20, 0.24);
+}
+
+.prices b {
+  font: italic 500 40px/0.95 var(--disp);
+  letter-spacing: -0.02em;
+}
+
+.prices span {
+  display: grid;
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+
+.prices small {
+  font-size: 11.5px;
+  color: rgba(242, 247, 246, 0.92);
+}
+
+.codRule,
+.include {
+  max-width: 44ch;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: rgba(242, 247, 246, 0.92);
+}
+
+.send {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 62px;
+  margin-top: 26px;
+  padding: 0 20px;
+  color: var(--ink);
+  background: var(--orange);
+  font: 600 16.5px/1.2 var(--text);
+  text-decoration: none;
+}
+
+/* ---------- Guests: the same grin, held up for the camera ---------- */
+
+.guests {
+  padding: 76px var(--pad) 70px;
+  color: var(--ink);
+  background: var(--mint);
+  overflow: hidden;
+}
+
+.guestsHead {
+  display: grid;
+  gap: 26px;
+}
+
+.guestsHead h2 {
+  margin-top: 14px;
+}
+
+.wall {
+  display: grid;
+  gap: 10px;
+  margin: 34px calc(-1 * var(--pad)) 0;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  width: max-content;
+  will-change: transform;
+}
+
+.row:first-child {
+  transform: translate3d(calc((var(--t) + 1) * -34vw), 0, 0);
+}
+
+.row:last-child {
+  transform: translate3d(calc((var(--t) - 1) * 26vw), 0, 0);
+}
+
+.tile {
+  flex: none;
+  width: 46vw;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--deep-2);
+}
+
+.tile picture,
+.tile img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.tile img {
+  object-fit: cover;
+}
+
+.rated {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  justify-self: start;
+  padding: 14px 22px 14px 18px;
+  border-radius: 999px;
+  color: var(--ink);
+  background: var(--orange);
+}
+
+.ratedValue {
+  display: grid;
+  justify-items: start;
+}
+
+.ratedValue b {
+  font: italic 500 58px/0.8 var(--disp);
+  letter-spacing: -0.03em;
+}
+
+.ratedValue span {
+  margin-top: 6px;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
+
+.ratedText {
+  display: grid;
+  gap: 4px;
+  font: 600 14px/1.3 var(--text);
+}
+
+.ratedText small {
+  font: 500 11px/1.2 var(--text);
+}
+
+.said {
+  display: grid;
+  gap: 26px;
+  margin-top: 40px;
+}
+
+.said blockquote {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.said p {
+  font: italic 500 27px/1.12 var(--disp);
+  letter-spacing: -0.01em;
+}
+
+.said footer {
+  font: 600 11px/1.2 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.species {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 36px;
+}
+
+.species span {
+  flex-basis: 100%;
+  margin-bottom: 2px;
+  font: 600 10.5px/1.3 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.species b {
+  padding: 7px 13px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  font: 500 13.5px/1 var(--text);
+}
+
+/* ---------- The close: the next frame is yours ---------- */
+
+.end {
+  padding: 18px var(--pad) 100px;
+  color: var(--foam);
+  background: var(--deep);
+}
+
+.endFrame {
+  position: relative;
+  display: grid;
+  border: 2px solid var(--orange);
+}
+
+.endPic {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+}
+
+/* The close is labelled like the family's frames: the outermost one, after 2005. */
+.endTab {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  z-index: 2;
+  padding: 7px 12px 8px;
+  color: var(--ink);
+  background: var(--orange);
+  font: 600 10.5px/1 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.endPic picture,
+.endPic img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.endPic img {
+  object-fit: cover;
+}
+
+.endText {
+  padding: 28px 18px 0;
+}
+
+.endText h2 {
+  margin-top: 14px;
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(58px, 18vw, 96px);
+}
+
+.endLine {
+  margin-top: 14px;
+  max-width: 32ch;
+  font-size: 15px;
+  color: var(--dim);
+}
+
+.doors {
+  display: grid;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.door {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px 15px;
+  border: 1.5px solid rgba(242, 247, 246, 0.4);
+  color: var(--foam);
+  text-decoration: none;
+  transition:
+    background-color 0.4s var(--ease),
+    border-color 0.4s var(--ease);
+}
+
+.door:first-child {
+  border-color: var(--orange);
+  color: var(--ink);
+  background: var(--orange);
+}
+
+.door:last-child:hover {
+  border-color: var(--foam);
+}
+
+.door span {
+  font: 500 12.5px/1.2 var(--text);
+}
+
+.door b {
+  font: 600 19px/1.25 var(--text);
+  overflow-wrap: anywhere;
+}
+
+.role {
+  margin-top: 18px;
+  font-size: 12.5px;
+  color: var(--dim);
+}
+
+.departs {
+  display: grid;
+  gap: 8px;
+  padding: 30px 18px 0;
+}
+
+.departs ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 18px;
+}
+
+.departs li {
+  font: italic 500 30px/1.15 var(--disp);
+}
+
+.endWhen {
+  padding: 18px 18px 0;
+  max-width: 44ch;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--dim);
+}
+
+.endFoot {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  padding: 28px 18px 18px;
+}
+
+.endNest {
+  flex: none;
+  width: 104px;
+}
+
+.endNest .nestLabel {
+  font-size: 8.5px;
+}
+
+.foot {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--dim);
+}
+
+.foot :global(.demo-foot-note) {
+  font-size: 12px;
+}
+
+/* A desktop shortcut once the opening photograph has gone; phones have the floating pill. */
+.dock {
+  display: none;
+}
+
+@keyframes settle {
+  from {
+    transform: scale(1.09);
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(108%);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes tab {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes ring {
+  from {
+    clip-path: inset(0 100% 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes open {
+  from {
+    clip-path: inset(0 44% 44% 0);
+  }
+}
+
+@keyframes swell {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-44px, 4px, 0);
+  }
+}
+
+@keyframes swap {
+  from {
+    opacity: 0;
+    transform: translateY(0.35em);
+  }
+}
+
+/* ---------- Large screens ---------- */
+
+@media (min-width: 900px) {
+  .root {
+    --pad: 56px;
+    font-size: 17px;
+  }
+
+  .root h2 {
+    font-size: clamp(72px, 7.4vw, 120px);
+  }
+
+  .wide {
+    display: inline;
+  }
+
+  .narrow {
+    display: none;
+  }
+
+  .hero {
+    --big: clamp(170px, 15.5vw, 250px);
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.5fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    padding: 22px var(--pad) 40px;
+  }
+
+  .heroTab {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: start;
+    padding: 10px 16px 11px;
+    font-size: 14.5px;
+  }
+
+  .heroFrame {
+    grid-column: 2;
+    grid-row: 2;
+    min-height: 0;
+  }
+
+  .heroMedia img {
+    object-position: 0% 60% !important;
+  }
+
+  .heroNestLabel,
+  .heroNow {
+    padding: 6px 10px 7px;
+    font-size: 11.5px;
+  }
+
+  .heroText {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 0;
+    padding: 30px 0 4px;
+  }
+
+  .heroKicker {
+    max-width: none;
+    padding-left: 0;
+    font-size: 18px;
+  }
+
+  .line:first-child {
+    padding-left: 0;
+  }
+
+  /* On a wide screen the line about their trips opens the column and the headline holds its foot. */
+  .heroSub {
+    order: -1;
+    max-width: 22ch;
+    margin: 0 0 auto;
+    font: italic 500 clamp(30px, 2.5vw, 40px)/1.15 var(--disp);
+    color: var(--foam);
+  }
+
+  .heroKicker {
+    margin-top: 40px;
+  }
+
+  .heroText .block {
+    margin-top: 28px;
+    padding: 18px 26px 19px;
+  }
+
+  .block b {
+    font-size: 19px;
+  }
+
+  .block span {
+    font-size: 13.5px;
+  }
+
+  .kicker {
+    font-size: 24px;
+  }
+
+  /* The story holds its frames on the left and the line on the right. */
+  .storyFrame {
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: 72px;
+    padding: calc(var(--bar-h) + 52px) var(--pad) 56px;
+  }
+
+  .stage {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .frame {
+    --ar: 1.3333;
+  }
+
+  .storyHead {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+    padding-top: 2vh;
+  }
+
+  .storyHead h2 {
+    font-size: clamp(64px, 5.6vw, 92px);
+  }
+
+  .quote {
+    margin-top: 28px;
+    font-size: clamp(30px, 2.7vw, 44px);
+  }
+
+  .youText {
+    padding: 34px 40px 0;
+    gap: 14px;
+  }
+
+  .youLine {
+    font-size: 17px;
+  }
+
+  .youGo {
+    min-height: 58px;
+    padding: 0 26px;
+    font-size: 16px;
+  }
+
+  .boat {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    column-gap: 64px;
+    padding: 128px var(--pad) 120px;
+  }
+
+  .boatHead {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .boatHead h2 {
+    font-size: clamp(96px, 9vw, 150px);
+  }
+
+  .boatLead {
+    font-size: 18px;
+  }
+
+  .boatPic {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    margin: 0;
+  }
+
+  .boatSide {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: end;
+  }
+
+  .kit {
+    gap: 6px 24px;
+  }
+
+  .kit li {
+    font-size: 27px;
+  }
+
+  .dimLabel {
+    padding: 7px 16px 8px;
+    font-size: 13px;
+  }
+
+  .dimLabel b {
+    font-size: 28px;
+  }
+
+  .skipper {
+    font-size: 27px;
+  }
+
+  .planRoot {
+    padding: 128px var(--pad) 130px;
+  }
+
+  .planInner {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+    column-gap: 72px;
+    max-width: 1320px;
+    margin: 0 auto;
+  }
+
+  .planInner > .kicker,
+  .planHeading {
+    grid-column: 1 / -1;
+  }
+
+  .waters {
+    grid-column: 1;
+    grid-row: 3 / span 3;
+    height: 560px;
+    margin-top: 48px;
+    gap: 12px;
+  }
+
+  .water {
+    padding: 22px 20px;
+  }
+
+  .waterName {
+    font-size: 34px;
+  }
+
+  .water[aria-pressed='true'] .waterName {
+    font-size: 52px;
+  }
+
+  .codSay {
+    font-size: 30px;
+  }
+
+  .panelPrice b {
+    font-size: 60px;
+  }
+
+  .controls {
+    grid-column: 2;
+    grid-row: 3;
+    margin-top: 48px;
+  }
+
+  .result {
+    grid-column: 2;
+    grid-row: 4;
+    align-content: start;
+  }
+
+  .option {
+    font-size: 19px;
+  }
+
+  .prices b {
+    font-size: 48px;
+  }
+
+  .send {
+    grid-column: 2;
+    grid-row: 5;
+    min-height: 68px;
+    font-size: 18px;
+  }
+
+  .guests {
+    padding: 128px var(--pad) 120px;
+  }
+
+  .guestsHead {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 40px;
+  }
+
+  .rated {
+    justify-self: auto;
+    padding: 20px 34px 20px 28px;
+  }
+
+  .wall {
+    display: flex;
+    gap: 12px;
+    width: max-content;
+    margin-top: 64px;
+    transform: translate3d(calc((var(--t) + 1) * -28vw), 0, 0);
+    will-change: transform;
+  }
+
+  .row {
+    display: contents;
+  }
+
+  .tile {
+    width: 22vw;
+  }
+
+  .ratedValue b {
+    font-size: 84px;
+  }
+
+  .ratedText {
+    font-size: 17px;
+  }
+
+  .said {
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    margin-top: 64px;
+  }
+
+  .said p {
+    font-size: clamp(32px, 2.6vw, 42px);
+  }
+
+  .species {
+    margin-top: 56px;
+  }
+
+  .species span {
+    flex-basis: auto;
+    margin: 0 10px 0 0;
+  }
+
+  .end {
+    padding: 40px var(--pad) 56px;
+  }
+
+  .endFrame {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+  }
+
+  .endPic {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    aspect-ratio: auto;
+    min-height: 100%;
+  }
+
+  .endText {
+    grid-column: 1;
+    padding: 56px 56px 0;
+  }
+
+  .departs {
+    grid-column: 1;
+    padding: 40px 56px 0;
+  }
+
+  .departs li {
+    font-size: 40px;
+  }
+
+  .endWhen {
+    grid-column: 1;
+    padding: 20px 56px 0;
+    font-size: 14px;
+  }
+
+  .endFoot {
+    grid-column: 1;
+    padding: 48px 56px 40px;
+  }
+
+  .endNest {
+    width: 168px;
+  }
+
+  .endNest .nestLabel {
+    font-size: 10px;
+  }
+
+  .doors {
+    grid-template-columns: auto auto;
+    justify-content: start;
+  }
+
+  .door b {
+    font-size: 21px;
+    overflow-wrap: normal;
+    white-space: nowrap;
+  }
+
+  .dock {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px;
+    background: rgba(6, 38, 40, 0.86);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 0 0 1px rgba(242, 247, 246, 0.16);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(14px);
+    transition:
+      opacity 0.5s var(--ease),
+      transform 0.6s var(--ease),
+      visibility 0.5s;
+  }
+
+  :global([data-past-hero]) .dock {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+
+  .dock a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 46px;
+    padding: 0 18px;
+    color: var(--foam);
+    font: 600 14px/1 var(--text);
+    text-decoration: none;
+  }
+
+  .dock .dockGo {
+    color: var(--ink);
+    background: var(--orange);
+  }
+}
+
+/* With reduced motion asked for, the story is a plain run of frames and nothing waits to be drawn. */
+@media (prefers-reduced-motion: reduce) {
+  .nest {
+    height: auto;
+  }
+
+  .storyFrame {
+    position: static;
+    display: block;
+    height: auto;
+    padding-bottom: 64px;
+  }
+
+  .stage {
+    display: grid;
+    gap: 36px;
+    margin-top: 34px;
+    container-type: normal;
+  }
+
+  .frame {
+    position: relative;
+    display: flex;
+    flex-direction: column-reverse;
+    width: 100%;
+    max-width: 720px;
+    transform: none;
+    visibility: visible;
+  }
+
+  .framePic {
+    clip-path: none;
+  }
+
+  .cap {
+    position: static;
+    padding: 0 0 12px;
+    opacity: 1;
+  }
+
+  .cap b {
+    font-size: 40px;
+  }
+
+  .cap span {
+    font-size: 14px;
+  }
+
+  .you {
+    position: relative;
+    inset: auto;
+    max-width: 720px;
+    padding-bottom: 22px;
+    visibility: visible;
+    clip-path: none;
+  }
+
+  .youText {
+    opacity: 1;
+  }
+
+  .quote span {
+    opacity: 1;
+  }
+
+  .row,
+  .wall,
+  .boatMove {
+    transform: none !important;
+    flex-wrap: wrap;
+    width: auto;
+  }
+}
+
+@media (min-width: 900px) and (prefers-reduced-motion: reduce) {
+  .storyFrame {
+    padding-top: 112px;
+  }
+
+  .storyHead {
+    max-width: 900px;
+  }
+
+  .stage {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 48px 40px;
+    margin-top: 56px;
+  }
+
+  .frame,
+  .you {
+    max-width: none;
+  }
+
+  .you {
+    grid-column: 1 / -1;
+  }
+
+  .wall {
+    width: auto;
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+/* Prices, the rating and the phone number use lining figures, so a figure never dips into the line below. */
+.root.root :is(.panelPrice b, .prices b, .ratedValue b, .counter b, .dimLabel b) {
+  font-variant-numeric: lining-nums;
+}

@@ -1,0 +1,2792 @@
+.root {
+  --foam: #e8f3f1;
+  --ink: #0e2340;
+  --navy: #012a6a;
+  --deep: #03214f;
+  --abyss: #020b1c;
+  --teal: #0c7a83;
+  --sea: #4fc2ba;
+  --yellow: #ffcf2e;
+  --dim: #6f86ad;
+  --muted: #41526b;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring: cubic-bezier(0.3, 1.4, 0.5, 1);
+  --sway: cubic-bezier(0.45, 0, 0.55, 1);
+  --serif: 'Instrument Serif', 'Times New Roman', Times, serif;
+  --sans: 'Onest', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --pad: 22px;
+  --float-bg: rgba(255, 207, 46, 0.95);
+  --float-ink: #012a6a;
+  --float-call-bg: rgba(1, 42, 106, 0.9);
+  --float-call-ink: #fff;
+  --float-font: 'Onest', system-ui, sans-serif;
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--foam);
+  overflow-x: clip;
+}
+
+.root h1,
+.root h2,
+.root h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  letter-spacing: -0.012em;
+}
+
+.root h2 {
+  font-size: clamp(46px, 13vw, 62px);
+  line-height: 0.94;
+}
+
+:where(.root p) {
+  margin: 0;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+}
+
+/* A small label that opens a section, with a short line of the boat's yellow before it. */
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 650 12px/1.2 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.kicker::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 22px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--yellow);
+}
+
+/* The one action, in the yellow of their boat's hull. */
+.go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 26px 0 20px;
+  border-radius: 14px;
+  background: var(--yellow);
+  color: var(--navy);
+  font: 700 17px/1 var(--sans);
+  text-decoration: none;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.go svg {
+  transition: transform 0.5s var(--ease);
+}
+
+.go:hover svg {
+  transform: translateX(3px) scaleX(1.12);
+}
+
+/* The floating booking button on phones takes the same squared shape. */
+.root :global(.float-main) {
+  border-radius: 14px;
+}
+
+/* Chrome that arrives once the opening screen has gone by: a section gauge on the right edge and a round booking buoy. */
+.rail,
+.dock {
+  display: none;
+}
+
+/* The opening screen: a poster split at the waterline. The air is plain foam; below the line, their own photograph of a seal looking up at you. The headline surfaces through the line, dry above and refracted below. */
+.hero {
+  --line: 40%;
+  --fs: clamp(62px, 24.5vw, 112px);
+  position: relative;
+  height: calc(100svh - var(--bar-h));
+  min-height: 600px;
+  max-height: 1000px;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--foam);
+  color: var(--navy);
+}
+
+.sea {
+  position: absolute;
+  inset: calc(var(--line) - 24px) 0 0 0;
+  overflow: hidden;
+  background: #0b5f6a;
+}
+
+.sea picture,
+.sea img {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.sea img {
+  object-fit: cover;
+  animation: settle 1.8s var(--ease) both;
+}
+
+.sea::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(1, 42, 106, 0.66) 0%, rgba(1, 42, 106, 0.2) 20%, rgba(1, 42, 106, 0) 38%, rgba(2, 11, 28, 0.1) 58%, rgba(2, 11, 28, 0.84) 100%);
+}
+
+.rays {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.5) 40%, transparent 72%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.5) 40%, transparent 72%);
+}
+
+.rays i {
+  position: absolute;
+  top: -6%;
+  left: 10%;
+  width: 16%;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0));
+  transform: skewX(-16deg);
+  animation: ray 8s var(--sway) infinite alternate;
+}
+
+.rays i:nth-child(2) {
+  left: 44%;
+  width: 9%;
+  animation-duration: 10s;
+  animation-delay: -4s;
+}
+
+.rays i:nth-child(3) {
+  left: 70%;
+  width: 13%;
+  animation-duration: 12s;
+  animation-delay: -7s;
+}
+
+.motes,
+.bubbles {
+  position: absolute;
+  inset: 24px 0 0 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.motes i {
+  position: absolute;
+  bottom: -14px;
+  left: calc(5% + var(--i) * 10.6%);
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  border-radius: 50%;
+  opacity: 0;
+  animation: mote 9s cubic-bezier(0.55, 0.1, 0.8, 0.6) infinite;
+  animation-delay: calc(var(--i) * -1.15s);
+}
+
+.motes i:nth-child(3n) {
+  width: 11px;
+  height: 11px;
+  animation-duration: 11s;
+}
+
+.motes i:nth-child(4n + 1) {
+  width: 4px;
+  height: 4px;
+  animation-duration: 7.5s;
+}
+
+.bubbles {
+  inset: var(--line) 0 0 0;
+}
+
+.bubbles i {
+  position: absolute;
+  width: var(--s);
+  height: var(--s);
+  margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 58%);
+  animation: rise-bubble var(--d) cubic-bezier(0.3, 0.6, 0.4, 1) forwards;
+}
+
+/* The waterline itself: foam above, the sea showing below. It ripples where a finger or pointer passes. */
+.ripple {
+  position: absolute;
+  top: calc(var(--line) - 24px);
+  left: 0;
+  z-index: 2;
+  width: 100%;
+  height: 48px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.rippleAir {
+  fill: var(--foam);
+}
+
+.rippleLine {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.5;
+  stroke-dasharray: 1 1;
+  animation: trace 1.2s var(--ease) 0.1s both;
+}
+
+.top {
+  position: absolute;
+  top: 18px;
+  left: var(--pad);
+  right: var(--pad);
+  z-index: 4;
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+
+/* The name in the display face, the place beside it in small capitals over a short yellow waterline. */
+.mark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 9px;
+  padding: 6px 0;
+  color: var(--navy);
+  text-decoration: none;
+  animation: fade 0.7s var(--ease) 0.15s both;
+}
+
+.mark span {
+  font: italic 400 26px/1 var(--serif);
+  letter-spacing: -0.01em;
+}
+
+.mark small {
+  padding-bottom: 3px;
+  border-bottom: 2px solid var(--yellow);
+  font: 700 10.5px/1 var(--sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.season {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 13px 7px 11px;
+  border: 1px solid rgba(1, 42, 106, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  font: 500 clamp(12px, 3.35vw, 13px)/1.25 var(--sans);
+  animation: fade 0.7s var(--ease) 0.3s both;
+}
+
+.season i {
+  position: relative;
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #d39a00;
+}
+
+.season i::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  border: 2px solid #d39a00;
+  border-radius: 50%;
+  animation: ping 2.4s cubic-bezier(0.2, 0.6, 0.35, 1) 1.2s infinite;
+}
+
+.title {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  font-size: var(--fs);
+  line-height: 1;
+  letter-spacing: -0.015em;
+}
+
+/* Each line of the headline is set twice in the same place: dry above the waterline, wet below it. The last line straddles the line. */
+.row {
+  --cut: 1;
+  position: absolute;
+  left: var(--pad);
+  height: 1.12em;
+  white-space: nowrap;
+  top: calc(var(--line) - var(--fs) * 1.12 * 0.645 - var(--fs) * 0.96);
+}
+
+.row:last-child {
+  --cut: 0.645;
+  top: calc(var(--line) - var(--fs) * 1.12 * 0.645);
+}
+
+.dry {
+  position: relative;
+  display: block;
+  height: 100%;
+}
+
+.wet {
+  position: absolute;
+  inset: 0;
+}
+
+.dry {
+  color: var(--navy);
+  clip-path: inset(0 0 calc((1 - var(--cut)) * 100%) 0);
+}
+
+.wet {
+  color: #fff;
+  clip-path: inset(calc(var(--cut) * 100%) 0 0 0);
+}
+
+.dry > span,
+.wet > span {
+  display: block;
+  padding-top: 0.1em;
+  animation: surface 1.15s var(--ease) both;
+  animation-delay: calc(0.2s + var(--i) * 0.16s);
+}
+
+/* Under water the letters are bent a little and sway, as anything seen through the surface does. */
+.wet > span > span {
+  display: block;
+  transform: translate(0.03em, 0.035em) skewX(-1deg);
+  animation: refract 5s var(--sway) 1.4s infinite alternate;
+}
+
+.team {
+  display: none;
+}
+
+/* A marker buoy riding the waterline, its float half under water as the headline is. */
+.buoy {
+  --at: 0.86;
+  position: absolute;
+  top: var(--line);
+  left: calc(var(--at) * 100%);
+  z-index: 4;
+  width: 0;
+  height: 0;
+}
+
+.buoyBob {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  animation: appear 0.8s var(--ease) 0.9s both, bob 3.2s var(--sway) 1.7s infinite alternate;
+}
+
+.float {
+  position: absolute;
+  top: -15px;
+  left: -16px;
+  width: 32px;
+  height: 15px;
+  border-radius: 16px 16px 0 0;
+  background: linear-gradient(180deg, var(--yellow) 0 50%, var(--navy) 50% 72%, var(--yellow) 72%);
+}
+
+.float::after {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: 2px;
+  width: 32px;
+  height: 15px;
+  border-radius: 0 0 16px 16px;
+  background: rgba(255, 207, 46, 0.5);
+}
+
+.mast {
+  position: absolute;
+  top: -54px;
+  left: -1.5px;
+  width: 3px;
+  height: 40px;
+  background: var(--navy);
+}
+
+.flag {
+  position: absolute;
+  top: -54px;
+  right: 1.5px;
+  width: 20px;
+  height: 14px;
+  overflow: hidden;
+  background: var(--navy);
+  color: transparent;
+  font-size: 0;
+  clip-path: polygon(0 50%, 24% 0, 100% 0, 100% 100%, 24% 100%);
+  transform-origin: right center;
+  animation: flutter 1.8s var(--sway) infinite alternate;
+}
+
+.heroFoot {
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  bottom: 22px;
+  z-index: 3;
+  display: grid;
+  justify-items: start;
+  gap: 18px;
+  color: #fff;
+}
+
+.sub {
+  max-width: 22ch;
+  font: 400 clamp(28px, 8vw, 36px)/1.02 var(--serif);
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 18px rgba(2, 11, 28, 0.5);
+  animation: fade 0.8s var(--ease) 0.7s both;
+}
+
+.act {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  animation: arrive 0.8s var(--ease) 0.95s both;
+}
+
+/* The prices beside a booking button. */
+.faresLine {
+  display: grid;
+  gap: 3px;
+  font: 500 13px/1.25 var(--sans);
+}
+
+.faresLine b {
+  font-weight: 700;
+}
+
+.heroFoot .faresLine {
+  color: #fff;
+  text-shadow: 0 1px 10px rgba(2, 11, 28, 0.6);
+}
+
+/* The crew: who they are, in three short lines that fill word by word as they are read. */
+.crew {
+  position: relative;
+  overflow: hidden;
+  padding: 92px var(--pad) 100px;
+  background: var(--navy);
+  color: #fff;
+}
+
+.crewYear {
+  position: absolute;
+  bottom: -0.12em;
+  right: -0.05em;
+  z-index: 0;
+  margin: 0;
+  color: transparent;
+  font: 400 clamp(150px, 50vw, 460px)/0.8 var(--serif);
+  letter-spacing: -0.03em;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.2);
+  pointer-events: none;
+}
+
+.crewHead,
+.fill,
+.terms {
+  position: relative;
+  z-index: 1;
+}
+
+.crewHead .kicker {
+  color: var(--sea);
+}
+
+.crewHead h2 {
+  margin-top: 16px;
+  font-style: italic;
+  font-size: clamp(40px, 11vw, 52px);
+  color: var(--sea);
+}
+
+.fill {
+  margin-top: 40px;
+  display: grid;
+  gap: 22px;
+}
+
+.fill p {
+  font: 400 clamp(34px, 9.6vw, 46px)/1.04 var(--serif);
+  letter-spacing: -0.01em;
+}
+
+.fill span {
+  --w: clamp(0, calc(var(--p) * (var(--n) + 4) - var(--i)), 1);
+  color: #fff;
+  color: color-mix(in srgb, #fff calc(var(--w) * 100%), var(--dim));
+  transition: color 0.3s var(--ease);
+}
+
+.terms {
+  display: grid;
+  gap: 16px;
+  margin-top: 64px;
+}
+
+.termsLabel {
+  font: 650 12px/1.2 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--yellow);
+}
+
+.terms ul {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.terms li {
+  position: relative;
+  padding: 14px 0 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 16.5px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* How deep they go: one frame, held. The surface rises away, the light goes, and the seal dives from beside the swimmer while its depth counts down to the deepest figure they give. */
+.dive {
+  background: var(--abyss);
+}
+
+.descent {
+  --wl: 36;
+  --up: 28;
+  --s0: 50;
+  --s1: 12;
+  --d: clamp(0, calc((var(--p) - 0.3) / 0.42), 1);
+  position: relative;
+  height: calc(var(--steps) * 62svh + 100svh);
+}
+
+.descent [data-frame] {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+  color: #fff;
+}
+
+.deep {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, #0b7d86 0%, #075f7e 34%, #053c6b 68%, #03244f 100%);
+}
+
+.glow,
+.dark {
+  position: absolute;
+  inset: 0;
+}
+
+.glow {
+  background: repeating-linear-gradient(100deg, rgba(255, 255, 255, 0) 0 9%, rgba(255, 255, 255, 0.1) 11%, rgba(255, 255, 255, 0) 14% 22%), radial-gradient(90% 55% at 40% 0%, rgba(170, 245, 238, 0.4), rgba(170, 245, 238, 0) 70%);
+  -webkit-mask-image: linear-gradient(180deg, #000 10%, transparent 80%);
+  mask-image: linear-gradient(180deg, #000 10%, transparent 80%);
+  opacity: calc(1 - var(--d));
+}
+
+.dark {
+  background: radial-gradient(120% 90% at 40% 0%, #031635 0%, #01050d 72%);
+  opacity: calc(var(--d) * 0.97);
+}
+
+.snow i {
+  position: absolute;
+  top: -4%;
+  left: calc(3% + var(--i) * 6.9%);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  animation: snow 16s cubic-bezier(0.4, 0.2, 0.6, 0.8) infinite;
+  animation-delay: calc(var(--i) * -2.3s);
+}
+
+.snow i:nth-child(3n) {
+  width: 2px;
+  height: 2px;
+  animation-duration: 22s;
+}
+
+.snow i:nth-child(4n) {
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.35);
+  animation-duration: 13s;
+}
+
+/* The air and the surface: the same waterline the page opens on. It rises away as the seal goes down. */
+.air {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: calc(var(--wl) * 1svh);
+  background: var(--foam);
+  color: var(--navy);
+  transform: translateY(calc(var(--d) * var(--up) * -1svh));
+}
+
+.air::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: #fff;
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.8);
+}
+
+.diveHead {
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  bottom: 20px;
+}
+
+.diveHead h2 {
+  margin-top: 10px;
+  font-size: clamp(44px, 12.4vw, 60px);
+  color: var(--navy);
+}
+
+.you {
+  position: absolute;
+  top: calc(100% + 14px);
+  left: var(--pad);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 13px 7px 9px;
+  border-radius: 999px;
+  background: rgba(1, 42, 106, 0.6);
+  color: #fff;
+  font: 600 12.5px/1.2 var(--sans);
+}
+
+.you i {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--yellow);
+  box-shadow: 0 0 0 4px rgba(255, 207, 46, 0.3);
+}
+
+/* The seal's line down from the surface, as long as it has dived. */
+.trail {
+  position: absolute;
+  top: calc(var(--wl) * 1svh);
+  left: calc(var(--pad) + 45px);
+  z-index: 1;
+  width: 3px;
+  height: calc((var(--s0) - var(--wl) + var(--up) + var(--s1)) * 1svh);
+  background: repeating-linear-gradient(180deg, var(--yellow) 0 10px, rgba(255, 207, 46, 0) 10px 18px);
+  transform-origin: 50% 0;
+  transform: translateY(calc(var(--d) * var(--up) * -1svh)) scaleY(calc((var(--s0) - var(--wl) + var(--d) * (var(--up) + var(--s1))) / (var(--s0) - var(--wl) + var(--up) + var(--s1))));
+}
+
+.seal {
+  position: absolute;
+  top: calc(var(--s0) * 1svh);
+  left: var(--pad);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transform: translateY(calc(-50% + var(--d) * var(--s1) * 1svh));
+}
+
+.face {
+  position: relative;
+  flex: 0 0 auto;
+  width: 92px;
+  height: 92px;
+  overflow: hidden;
+  border: 3px solid var(--yellow);
+  border-radius: 50%;
+  box-shadow: 0 0 0 8px rgba(255, 207, 46, 0.18), 0 0 40px rgba(255, 207, 46, 0.35);
+}
+
+.face picture,
+.face img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.face img {
+  object-fit: cover;
+}
+
+.depth {
+  font: 400 clamp(56px, 16vw, 76px)/1 var(--serif);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+  white-space: nowrap;
+}
+
+.stops {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stops li {
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  bottom: 92px;
+  z-index: 2;
+  display: grid;
+  gap: 6px;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.5s var(--ease), transform 0.7s var(--ease);
+}
+
+.stops li[data-state='on'] {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.1s;
+}
+
+.stops li[data-state='done'] {
+  transform: translateY(-14px);
+}
+
+.stopKicker {
+  font: 650 11.5px/1.2 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--yellow);
+}
+
+.stops h3 {
+  font-size: clamp(34px, 9.6vw, 46px);
+  line-height: 0.95;
+}
+
+.stopText {
+  max-width: 36ch;
+  font-size: 16px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.stopNote {
+  max-width: 36ch;
+  font-size: 14.5px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.76);
+}
+
+
+/* Their year: the water of this section warms for the months they swim and goes cold for winter. */
+.year {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 96px var(--pad) 108px;
+  background: #cdeee7;
+  color: var(--ink);
+  transition: background-color 0.9s var(--ease);
+}
+
+.year::before {
+  content: '';
+  position: absolute;
+  top: -30%;
+  right: -40%;
+  z-index: -1;
+  width: 120%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 207, 46, 0.55), rgba(255, 207, 46, 0) 62%);
+  transition: opacity 0.9s var(--ease), transform 1.2s var(--ease);
+}
+
+.year::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(90% 60% at 0% 100%, rgba(120, 146, 186, 0.45), rgba(120, 146, 186, 0) 70%), linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0));
+  opacity: 0;
+  transition: opacity 0.9s var(--ease);
+}
+
+.year:has([data-dial-state='off']) {
+  background: #d3dce8;
+}
+
+.year:has([data-dial-state='off'])::after {
+  opacity: 1;
+}
+
+.year:has([data-dial-state='off'])::before {
+  opacity: 0;
+  transform: translateY(12%) scale(0.8);
+}
+
+.yearHead {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  text-align: center;
+}
+
+.yearHead h2 {
+  max-width: 9ch;
+  color: var(--navy);
+}
+
+.yearLead {
+  max-width: 30ch;
+  font-size: 16.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.dial {
+  --size: min(88vw, 380px);
+  display: grid;
+  justify-items: center;
+  gap: 26px;
+  margin-top: 40px;
+}
+
+.dial [data-dial-ring] {
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+}
+
+.dial svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.dial [data-dial-bezel] {
+  fill: var(--navy);
+}
+
+.dial [data-dial-tick] {
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 1.4;
+}
+
+.dial [data-dial-arc] {
+  fill: none;
+  stroke-width: 15;
+  stroke-linecap: round;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 0.75s var(--ease), stroke-width 0.4s var(--ease), stroke 0.4s var(--ease);
+  transition-delay: calc(var(--i) * 70ms), 0s, 0s;
+}
+
+.dial[data-in] [data-dial-arc] {
+  stroke-dashoffset: 0;
+}
+
+.dial [data-dial-arc='on'] {
+  stroke: var(--yellow);
+}
+
+.dial [data-dial-arc='off'] {
+  stroke: rgba(255, 255, 255, 0.2);
+}
+
+.dial [data-dial-arc][data-sel] {
+  stroke-width: 24;
+}
+
+.dial [data-dial-arc='off'][data-sel] {
+  stroke: rgba(255, 255, 255, 0.5);
+}
+
+.dial [data-dial-now] {
+  transform-box: view-box;
+  transform-origin: 50% 50%;
+  transform: rotate(var(--a));
+}
+
+.dial [data-dial-now] circle {
+  fill: #fff;
+  stroke: var(--navy);
+  stroke-width: 3;
+}
+
+.dial [data-dial-hand] {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: transform 1.3s var(--spring);
+}
+
+.dial [data-dial-stick] {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  width: 3px;
+  height: 22%;
+  margin-left: -1.5px;
+  border-radius: 3px;
+  background: linear-gradient(0deg, rgba(255, 207, 46, 0.2), var(--yellow));
+}
+
+.dial [data-dial-knob] {
+  position: absolute;
+  top: 12.5%;
+  left: 50%;
+  width: 48px;
+  height: 48px;
+  margin: -24px 0 0 -24px;
+  border-radius: 50%;
+  pointer-events: auto;
+  touch-action: none;
+  cursor: grab;
+}
+
+.dial [data-dial-knob]::before {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border: 4px solid var(--navy);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 3px var(--yellow), 0 0 22px rgba(255, 207, 46, 0.8);
+}
+
+.dial [data-dial-knob]:active {
+  cursor: grabbing;
+}
+
+.dial [data-dial-face] {
+  position: absolute;
+  inset: 31%;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  color: #fff;
+  text-align: center;
+  pointer-events: none;
+}
+
+.dial [data-dial-month] {
+  font: italic 400 clamp(32px, 9.4vw, 50px)/0.9 var(--serif);
+  white-space: nowrap;
+  animation: month-in 0.6s var(--ease) both;
+}
+
+.dial [data-dial-chip] {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--yellow);
+  color: var(--navy);
+  font: 700 10.5px/1 var(--sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dial [data-dial-chip][data-state='off'] {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.dial [data-dial-here] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 650 10.5px/1 var(--sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #c9f1ec;
+}
+
+.dial [data-dial-here] i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.dial [data-dial-months] {
+  position: absolute;
+  inset: 0;
+}
+
+.dial [data-dial-months] button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.74);
+  font: 650 11px/1 var(--sans);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transform: rotate(var(--a)) translateY(calc(var(--size) * -0.29)) rotate(calc(var(--a) * -1));
+  transition: color 0.3s var(--ease), background-color 0.3s var(--ease);
+}
+
+.dial [data-dial-months] button[data-state='on'] {
+  color: #fff;
+}
+
+.dial [data-dial-months] button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dial [data-dial-months] button[aria-pressed='true'] {
+  background: #fff;
+  color: var(--navy);
+}
+
+.dial [data-dial-side] {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  max-width: 34ch;
+  text-align: center;
+}
+
+.dial [data-dial-note] {
+  min-height: 3.75em;
+  font: 400 21px/1.24 var(--serif);
+  color: var(--navy);
+  animation: fade 0.6s var(--ease) both;
+}
+
+.dial [data-dial-legend] {
+  display: flex;
+  gap: 18px;
+  font: 600 12.5px/1 var(--sans);
+  color: var(--muted);
+}
+
+.dial [data-dial-legend] span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dial [data-dial-legend] span::before {
+  content: '';
+  width: 18px;
+  height: 6px;
+  border-radius: 6px;
+  background: var(--yellow);
+  box-shadow: inset 0 0 0 1px rgba(1, 42, 106, 0.3);
+}
+
+.dial [data-dial-legend] span[data-state='off']::before {
+  background: #9fb0c6;
+}
+
+.dial [data-dial-hint] {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.yearGo {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  margin-top: 40px;
+  text-align: center;
+}
+
+.yearGo p {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+/* The tour, drawn as the line a swimmer follows: ashore, out on the surface, about an hour in the water, and back, along the same waterline. */
+.tour {
+  background: var(--deep);
+  color: #fff;
+}
+
+.tourHead {
+  display: grid;
+  gap: 14px;
+  padding: 96px var(--pad) 26px;
+  background: var(--foam);
+  color: var(--navy);
+}
+
+.tourHead h2 {
+  max-width: 8ch;
+}
+
+.tourLead {
+  max-width: 30ch;
+  font-size: 16.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+/* The whole trip's length, set like a dimension line across the drawing. */
+.span {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 26px;
+  font: 700 12px/1 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.span::before,
+.span::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 12px;
+  border-top: 2px solid var(--navy);
+}
+
+.span::before {
+  border-left: 2px solid var(--navy);
+}
+
+.span::after {
+  border-right: 2px solid var(--navy);
+}
+
+.trip {
+  position: relative;
+  background: linear-gradient(180deg, var(--foam) 50%, #0a6b80 50%);
+}
+
+.trip::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  margin-top: -1px;
+  background: #fff;
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.85);
+}
+
+.chart {
+  position: relative;
+  z-index: 1;
+  height: 250px;
+  margin: 0 var(--pad);
+}
+
+.chart svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* The time in the water, filled in under the waterline. */
+.chartHour {
+  fill: rgba(255, 255, 255, 0.14);
+}
+
+.chartTrace {
+  fill: none;
+  stroke: rgba(1, 42, 106, 0.14);
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+
+/* Dry, the line is navy; under the waterline it turns white, as the headline does. */
+.chartLine {
+  fill: none;
+  stroke: url(#fathom-trip);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 1 1;
+}
+
+.chartLabels {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chartLabels li {
+  position: absolute;
+  left: calc(var(--x0) * 100%);
+  width: calc(var(--w) * 100%);
+  padding: 0 3px;
+  font: 700 11.5px/1.2 var(--sans);
+  text-align: center;
+  color: var(--navy);
+}
+
+.chartLabels li:first-child {
+  padding-left: 0;
+  text-align: left;
+}
+
+.chartLabels li:last-child {
+  padding-right: 0;
+  text-align: right;
+}
+
+.chartLabels li[data-where='dry'] {
+  top: 0;
+}
+
+.chartLabels li[data-where='surface'] {
+  top: calc(50% - 42px);
+}
+
+.chartLabels li[data-where='wet'] {
+  top: calc(50% + 18px);
+  font: 400 clamp(19px, 5.4vw, 26px)/1.05 var(--serif);
+  color: #fff;
+}
+
+/* What happens in each part, in their words, under the part of the line it belongs to. */
+.log {
+  display: grid;
+  gap: 40px;
+  padding: 44px var(--pad) 24px;
+  background: linear-gradient(180deg, #0a6b80 0, var(--deep) 360px);
+}
+
+.phase {
+  display: grid;
+  gap: 40px;
+  align-content: start;
+}
+
+.stage {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.stageLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 650 12px/1.2 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--yellow);
+}
+
+/* A small waterline beside each label, with a dot above it ashore, on it at the surface and under it in the water. */
+.stageLabel i {
+  position: relative;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+}
+
+.stageLabel i::before {
+  content: '';
+  position: absolute;
+  top: 11px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.stageLabel i::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 7px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--yellow);
+}
+
+.stage[data-where='surface'] .stageLabel i::after {
+  top: 7px;
+}
+
+.stage[data-where='wet'] .stageLabel i::after {
+  top: 14px;
+  background: #fff;
+}
+
+.stage h3 {
+  font-size: clamp(34px, 9.4vw, 46px);
+  line-height: 0.98;
+}
+
+.stagePhoto {
+  aspect-ratio: 2 / 1;
+  overflow: hidden;
+  margin: 4px 0 2px;
+}
+
+.stagePhoto picture,
+.stagePhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.stagePhoto img {
+  object-fit: cover;
+}
+
+.stageText {
+  max-width: 38ch;
+  font-size: 16px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.kit {
+  display: grid;
+  margin: 2px 0 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.kit li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font: 400 clamp(36px, 10vw, 48px)/1.04 var(--serif);
+}
+
+.kit i {
+  font-style: normal;
+  color: var(--yellow);
+}
+
+.close {
+  display: grid;
+  gap: 26px;
+  padding: 36px var(--pad) 112px;
+  background: var(--deep);
+}
+
+.promise {
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+  border: 1.5px solid rgba(255, 255, 255, 0.26);
+  border-radius: 18px;
+}
+
+.promiseText {
+  font: 400 23px/1.18 var(--serif);
+}
+
+.priceCard {
+  display: grid;
+  gap: 12px;
+  padding: 28px 22px 26px;
+  border-radius: 22px;
+  background: var(--yellow);
+  color: var(--navy);
+}
+
+.cardLabel {
+  font: 700 12px/1.2 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.priceCard h3 {
+  font-size: clamp(48px, 13vw, 64px);
+  line-height: 0.9;
+}
+
+.priceCard dl {
+  display: grid;
+  margin: 6px 0 0;
+}
+
+.priceCard dl div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 2px solid var(--navy);
+}
+
+.priceCard dt {
+  font: 600 14.5px/1.3 var(--sans);
+}
+
+.priceCard dd {
+  margin: 0;
+  font: 400 clamp(34px, 9.6vw, 48px)/1 var(--serif);
+  white-space: nowrap;
+}
+
+.cardNote {
+  font-size: 14.5px;
+  line-height: 1.4;
+}
+
+.priceCard .go {
+  justify-self: start;
+  margin-top: 8px;
+  background: var(--navy);
+  color: #fff;
+}
+
+
+/* The proof: Lonely Planet's line given a whole section, with reviews rising round it as bubbles. */
+.proof {
+  position: relative;
+  overflow: hidden;
+  padding: 104px var(--pad) 112px;
+  background: linear-gradient(180deg, var(--foam) 0%, #cfeae4 100%);
+  text-align: center;
+}
+
+.proofHead {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+}
+
+.proofHead .kicker {
+  color: var(--navy);
+}
+
+.proofHead h2 {
+  max-width: 9ch;
+  font-style: italic;
+  font-size: clamp(54px, 15.6vw, 80px);
+  line-height: 0.9;
+  color: var(--navy);
+}
+
+.proofLine {
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.bubbleList {
+  display: flex;
+  flex-direction: column;
+  margin: 48px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bubble {
+  width: min(57vw, 250px);
+  margin-top: -15vw;
+}
+
+.bubble:first-child {
+  margin-top: 0;
+}
+
+.bubble:nth-child(odd) {
+  align-self: flex-start;
+}
+
+.bubble:nth-child(even) {
+  align-self: flex-end;
+}
+
+.bubble > div {
+  position: relative;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  aspect-ratio: 1;
+  padding: 17%;
+  border: 1.5px solid rgba(1, 42, 106, 0.18);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--navy);
+  animation: float 6s var(--sway) infinite alternate;
+  animation-delay: calc(var(--i) * -1.3s);
+}
+
+.bubble blockquote {
+  margin: 0;
+}
+
+.bubble blockquote p {
+  font: italic 400 clamp(19px, 5.4vw, 25px)/1.1 var(--serif);
+}
+
+.bubble small {
+  font: 600 12px/1.3 var(--sans);
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.bubble b {
+  font: 400 clamp(70px, 20vw, 96px)/0.9 var(--serif);
+}
+
+.bubble span {
+  font: 600 14px/1.25 var(--sans);
+}
+
+.bubble[data-kind='rating'] > div {
+  border-color: transparent;
+  background: var(--navy);
+  color: #fff;
+}
+
+.bubble[data-kind='rating'] small {
+  color: #c9d8ee;
+}
+
+.bubble[data-kind='count'] {
+  width: min(48vw, 210px);
+}
+
+.bubble[data-kind='count'] > div {
+  border-color: transparent;
+  background: var(--yellow);
+}
+
+.bubble[data-kind='count'] b {
+  font-size: clamp(54px, 15vw, 72px);
+}
+
+/* The close: the booking comes first, in the yellow of their boat, above the waterline. The ways to reach them float on that line as marker buoys, each with its details below the surface. */
+.harbour {
+  position: relative;
+  overflow: hidden;
+  background: var(--deep);
+  color: #fff;
+}
+
+.berth {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+  padding: 96px var(--pad) 110px;
+  background: var(--yellow);
+  color: var(--navy);
+}
+
+.berth .kicker::before {
+  background: var(--navy);
+}
+
+.berth h2 {
+  font-size: clamp(64px, 19vw, 96px);
+  line-height: 0.88;
+}
+
+.berthLine {
+  max-width: 34ch;
+  font-size: 16.5px;
+  line-height: 1.45;
+}
+
+.berthGo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  margin-top: 10px;
+}
+
+.berthGo .go {
+  background: var(--navy);
+  color: #fff;
+}
+
+.berthGo .faresLine {
+  color: var(--navy);
+}
+
+.berthSeason {
+  font-size: 14.5px;
+}
+
+.moorings {
+  position: relative;
+  isolation: isolate;
+  padding: 0 var(--pad) 150px;
+}
+
+.moorings::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: 2px;
+  background: #fff;
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.85);
+}
+
+.mooringPhoto {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.mooringPhoto picture,
+.mooringPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mooringPhoto img {
+  object-fit: cover;
+}
+
+.mooringPhoto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(3, 33, 79, 0.8) 0%, rgba(2, 11, 28, 0.93) 100%);
+}
+
+/* On a phone the buoys ride the line in a row, and what each one marks is listed below them in the same order. */
+.markers {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.marker {
+  display: contents;
+}
+
+.markerBuoy {
+  position: relative;
+  grid-row: 1;
+  z-index: 3;
+  height: 16px;
+  animation: bob 3.4s var(--sway) infinite alternate;
+  animation-delay: calc(var(--i) * -0.8s);
+}
+
+.markerBuoy i {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  width: 26px;
+  height: 13px;
+  margin-left: -13px;
+  border-radius: 13px 13px 0 0;
+  background: linear-gradient(180deg, var(--yellow) 0 50%, var(--navy) 50% 72%, var(--yellow) 72%);
+}
+
+.markerBuoy i::after {
+  content: '';
+  position: absolute;
+  top: 13px;
+  left: 1.5px;
+  width: 26px;
+  height: 13px;
+  border-radius: 0 0 13px 13px;
+  background: rgba(255, 207, 46, 0.45);
+}
+
+.markerBuoy::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  left: calc(50% - 1.5px);
+  width: 3px;
+  height: 38px;
+  background: var(--navy);
+}
+
+.markerBuoy::after {
+  content: '';
+  position: absolute;
+  top: -50px;
+  left: calc(50% + 1.5px);
+  width: 18px;
+  height: 13px;
+  background: var(--navy);
+  clip-path: polygon(0 0, 100% 0, 76% 50%, 100% 100%, 0 100%);
+}
+
+.marker:first-child .markerBuoy i {
+  transform: scale(1.3);
+}
+
+.markerBody {
+  grid-column: 1 / -1;
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding-top: 30px;
+}
+
+.marker:first-child .markerBody {
+  padding-top: 40px;
+}
+
+.markerBody h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 650 12px/1.2 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--yellow);
+}
+
+.markerBody h3::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--yellow) 50%, rgba(255, 207, 46, 0.45) 50%);
+}
+
+.markerNote {
+  max-width: 36ch;
+  font-size: 15.5px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.markerLink {
+  padding: 3px 0;
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+  font: 400 clamp(24px, 7vw, 32px)/1.1 var(--serif);
+  text-decoration: none;
+  transition: border-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.markerLink:hover {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+.markerExtra {
+  max-width: 36ch;
+  font-size: 14px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.swells {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 84px;
+  pointer-events: none;
+}
+
+.swells svg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 64px;
+}
+
+.swellBack {
+  height: 80px !important;
+  animation: swell 9s var(--sway) infinite alternate;
+}
+
+.swellBack path {
+  fill: var(--teal);
+}
+
+.swellFront {
+  animation: swell 6.5s var(--sway) -2s infinite alternate-reverse;
+}
+
+.swellFront path {
+  fill: var(--foam);
+}
+
+/* The foot: back on shore, the peninsula from the air. */
+.foot {
+  padding: 0 0 116px;
+  background: var(--foam);
+  color: var(--ink);
+}
+
+.pano {
+  position: relative;
+  height: clamp(220px, 58vw, 560px);
+  overflow: hidden;
+}
+
+.pano picture,
+.pano img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.pano img {
+  object-fit: cover;
+  transform: scale(1.1);
+}
+
+.footText {
+  display: grid;
+  gap: 12px;
+  padding: 30px var(--pad) 0;
+}
+
+.footMark {
+  font: 400 40px/1 var(--serif);
+  color: var(--navy);
+}
+
+.footLine {
+  max-width: 36ch;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+@keyframes settle {
+  from {
+    transform: scale(1.09) translateY(-1.5%);
+  }
+}
+
+@keyframes surface {
+  from {
+    transform: translateY(102%);
+  }
+}
+
+@keyframes refract {
+  0% {
+    transform: translate(0.03em, 0.035em) skewX(-1deg);
+  }
+  50% {
+    transform: translate(-0.015em, 0.045em) skewX(-3deg);
+  }
+  100% {
+    transform: translate(0.045em, 0.03em) skewX(1.5deg);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+  }
+}
+
+@keyframes draw-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes ray {
+  from {
+    transform: skewX(-16deg) translateX(-40%);
+    opacity: 0.4;
+  }
+  to {
+    transform: skewX(-9deg) translateX(40%);
+    opacity: 1;
+  }
+}
+
+@keyframes mote {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  12% {
+    opacity: 0.85;
+  }
+  80% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(16px, -520px);
+  }
+}
+
+@keyframes rise-bubble {
+  from {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.3);
+  }
+  14% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(var(--x), -190px) scale(1);
+  }
+}
+
+@keyframes ping {
+  from {
+    opacity: 0.9;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+@keyframes bob {
+  from {
+    transform: translateY(-5px);
+  }
+  to {
+    transform: translateY(6px);
+  }
+}
+
+@keyframes rock {
+  from {
+    transform: rotate(-16deg);
+  }
+  to {
+    transform: rotate(14deg);
+  }
+}
+
+@keyframes snow {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(-22px, 108svh);
+  }
+}
+
+@keyframes month-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.3em);
+  }
+}
+
+@keyframes nudge {
+  from {
+    transform: translateX(-4px);
+  }
+  to {
+    transform: translateX(8px);
+  }
+}
+
+@keyframes float {
+  from {
+    transform: translateY(-7px);
+  }
+  to {
+    transform: translateY(8px);
+  }
+}
+
+@keyframes swell {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-25%);
+  }
+}
+
+@keyframes trace {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes flutter {
+  from {
+    transform: scaleX(1) skewY(0deg);
+  }
+  to {
+    transform: scaleX(0.8) skewY(-6deg);
+  }
+}
+
+@media (min-width: 760px) {
+  .dock {
+    position: fixed;
+    right: 26px;
+    bottom: 26px;
+    z-index: 45;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 6px;
+    width: 116px;
+    height: 116px;
+    padding: 14px;
+    border-radius: 50%;
+    background: var(--yellow);
+    color: var(--navy);
+    box-shadow: 0 0 0 4px var(--navy), 0 0 0 10px rgba(255, 207, 46, 0.3);
+    font: 700 13px/1.15 var(--sans);
+    text-align: center;
+    text-decoration: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(16px) scale(0.9);
+    transition: opacity 0.4s var(--ease), transform 0.6s var(--ease), visibility 0.4s;
+  }
+
+  :global([data-past-hero]) .dock {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+
+  /* Where the page closes on its own booking action, the buoy steps aside. */
+  .root:has(.railLinks a:last-child[aria-current]) .dock {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(16px) scale(0.9);
+  }
+}
+
+@media (min-width: 900px) {
+  .team {
+    position: absolute;
+    top: 30px;
+    right: var(--pad);
+    z-index: 4;
+    display: block;
+    max-width: 16ch;
+    font: 400 clamp(26px, 2.3vw, 38px)/1.08 var(--serif);
+    text-align: right;
+    color: var(--navy);
+    animation: fade 0.9s var(--ease) 0.6s both;
+  }
+
+  .buoy {
+    --at: 0.8;
+  }
+
+  .mast {
+    top: -68px;
+    height: 54px;
+  }
+
+  .flag {
+    top: -68px;
+    right: auto;
+    left: 1.5px;
+    width: auto;
+    height: auto;
+    padding: 5px 17px 5px 9px;
+    color: #fff;
+    font: 700 11px/1 var(--sans);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    clip-path: polygon(0 0, 100% 0, 86% 50%, 100% 100%, 0 100%);
+    transform-origin: left center;
+  }
+
+  .heroFoot {
+    bottom: 40px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+  }
+
+  .sub {
+    max-width: 20ch;
+    font-size: clamp(40px, 3.6vw, 60px);
+  }
+
+  .act {
+    flex-wrap: nowrap;
+    gap: 20px;
+  }
+
+  .descent {
+    --wl: 40;
+    --up: 31;
+    --s0: 55;
+    --s1: 16;
+  }
+
+  .diveHead {
+    bottom: 30px;
+  }
+
+  .diveHead h2 {
+    font-size: clamp(72px, 6.6vw, 112px);
+  }
+
+  .trail {
+    left: calc(var(--pad) + 6vw + 59px);
+  }
+
+  .seal {
+    left: calc(var(--pad) + 6vw);
+    gap: 30px;
+  }
+
+  .face {
+    width: 124px;
+    height: 124px;
+  }
+
+  .depth {
+    font-size: clamp(130px, 13vw, 230px);
+  }
+
+  .stops li {
+    top: 50svh;
+    left: 60vw;
+    right: 9vw;
+    bottom: auto;
+    gap: 10px;
+  }
+
+  .stopText {
+    font-size: 19px;
+  }
+
+  .stopNote {
+    font-size: 16px;
+  }
+
+  .tourHead {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 64px;
+    padding: 150px var(--pad) 30px;
+  }
+
+  .tourHead .kicker,
+  .tourHead h2 {
+    grid-column: 1;
+  }
+
+  .tourHead h2 {
+    max-width: none;
+    font-size: clamp(80px, 7.6vw, 130px);
+  }
+
+  .tourLead {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: end;
+    justify-self: end;
+    font-size: 19px;
+  }
+
+  .span {
+    grid-column: 1 / -1;
+  }
+
+  .chart {
+    height: 320px;
+  }
+
+  .chartLabels li {
+    font-size: 14px;
+  }
+
+  .chartLabels li[data-where='surface'] {
+    top: calc(50% - 48px);
+  }
+
+  .chartLabels li[data-where='wet'] {
+    top: calc(50% + 26px);
+    font-size: clamp(28px, 2.4vw, 40px);
+  }
+
+  .log {
+    grid-template-columns: var(--cols);
+    gap: 0;
+    padding: 64px var(--pad) 40px;
+  }
+
+  .phase {
+    padding: 0 24px;
+    border-left: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .phase:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .phase:last-child {
+    padding-right: 0;
+  }
+
+  .stage h3 {
+    font-size: clamp(34px, 2.9vw, 50px);
+  }
+
+  .kit li {
+    font-size: clamp(30px, 2.5vw, 42px);
+  }
+
+  .stageText {
+    font-size: 16.5px;
+  }
+
+  .close {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: end;
+    gap: 56px;
+    padding: 48px var(--pad) 140px;
+  }
+
+  .priceCard {
+    order: -1;
+  }
+
+  .promiseText {
+    font-size: 32px;
+  }
+
+  .priceCard {
+    padding: 36px 36px 34px;
+  }
+
+  .root {
+    --pad: 56px;
+    font-size: 18px;
+  }
+
+  .root h2 {
+    font-size: clamp(72px, 6.6vw, 112px);
+  }
+
+  .hero {
+    --line: 54%;
+    --fs: clamp(120px, 14.2vw, 250px);
+    min-height: 640px;
+  }
+
+  .row:last-child {
+    left: calc(var(--pad) + 20vw);
+  }
+
+  .top {
+    top: 24px;
+    gap: 10px;
+  }
+
+  .crew {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    column-gap: 64px;
+    padding: 168px var(--pad) 156px;
+  }
+
+  .crewHead {
+    padding-top: 12px;
+  }
+
+  .crewHead h2 {
+    font-size: clamp(52px, 4.4vw, 72px);
+  }
+
+  .fill {
+    margin-top: 0;
+    gap: 30px;
+  }
+
+  .fill p {
+    font-size: clamp(52px, 4.8vw, 84px);
+    line-height: 1;
+  }
+
+  .terms {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    column-gap: 64px;
+    margin-top: 110px;
+  }
+
+  .terms ul {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px;
+  }
+
+  .year {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'head ring' 'side ring' 'go ring';
+    grid-template-rows: auto auto 1fr;
+    column-gap: 7vw;
+    align-items: start;
+    padding: 120px var(--pad) 120px 9vw;
+  }
+
+  .yearHead {
+    grid-area: head;
+    justify-items: start;
+    text-align: left;
+    align-self: end;
+  }
+
+  .yearLead {
+    max-width: 34ch;
+  }
+
+  .year::before {
+    top: -40%;
+    right: -12%;
+    width: 70%;
+  }
+
+  .yearHead h2 {
+    max-width: none;
+  }
+
+  .dial {
+    --size: min(44vw, 74svh, 640px);
+    display: contents;
+  }
+
+  .dial [data-dial-ring] {
+    grid-area: ring;
+    align-self: center;
+  }
+
+  .dial [data-dial-side] {
+    grid-area: side;
+    justify-items: start;
+    max-width: 30ch;
+    margin-top: 44px;
+    text-align: left;
+  }
+
+  .yearGo {
+    grid-area: go;
+    justify-items: start;
+    margin-top: 36px;
+    text-align: left;
+  }
+
+  .dial [data-dial-note] {
+    font-size: 30px;
+  }
+
+  .dial [data-dial-months] button {
+    font-size: 12.5px;
+    width: 50px;
+    height: 50px;
+    margin: -25px 0 0 -25px;
+  }
+
+  .proof {
+    min-height: 1040px;
+    padding: 0 var(--pad);
+    display: grid;
+    place-items: center;
+  }
+
+  .proofHead h2 {
+    max-width: 11ch;
+    font-size: clamp(96px, 8.2vw, 150px);
+  }
+
+  .bubbleList {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    display: block;
+  }
+
+  .bubble {
+    position: absolute;
+    width: clamp(220px, 17vw, 290px);
+    margin: 0;
+  }
+
+  .bubble:nth-child(1) {
+    top: 8%;
+    left: 6%;
+  }
+
+  .bubble:nth-child(2) {
+    top: 5%;
+    left: auto;
+    right: 9%;
+  }
+
+  .bubble:nth-child(3) {
+    top: 63%;
+    left: 4%;
+  }
+
+  .bubble:nth-child(4) {
+    top: 70%;
+    left: auto;
+    right: 23%;
+  }
+
+  .bubble:nth-child(5) {
+    top: 40%;
+    left: auto;
+    right: 11%;
+  }
+
+  .bubble:nth-child(6) {
+    top: 76%;
+    left: 30%;
+    width: clamp(170px, 12vw, 210px);
+  }
+
+  .berth {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    column-gap: 64px;
+    align-items: end;
+    padding: 150px var(--pad) 140px;
+  }
+
+  .berth .kicker,
+  .berth h2,
+  .berthGo,
+  .berthSeason {
+    grid-column: 1;
+  }
+
+  .berth h2 {
+    max-width: none;
+    font-size: clamp(110px, 10vw, 180px);
+  }
+
+  .berthLine {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 19px;
+  }
+
+  .moorings {
+    padding: 0 var(--pad) 210px;
+  }
+
+  .markers {
+    column-gap: 40px;
+  }
+
+  .marker {
+    display: block;
+    position: relative;
+  }
+
+  .markerBuoy {
+    height: 0;
+  }
+
+  .markerBuoy i {
+    left: 0;
+    margin-left: 0;
+  }
+
+  .markerBuoy::before {
+    left: 11.5px;
+  }
+
+  .markerBuoy::after {
+    left: 14.5px;
+  }
+
+  .markerBody,
+  .marker:first-child .markerBody {
+    position: relative;
+    padding-top: 70px;
+  }
+
+  /* Each buoy's mooring line runs down to what it marks. */
+  .markerBody::before {
+    content: '';
+    position: absolute;
+    top: 18px;
+    left: 12px;
+    width: 2px;
+    height: 40px;
+    background: repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0 5px, transparent 5px 9px);
+  }
+
+  .markerLink {
+    font-size: clamp(20px, 1.7vw, 28px);
+  }
+
+  .swells {
+    height: 120px;
+  }
+
+  .swells svg {
+    height: 96px;
+  }
+
+  .swellBack {
+    height: 118px !important;
+  }
+
+  .pano {
+    height: clamp(320px, 36vw, 620px);
+  }
+
+  .footText {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: end;
+    column-gap: 48px;
+    padding: 36px var(--pad) 0;
+  }
+
+  .foot {
+    padding-bottom: 48px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .rail {
+    position: fixed;
+    top: 50%;
+    right: 24px;
+    z-index: 40;
+    display: block;
+    padding: 12px 14px;
+    border-radius: 18px;
+    background: rgba(1, 26, 66, 0.84);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    backdrop-filter: blur(14px) saturate(1.3);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(12px, -50%);
+    transition: opacity 0.4s var(--ease), transform 0.5s var(--ease), visibility 0.4s;
+  }
+
+  :global([data-past-hero]) .rail {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(0, -50%);
+  }
+
+  .railLinks {
+    display: grid;
+    gap: 2px;
+  }
+
+  .railLinks a {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    min-height: 30px;
+    color: rgba(255, 255, 255, 0.7);
+    font: 650 11.5px/1 var(--sans);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.3s var(--ease);
+  }
+
+  /* The gauge keeps to its ticks, out of the way of the page, and spells its sections out when reached for. */
+  .rail:not(:hover):not(:focus-within) .railLinks a {
+    font-size: 0;
+    letter-spacing: 0;
+  }
+
+  .rail:not(:hover):not(:focus-within) {
+    padding: 12px 10px;
+  }
+
+  .railLinks a::after {
+    content: '';
+    width: 14px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: width 0.5s var(--ease), background-color 0.3s var(--ease);
+  }
+
+  .railLinks a:hover,
+  .railLinks a[aria-current] {
+    color: #fff;
+  }
+
+  .railLinks a[aria-current]::after {
+    width: 32px;
+    background: var(--yellow);
+  }
+
+  .dock {
+    bottom: 32px;
+    right: 32px;
+  }
+
+  /* The section gauge rides the right edge, so the dial and the buoys keep clear of it. */
+  .year {
+    padding-right: 110px;
+  }
+
+  .moorings {
+    padding-right: 90px;
+  }
+}
+
+/* The trip's line draws itself as it comes into view, where the browser can tie it to the scroll. */
+@supports (animation-timeline: view()) {
+  .chartLine {
+    animation: trace linear both;
+    animation-timeline: view();
+    animation-range: entry 10% cover 50%;
+  }
+}
+
+/* With reduced motion asked for, the dive is not held: it reads straight down, at its deepest, with every stop shown. */
+@media (prefers-reduced-motion: reduce) {
+  .descent {
+    --d: 1;
+    height: auto;
+  }
+
+  .descent [data-frame] {
+    position: relative;
+    height: auto;
+    display: grid;
+    padding-bottom: 64px;
+  }
+
+  .air {
+    position: relative;
+    height: auto;
+    padding: 96px var(--pad) 26px;
+    transform: none;
+  }
+
+  .diveHead {
+    position: static;
+  }
+
+  .you {
+    position: static;
+    margin-top: 18px;
+    background: var(--navy);
+  }
+
+  .trail {
+    display: none;
+  }
+
+  .seal {
+    position: relative;
+    top: auto;
+    left: auto;
+    margin: 40px var(--pad) 0;
+    transform: none;
+  }
+
+  .stops {
+    display: grid;
+    gap: 30px;
+    padding: 34px var(--pad) 0;
+  }
+
+  .stops li {
+    position: static;
+    opacity: 1;
+    transform: none;
+  }
+
+  .chartLine {
+    animation: none;
+  }
+}

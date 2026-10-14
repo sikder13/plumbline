@@ -1,0 +1,2504 @@
+/* A day on a yellow boat, told as a line. Hi-vis yellow, black and bare aluminium; Antonio for what is
+   painted on a boat, Libre Franklin for what is said. Hard edges throughout. */
+
+.root {
+  --y: #ffd700;
+  --ink: #0d0d0c;
+  --char: #383838;
+  --alu: #e8e9e4;
+  --paper: #f4f4f1;
+  --on-dark: #f4f4ef;
+  --soft-dark: #c4c4bc;
+  --soft-light: #45453f;
+  --sea: #0a1a22;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --fall: cubic-bezier(0.55, 0, 0.85, 0.36);
+  --disp: 'Antonio', 'Arial Narrow', 'Roboto Condensed', 'Helvetica Neue', Arial, sans-serif;
+  --text: 'Libre Franklin', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --pad: 18px;
+  --lead: 84px;
+  --float-bg: #0d0d0c;
+  --float-ink: #ffd700;
+  --float-call-bg: #ffd700;
+  --float-call-ink: #0d0d0c;
+  --float-font: 'Antonio', 'Arial Narrow', Arial, sans-serif;
+  font-family: var(--text);
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--ink);
+  overflow-x: clip;
+}
+
+.root h1,
+.root h2,
+.root h3 {
+  margin: 0;
+  font-family: var(--disp);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.root h2 {
+  font-size: clamp(54px, 15.4vw, 64px);
+  line-height: 0.9;
+}
+
+.root p {
+  margin: 0;
+}
+
+.root a:focus-visible,
+.root button:focus-visible,
+.root input:focus-visible + span::before,
+.tick:focus-visible span::before {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+}
+
+.root :global(.float-main) {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 18px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 2px var(--y);
+}
+
+.root :global(.float-call) {
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.root :global(.demo-foot-note) {
+  color: #c9d4da;
+  opacity: 1;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The hook, everywhere it appears. */
+.markHook,
+.heroHook,
+.tagHook {
+  width: 12px;
+  height: 24px;
+  margin: 0 3px;
+  color: var(--y);
+  opacity: var(--show);
+}
+
+/* The booking button: a hard block with an arrow, black on yellow and light grounds, yellow on dark ones. */
+.go {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 0 22px 0 24px;
+  border-radius: 3px;
+  background: var(--go-bg, var(--ink));
+  color: var(--go-ink, var(--y));
+  font: 700 21px/1 var(--disp);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.go svg {
+  transition: transform 0.4s var(--ease);
+}
+
+.go:hover svg {
+  transform: translateX(4px);
+}
+
+.price {
+  display: grid;
+  gap: 5px;
+  color: inherit;
+}
+
+.priceTag {
+  font: 700 19px/1 var(--disp);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.priceTag b {
+  margin-right: 3px;
+  font-size: 36px;
+  letter-spacing: 0.01em;
+}
+
+.price small {
+  max-width: 44ch;
+  color: var(--price-soft, var(--soft-light));
+  font: 500 13px/1.3 var(--text);
+}
+
+/* A section's label, with its line let down from the section's top edge. */
+.drop {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 20px;
+  color: var(--drop-c, var(--ink));
+  font: 700 15px/1 var(--disp);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* A small lead sinker or a knot before some labels; others stand alone. */
+.sinker {
+  flex: none;
+  width: 13px;
+  height: 20px;
+  fill: currentColor;
+  overflow: visible;
+  transition:
+    transform 0.9s var(--spring),
+    opacity 0.3s linear;
+}
+
+.sinker [data-eye] {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+}
+
+.knot {
+  flex: none;
+  width: 30px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition:
+    transform 0.7s var(--ease),
+    opacity 0.4s linear;
+}
+
+.drop > span:last-child {
+  transition:
+    opacity 0.5s var(--ease) 0.25s,
+    transform 0.7s var(--ease) 0.25s;
+}
+
+.drop[data-drop='wait'] .sinker {
+  opacity: 0;
+  transform: translateY(-18px);
+}
+
+.drop[data-drop='wait'] .knot {
+  opacity: 0;
+  transform: scaleX(0.4);
+}
+
+.drop[data-drop='wait'] > span:last-child {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+/* ---------- The opening: a yellow poster, the boat's name crossing onto the photograph, and a line dropped to the booking. ---------- */
+
+.hero {
+  --lead-fs: clamp(26px, 8.2vw, 34px);
+  --name-fs: min(31.5vw, 172px);
+  --seam: calc(10px + var(--lead-fs) * 1.04 + var(--name-fs) * 0.86);
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(170px, 1fr) auto auto;
+  min-height: calc(100svh - var(--bar-h));
+  overflow: hidden;
+  background: var(--y);
+  color: var(--ink);
+}
+
+.heroPic {
+  position: relative;
+  grid-row: 2 / 4;
+  grid-column: 1;
+  margin-top: var(--seam);
+  overflow: hidden;
+  background: #22313a;
+}
+
+.heroPic::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 16, 22, 0.42) 0%, rgba(8, 16, 22, 0) 38%);
+  pointer-events: none;
+}
+
+/* Where the line crosses the photograph it turns yellow, as the boat's name does. */
+.heroLineOver {
+  position: absolute;
+  z-index: 2;
+  left: calc(var(--pad) + 27.4px);
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--y);
+  transform-origin: 50% 0;
+  animation: let-down 0.4s var(--fall) 0.3s both;
+}
+
+.heroPic picture,
+.heroPic img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.heroPic picture {
+  animation: run 16s ease-in-out 1.8s infinite alternate;
+}
+
+.heroPic img {
+  object-fit: cover;
+  filter: saturate(1.2) brightness(1.16) contrast(1.06);
+  animation: settle 1.7s var(--ease) both;
+}
+
+.heroVeil {
+  position: absolute;
+  inset: 0;
+  background: var(--y);
+  transform-origin: 50% 0;
+  animation: lift 0.7s cubic-bezier(0.7, 0, 0.2, 1) 0.04s both;
+}
+
+.dayRow {
+  grid-row: 3;
+  grid-column: 1;
+  align-self: end;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 0;
+  margin: 0;
+  padding: 12px var(--pad) 14px;
+  list-style: none;
+  background: var(--ink);
+  color: var(--y);
+  font: 700 14px/1.1 var(--disp);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dayRow li {
+  display: flex;
+  align-items: center;
+  animation: slide-in 0.6s var(--ease) both;
+  animation-delay: calc(0.85s + var(--i) * 0.1s);
+}
+
+.dayRow li + li::before {
+  content: '';
+  width: 18px;
+  height: 2px;
+  margin: 0 9px;
+  background: currentColor;
+}
+
+.mark {
+  grid-row: 1;
+  grid-column: 1;
+  position: relative;
+  z-index: 3;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  margin: 4px var(--pad) 0;
+  color: var(--ink);
+  font: 700 18px/1 var(--disp);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  animation: fade 0.5s var(--ease) 0.05s both;
+}
+
+.markHook {
+  width: 13px;
+  height: 26px;
+}
+
+.title,
+.titleOver {
+  grid-row: 2;
+  grid-column: 1;
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  padding: 8px var(--pad) 0;
+  font-family: var(--disp);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.title {
+  clip-path: inset(-30px -30px calc(var(--name-fs) * 0.86) -30px);
+}
+
+.titleOver {
+  color: var(--y);
+  pointer-events: none;
+  clip-path: inset(calc(100% - var(--name-fs) * 0.86) -30px -30px -30px);
+}
+
+.titleLead {
+  display: block;
+  overflow: hidden;
+  font-size: var(--lead-fs);
+  line-height: 1.04;
+  letter-spacing: 0.02em;
+}
+
+.titleLead > span,
+.word > span {
+  display: inline-block;
+  animation: rise 0.95s var(--ease) both;
+  animation-delay: calc(0.04s + var(--i) * 0.1s);
+}
+
+.titleName {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--name-fs);
+  line-height: 0.84;
+  letter-spacing: -0.005em;
+}
+
+.word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.02em;
+}
+
+.heroSub {
+  grid-row: 4;
+  grid-column: 1;
+  position: relative;
+  z-index: 2;
+  max-width: calc(33ch + 46px);
+  padding: 12px var(--pad) 0 calc(var(--pad) + 46px);
+  font: 500 15.5px/1.4 var(--text);
+  animation: fade 0.6s var(--ease) 0.42s both;
+}
+
+.heroAct {
+  grid-row: 5;
+  grid-column: 1;
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 50px var(--pad) 18px;
+}
+
+/* The line runs from the hook's eye up past the top of the screen; the headline sits over it. */
+.heroLine {
+  position: absolute;
+  z-index: 1;
+  left: calc(var(--pad) + 27.4px);
+  bottom: calc(100% - 7px);
+  width: 2px;
+  height: 160vh;
+  background: var(--ink);
+  transform-origin: 50% 0;
+  animation: let-down 0.5s var(--fall) 0.3s both;
+}
+
+.heroHook {
+  position: absolute;
+  z-index: 4;
+  left: calc(var(--pad) + 8px);
+  top: 2px;
+  width: 36px;
+  height: 72px;
+  color: var(--ink);
+  transform-origin: 57% 8%;
+  animation: swing 1s var(--ease) 0.72s both;
+}
+
+/* A button that hangs from the hook has an eyelet the hook passes through. */
+.heroAct .go,
+.endAct .go {
+  padding-left: 40px;
+}
+
+.heroAct .go::before,
+.endAct .go::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 4px;
+  width: 13px;
+  height: 13px;
+  border: 2.5px solid currentColor;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.heroHook [data-halo],
+.endHook [data-halo] {
+  stroke: var(--y);
+  stroke-width: 7.5;
+}
+
+.heroAct .go {
+  position: relative;
+  z-index: 3;
+  animation: hang 0.75s var(--spring) 0.78s both;
+}
+
+.heroPrice {
+  animation: fade 0.55s var(--ease) 0.95s both;
+}
+
+/* Their snapshots share one treatment: yellow and black. Some carry a full colour copy that the page uncovers. */
+.duo {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--y);
+}
+
+.duo picture,
+.duo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.duo img {
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.36) brightness(1.08);
+  mix-blend-mode: multiply;
+}
+
+.tint {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(100% 0 0 0);
+}
+
+.tint img {
+  filter: none;
+  mix-blend-mode: normal;
+}
+
+/* ---------- The haul: a reel hauls the day up, one thing at a time. ---------- */
+
+.haul {
+  --drop-c: var(--y);
+  --go-bg: var(--y);
+  --go-ink: var(--ink);
+  position: relative;
+  background: var(--ink);
+  color: var(--on-dark);
+}
+
+.haulHead {
+  position: relative;
+  overflow: clip;
+  padding: var(--lead) var(--pad) 8px;
+}
+
+.haulHead h2 {
+  color: var(--on-dark);
+}
+
+.haulLead {
+  max-width: 34ch;
+  margin-top: 16px !important;
+  color: var(--soft-dark);
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+.reel {
+  --lx: 50%;
+  --gap: 100svh;
+  --hy: 92px;
+  --fw: min(70vw, 300px);
+  position: relative;
+  height: calc(var(--steps) * 72svh + 100svh);
+}
+
+.reel [data-frame] {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.reelLine {
+  position: absolute;
+  left: calc(var(--lx) - 1px);
+  top: 52px;
+  bottom: 0;
+  width: 2px;
+  background: var(--y);
+}
+
+.reelBeads {
+  position: absolute;
+  left: calc(var(--lx) - 5px);
+  top: 52px;
+  width: 10px;
+  height: calc(100% + var(--steps) * var(--gap));
+  background: repeating-linear-gradient(180deg, transparent 0 58px, var(--y) 58px 61px);
+  transform: translateY(calc(var(--rig) * var(--gap) * -1));
+  will-change: transform;
+}
+
+.spool {
+  position: absolute;
+  left: calc(var(--lx) - 28px);
+  top: 4px;
+  width: 56px;
+  height: 56px;
+  fill: var(--ink);
+  stroke: var(--y);
+  stroke-width: 2.4;
+  transform: rotate(calc(var(--p) * -1440deg));
+}
+
+.stops {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hang {
+  position: absolute;
+  left: var(--lx);
+  top: var(--hy);
+  transform: translate(-50%, calc((var(--i) - var(--rig)) * var(--gap)));
+  will-change: transform;
+}
+
+.frame {
+  position: relative;
+  width: var(--fw);
+  margin: 0;
+  aspect-ratio: 3 / 4;
+  border: 3px solid var(--y);
+  background: var(--char);
+}
+
+.hang[data-kind='photo'] .frame {
+  transition: transform 0.9s var(--spring);
+}
+
+.stop[data-state='off'] .frame {
+  transform: rotate(4deg);
+}
+
+.stop[data-state='done'] .frame {
+  transform: rotate(-3deg);
+}
+
+.frame[data-shape='wide'] {
+  --fw: min(86vw, 420px);
+  aspect-ratio: 4 / 3;
+}
+
+/* A photograph comes into colour as it reaches the surface, and goes back as it passes. */
+.frame .tint,
+.bird .tint {
+  --r: clamp(0, calc(1 - max(var(--d, 0), calc(var(--d, 0) * -1)) * 2.6), 1);
+  clip-path: inset(calc((1 - var(--r)) * 100%) 0 0 0);
+}
+
+.frame picture,
+.frame img,
+.bird picture,
+.bird img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.frame img,
+.bird img {
+  object-fit: cover;
+}
+
+.eye {
+  position: absolute;
+  left: 50%;
+  top: -16px;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border: 2.5px solid var(--y);
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.bird {
+  position: absolute;
+  right: -10vw;
+  top: 74%;
+  width: min(46vw, 260px);
+  margin: 0;
+  aspect-ratio: 7 / 4;
+  border: 3px solid var(--ink);
+  outline: 2px solid var(--y);
+  transition:
+    transform 1.2s var(--ease) 0.25s,
+    opacity 0.6s var(--ease) 0.25s;
+}
+
+.stop:not([data-state='on']) .bird {
+  opacity: 0;
+  transform: translate(28vw, -24px);
+}
+
+.rig {
+  position: relative;
+  width: min(94vw, 380px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rig li {
+  --show: clamp(0, calc((0.34 - var(--d, 0)) * 26 - var(--j)), 1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 42px;
+}
+
+.rig li[data-side='l'] {
+  flex-direction: row-reverse;
+  padding-right: 50%;
+}
+
+.rig li[data-side='r'] {
+  padding-left: 50%;
+}
+
+.snood {
+  flex: none;
+  width: 26px;
+  height: 2px;
+  background: var(--y);
+  transform-origin: 0 50%;
+  transform: scaleX(var(--show));
+}
+
+.rig li[data-side='l'] .snood {
+  transform-origin: 100% 50%;
+}
+
+.tagHook {
+  width: 12px;
+  height: 24px;
+  margin: 0 3px;
+  color: var(--y);
+  transition: opacity 0.3s linear;
+  transition-delay: calc(var(--j) * 0.07s + 0.2s);
+}
+
+.tag {
+  padding: 6px 10px 7px;
+  background: var(--y);
+  color: var(--ink);
+  font: 700 19px/1 var(--disp);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: var(--show);
+  transform: translateX(calc((1 - var(--show)) * -18px));
+}
+
+.rig li[data-side='l'] .tag {
+  transform: translateX(calc((1 - var(--show)) * 18px));
+}
+
+.rig li:last-child .tag {
+  background: transparent;
+  color: var(--y);
+  box-shadow: inset 0 0 0 2px var(--y);
+}
+
+.say {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 34px var(--pad) 104px;
+  background: linear-gradient(180deg, rgba(13, 13, 12, 0) 0, var(--ink) 30px);
+  transition:
+    opacity 0.5s var(--ease) 0.16s,
+    transform 0.7s var(--ease) 0.16s,
+    visibility 0s linear 0s;
+}
+
+.stop:not([data-state='on']) .say {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(22px);
+  transition:
+    opacity 0.14s linear,
+    transform 0.2s linear,
+    visibility 0s linear 0.2s;
+}
+
+.say h3 {
+  color: var(--on-dark);
+  font-size: clamp(44px, 12.6vw, 52px);
+  line-height: 0.92;
+}
+
+.say p {
+  max-width: 34ch;
+  margin-top: 10px;
+  color: #e7e7e1;
+  font-size: 17px;
+  line-height: 1.42;
+}
+
+.say .note {
+  margin-top: 10px;
+  color: var(--y);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* ---------- The skipper: one man, two kinds of guest, switched. ---------- */
+
+.skipper {
+  --drop-c: var(--ink);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  background: var(--alu);
+  color: var(--ink);
+}
+
+.skipperHead {
+  position: relative;
+  overflow: clip;
+  padding: var(--lead) var(--pad) 0;
+}
+
+.skipperHead h2 {
+  font-size: clamp(72px, 21vw, 84px);
+  line-height: 0.86;
+}
+
+.skipperLead {
+  max-width: 24ch;
+  margin-top: 16px !important;
+  font: 600 22px/1.28 var(--text);
+}
+
+.num {
+  display: inline-block;
+  padding: 0 0.12em;
+  background: var(--y);
+  font: 700 1.36em/1 var(--disp);
+  letter-spacing: 0.01em;
+  vertical-align: -0.06em;
+}
+
+.skipperRange {
+  max-width: 34ch;
+  margin-top: 12px !important;
+  color: var(--soft-light);
+  font-size: 16px;
+}
+
+.switch {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 26px var(--pad) 0;
+  padding: 4px;
+  background: var(--ink);
+  border-radius: 3px;
+}
+
+.knob {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  border-radius: 2px;
+  background: var(--y);
+  transition: transform 0.55s var(--spring);
+}
+
+.switch[data-on='1'] .knob {
+  transform: translateX(100%);
+}
+
+.switch button {
+  position: relative;
+  z-index: 1;
+  min-height: 50px;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--on-dark);
+  font: 700 16px/1.05 var(--disp);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.35s var(--ease);
+}
+
+.switch button[aria-pressed='true'] {
+  color: var(--ink);
+}
+
+.skipperPics {
+  position: relative;
+  display: grid;
+  margin-top: 18px;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--char);
+}
+
+.skipperPic {
+  grid-area: 1 / 1;
+  margin: 0;
+  clip-path: inset(100% 0 0 0);
+  transition: clip-path 0s linear 0.9s;
+}
+
+.skipperPic picture,
+.skipperPic img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.skipperPic img {
+  object-fit: cover;
+  transform: scale(1.12);
+  transition: transform 0s linear 0.9s;
+}
+
+.skipper[data-on='0'] .skipperPic[data-choice='0'],
+.skipper[data-on='1'] .skipperPic[data-choice='1'],
+.skipper[data-on='2'] .skipperPic[data-choice='2'] {
+  z-index: 2;
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 0.9s var(--ease);
+}
+
+.skipper[data-on='0'] .skipperPic[data-choice='0'] img,
+.skipper[data-on='1'] .skipperPic[data-choice='1'] img,
+.skipper[data-on='2'] .skipperPic[data-choice='2'] img {
+  transform: none;
+  transition: transform 1.3s var(--ease);
+}
+
+.skipperSays {
+  display: grid;
+  padding: 24px var(--pad) 88px;
+}
+
+.skipperSay {
+  grid-area: 1 / 1;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(14px);
+  transition:
+    opacity 0.25s linear,
+    transform 0.3s linear,
+    visibility 0s linear 0.3s;
+}
+
+.skipper[data-on='0'] .skipperSay[data-choice='0'],
+.skipper[data-on='1'] .skipperSay[data-choice='1'],
+.skipper[data-on='2'] .skipperSay[data-choice='2'] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 0.6s var(--ease) 0.2s,
+    transform 0.8s var(--ease) 0.2s;
+}
+
+.skipperSay p {
+  max-width: 34ch;
+  font: 500 19px/1.45 var(--text);
+}
+
+.skipperSay p + p {
+  margin-top: 12px;
+  font-weight: 700;
+}
+
+/* ---------- The boat: a plan from above that takes the visitor's group aboard. ---------- */
+
+.boat {
+  --drop-c: var(--y);
+  --go-bg: var(--y);
+  --go-ink: var(--ink);
+  --price-soft: var(--soft-dark);
+  position: relative;
+  background: var(--ink);
+  color: var(--on-dark);
+  padding-bottom: 72px;
+}
+
+.boatHead {
+  position: relative;
+  overflow: clip;
+  padding: var(--lead) var(--pad) 0;
+}
+
+.boatLead {
+  max-width: 34ch;
+  margin-top: 16px !important;
+  color: var(--soft-dark);
+}
+
+.deck {
+  display: grid;
+  grid-template-columns: minmax(0, 54fr) minmax(0, 46fr);
+  align-items: center;
+  gap: 16px;
+  padding: 30px var(--pad) 0;
+}
+
+.plan {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.planWide {
+  display: none;
+}
+
+.planDim {
+  fill: none;
+  stroke: var(--soft-dark);
+  stroke-width: 1.2;
+}
+
+.planHull {
+  fill: #191918;
+  stroke: var(--on-dark);
+  stroke-width: 2;
+}
+
+.planRail {
+  fill: none;
+  stroke: rgba(244, 244, 239, 0.32);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 5;
+}
+
+.planCabin {
+  fill: var(--y);
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.planGlass {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+.planPart {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.6;
+}
+
+.planMotor {
+  fill: #2b2b2a;
+  stroke: var(--on-dark);
+  stroke-width: 1.6;
+}
+
+.planBoard {
+  fill: none;
+  stroke: rgba(244, 244, 239, 0.5);
+  stroke-width: 1.2;
+}
+
+.planMark {
+  fill: #fff;
+  stroke: var(--ink);
+  stroke-width: 1.6;
+}
+
+.seatRing {
+  fill: none;
+  stroke: rgba(244, 244, 239, 0.5);
+  stroke-width: 1.5;
+}
+
+.seat[data-extra] .seatRing {
+  stroke-dasharray: 3 4;
+  stroke: rgba(13, 13, 12, 0.7);
+}
+
+.seatGuest {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  transform: scale(clamp(0, calc(var(--n, 0) - var(--i)), 1));
+  transition: transform 0.55s var(--spring);
+}
+
+.seatGuest circle {
+  fill: var(--y);
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+
+.seatGuest circle[data-head] {
+  fill: var(--ink);
+  stroke: none;
+}
+
+.legend {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14.5px;
+  line-height: 1.35;
+  color: var(--on-dark);
+}
+
+.legend li {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.legendMark {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  fill: #fff;
+  stroke: var(--ink);
+  stroke-width: 1.6;
+}
+
+.legendMark [data-line] {
+  fill: none;
+  stroke: var(--soft-dark);
+  stroke-width: 1.6;
+}
+
+.crewWrap {
+  display: grid;
+  gap: 36px;
+  padding: 34px var(--pad) 0;
+}
+
+.crew {
+  display: grid;
+  gap: 14px;
+  padding-top: 24px;
+  border-top: 2px solid var(--y);
+}
+
+.crewControls {
+  max-width: 460px;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 56px;
+  align-items: center;
+  gap: 10px;
+}
+
+.crewStep {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 2px solid var(--y);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--y);
+  cursor: pointer;
+  transition:
+    background-color 0.25s var(--ease),
+    color 0.25s var(--ease),
+    opacity 0.25s linear;
+}
+
+.crewStep:hover:not(:disabled) {
+  background: var(--y);
+  color: var(--ink);
+}
+
+.crewStep:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+
+.crewCount {
+  display: block;
+  text-align: center;
+  color: var(--on-dark);
+  font: 700 25px/1.05 var(--disp);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.crewCount b {
+  color: var(--y);
+}
+
+.crewSay {
+  min-height: 2.9em;
+  color: var(--soft-dark);
+  font-size: 16px;
+  line-height: 1.42;
+}
+
+.crewTotal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 16px;
+  min-height: 72px;
+  margin-top: 4px !important;
+  color: var(--y);
+}
+
+.crewTotal b {
+  font: 700 66px/1 var(--disp);
+  letter-spacing: 0.01em;
+  animation: pop 0.45s var(--spring) both;
+}
+
+.crewTotal span {
+  color: var(--on-dark);
+  font: 700 17px/1.2 var(--disp);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.crewTotal:not([data-on]) span {
+  align-self: center;
+  color: var(--soft-dark);
+}
+
+.crewAct {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 20px;
+}
+
+.crewFewer {
+  max-width: 44ch;
+  color: var(--soft-dark);
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+.crewFewer b {
+  color: var(--on-dark);
+  font-weight: 700;
+}
+
+.crew[data-band='full'] .crewSay,
+.crew[data-band='roomy'] .crewSay {
+  color: var(--on-dark);
+}
+
+.crewMail {
+  color: var(--y);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.tripName {
+  font: 700 26px/1.02 var(--disp);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.tripFacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--soft-dark);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tripFacts li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tripFacts li::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  background: var(--y);
+}
+
+.custom {
+  display: grid;
+  gap: 10px;
+  padding: 26px 22px 22px;
+  border-radius: 3px;
+  background: var(--y);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.42;
+}
+
+.custom h3 {
+  font-size: 40px;
+  line-height: 0.92;
+}
+
+.customAsk {
+  font-weight: 700;
+}
+
+.customShort {
+  color: var(--soft-light);
+}
+
+.customGo {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  margin-top: 4px;
+  color: var(--ink);
+  font: 700 18px/1 var(--disp);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
+/* ---------- The catch: their guests' snapshots in one strip that travels sideways, the middle one in colour. ---------- */
+
+.catch {
+  --drop-c: var(--ink);
+  position: relative;
+  background: var(--paper);
+  color: var(--ink);
+  padding-bottom: 64px;
+}
+
+.catchHead {
+  position: relative;
+  overflow: clip;
+  padding: var(--lead) var(--pad) 0;
+}
+
+.catchText {
+  max-width: 36ch;
+  margin-top: 16px !important;
+  color: var(--soft-light);
+  font-size: 17px;
+}
+
+.lineFrame {
+  position: relative;
+  margin-top: 36px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.lineFrame::-webkit-scrollbar {
+  display: none;
+}
+
+.lineFrame:has([data-drift='on']) {
+  overflow: hidden;
+}
+
+.prints {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  width: max-content;
+  margin: 0;
+  padding: 0 var(--pad);
+  list-style: none;
+}
+
+.prints[data-drift='on'] {
+  will-change: transform;
+}
+
+.printWrap {
+  position: relative;
+}
+
+.print {
+  height: min(78vw, 340px);
+  margin: 0;
+  aspect-ratio: 3 / 4;
+}
+
+.printWrap[data-shape='wide'] .print {
+  aspect-ratio: 4 / 3;
+}
+
+.printWrap .tint {
+  transition: clip-path 0.9s var(--ease);
+}
+
+.printWrap[data-lit] .tint {
+  clip-path: inset(0 0 0 0);
+}
+
+/* ---------- Good to know: a list to tick, what is on board, and straight answers. ---------- */
+
+.kit {
+  --drop-c: var(--y);
+  --go-bg: var(--y);
+  --go-ink: var(--ink);
+  position: relative;
+  background: var(--ink);
+  color: var(--on-dark);
+  padding-bottom: 80px;
+}
+
+.kitHead {
+  position: relative;
+  overflow: clip;
+  padding: var(--lead) var(--pad) 0;
+}
+
+.kitCols {
+  display: grid;
+  gap: 34px;
+  padding: 30px var(--pad) 0;
+}
+
+.bring {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.bringLabel,
+.supply h3 {
+  padding: 0;
+  margin-bottom: 10px;
+  color: var(--y);
+  font: 700 22px/1 var(--disp);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tick {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid rgba(244, 244, 239, 0.16);
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.tick span {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: color 0.3s var(--ease);
+}
+
+.tick span::before {
+  content: '';
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 2px solid var(--y);
+  border-radius: 2px;
+  background: transparent no-repeat center / 18px 18px;
+  transition: background-color 0.25s var(--ease);
+}
+
+.tick[aria-checked='true'] span {
+  color: var(--soft-dark);
+  text-decoration: line-through;
+  text-decoration-color: var(--y);
+  text-decoration-thickness: 2px;
+}
+
+.tick[aria-checked='true'] span::before {
+  background-color: var(--y);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M3 9.5l4 4L15 5' fill='none' stroke='%230d0d0c' stroke-width='2.6'/%3E%3C/svg%3E");
+}
+
+.supply ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.supply li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 52px;
+  border-bottom: 1px solid rgba(244, 244, 239, 0.16);
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.supply li::before {
+  content: '';
+  flex: none;
+  width: 9px;
+  height: 9px;
+  background: var(--y);
+}
+
+.packed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  min-height: 78px;
+  padding-top: 20px;
+}
+
+.packed b {
+  color: var(--y);
+  font: 700 34px/1 var(--disp);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  animation: pop 0.5s var(--spring) both;
+}
+
+.packed .go {
+  animation: fade 0.5s var(--ease) 0.15s both;
+}
+
+.answers {
+  display: grid;
+  gap: 26px;
+  margin: 46px 0 0;
+  padding: 0 var(--pad);
+}
+
+.answers div {
+  display: grid;
+  gap: 8px;
+}
+
+.answers dt {
+  color: var(--y);
+  font: 700 27px/1 var(--disp);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.answers dd {
+  margin: 0;
+  max-width: 36ch;
+  color: #dcdcd5;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+/* ---------- The end: the yellow boat itself, its numbers sign-written on the hull. ---------- */
+
+.end {
+  --drop-c: var(--ink);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  background: var(--y);
+  color: var(--ink);
+}
+
+.endText {
+  position: relative;
+  overflow: clip;
+  padding: var(--lead) var(--pad) 0;
+}
+
+.endText h2 {
+  font-size: clamp(62px, 18vw, 76px);
+  line-height: 0.88;
+}
+
+.endText p {
+  max-width: 34ch;
+  margin-top: 12px;
+  font-size: 16.5px;
+  line-height: 1.45;
+}
+
+.endText .endMeet {
+  margin-top: 18px;
+  font-weight: 700;
+}
+
+.endWay {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-top: 10px;
+  color: var(--ink);
+  font: 700 17px/1 var(--disp);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
+.endPic {
+  position: relative;
+  margin: 28px 0 0;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: var(--char);
+}
+
+.endPic picture,
+.endPic img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.endPic img {
+  object-fit: cover;
+}
+
+.endAct {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+  padding: 88px var(--pad) 26px;
+}
+
+.endLine {
+  position: absolute;
+  left: calc(var(--pad) + 27.4px);
+  top: 0;
+  height: 47px;
+  width: 2px;
+  background: var(--ink);
+  transform-origin: 50% 0;
+  transition: transform 0.55s var(--fall);
+}
+
+.endHook {
+  position: absolute;
+  left: calc(var(--pad) + 8px);
+  top: 40px;
+  z-index: 2;
+  width: 36px;
+  height: 72px;
+  color: var(--ink);
+  transform-origin: 57% 8%;
+  transition:
+    transform 1s var(--spring) 0.45s,
+    opacity 0.3s linear 0.45s;
+}
+
+.endAct .go {
+  position: relative;
+  z-index: 1;
+  transition:
+    transform 0.8s var(--spring) 0.6s,
+    opacity 0.4s var(--ease) 0.6s;
+}
+
+.endAct[data-drop='wait'] .endLine {
+  transform: scaleY(0);
+}
+
+.endAct[data-drop='wait'] .endHook {
+  opacity: 0;
+  transform: translateY(-26px) rotate(-36deg);
+}
+
+.endAct[data-drop='wait'] .go {
+  opacity: 0;
+  transform: translateY(-16px);
+}
+
+.endPrice b {
+  font-size: 44px;
+}
+
+.endWeather {
+  flex-basis: 100%;
+  color: var(--soft-light);
+  font-size: 14px;
+}
+
+.hull {
+  position: relative;
+  display: grid;
+  gap: 10px;
+  margin: 22px var(--pad) 0;
+  padding: 26px 0 46px;
+  border-top: 4px solid var(--ink);
+  color: var(--ink);
+}
+
+.hullTalk {
+  margin-top: 8px !important;
+  font: 700 16px/1 var(--disp);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hullName {
+  font: 700 46px/0.95 var(--disp);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  transform: skewX(-9deg);
+  transform-origin: 0 100%;
+}
+
+.hullNums {
+  display: grid;
+  gap: 2px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hullNums a,
+.hullNums span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 0;
+  color: var(--ink);
+  text-decoration: none;
+  font: 700 25px/1.1 var(--disp);
+  letter-spacing: 0.02em;
+}
+
+.hullNums li:first-child a {
+  font-size: clamp(40px, 12vw, 50px);
+}
+
+.hullNums li:nth-child(3) a {
+  font: 600 17px/1.2 var(--text);
+  letter-spacing: 0;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+  align-items: center;
+}
+
+.hullNums small {
+  font: 700 13px/1 var(--text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hullNums a:hover {
+  text-decoration: underline;
+}
+
+.hullWelcome {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 8px !important;
+  font: 700 15px/1.3 var(--disp);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.hullWelcome span {
+  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans SC', 'Noto Serif CJK SC', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.hullReply {
+  max-width: 34ch;
+  color: var(--soft-light);
+  font-size: 14px;
+}
+
+.water {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  padding: 26px var(--pad) 104px;
+  background: var(--sea);
+  color: #dce4e8;
+}
+
+.waterWhere {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 2px dashed color-mix(in srgb, var(--y) 55%, transparent);
+  font: 700 16px/1.2 var(--disp);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* The small print sits below the waterline, at the far end of it, where the line would run out to sea. */
+.water > :last-child {
+  justify-self: end;
+  max-width: 34em;
+  text-align: right;
+}
+
+.waterHook {
+  width: 12px;
+  height: 24px;
+  color: var(--y);
+}
+
+/* The side tab, on large screens once the opening has gone. */
+.dock {
+  display: none;
+}
+
+/* ---------- Load and scroll choreography. ---------- */
+
+@keyframes rise {
+  from {
+    transform: translateY(104%);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+
+@keyframes settle {
+  from {
+    transform: scale(1.09);
+  }
+}
+
+@keyframes run {
+  from {
+    transform: scale(1.03) translateX(0.8%);
+  }
+  to {
+    transform: scale(1.03) translateX(-0.8%);
+  }
+}
+
+@keyframes lift {
+  to {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes let-down {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes swing {
+  0% {
+    opacity: 0;
+    transform: translateY(-34px) rotate(-34deg);
+  }
+  30% {
+    opacity: 1;
+  }
+  55% {
+    transform: translateY(0) rotate(14deg);
+  }
+  78% {
+    transform: rotate(-6deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes hang {
+  from {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+}
+
+@keyframes sway {
+  from {
+    transform: rotate(-1.6deg);
+  }
+  to {
+    transform: rotate(1.6deg);
+  }
+}
+
+/* ---------- Larger phones and tablets. ---------- */
+
+@media (min-width: 600px) {
+  .root {
+    --pad: 32px;
+  }
+
+  .deck {
+    grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+    gap: 40px;
+  }
+
+  .print {
+    height: min(58svh, 520px);
+  }
+
+}
+
+/* ---------- Desktop. ---------- */
+
+@media (min-width: 1000px) {
+  .root {
+    --pad: 56px;
+    --lead: 128px;
+    font-size: 18px;
+  }
+
+  .root h2 {
+    font-size: clamp(88px, 7.6vw, 124px);
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 40fr) minmax(0, 60fr);
+    grid-template-rows: auto auto auto minmax(24px, 1fr) auto;
+    height: calc(100svh - var(--bar-h));
+    min-height: 660px;
+    max-height: 1080px;
+  }
+
+  .heroPic {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    margin-top: 0;
+  }
+
+  .heroLineOver {
+    display: none;
+  }
+
+  .heroSub {
+    grid-row: 3;
+  }
+
+  .heroVeil {
+    transform-origin: 0 50%;
+    animation-name: lift-x;
+  }
+
+  .dayRow {
+    grid-row: 5;
+    grid-column: 2;
+    justify-self: start;
+    padding: 16px 28px 18px;
+    font-size: 16px;
+  }
+
+  .mark {
+    margin: 26px var(--pad) 0;
+    font-size: 19px;
+  }
+
+  .title,
+  .titleOver {
+    grid-column: 1 / -1;
+    padding-top: 30px;
+  }
+
+  .title {
+    clip-path: inset(-20px 60% -20px -20px);
+  }
+
+  .titleOver {
+    display: block;
+    color: var(--y);
+    clip-path: inset(-20px -20px -20px 40%);
+  }
+
+  .titleLead {
+    font-size: clamp(38px, 3.3vw, 54px);
+  }
+
+  .titleName {
+    margin-top: 6px;
+    font-size: clamp(150px, 15.4vw, 262px);
+  }
+
+  .heroSub {
+    max-width: 30ch;
+    padding-top: 24px;
+    font-size: 19px;
+  }
+
+  .heroAct {
+    grid-row: 5;
+    padding: 50px var(--pad) 48px;
+    gap: 16px 22px;
+  }
+
+  .heroPic::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(8, 16, 22, 0.42) 0%, rgba(8, 16, 22, 0.12) 40%, rgba(8, 16, 22, 0) 60%);
+    pointer-events: none;
+  }
+
+  /* A bar docked at the foot of the screen keeps the price and the booking in reach. */
+  .dock {
+    position: fixed;
+    right: 24px;
+    bottom: 22px;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    padding: 10px 10px 10px 22px;
+    border-radius: 4px;
+    background: var(--ink);
+    color: var(--on-dark);
+    box-shadow: inset 0 0 0 2px var(--y), 0 18px 40px -18px rgba(0, 0, 0, 0.55);
+    --go-bg: var(--y);
+    --go-ink: var(--ink);
+    --price-soft: var(--soft-dark);
+    opacity: 0;
+    visibility: hidden;
+    translate: 0 18px;
+    transition:
+      opacity 0.4s var(--ease),
+      translate 0.5s var(--ease),
+      visibility 0s linear 0.4s;
+  }
+
+  .dock .go {
+    min-height: 50px;
+    font-size: 19px;
+  }
+
+  .dockPrice .priceTag b {
+    color: var(--y);
+    font-size: 30px;
+  }
+
+  :global([data-past-hero]) .dock {
+    opacity: 1;
+    visibility: visible;
+    translate: 0 0;
+    transition:
+      opacity 0.5s var(--ease),
+      translate 0.6s var(--ease);
+  }
+
+  /* The haul: the heading holds on the left while the reel turns on the right. */
+  .haulHead .drop {
+    grid-column: 1 / -1;
+  }
+
+  .haulLead {
+    font-size: 21px;
+  }
+
+  .haulHead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 64px;
+    align-items: end;
+  }
+
+  .haulHead h2 {
+    grid-column: 1 / -1;
+    font-size: clamp(88px, 7.6vw, 124px);
+  }
+
+  .haulLead {
+    grid-column: 2;
+    margin-top: 18px !important;
+  }
+
+  .reel {
+    --lx: 31%;
+    --hy: 11svh;
+    --fw: min(30vw, 50svh);
+    height: calc(var(--steps) * 72svh + 100svh);
+  }
+
+  .frame[data-shape='wide'] {
+    --fw: min(46vw, 88svh);
+  }
+
+  .rig {
+    width: 660px;
+  }
+
+  .rig li {
+    height: 60px;
+  }
+
+  .tag {
+    padding: 8px 14px 9px;
+    font-size: 30px;
+  }
+
+  .bird {
+    right: auto;
+    left: 46%;
+    top: 78%;
+    width: 340px;
+  }
+
+  .say {
+    left: 57%;
+    right: 5%;
+    top: 50%;
+    bottom: auto;
+    padding: 0;
+    background: none;
+    transform: translateY(-50%);
+  }
+
+  .stop:not([data-state='on']) .say {
+    transform: translateY(calc(-50% + 22px));
+  }
+
+  .say h3 {
+    font-size: clamp(84px, 7.4vw, 132px);
+  }
+
+  .say p {
+    font-size: 22px;
+  }
+
+  .say .note {
+    font-size: 18px;
+  }
+
+  /* The skipper: the photograph on the left, his words and the switch on the right. */
+  .skipper {
+    grid-template-columns: minmax(0, 46fr) minmax(0, 54fr);
+    grid-template-rows: auto auto 1fr;
+    column-gap: 64px;
+  }
+
+  .skipperPics {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    margin: 0;
+    aspect-ratio: auto;
+    min-height: 100svh;
+  }
+
+  .skipperHead,
+  .switch,
+  .skipperSays {
+    grid-column: 2;
+  }
+
+  .skipperHead {
+    padding-left: 0;
+  }
+
+  .skipperHead h2 {
+    font-size: clamp(120px, 10.4vw, 170px);
+  }
+
+  .skipperLead {
+    font-size: 30px;
+  }
+
+  .skipperRange {
+    font-size: 18px;
+  }
+
+  .switch {
+    justify-self: start;
+    width: min(520px, 100%);
+    margin: 34px 0 0;
+  }
+
+  .switch button {
+    min-height: 56px;
+    font-size: 18px;
+  }
+
+  .skipperSays {
+    padding: 30px var(--pad) var(--lead) 0;
+  }
+
+  .skipperSay p {
+    font-size: 23px;
+  }
+
+  /* The boat: the plan runs across the screen, the group and the booking beneath it. */
+  .boat {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 48px;
+    padding: 0 var(--pad) 120px;
+  }
+
+  .boatHead {
+    grid-column: 1 / 3;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .deck {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 56px;
+    padding: 48px 0 0;
+  }
+
+  .planTall {
+    display: none;
+  }
+
+  .planWide {
+    display: block;
+  }
+
+  .legend {
+    font-size: 16px;
+  }
+
+  .crewWrap {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 72px;
+    padding: 56px 0 0;
+    align-items: start;
+  }
+
+  .crewTotal b {
+    font-size: 84px;
+  }
+
+  .tripName {
+    font-size: 30px;
+  }
+
+  .crewCount {
+    font-size: 28px;
+  }
+
+  /* The catch. */
+  .catchHead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 64px;
+    align-items: end;
+  }
+
+  .catchHead .drop {
+    grid-column: 1 / -1;
+  }
+
+  .catchText {
+    margin-top: 0 !important;
+    font-size: 21px;
+    max-width: 30ch;
+  }
+
+  .lineFrame {
+    margin-top: 64px;
+  }
+
+  .prints {
+    gap: 14px;
+    padding-left: var(--pad);
+    padding-right: var(--pad);
+  }
+
+  .print {
+    width: 270px;
+  }
+
+  .printWrap[data-shape='wide'] .print {
+    width: 400px;
+  }
+
+  /* Good to know. */
+  .kitCols {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 72px;
+    padding-top: 44px;
+  }
+
+  .answers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 40px;
+    margin-top: 72px;
+  }
+
+  .answers dt {
+    font-size: 30px;
+  }
+
+  /* The end. */
+  .end {
+    grid-template-columns: minmax(0, 45fr) minmax(0, 55fr);
+    grid-template-rows: auto 1fr;
+  }
+
+  .endText {
+    grid-column: 1;
+    grid-row: 1;
+    padding-right: 24px;
+  }
+
+  .endText h2 {
+    font-size: clamp(96px, 8vw, 132px);
+  }
+
+  .endPic {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    margin: var(--lead) var(--pad) 0 0;
+    aspect-ratio: 4 / 3;
+    align-self: start;
+  }
+
+  .endAct {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+  }
+
+  .hull {
+    grid-column: 1 / -1;
+    grid-template-columns: auto auto;
+    justify-content: start;
+    column-gap: 96px;
+    align-items: end;
+    margin: 64px var(--pad) 0;
+    padding: 40px 0 72px;
+  }
+
+  .hullTalk,
+  .hullName {
+    grid-column: 1;
+  }
+
+  .hullName {
+    font-size: 64px;
+  }
+
+  .hullNums {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+
+  .hullNums li:first-child a {
+    font-size: 108px;
+  }
+
+  .hullWelcome,
+  .hullReply {
+    grid-column: 1;
+  }
+
+  .water {
+    padding: 28px var(--pad) 30px;
+  }
+
+  @keyframes lift-x {
+    to {
+      transform: scaleX(0);
+    }
+  }
+}
+
+/* ---------- With reduced motion asked for, every state simply shows and the haul reads straight down. ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .heroVeil {
+    display: none;
+  }
+
+  .reel {
+    height: auto;
+  }
+
+  .reel [data-frame] {
+    position: relative;
+    height: auto;
+    overflow: visible;
+    padding: 12px 0 72px;
+  }
+
+  .reelLine,
+  .reelBeads,
+  .spool {
+    display: none;
+  }
+
+  .stop {
+    display: grid;
+    gap: 24px;
+    justify-items: start;
+    padding: 28px var(--pad);
+  }
+
+  .hang,
+  .say {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    transform: none !important;
+  }
+
+  .stop .say,
+  .stop .bird,
+  .stop .frame {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+  }
+
+  .stop .bird {
+    right: 0;
+  }
+
+  .rig li .snood,
+  .rig li .tag,
+  .rig li .tagHook {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .eye {
+    display: none;
+  }
+
+  .frame .tint,
+  .bird .tint {
+    clip-path: none;
+  }
+
+  .lineFrame {
+    overflow: visible;
+  }
+
+  .prints {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    width: auto;
+  }
+
+  .print,
+  .printWrap[data-shape='wide'] .print {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 4;
+  }
+
+  .say {
+    padding: 0;
+    background: none;
+  }
+
+  .seatGuest {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) and (min-width: 1000px) {
+  .prints {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .stop {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    column-gap: 56px;
+    padding: 48px var(--pad);
+  }
+}
