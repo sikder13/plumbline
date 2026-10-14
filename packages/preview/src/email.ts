@@ -18,17 +18,22 @@ export interface Draft {
   to: string;
   subject: string;
   body: string;
+  /** The table under the email that gives each line's measured value, source and date, for the person sending. */
+  facts: string;
 }
+
+/** The heading of the table of facts a draft may carry under its email. Nothing from it on is part of the email. */
+export const FACTS_HEADING = '## Facts behind this email';
 
 export function parseDraft(text: string): Draft {
   const [head = '', ...rest] = text.split(/^---\s*$/m);
-  const mail = rest.join('---').replace(/^\s*\n/, '');
+  const [mail = '', facts = ''] = rest.join('---').replace(/^\s*\n/, '').split(new RegExp(`^${FACTS_HEADING}\\s*$`, 'm'));
   const field = (name: string, from: string) => new RegExp(`^${name}:[ \\t]*(.*)$`, 'm').exec(from)?.[1]?.trim() ?? '';
   const statusLine = field('Status', head);
   const findings = [...head.matchAll(/^(\d+)\.\s+#(\d+)\s+\|\s+(.*)$/gm)].map((m) => ({ line: Number(m[1]), id: Number(m[2]), sentence: m[3]!.trim() }));
   const unread = (head.split(/^Findings used:.*$/m)[1] ?? '').split('\n').map((l) => l.trim()).filter((l) => l && !/^\d+\.\s+#\d+\s+\|\s+/.test(l));
   const body = mail.replace(/^To:.*\n/m, '').replace(/^Subject:.*\n/m, '').replace(/^\s*\n/, '');
-  return { status: /^needs edit/i.test(statusLine) ? 'needs edit' : /^hold/i.test(statusLine) ? 'HOLD' : statusLine.split(/[,:(]/)[0]!.trim(), statusLine, batch: field('Batch', head) || null, findings, unread, to: field('To', mail), subject: field('Subject', mail), body };
+  return { status: /^needs edit/i.test(statusLine) ? 'needs edit' : /^hold/i.test(statusLine) ? 'HOLD' : statusLine.split(/[,:(]/)[0]!.trim(), statusLine, batch: field('Batch', head) || null, findings, unread, to: field('To', mail), subject: field('Subject', mail), body: facts ? `${body.trimEnd()}\n` : body, facts: facts.trim() };
 }
 
 export function withStatus(text: string, status: string): string {

@@ -35,6 +35,14 @@ describe('an email draft', () => {
     expect(d.body.startsWith('Hi Jack,')).toBe(true);
   });
 
+  it('keeps the table of facts under the email apart from the email', () => {
+    const d = parseDraft(`${DRAFT}\n## Facts behind this email\n\n| Line | Value | Source | Date |\n|---|---|---|---|\n| Finding 2 | 30 out of 100, 6.0 s | Plumbline C20 | 14 Oct 2026 |\n`);
+    expect(d.body).toContain('https://nahltech.com/demo/alpha-abc123');
+    expect(d.body).not.toContain('Facts behind');
+    expect(d.facts).toContain('| Finding 2 | 30 out of 100, 6.0 s | Plumbline C20 | 14 Oct 2026 |');
+    expect(parseDraft(DRAFT).facts).toBe('');
+  });
+
   it('keeps its text when its status is changed', () => {
     const changed = withStatus(DRAFT, 'needs edit: line 2, finding #739 no longer reproduces');
     expect(changed.split('\n')[0]).toBe('Status: needs edit: line 2, finding #739 no longer reproduces');
