@@ -27,6 +27,8 @@ export function contactLinkProblem(link: Pick<PageLink, 'raw' | 'href'> & { text
 
   if (lower.startsWith('mailto:')) {
     const address = decodeURIComponent(raw.slice(7).split('?')[0] ?? '').trim();
+    // "Email this page to a friend": no address on purpose, the visitor adds one, and a subject or body is ready.
+    if (!address && /[?&](subject|body)=[^&]/i.test(raw)) return null;
     if (!address) return { kind: 'mailto', problem: 'The email link has no address.' };
     const bad = address.split(/[,;]/).map((a) => a.trim()).filter((a) => a && !EMAIL_OK.test(a));
     if (bad.length) return { kind: 'mailto', problem: `The email link holds "${bad[0]}", which is not an email address.` };

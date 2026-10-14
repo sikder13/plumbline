@@ -94,10 +94,13 @@ describe('content analysis', () => {
 describe('contact link validation', () => {
   const problem = (raw: string, text = '') => contactLinkProblem({ raw, href: raw, text })?.kind ?? null;
   it('accepts well formed links', () => {
+    // A share button leaves the address for the visitor to fill in.
+    for (const ok of ['mailto:?subject=A%20tour&body=I%20found%20this', 'mailto:?body=Look%20at%20this']) expect(problem(ok)).toBeNull();
     for (const ok of ['mailto:info@fixture.co.nz', 'mailto:a@b.nz?subject=Hi', 'tel:+6494028105', 'tel:09 402 8105', 'https://wa.me/64274983323', 'https://m.me/fixturetours', 'https://example.com/', '/contact']) expect(problem(ok)).toBeNull();
   });
   it('rejects empty and malformed links', () => {
     expect(problem('mailto:')).toBe('mailto');
+    expect(problem('mailto:?subject=')).toBe('mailto');
     expect(problem('mailto:info at fixture')).toBe('mailto');
     expect(problem('tel:')).toBe('tel');
     expect(problem('tel:123')).toBe('tel');
