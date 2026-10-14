@@ -149,7 +149,6 @@ export function PourCard({
     const body = [content.greeting, fill(content.message, values), content.ask, content.thanks].join('\n\n');
     return `mailto:${email}?subject=${encodeURIComponent(fill(content.subject, values))}&body=${encodeURIComponent(body)}`;
     // The values are rebuilt from the picks each render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [picks, content, email]);
 
   const choose = (name: string, i: number) => {

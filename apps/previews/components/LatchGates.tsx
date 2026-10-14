@@ -150,7 +150,6 @@ export function LatchGates({
       for (const t of timers) window.clearTimeout(t);
     };
     // The demonstration runs once, from what the page was given.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [demo]);
 
   const choose = (next: string[]) => {

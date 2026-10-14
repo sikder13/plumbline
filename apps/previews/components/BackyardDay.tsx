@@ -133,7 +133,6 @@ export function BackyardDay({ start, between, modes, lengths, ends, trips, legs,
       for (const t of timers) window.clearTimeout(t);
     };
     // The demonstration is planned once; a visitor's own turn ends it.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [touched]);
 
   const press = (slot: number) => {

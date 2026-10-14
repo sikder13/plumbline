@@ -68,7 +68,7 @@ export function AfootSpotter({ birds, label, hint, className }: { birds: Spotter
     void import('motion').then(({ animate, inView }) => {
       if (cancelled) return;
       type Run = { stop: () => void };
-      let runs: Run[] = [];
+      const runs: Run[] = [];
       let wander: Run[] = [];
       const halt = () => {
         for (const r of runs.splice(0)) r.stop();

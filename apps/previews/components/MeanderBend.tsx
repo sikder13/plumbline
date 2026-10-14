@@ -408,7 +408,6 @@ export function MeanderBend({ loves, start, end, hint, cls }: { loves: BendLove[
       kick.current = () => {};
     };
     // The loves are fixed for the life of the page.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const toggle = (key: string) => {
