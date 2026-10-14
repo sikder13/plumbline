@@ -213,10 +213,12 @@ export interface SecondCrawl {
 
 /**
  * What the page of a wave's business says of the second crawl: its scores where a summary is on file, and up to
- * three approved findings. Null when there is neither, and the page then says nothing of it.
+ * three lines: the findings first, then any note a person confirmed on the pages. Null when there
+ * is none of these, and the page then says nothing of it.
  */
-export function secondCheckOf(summary: SecondCrawl | null, findings: string[]): SecondCheck | null {
-  if (!summary && !findings.length) return null;
+export function secondCheckOf(summary: SecondCrawl | null, findings: string[], notes: string[] = []): SecondCheck | null {
+  const lines = [...findings, ...notes];
+  if (!summary && !lines.length) return null;
   const readiness = summary?.ai_readiness?.score ?? summary?.ai_readiness_score ?? null;
   return {
     score: summary && summary.site_score !== null && summary.grade ? `${Math.round(summary.site_score)} out of 100 (grade ${summary.grade})` : null,
@@ -225,7 +227,7 @@ export function secondCheckOf(summary: SecondCrawl | null, findings: string[]): 
     // A clean result is worth saying. Broken links that were found come as findings, not here.
     ...(/^\s*none found\b/i.test(summary?.broken_links ?? '') ? { brokenLinks: 'None found' } : {}),
     // A page carries no dash, so one inside a title it quotes is set as a comma.
-    findings: findings.slice(0, 3).map((f) => withoutDashes(f)!),
+    findings: lines.slice(0, 3).map((f) => withoutDashes(f)!),
   };
 }
 
@@ -319,7 +321,7 @@ export async function buildPage(db: Db, slug: string, opts: BuildOptions): Promi
     const listed = secondCheckList(rows, content.secondCheckAlso);
     const kept = [...ownerOrder(listed.filter((r) => r.status === 'approved').map(asFinding), runs), ...listed.filter((r) => r.status !== 'approved').map(asFinding)];
     // The summary of a wave's business is filed with the wave's inputs, not where the first pages kept theirs.
-    secondCheck = secondCheckOf(cm ?? loadWaveCrawlmouse(slug, b.website), kept.map((f) => `${statedSentence(f, runs)}.`));
+    secondCheck = secondCheckOf(cm ?? loadWaveCrawlmouse(slug, b.website), kept.map((f) => `${statedSentence(f, runs)}.`), content.secondCheckNotes);
   } else if (cm) {
     const verified = loadVerified(slug);
     const keep = (verified?.findings ?? []).filter((x) => x.verified).map((x) => x.text);

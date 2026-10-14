@@ -69,6 +69,8 @@ export interface ContentFile {
   wave?: boolean;
   /** For a wave's business: findings of the second tool to list under the second check although they ranked below the approved ones. By finding id, in the order to show them. Each must have held when we opened its pages ourselves. */
   secondCheckAlso?: number[];
+  /** For a wave's business: a line to set after the second check's findings, for something the second tool raised as an observation and a person confirmed on the pages. Each is a whole sentence, as it is put to the owner. */
+  secondCheckNotes?: string[];
   /** The business name as it should read on the page, when the stored name carries extra words. */
   name?: string;
   /** `quality` (20 to 60, 48 unless given) sets how hard a photograph is compressed: a busy one at the top of a page may need less to load in time. */

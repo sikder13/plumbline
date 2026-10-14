@@ -207,6 +207,12 @@ describe('what a recipe page says of the second crawl', () => {
     expect(secondCheckOf(null, [])).toBeNull();
   });
 
+  it('sets a note a person confirmed after the findings, within the same three lines', () => {
+    expect(secondCheckOf(summary, ['a.', 'b.'], ['A minor tidy up: c.'])?.findings).toEqual(['a.', 'b.', 'A minor tidy up: c.']);
+    expect(secondCheckOf(summary, ['a.', 'b.', 'c.'], ['A minor tidy up: d.'])?.findings).toEqual(['a.', 'b.', 'c.']);
+    expect(secondCheckOf(null, [], ['A minor tidy up: c.'])?.findings).toEqual(['A minor tidy up: c.']);
+  });
+
   it('says that no broken links were found when the summary says so, and nothing about links otherwise', () => {
     expect(secondCheckOf({ ...summary, broken_links: 'None found. All 9 pages answered 200 and none is orphaned.' }, [])?.brokenLinks).toBe('None found');
     expect(secondCheckOf({ ...summary, broken_links: '2 links lead to missing pages.' }, [])?.brokenLinks).toBeUndefined();
