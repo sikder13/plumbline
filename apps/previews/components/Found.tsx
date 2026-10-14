@@ -60,6 +60,12 @@ export function Found({ data }: { data: PageData }) {
                 <dd>{data.secondCheck.crawlerAccess}</dd>
               </div>
             )}
+            {data.secondCheck.brokenLinks && (
+              <div>
+                <dt>Broken links</dt>
+                <dd>{data.secondCheck.brokenLinks}</dd>
+              </div>
+            )}
           </dl>
           {data.secondCheck.findings.length > 0 && (
             <ul className="plain">

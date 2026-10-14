@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { chromium } from 'playwright';
 import { describe, expect, it } from 'vitest';
-import { cropInPixels, mediaDir, nzReadable, plainDates, plainImpact, plainSeen, secondCheckOf, withoutDashes } from './build.ts';
+import { cropInPixels, mediaDir, nzReadable, plainDates, plainImpact, plainSeen, secondCheckList, secondCheckOf, withoutDashes } from './build.ts';
 import { bannedIssues, dashIssues, numberIssues, numberSet, scanPage, splitPage, visibleText } from './copy.ts';
 import { holds, kindOf, pageFacts } from './crawlmouse.ts';
 import { quietContext, validMailto, validTel } from './gates.ts';
@@ -205,5 +205,34 @@ describe('what a recipe page says of the second crawl', () => {
 
   it('is left off the page when there is neither a summary nor a finding', () => {
     expect(secondCheckOf(null, [])).toBeNull();
+  });
+
+  it('says that no broken links were found when the summary says so, and nothing about links otherwise', () => {
+    expect(secondCheckOf({ ...summary, broken_links: 'None found. All 9 pages answered 200 and none is orphaned.' }, [])?.brokenLinks).toBe('None found');
+    expect(secondCheckOf({ ...summary, broken_links: '2 links lead to missing pages.' }, [])?.brokenLinks).toBeUndefined();
+    expect(secondCheckOf(summary, [])?.brokenLinks).toBeUndefined();
+  });
+});
+
+describe("which of the second tool's findings a wave page lists", () => {
+  const rows = [
+    { id: 1, status: 'approved', reproduced: 1 },
+    { id: 2, status: 'rejected', reproduced: 1 },
+    { id: 3, status: 'rejected', reproduced: 1 },
+    { id: 4, status: 'rejected', reproduced: 0 },
+    { id: 5, status: 'resolved', reproduced: 1 },
+  ];
+  const ids = (also?: number[]) => secondCheckList(rows, also).map((r) => r.id);
+
+  it('lists the approved ones, and after them any the content file names, each once', () => {
+    expect(ids()).toEqual([1]);
+    expect(ids([3, 2])).toEqual([1, 3, 2]);
+    expect(ids([1, 2])).toEqual([1, 2]);
+  });
+
+  it('refuses a named finding that did not hold on our own reading, or that is not the second tool\'s', () => {
+    expect(() => ids([4])).toThrow('finding 4 did not hold when we opened its pages ourselves');
+    expect(() => ids([5])).toThrow('finding 5 did not hold when we opened its pages ourselves');
+    expect(() => ids([9])).toThrow('finding 9 is not one of the second check\'s findings for this business');
   });
 });

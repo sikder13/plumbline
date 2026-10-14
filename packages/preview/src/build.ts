@@ -207,6 +207,8 @@ export interface SecondCrawl {
   ai_readiness?: { score: number } | null;
   ai_readiness_score?: number;
   ai_crawler_access?: string | null;
+  /** What the second tool says of broken links, such as "None found." */
+  broken_links?: string | null;
 }
 
 /**
@@ -220,9 +222,27 @@ export function secondCheckOf(summary: SecondCrawl | null, findings: string[]): 
     score: summary && summary.site_score !== null && summary.grade ? `${Math.round(summary.site_score)} out of 100 (grade ${summary.grade})` : null,
     aiReadiness: readiness === null ? null : `${readiness} out of 100`,
     crawlerAccess: summary?.ai_crawler_access ? summary.ai_crawler_access.replace(/\s*(This is )?a strength, not a finding\.?/i, '').replace(/\s*\(([^)]*)\)/, ': $1').trim() : null,
+    // A clean result is worth saying. Broken links that were found come as findings, not here.
+    ...(/^\s*none found\b/i.test(summary?.broken_links ?? '') ? { brokenLinks: 'None found' } : {}),
     // A page carries no dash, so one inside a title it quotes is set as a comma.
     findings: findings.slice(0, 3).map((f) => withoutDashes(f)!),
   };
+}
+
+/**
+ * The second tool's findings a wave page lists under the second check: those approved, and after
+ * them any the content file names. A named one must have held when we opened its pages ourselves,
+ * so a finding that has since fallen away is never listed by an old content file.
+ */
+export function secondCheckList<T extends { id: number; status: string; reproduced: number }>(rows: T[], also: number[] = []): T[] {
+  const approved = rows.filter((r) => r.status === 'approved');
+  const named = also.filter((id) => !approved.some((r) => r.id === id)).map((id) => {
+    const row = rows.find((r) => r.id === id);
+    if (!row) throw new Error(`finding ${id} is not one of the second check's findings for this business`);
+    if (!row.reproduced || row.status === 'resolved') throw new Error(`finding ${id} did not hold when we opened its pages ourselves`);
+    return row;
+  });
+  return [...approved, ...named];
 }
 
 /** Gathers everything one page shows and writes its images. Nothing is written to the repository. */
@@ -293,9 +313,11 @@ export async function buildPage(db: Db, slug: string, opts: BuildOptions): Promi
   let secondCheck: SecondCheck | null = null;
   const cm = loadCrawlmouse(slug);
   if (asWave) {
-    // What Crawlmouse wrote is kept only where it was approved as a finding, and is said in terms of what we read ourselves.
-    const rows = db.prepare("SELECT id, check_id, severity, score, title, detail FROM findings WHERE business_id = ? AND batch = ? AND source = 'crawlmouse' AND status = 'approved'").all(b.id, batch) as { id: number; check_id: string; severity: number; score: number; title: string; detail: string }[];
-    const kept = ownerOrder(rows.map((r) => ({ id: r.id, checkId: r.check_id, severity: r.severity, score: r.score, title: r.title, detail: JSON.parse(r.detail || '{}') as Record<string, unknown> })), runs);
+    // What Crawlmouse wrote is kept where it was approved as a finding, or where the content file lists it and it held on our own reading. It is said in terms of what we read ourselves.
+    const rows = db.prepare("SELECT id, check_id, severity, score, title, detail, status, reproduced FROM findings WHERE business_id = ? AND batch = ? AND source = 'crawlmouse'").all(b.id, batch) as { id: number; check_id: string; severity: number; score: number; title: string; detail: string; status: string; reproduced: number }[];
+    const asFinding = (r: (typeof rows)[number]) => ({ id: r.id, checkId: r.check_id, severity: r.severity, score: r.score, title: r.title, detail: JSON.parse(r.detail || '{}') as Record<string, unknown> });
+    const listed = secondCheckList(rows, content.secondCheckAlso);
+    const kept = [...ownerOrder(listed.filter((r) => r.status === 'approved').map(asFinding), runs), ...listed.filter((r) => r.status !== 'approved').map(asFinding)];
     // The summary of a wave's business is filed with the wave's inputs, not where the first pages kept theirs.
     secondCheck = secondCheckOf(cm ?? loadWaveCrawlmouse(slug, b.website), kept.map((f) => `${statedSentence(f, runs)}.`));
   } else if (cm) {

@@ -35,6 +35,8 @@ export interface SecondCheck {
   score: string | null;
   aiReadiness: string | null;
   crawlerAccess: string | null;
+  /** Said only when the second tool found none. */
+  brokenLinks?: string;
   findings: string[];
 }
 
@@ -65,6 +67,8 @@ export interface ContentFile {
   design: string;
   /** Set when the business was prepared as part of a wave: its findings are then stated and ordered as the wave's are, and its photographs are read from the folder the wave was researched into. A recipe page always is. */
   wave?: boolean;
+  /** For a wave's business: findings of the second tool to list under the second check although they ranked below the approved ones. By finding id, in the order to show them. Each must have held when we opened its pages ourselves. */
+  secondCheckAlso?: number[];
   /** The business name as it should read on the page, when the stored name carries extra words. */
   name?: string;
   /** `quality` (20 to 60, 48 unless given) sets how hard a photograph is compressed: a busy one at the top of a page may need less to load in time. */
