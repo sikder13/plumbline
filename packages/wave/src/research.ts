@@ -50,6 +50,8 @@ export const Research = z.object({
   activities: z.array(z.string().min(1)).max(2).default([]),
   strengths: z.array(z.object({ kind: z.enum(['award', 'certification', 'reviews', 'other']), text: z.string().min(1), source: Source })).default([]),
   voice: z.array(Source).max(5).default([]),
+  /** The idea the business is built on, in its own words: what a page made for it should feel like ("no fixed winery timetable"). */
+  core_idea: z.array(Source).max(3).default([]),
   unknowns: z.array(z.string().min(1)).default([]),
 });
 export type Research = z.infer<typeof Research>;
@@ -68,6 +70,7 @@ function everySource(r: Research): { where: string; source: Source }[] {
     ...r.price_conflicts.flatMap((c) => c.values.map((v) => ({ where: `price conflict "${c.item}"`, source: v.source }))),
     ...r.strengths.map((s) => ({ where: `strength "${s.text}"`, source: s.source })),
     ...r.voice.map((source) => ({ where: 'voice quote', source })),
+    ...r.core_idea.map((source) => ({ where: 'core idea', source })),
   ];
 }
 
@@ -144,6 +147,7 @@ export function storeResearch(db: Db, business: { id: number }, r: Research, pag
   put('activity', r.activities.map((a) => ({ value: a })));
   put('strength', r.strengths.map((s) => ({ label: s.kind, value: s.text, sourceUrl: s.source.url, quote: s.source.quote, at: readAt(s.source.url) })));
   put('voice', r.voice.map((v) => ({ value: v.quote, sourceUrl: v.url, quote: v.quote, at: readAt(v.url) })));
+  put('core_idea', r.core_idea.map((v) => ({ value: v.quote, sourceUrl: v.url, quote: v.quote, at: readAt(v.url) })));
   put('unknown', r.unknowns.map((u) => ({ value: u, flag: 'unknown' })));
   db.prepare('UPDATE businesses SET town = ?, region = ? WHERE id = ?').run(r.location.town, r.location.region, business.id);
   }
