@@ -6,7 +6,7 @@ import { db, env, nzTime, paths, type Business, type Db } from '@plumbline/core'
 import { Polite } from '@plumbline/fetch';
 import { limits, spent } from '@plumbline/budget';
 import { latestBatch } from '@plumbline/export';
-import { BASE_PATH, LIMITS, RECHECK_EDIT, WAVE1_LAYOUTS, draftAfterRecheck, liveBatches, recordLiveBatches, retireRecipe, fillDraft, fixedBlocks, numbersIn, parseDraft, scanEmail, withStatus, askCorrected, buildPage, layoutOf, loadPlan, loadRecipe, lookOf, pagesToPublish, recipeSlugs, varietyIssues, checkPage, contentDir, correctedQuestions, correctedSummary, forgetToken, planCorrected, previewPaths, readVisits, removeGenerated, serveSite, summarise, tokenFor, verifyCrawlmouse, type Dropped, type GateReport, type PageData } from '@plumbline/preview';
+import { BASE_PATH, EARLIER_LOOKS, LIMITS, RECHECK_EDIT, WAVE1_LAYOUTS, lookIssues, draftAfterRecheck, liveBatches, recordLiveBatches, retireRecipe, fillDraft, fixedBlocks, numbersIn, parseDraft, scanEmail, withStatus, askCorrected, buildPage, layoutOf, loadPlan, loadRecipe, lookOf, pagesToPublish, recipeSlugs, varietyIssues, checkPage, contentDir, correctedQuestions, correctedSummary, forgetToken, planCorrected, previewPaths, readVisits, removeGenerated, serveSite, summarise, tokenFor, verifyCrawlmouse, type ContentFile, type Dropped, type GateReport, type Look, type PageData } from '@plumbline/preview';
 import { aiSummary } from '@plumbline/ai';
 import { speedRuns, statedSentence, waveMembers } from '@plumbline/wave';
 import { waveBatch, waveCrawlmouse } from './wave.ts';
@@ -483,7 +483,8 @@ export function registerPreview(program: Command): void {
     .command('variety')
     .description('Check the recipes of a wave against the variety rules: no two pages alike, businesses of one kind or place clearly different, none laid out like a wave 1 page')
     .requiredOption('--wave <name>', 'wave name')
-    .action((o: { wave: string }) => {
+    .option('--across', 'also hold the pages made to order (a content file with a look) to the rule against every page of every wave')
+    .action((o: { wave: string; across?: boolean }) => {
       const plan = loadPlan();
       const made = new Set(recipeSlugs());
       const members = waveMembers(db(), o.wave).map((b) => b.slug);
@@ -492,9 +493,25 @@ export function registerPreview(program: Command): void {
         const look = lookOf(p.recipe);
         console.log(`${p.slug}: ${look.hero}, ${look.type}, ${look.family} | ${layoutOf(p.recipe)}`);
       }
-      const missing = members.filter((s) => !made.has(s));
-      if (missing.length) console.log(`No recipe yet: ${missing.join(', ')}`);
+      const ordered = (slug: string) => existsSync(join(contentDir(slug), 'content.json')) && (JSON.parse(readFileSync(join(contentDir(slug), 'content.json'), 'utf8')) as ContentFile).look;
+      const missing = members.filter((s) => !made.has(s) && !(o.across && ordered(s)));
+      if (missing.length) console.log(`No recipe${o.across ? ' or look' : ''} yet: ${missing.join(', ')}`);
       const issues = varietyIssues(pages, WAVE1_LAYOUTS);
+      if (o.across) {
+        // Every page of every wave: the recipes, the pages made to order that say how they look, and the earlier ones that do not.
+        const looks = new Map<string, Look>(EARLIER_LOOKS.map((e) => [e.slug, e.look]));
+        for (const slug of recipeSlugs()) looks.set(slug, lookOf(loadRecipe(slug)));
+        for (const name of existsSync(previewPaths.content) ? readdirSync(previewPaths.content) : []) {
+          const look = ordered(name);
+          if (look) looks.set(name, look);
+        }
+        for (const slug of members.filter((s) => !made.has(s))) {
+          const look = looks.get(slug);
+          if (look) console.log(`${slug}: ${look.hero}, ${look.type}, ${look.family} (made to order)`);
+        }
+        for (const i of lookIssues([...looks].map(([slug, look]) => ({ slug, look })))) if (!issues.includes(i)) issues.push(i);
+        console.log(`Held against ${looks.size} pages across every wave.`);
+      }
       for (const i of issues) console.log(`PROBLEM ${i}`);
       console.log(issues.length ? `${issues.length} problem(s).` : `${pages.length} page(s), and the variety rules hold.`);
       if (issues.length) process.exitCode = 1;

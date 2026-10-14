@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFile
 import { join } from 'node:path';
 import { z } from 'zod';
 import { previewPaths } from './paths.ts';
-import { HERO_VARIANTS, PALETTE_FAMILIES, TYPE_PAIRS, type ContentFile, type Recipe, type Section } from './types.ts';
+import { HERO_VARIANTS, PALETTE_FAMILIES, TYPE_PAIRS, type ContentFile, type Look, type Recipe, type Section } from './types.ts';
 
 const colour = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'a colour is written as #rrggbb');
 const text = z.string().trim().min(1);
@@ -211,6 +211,35 @@ export const WAVE1_LAYOUTS: { name: string; layout: string }[] = [
   { name: 'journal', layout: 'hero:photo > list:ruled > words:letter > numbers:band > story:rail > visit:plain' },
   { name: 'coastal', layout: 'hero:photo > story:rail > rows:wide > words:letter > list:steps > visit:plain' },
 ];
+
+/** How the pages made to order before wave 3 look at a glance. Each was finished before a page said so itself. */
+export const EARLIER_LOOKS: { slug: string; look: Look }[] = [
+  { slug: 'golden-bay-kayaks', look: { hero: 'photo', type: 'figtree-figtree', family: 'forest' } },
+  { slug: 'grey-ridge-vineyard', look: { hero: 'photo', type: 'newsreader-opensans', family: 'stone' } },
+  { slug: 'kaewa-tours', look: { hero: 'photo', type: 'playfair-montserrat', family: 'forest' } },
+  { slug: 'coromandel-ocean-adventures', look: { hero: 'photo', type: 'dmserif-karla', family: 'clay' } },
+  { slug: 'wine-hopper', look: { hero: 'photo', type: 'archivowide-chivomono', family: 'stone' } },
+];
+
+/** The same look written the same way, so "Photo " and "photo" are one hero. */
+export function sameLook(a: Look, b: Look): (keyof Look)[] {
+  const norm = (v: string) => v.trim().toLowerCase().replace(/\s+/g, ' ');
+  return (['hero', 'type', 'family'] as const).filter((k) => norm(a[k]) === norm(b[k]));
+}
+
+/**
+ * The rule that holds across every wave: no two pages, whichever wave they were made in, share a hero,
+ * a pair of faces and a palette family all three.
+ */
+export function lookIssues(pages: { slug: string; look: Look }[]): string[] {
+  const out: string[] = [];
+  for (const [i, a] of pages.entries()) {
+    for (const b of pages.slice(i + 1)) {
+      if (sameLook(a.look, b.look).length === 3) out.push(`${a.slug} and ${b.slug} share a hero (${a.look.hero}), a type pair (${a.look.type}) and a palette family (${a.look.family})`);
+    }
+  }
+  return out;
+}
 
 export type Batches = Record<string, string[]>;
 

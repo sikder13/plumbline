@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { batchOf, checkRecipe, layoutOf, liveBatches, lookOf, pagesToPublish, recipeContent, recipeSlugs, recordLiveBatches, retireRecipe, varietyIssues, type Placed } from './recipe.ts';
+import { batchOf, checkRecipe, layoutOf, liveBatches, lookIssues, lookOf, pagesToPublish, recipeContent, recipeSlugs, recordLiveBatches, retireRecipe, varietyIssues, type Placed } from './recipe.ts';
 import type { Recipe, Section } from './types.ts';
 
 const hero = (variant: 'photo' | 'split' | 'type' | 'frame' = 'photo'): Section => ({ kind: 'hero', variant, place: 'Seal Cove, Example Coast', lines: ['Seals at', 'their own pace'] });
@@ -166,5 +166,16 @@ describe('a recipe set aside when its page is taken down', () => {
     expect(recipeSlugs(dir)).toEqual(['bravo']);
     expect(existsSync(join(dir, 'removed', 'alpha.json'))).toBe(true);
     expect(retireRecipe('alpha', dir)).toBe(false);
+  });
+});
+
+describe('the variety rule across every wave', () => {
+  it('stops two pages that share a hero, a type pair and a palette family, however they are written', () => {
+    const issues = lookIssues([
+      { slug: 'alpha', look: { hero: 'photo', type: 'fraunces-onest', family: 'ocean' } },
+      { slug: 'bravo', look: { hero: 'Photo ', type: 'fraunces-onest', family: 'Ocean' } },
+      { slug: 'charlie', look: { hero: 'photo', type: 'fraunces-onest', family: 'forest' } },
+    ]);
+    expect(issues).toEqual(['alpha and bravo share a hero (photo), a type pair (fraunces-onest) and a palette family (ocean)']);
   });
 });
