@@ -198,9 +198,19 @@ export async function checkBeacon(browser: Browser, url: string, token: string):
   const page = await ctx.newPage();
   await page.goto(url, { waitUntil: 'load' });
   start = Date.now();
-  // The scripts wake on the first touch, as they do for a person.
+  // The scripts wake on the first touch, as they do for a person. The touch lands where nothing
+  // navigates or acts: on a page whose booking button sits mid screen, a touch there would leave it.
+  // The first screen is let settle first, so a button still sliding in is where it will be touched.
+  await page.waitForTimeout(1500);
+  const spot = await page.evaluate(() => {
+    for (const [x, y] of [[195, 420], [30, 600], [360, 600], [195, 760], [30, 250], [360, 250]] as const) {
+      const e = document.elementFromPoint(x, y);
+      if (e && !e.closest('a, button, input, select, textarea, label, summary, [role="button"], [role="link"], [onclick]')) return { x, y };
+    }
+    return { x: 195, y: 420 };
+  });
   await page.mouse.move(120, 300);
-  await page.touchscreen.tap(195, 420).catch(() => undefined);
+  await page.touchscreen.tap(spot.x, spot.y).catch(() => undefined);
   await page.waitForTimeout(2600);
   const early = posts.length;
   await page.waitForTimeout(7400);
