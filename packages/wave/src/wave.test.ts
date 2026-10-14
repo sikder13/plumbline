@@ -317,7 +317,7 @@ describe('what a page shows when it is opened again', () => {
     p.meta.description = 'Tours';
     p.meta.h1 = ['Our tours'];
     p.meta.jsonld = ['{"@type":"TouristTrip"}'];
-    expect(pageState(p, '')).toEqual({ url: 'https://fixture.co.nz/tours', status: 200, missing: false, unread: false, metaDescription: true, mainHeading: true, structuredData: true, words: 11, title: 'Fixture' });
+    expect(pageState(p, '')).toEqual({ url: 'https://fixture.co.nz/tours', status: 200, missing: false, unread: false, metaDescription: true, mainHeading: true, structuredData: true, words: 11, title: 'Fixture', same: expect.any(String) });
     const bare = page('https://fixture.co.nz/x', ['Hello']);
     bare.meta.description = '  ';
     expect(pageState(bare, '<div itemscope itemtype="https://schema.org/Winery"></div>')).toMatchObject({ metaDescription: false, mainHeading: false, structuredData: true, words: 1 });
@@ -331,6 +331,12 @@ describe('what a page shows when it is opened again', () => {
     expect(pageState(soft, '').missing).toBe(true);
     const fine = page('https://fixture.co.nz/404-fishing-club', ['Welcome to the 404 fishing club, where we never miss.']);
     expect(pageState(fine, '').missing).toBe(false);
+  });
+
+  it('marks two addresses that return the same page alike, and two different pages apart', () => {
+    const at = (url: string, words: string) => pageState(page(url, [words]), '').same;
+    expect(at('https://fixture.co.nz/', 'Welcome to the bay.')).toBe(at('https://fixture.co.nz/index.html', 'Welcome to the bay.'));
+    expect(at('https://fixture.co.nz/', 'Welcome to the bay.')).not.toBe(at('https://fixture.co.nz/about', 'Who we are.'));
   });
 
   it('tells a page that could not be read from one that is missing', () => {
@@ -419,6 +425,10 @@ describe('whether a Crawlmouse sentence still holds', () => {
 
   it('confirms what is absent from a page when every example shows it', () => {
     expect(judge(['no_meta_description'], [state({ metaDescription: false })], others)).toMatchObject({ confirmed: true, measured: 'No meta description on the example page, nor on 2 of the 3 other pages we read.' });
+    // Two addresses that return the same page are one page: it is not counted again beside an example, nor beside itself.
+    const home = state({ url: 'https://fixture.co.nz/', metaDescription: false, same: 'home' });
+    const twice = [state({ url: 'https://fixture.co.nz/index.html', metaDescription: false, same: 'home' }), state({ url: 'https://fixture.co.nz/a', metaDescription: false, same: 'a' }), state({ url: 'https://fixture.co.nz/a/', metaDescription: false, same: 'a' }), state({ url: 'https://fixture.co.nz/b', metaDescription: false, same: 'b' })];
+    expect(judge(['no_meta_description'], [home], twice)).toMatchObject({ confirmed: true, measured: 'No meta description on the example page, nor on 2 of the 2 other pages we read.' });
     // When our own reading does not bear out a count, the measured line says so plainly.
     expect(judge(['no_structured_data'], [state({ structuredData: false })], others)).toMatchObject({ confirmed: true, measured: 'No structured data on the example page. The 3 other pages we read all carry some.' });
     expect(judge(['no_main_heading'], [state({ mainHeading: false })], others)).toMatchObject({ confirmed: true, measured: 'No main heading on the example page. The 3 other pages we read all have one.' });

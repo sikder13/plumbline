@@ -77,6 +77,8 @@ export interface PageState {
   structuredData: boolean;
   words: number;
   title: string;
+  /** A mark made from the page's title and words. Two addresses that return the same page carry the same mark. */
+  same?: string;
 }
 
 const NOT_FOUND = /\bnot found\b|\b404\b|\bpage (?:doesn'?t|does not) exist\b|\bno longer (?:exists|available)\b/i;
@@ -97,6 +99,7 @@ export function pageState(page: PageCapture, html: string): PageState {
     structuredData: page.meta.jsonld.length > 0 || (!!$ && $('[itemscope], [typeof]').length > 0),
     words: page.text.split(/\s+/).filter(Boolean).length,
     title: page.meta.title,
+    same: createHash('sha1').update(`${page.meta.title ?? ''}|${page.text.replace(/\s+/g, ' ').trim()}`).digest('hex'),
   };
 }
 
@@ -188,7 +191,15 @@ export function judge(claims: Claim[], examples: ExampleState[], others: PageSta
   if (!examples.length) return drop('no example page was given');
   const unread = examples.find((e) => e.unread);
   if (unread) return { confirmed: false, undecided: true, measured: null, reason: `${unread.url} could not be read (status ${unread.status ?? 'none'}), so nothing is concluded` };
-  const rest = others.filter((o) => live(o) && !examples.some((e) => sameAddress(e.url, o.url)));
+  // Two addresses that return the same page are one page: it is counted once, and not again beside an example.
+  const counted = new Set(examples.map((e) => e.same).filter(Boolean));
+  const rest = others.filter((o) => {
+    if (!live(o) || examples.some((e) => sameAddress(e.url, o.url))) return false;
+    if (!o.same) return true;
+    if (counted.has(o.same)) return false;
+    counted.add(o.same);
+    return true;
+  });
   for (const e of examples) {
     const results = claims.map((c) => shows(c, e));
     if (!results.some((r) => r.ok)) return drop(results[0]!.why);
