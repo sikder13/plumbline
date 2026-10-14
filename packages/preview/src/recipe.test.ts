@@ -147,6 +147,14 @@ describe('the batches that are live', () => {
   it('carry no recipe page whose batch has not been named', () => {
     expect(pagesToPublish(['alpha', 'bravo', 'charlie'], ['alpha'], { A: ['bravo'], B: ['charlie'] }, [])).toEqual(['alpha']);
   });
+
+  it('carry a page with a design of its own only once its batch is named, when a batch lists it', () => {
+    const order = { A: ['bravo'], B: ['charlie', 'echo'] };
+    const built = ['alpha', 'bravo', 'charlie', 'echo'];
+    // alpha has a design of its own and no batch: it always goes out. echo has one too, but batch B lists it.
+    expect(pagesToPublish(built, ['alpha', 'echo'], order, ['A'])).toEqual(['alpha', 'bravo']);
+    expect(pagesToPublish(built, ['alpha', 'echo'], order, ['A', 'B'])).toEqual(['alpha', 'bravo', 'charlie', 'echo']);
+  });
 });
 
 describe('a recipe set aside when its page is taken down', () => {

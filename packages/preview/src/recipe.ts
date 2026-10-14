@@ -227,12 +227,12 @@ export function loadPlan(): WavePlan {
 }
 
 /**
- * The pages a deploy carries: every built page that has a design of its own, and the built recipe
- * pages of the batches named. A recipe page of a later batch may be built already, to be looked
- * at, and is left out until its batch passes.
+ * The pages a deploy carries: every built page that has a design of its own, and the built pages of
+ * the batches named. A page of a later batch may be built already, to be looked at, and is left out
+ * until its batch passes. That holds for a page with a design of its own too, once a batch lists it.
  */
 export function pagesToPublish(built: string[], designed: string[], order: Batches, batches: string[]): string[] {
-  const wanted = new Set(designed);
+  const wanted = new Set(designed.filter((slug) => !batchOf(order, slug)));
   for (const b of batches) {
     if (!order[b]) throw new Error(`previews/batches.json names no batch ${b}`);
     for (const slug of order[b]) wanted.add(slug);
