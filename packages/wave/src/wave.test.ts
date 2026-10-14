@@ -300,6 +300,8 @@ describe('a Crawlmouse summary', () => {
     expect(claimsIn('Your Packages page is not linked from anywhere else on the site.')).toEqual(['orphan_page']);
     expect(claimsIn('26 of 27 pages have no meta description, and 13 have no main heading.')).toEqual(['no_meta_description', 'no_main_heading']);
     expect(claimsIn('14 of 15 pages carry no structured data, and 10 have no meta description.')).toEqual(['no_structured_data', 'no_meta_description']);
+    // A meta description said in plain words is the same claim.
+    expect(claimsIn('The Gallery page has no description for search results.')).toEqual(['no_meta_description']);
     expect(claimsIn("A leftover page called 'copy of cellar door' is live.")).toEqual(['leftover_page']);
     expect(claimsIn("Old pages are still live but unlinked, such as a Mother's Day offer and a second home page.")).toEqual(['leftover_page', 'orphan_page']);
     expect(claimsIn('The blog page is nearly empty.')).toEqual(['thin_page']);

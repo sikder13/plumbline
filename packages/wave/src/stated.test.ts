@@ -56,6 +56,9 @@ describe('the sentence put to an owner', () => {
     expect(statedSentence(f('CM_no_main_heading', 'Half the pages have no main heading.', { measured: 'No main heading on the 3 example pages.' }), [])).toBe('The 3 pages we read have no main heading');
     // With nothing of ours to go on at all, the sentence stays as it was.
     expect(statedSentence(f('CM_no_meta_description', 'Half the pages have no meta description.', { measured: '' }), [])).toBe('Half the pages have no meta description.');
+    // Where the other pages we read all have it, the page that lacks it is named. It is not "the one page we read".
+    expect(statedSentence(f('CM_no_meta_description', 'The Gallery page has no description for search results.', { measured: 'No meta description on the example page. The 10 other pages we read all have one.', examples: [{ url: 'https://www.alpha.co.nz/gallery.html' }] }), [])).toBe('The page at /gallery.html has no meta description');
+    expect(statedSentence(f('CM_no_main_heading', 'Two pages have no main heading.', { measured: 'No main heading on the 2 example pages. The 7 other pages we read all have one.', examples: [{ url: 'https://alpha.co.nz/a' }, { url: 'https://alpha.co.nz/b' }] }), [])).toBe('The pages at /a and /b have no main heading');
   });
 
   it('names an unlinked page and a leftover page by its address', () => {

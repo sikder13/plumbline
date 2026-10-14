@@ -104,6 +104,12 @@ export function statedSentence(f: { checkId: string; title: string; detail: Reco
     return e ? `The page at ${place(e.url)} is still live${e.title ? `, under the title "${e.title}"` : ''}` : f.title;
   }
   if (/^CM_no_/.test(f.checkId)) {
+    // Where the other pages we read all have it, the page that lacks it is named.
+    const alone = /^No (meta description|main heading|structured data) on the (?:\d+ )?example pages?\. The \d+ other pages we read all /.exec(measured);
+    if (alone && examples.length) {
+      const where = examples.map((e) => place(e.url));
+      return `The page${where.length > 1 ? 's' : ''} at ${listed(where)} ${where.length > 1 ? 'have' : 'has'} no ${alone[1]}`;
+    }
     const seen = [...measured.matchAll(ABSENT)];
     const counts = seen.filter((m) => m[4]).map((m) => ({ what: m[1]!, without: Number(m[2] ?? 1) + Number(m[3]), of: Number(m[2] ?? 1) + Number(m[4]) }));
     if (!counts.length) {

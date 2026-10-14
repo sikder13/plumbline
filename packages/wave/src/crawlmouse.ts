@@ -53,7 +53,7 @@ export type Claim = 'missing_page' | 'orphan_page' | 'no_meta_description' | 'no
 const CLAIMS: [Claim, RegExp][] = [
   ['missing_page', /\b404\b|missing pages?|broken links?|links? (?:are|is) broken/i],
   ['orphan_page', /not linked from anywhere|\bunlinked\b/i],
-  ['no_meta_description', /meta description/i],
+  ['no_meta_description', /meta description|description for search results/i],
   ['no_main_heading', /main heading|\bh1\b/i],
   ['no_structured_data', /structured data/i],
   ['thin_page', /very little text|nearly empty/i],

@@ -66,6 +66,9 @@ describe('Filter 1: reasons to reject a finding', () => {
     const count = (measured: string) => rule(finding('CM_no_meta_description', { title: '72 of 102 pages have no meta description.', detail: { measured } }));
     expect(count('No meta description on the example page, nor on 1 of the 14 other pages we read.')).toBe('F1.4 inference, not measurement');
     expect(count('No meta description on the example page, nor on 9 of the 14 other pages we read.')).toBeNull();
+    // A sentence about one named page is borne out when that page is the only one we read that lacks it.
+    expect(rule(finding('CM_no_meta_description', { title: 'The Gallery page has no description for search results.', detail: { measured: 'No meta description on the example page. The 10 other pages we read all have one.' } }))).toBeNull();
+    expect(rule(finding('CM_no_meta_description', { title: 'Most pages, such as the Gallery page, have no description.', detail: { measured: 'No meta description on the example page. The 10 other pages we read all have one.' } }))).toBe('F1.4 inference, not measurement');
     // A sentence with no count in it has nothing to bear out.
     expect(rule(finding('CM_no_meta_description', { title: 'Half the pages have no meta description.', detail: { measured: 'No meta description on the 2 example pages, nor on 1 of the 4 other pages we read.' } }))).toBeNull();
     expect(rule(finding('CM_orphan_page', { title: 'Several trip pages are not linked from anywhere else on the site.', detail: { caution: 'Some may be intentionally retired. Check before using.' } }))).toBe('F1.4 inference, not measurement');

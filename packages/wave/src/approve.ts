@@ -56,14 +56,19 @@ const NEEDED_PAGE = /\b(book|booking|bookings|reservations?|tours?|trips?|packag
 /** A page with fewer words than this has nothing on it for a visitor to miss. */
 const EMPTY_PAGE_WORDS = 50;
 
+/** A sentence that speaks of one page alone, as in "The Gallery page has no description". */
+const ONE_PAGE = /\b(?:the|your|one|a|this)\b[^.]*\bpage (?:has|carries|is|shows)\b/i;
+
 /**
  * Whether our own reading of the pages bears out a count given in the sentence. The sentence may
  * say "72 of 102 pages"; what we measured is the share of the pages we read ourselves. When ours
  * is under half of theirs, or every other page we read was fine, the count is theirs and not ours.
+ * A sentence about one page alone claims no more than that page, so it stands when every other
+ * page was fine.
  */
 function bornOut(f: ApprovalFinding): boolean {
   const measured = String(f.detail.measured ?? '');
-  if (/\bThe \d+ other pages we read all (have one|carry some)\b/.test(measured)) return false;
+  if (/\bThe \d+ other pages we read all (have one|carry some)\b/.test(measured)) return ONE_PAGE.test(f.title) && !/\bpages\b/i.test(f.title);
   const claimed = /\b(\d+) of (\d+) pages\b/.exec(f.title);
   const ours = /\bon the (\d+ )?example pages?, nor on (\d+) of the (\d+) other pages we read\b/.exec(measured);
   if (!claimed || !ours) return true;
