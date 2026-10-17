@@ -44,6 +44,10 @@ export const BOOKING_SYSTEMS: BookingFingerprint[] = [
   { system: 'ResDiary', kind: 'system', host: /(^|\.)resdiary\.com$/ },
   { system: 'Tock', kind: 'system', host: /(^|\.)exploretock\.com$/ },
   { system: 'Shopify', kind: 'system', host: /(^|\.)myshopify\.com$/ },
+  { system: 'ResOnline', kind: 'system', host: /(^|\.)resonline\.com$/ },
+  { system: 'SiteMinder', kind: 'system', host: /(^|\.)siteminder\.com$/ },
+  { system: 'Cliniko', kind: 'system', host: /(^|\.)cliniko\.com$/ },
+  { system: 'Gensolve', kind: 'system', host: /(^|\.)gensolve\.(com|co\.nz|net)$/ },
 ];
 
 /** Platforms that sell on the operator's behalf and take a commission. */

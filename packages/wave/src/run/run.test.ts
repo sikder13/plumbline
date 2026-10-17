@@ -1,0 +1,237 @@
+import { describe, expect, it } from 'vitest';
+import { bookingSystemsIn, bookingish, pageSaysMissing } from './booking.ts';
+import { buildFindings, type RunMeasured } from './findings.ts';
+import { greetingNames, nameForms, waveRows } from './list.ts';
+import { faithFlags, testimonialsOn } from './screens.ts';
+import { isSlowOnPhone, speedVerdict } from './speed.ts';
+import { KINDS, rankRunFindings, recommendation, sentenceFor, type FindingType, type RawFinding } from './tiers.ts';
+import { decodeCfEmail, emailsInSource, nameOnText, textOf, verifyFacts, type PageRead, type Reader } from './verify.ts';
+
+const row = waveRows([{ order: '1', status: 'wave 4', slug: 'x', business_name: 'X', website: 'https://x.co.nz', email: 'info@x.co.nz', email_source_url: 'https://x.co.nz/contact', greeting: 'Mike and Nans', owner_names: 'Mike Kirkpatrick (owner/guide), wife Nans Kirkpatrick-Stolk', owner_source_url_1: 'https://x.co.nz/about' }])[0]!;
+
+const page = (html: string, over: Partial<PageRead> = {}): PageRead => ({ ok: true, status: 200, finalUrl: 'https://x.co.nz/', html, text: textOf(html), via: 'http', ...over });
+
+describe('checking the list against the site', () => {
+  it('decodes an address Cloudflare has hidden', () => {
+    // "info@x.co.nz" with key 0x2a
+    const key = 0x2a;
+    const hex = key.toString(16).padStart(2, '0') + [...'info@x.co.nz'].map((c) => (c.charCodeAt(0) ^ key).toString(16).padStart(2, '0')).join('');
+    expect(decodeCfEmail(hex)).toBe('info@x.co.nz');
+    expect(emailsInSource(`<a class="__cf_email__" data-cfemail="${hex}">[email protected]</a>`)).toContain('info@x.co.nz');
+    expect(emailsInSource(`<a href="/cdn-cgi/l/email-protection#${hex}">write</a>`)).toContain('info@x.co.nz');
+  });
+
+  it('finds an address however it is written', () => {
+    expect(emailsInSource('<a href="mailto:Info%40X.co.nz?subject=hi">mail</a>')).toContain('info@x.co.nz');
+    expect(emailsInSource('<p>write to info [at] x [dot] co [dot] nz</p>')).toContain('info@x.co.nz');
+    expect(emailsInSource('<p>info@x.co.nz</p>')).toEqual(['info@x.co.nz']);
+  });
+
+  it('matches names as words, with short forms and without hyphens or accents', () => {
+    expect(greetingNames('Mike and Nans')).toEqual(['Mike', 'Nans']);
+    expect(nameForms('Malc', 'Malcolm Halstead')).toContain('Malcolm');
+    expect(nameOnText('Meet Malcolm, our skipper', nameForms('Malc', 'Malcolm Halstead'))).toBe(true);
+    expect(nameOnText('Meet Mikey', ['Mike'])).toBe(false);
+    expect(nameOnText('Anne-Marie runs it', ['Anne Marie'])).toBe(true);
+  });
+
+  const reader = (pages: Record<string, string>, browser: Record<string, string> = {}): Reader => async (url, via) => {
+    const src = via === 'http' ? pages : browser;
+    return url in src ? page(src[url]!, { via, finalUrl: url }) : null;
+  };
+
+  it('passes when the site answers, the email is on its page and the owners are named', async () => {
+    const r = await verifyFacts(row, reader({ 'https://x.co.nz': '<p>hi</p>', 'https://x.co.nz/contact': '<a href="mailto:info@x.co.nz">m</a>', 'https://x.co.nz/about': '<p>Mike and Nans run it</p>' }));
+    expect(r.changed).toEqual([]);
+    expect(r.email.found).toBe(true);
+    expect(r.owners.names.every((n) => n.found)).toBe(true);
+  });
+
+  it('marks facts_changed and guesses nothing when something no longer holds', async () => {
+    const r = await verifyFacts(row, reader({ 'https://x.co.nz': '<p>hi</p>', 'https://x.co.nz/contact': '<a href="mailto:other@x.co.nz">m</a>', 'https://x.co.nz/about': '<p>Mike runs it</p>' }));
+    expect(r.changed).toEqual(['info@x.co.nz no longer appears on https://x.co.nz/contact', 'Nans does not appear on https://x.co.nz/about']);
+    expect(r.email.seenOnPage).toEqual(['other@x.co.nz']);
+  });
+
+  it('reads a page as a browser shows it when the plain source is empty', async () => {
+    const r = await verifyFacts(row, reader({ 'https://x.co.nz': '<p>hi</p>', 'https://x.co.nz/contact': '<div id=app></div>', 'https://x.co.nz/about': '<div id=app></div>' }, { 'https://x.co.nz/contact': '<a href="mailto:info@x.co.nz">m</a>', 'https://x.co.nz/about': '<p>Mike and Nans</p>' }));
+    expect(r.changed).toEqual([]);
+    expect(r.email.via).toBe('browser');
+  });
+
+  it('flags a site that does not answer', async () => {
+    const r = await verifyFacts(row, async () => page('', { ok: false, status: 503 }));
+    expect(r.site.ok).toBe(false);
+    expect(r.changed[0]).toBe('the site does not answer (503)');
+  });
+});
+
+describe('phone speed from the API', () => {
+  const run = (performance: number, lcpMs: number) => ({ performance, lcpMs, cls: 0, tbtMs: 0 });
+  it('uses two runs that agree', () => {
+    const v = speedVerdict([run(40, 6000), run(44, 5000)]);
+    expect(v.status).toBe('ok');
+    expect(v.performance).toBe(42);
+    expect(isSlowOnPhone(v)).toBe(true);
+  });
+  it('does not use two runs more than 20 percent apart', () => {
+    const v = speedVerdict([run(40, 6000), run(55, 5000)]);
+    expect(v.status).toBe('unstable');
+    expect(v.reason).toContain('27%');
+    expect(isSlowOnPhone(v)).toBe(false);
+  });
+  it('is unavailable without two scores', () => {
+    expect(speedVerdict([{ performance: null, lcpMs: null, cls: null, tbtMs: null, error: 'PageSpeed API answered 429' }]).status).toBe('unavailable');
+    expect(speedVerdict([run(40, 6000)]).status).toBe('unavailable');
+  });
+  it('needs main content after 4 seconds as well as a score under 50', () => {
+    expect(isSlowOnPhone(speedVerdict([run(40, 3000), run(42, 3500)]))).toBe(false);
+    expect(isSlowOnPhone(speedVerdict([run(55, 6000), run(58, 6500)]))).toBe(false);
+  });
+});
+
+describe('booking paths', () => {
+  it('recognises the booking systems of the list', () => {
+    const html = `<a href="https://reservations.thebookingbutton.com.au/x">Book</a><iframe src="https://www.resonline.com/x"></iframe><script src="https://app.cliniko.com/x.js"></script><a href="https://bookeo.com/x">b</a><a href="https://fareharbor.com/embeds/book/x">f</a>`;
+    expect(bookingSystemsIn([{ url: 'https://x.co.nz', html }]).map((s) => s.system).sort()).toEqual(['Bookeo', 'Cliniko', 'FareHarbor', 'Little Hotelier', 'ResOnline']);
+    expect(bookingSystemsIn([{ url: 'https://x.co.nz', html: '<meta name="generator" content="Wix.com Website Builder"><a href="/booking-calendar/massage">Book</a>' }]).map((s) => s.system)).toEqual(['Wix Bookings']);
+  });
+  it('knows a page that says it is gone', () => {
+    expect(pageSaysMissing(404, '', '')).toBe(true);
+    expect(pageSaysMissing(200, 'Page not found', '')).toBe(true);
+    expect(pageSaysMissing(200, 'Book now', 'Book')).toBe(false);
+  });
+  it('tells booking links from the rest', () => {
+    expect(bookingish('Accomodation')).toBe(true);
+    expect(bookingish('/product-page/gift-voucher')).toBe(true);
+    expect(bookingish('Blog')).toBe(false);
+  });
+});
+
+describe('screens', () => {
+  const capture = (text: string) => ({ finalUrl: 'https://x.co.nz/', text }) as never;
+  it('finds testimonials a visitor can see, and a review widget', () => {
+    const html = '<h2>What our clients say</h2><p>Sharon fixed my shoulder after two sessions and I could swing a racket again.</p><script src="https://static.elfsight.com/platform/platform.js"></script>';
+    const signs = testimonialsOn(capture(textOf(html)), html);
+    expect(signs.map((s) => s.kind).sort()).toEqual(['section', 'widget']);
+    expect(signs.find((s) => s.kind === 'widget')!.text).toBe('Elfsight reviews widget');
+    // Text hidden from visitors is not visible text, so it is not found.
+    expect(testimonialsOn(capture('Home About'), html).some((s) => s.kind === 'section')).toBe(false);
+  });
+  it('flags a menu page that sells wine and leaves the others', () => {
+    const flags = faithFlags([
+      { label: 'Wine shop', url: 'https://x.co.nz/shop', title: 'Wine', h1: 'Our wines', text: 'Buy a case of pinot noir. $240 per case. Add to cart.' },
+      { label: 'Tours', url: 'https://x.co.nz/tours', title: 'Tours', h1: 'Tours', text: 'A day on the water with lunch. Book now. $120.' },
+    ]);
+    expect(flags).toHaveLength(1);
+    expect(flags[0]!.topic).toBe('alcohol');
+  });
+});
+
+describe('sentences, filters and ranking', () => {
+  const at = '2026-10-17T00:00:00.000Z';
+  const f = (type: FindingType, over: Partial<RawFinding> = {}): RawFinding => ({ type, facts: { label: 'Book Now', page: 'homepage', title: 'x', count: 2, of: 5, score: 41, seconds: 6.2, product: 'PHP', version: '7.4', since: 'November 2022', year: '2021', season: 'summer', text: 'lorem ipsum' }, measured: 'm', evidenceUrl: 'https://x.co.nz/', key: type, source: 'plumbline', measuredAt: at, ...over });
+
+  it('writes every kind as one plain sentence with no dash in it', () => {
+    for (const type of Object.keys(KINDS) as FindingType[]) {
+      const s = sentenceFor(type, { ...f(type).facts, label: 'Pre-book now – today', title: 'copy-of-room', page: 'room-two page', what: 'enquiry form' });
+      expect(s, type).toMatch(/\.$/);
+      expect(s, type).not.toMatch(/[-‐-―]/);
+      expect(s.match(/\. /g)?.length ?? 0, type).toBe(0);
+    }
+  });
+
+  it('puts the lower tier first and keeps three', () => {
+    const { top } = rankRunFindings([f('no_description'), f('broken_images'), f('phone_sideways'), f('book_button_missing'), f('slow_phone', { steady: true }), f('hello_world')], { agencies: [] });
+    expect(top.map((t) => t.type)).toEqual(['book_button_missing', 'slow_phone', 'phone_sideways']);
+    expect(top.map((t) => t.place)).toEqual([1, 2, 3]);
+  });
+
+  it('never puts a minor search item above third place', () => {
+    expect(rankRunFindings([f('no_description'), f('no_heading')], { agencies: [] }).top).toEqual([]);
+    expect(rankRunFindings([f('hello_world'), f('no_description')], { agencies: [] }).top.map((t) => t.type)).toEqual(['hello_world']);
+    expect(rankRunFindings([f('hello_world'), f('phone_sideways'), f('no_description')], { agencies: [] }).top.map((t) => t.type)).toEqual(['phone_sideways', 'hello_world', 'no_description']);
+  });
+
+  it('drops what does not reproduce, a missing page nothing links to, unstable speed, duplicates and a named agency', () => {
+    const { top, dropped } = rankRunFindings(
+      [
+        f('broken_link', { key: 'a', reproduced: false }),
+        f('broken_link', { key: 'b', unlinked: true }),
+        f('slow_phone', { key: 'c', steady: false }),
+        f('book_link_broken', { key: 'd' }),
+        f('book_link_broken', { key: 'd', source: 'crawlmouse' }),
+        f('form_not_loading', { key: 'e', evidenceUrl: 'https://cleverstudio.co.nz/form' }),
+      ],
+      { agencies: ['cleverstudio.co.nz'] },
+    );
+    expect(top.map((t) => t.type)).toEqual(['book_link_broken']);
+    expect(dropped.map((d) => d.reason)).toEqual(['does not reproduce today', 'a missing page that nothing links to', 'speed unstable or unavailable', 'names a web agency (cleverstudio.co.nz)', 'duplicate of a booking or contact broken item']);
+  });
+
+  it('recommends BUILD from tier 1 to 5 and RESERVE otherwise', () => {
+    expect(recommendation(rankRunFindings([f('hello_world')], { agencies: [] }).top)).toBe('BUILD');
+    expect(recommendation(rankRunFindings([f('outdated_software')], { agencies: [] }).top)).toBe('RESERVE');
+    expect(recommendation([])).toBe('RESERVE');
+  });
+});
+
+describe('findings from what was measured', () => {
+  const base = (over: Partial<RunMeasured>): RunMeasured =>
+    ({
+      slug: 'x',
+      measuredAt: '2026-10-17T00:00:00.000Z',
+      category: 'kayak',
+      homepage: 'https://x.co.nz/',
+      collection: { blocked: null, errors: [], pagesRead: 3, checkErrors: [] },
+      checks: [],
+      eol: [],
+      speed: { source: 'PageSpeed Insights API', status: 'unavailable', runs: [], spread: null, performance: null, lcpMs: null, reason: 'x', measuredAt: '' },
+      phone: null,
+      booking: null,
+      crawlmouse: [],
+      pages: [],
+      physio: null,
+      faith: [],
+      agencies: [],
+      refusal: null,
+      pelorus: null,
+      trading: [],
+      aiCrawlers: { allowed: true, blocked: [] },
+      ...over,
+    }) as RunMeasured;
+
+  it('turns a Book button that lands on the contact page into a tier 1 sentence', () => {
+    const m = base({ booking: { systems: [], path: 'contact page only', unlinked: [], forms: [], noWay: false, landings: [{ text: 'Book Now', href: 'https://x.co.nz/contact/', kind: 'page', status: 200, finalUrl: 'https://x.co.nz/contact/', landsOn: 'the contact page', problem: 'contact_page', system: null, error: null }] } });
+    const [one] = rankRunFindings(buildFindings(m), { agencies: [] }).top;
+    expect(one!.sentence).toBe('The "Book Now" button on your homepage opens your contact page, not a booking page.');
+    expect(one!.tier).toBe(1);
+  });
+
+  it('uses a Crawlmouse sentence only when it held, and a missing page only when a page links to it', () => {
+    const ex = { url: 'https://x.co.nz/accomodation', status: 404, missing: true, title: '', words: 0, snippet: '' };
+    const sentence = (confirmed: boolean, linked: boolean) => ({ text: 't', claims: ['missing_page'], caution: null, confirmed, undecided: false, measured: 'm', reason: null, examples: [{ ...ex, linkedFrom: linked ? [{ pageUrl: 'https://x.co.nz/', text: 'Accomodation', where: 'menu' }] : [] }] });
+    const rank = (c: ReturnType<typeof sentence>) => rankRunFindings(buildFindings(base({ crawlmouse: [c] })), { agencies: [] }).top.map((t) => t.sentence);
+    expect(rank(sentence(true, true))).toEqual(['The "Accomodation" link on your homepage opens a page that is not found.']);
+    expect(rank(sentence(true, false))).toEqual([]);
+    expect(rank(sentence(false, true))).toEqual([]);
+  });
+
+  it('says a template post, a Hello world post and copy of addresses by what the pages show', () => {
+    const e = (url: string, title: string, snippet: string) => ({ url, status: 200, missing: false, title, words: 5, snippet, linkedFrom: [] });
+    const m = base({
+      crawlmouse: [
+        { text: 'a', claims: ['leftover_page'], caution: null, confirmed: true, undecided: false, measured: 'm', reason: null, examples: [e('https://x.co.nz/hello-world', 'Hello world!', 'Welcome to WordPress'), e('https://x.co.nz/a-blog-post-copy-zR18sT', 'Monkeys: adorable mischief', 'My post content')] },
+        { text: 'b', claims: ['leftover_page'], caution: null, confirmed: true, undecided: false, measured: 'm', reason: null, examples: [e('https://x.co.nz/copy-of-queen-studio', 'Twin Studios', 'x'), e('https://x.co.nz/copy-of-studios-8-9-1', 'Studios', 'x')] },
+      ],
+    });
+    const sentences = rankRunFindings(buildFindings(m), { agencies: [] }).top.map((t) => t.sentence);
+    expect(sentences).toEqual(['The default "Hello world!" post is still live on your website.', 'A template blog post titled "Monkeys: adorable mischief" is still live on your website.', '2 of your pages have web addresses that start with copy of, so the address names a different page from its content.']);
+  });
+
+  it('puts the physio testimonial finding at tier 2 and only for a physio', () => {
+    const signs = [{ kind: 'widget' as const, text: 'Elfsight reviews widget', url: 'https://x.co.nz/', source: 'https://static.elfsight.com/p.js' }];
+    expect(rankRunFindings(buildFindings(base({ category: 'physio', physio: signs })), { agencies: [] }).top[0]!.tier).toBe(2);
+    expect(buildFindings(base({ category: 'kayak', physio: null })).some((x) => x.type === 'physio_testimonials')).toBe(false);
+  });
+});
