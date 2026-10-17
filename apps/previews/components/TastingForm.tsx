@@ -45,7 +45,9 @@ export function TastingForm({ labels, className }: { labels: Labels; className?:
           <input type="radio" name="platter" value="no" /> <span>{labels.no}</span>
         </label>
       </fieldset>
-      <button type="submit">{labels.submit}</button>
+      <button type="submit" data-press>
+        {labels.submit}
+      </button>
       <p role="status">{sent ? labels.done : labels.note}</p>
     </form>
   );

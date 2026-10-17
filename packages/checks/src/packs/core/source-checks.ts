@@ -1,7 +1,7 @@
-import { foldName, normalizeEmail, normalizePhone } from '@plumbline/core';
+import { foldName, normalizeEmail, normalizePhone, type CandidateFinding } from '@plumbline/core';
 import { emailsIn, phonesIn, prices, type ListingData, type SiteData } from '@plumbline/collect';
 import { okHomes, okInner, pagesInOrder, siteFinding } from '../../helpers.ts';
-import type { Check } from '../../types.ts';
+import { ANSWERS_NEEDED, type AiSummary, type Check } from '../../types.ts';
 
 function sitePhones(site: SiteData): Set<string> {
   const out = new Set<string>();
@@ -35,35 +35,54 @@ function comparable(site: SiteData, l: ListingData): boolean {
   return l.status === 'fetched' && l.kind === 'directory' && namesBusiness(site, l);
 }
 
+const namedBy = (list: { name: string; answers: number }[]) => list.map((o) => `${o.name} (${o.answers})`).join(', ');
+
+/** Whether the answers are all in. Until they are, nothing is concluded: not a finding, and not that an earlier finding has gone. */
+export function aiAnswersComplete(ai: AiSummary | null): ai is AiSummary {
+  return !!ai && ai.asked.length > 0 && ai.asked.every((q) => q.answers >= ANSWERS_NEEDED);
+}
+
+/**
+ * The finding for a business no AI answer names: not one answer to any of its questions, while
+ * the answers name others. Named even once, it is not a finding: a business named in most
+ * answers to a question has a strength there, and one named now and then has neither.
+ */
+export function aiFinding(business: string, ai: AiSummary | null): CandidateFinding | null {
+  if (!aiAnswersComplete(ai) || ai.asked.some((q) => q.namedIn > 0)) return null;
+  const total = ai.asked.reduce((n, q) => n + q.answers, 0);
+  const named = new Map<string, { name: string; answers: number }>();
+  for (const q of ai.asked) {
+    for (const o of q.others) {
+      const key = foldName(o.name);
+      named.set(key, { name: o.name, answers: (named.get(key)?.answers ?? 0) + o.answers });
+    }
+  }
+  const strong = [...named.values()].filter((o) => o.answers >= 3).sort((x, y) => y.answers - x.answers);
+  if (strong.length < 2) return null;
+  return {
+    checkId: 'C37_not_named_by_ai',
+    fingerprint: 'ai',
+    title: `Named in 0 of ${total} AI answers`,
+    pageUrl: null,
+    viewport: null,
+    where: 'homepage_mobile',
+    detail: { namedIn: 0, questions: total, asked: ai.asked.map((q) => q.question), othersNamed: strong.slice(0, 6), business, spanMinutes: Math.round(ai.spanMinutes), reproducedAcrossPasses: ai.holdsInBothPasses },
+    evidence: ai.asked.map((q) => ({
+      kind: 'ai',
+      excerpt: [`Question: ${q.question}`, `Named in ${q.namedIn} of ${q.answers} answers. Others named: ${namedBy(q.others.slice(0, 6)) || 'none'}`, ...(q.sample ? [`Provider: ${q.sample.provider}`, `Asked: ${q.sample.askedAt}`, `Answer: ${q.sample.answer}`, `Citations: ${q.sample.citations.join(' ')}`] : [])].join('\n'),
+    })),
+  };
+}
+
 export const C37_not_named_by_ai: Check = {
   id: 'C37_not_named_by_ai',
   pack: 'core',
   tier: 'measured',
   evidenceSpec: 'ai',
-  appliesTo: ({ ai }) => !!ai && ai.questions >= 4,
+  appliesTo: ({ ai }) => !!ai && ai.questions >= ANSWERS_NEEDED,
   evaluate({ site, ai }) {
-    if (!ai || ai.namedIn > 1) return [];
-    const strong = ai.others.filter((o) => o.answers >= 3);
-    if (strong.length < 2) return [];
-    return [
-      {
-        checkId: this.id,
-        fingerprint: 'ai',
-        title: `Named in ${ai.namedIn} of ${ai.questions} AI answers about the area`,
-        pageUrl: null,
-        viewport: null,
-        where: 'homepage_mobile',
-        detail: { namedIn: ai.namedIn, questions: ai.questions, othersNamed: strong.slice(0, 6), business: site.business.name, spanMinutes: Math.round(ai.spanMinutes), reproducedAcrossPasses: ai.holdsInBothPasses },
-        evidence: [
-          {
-            kind: 'ai',
-            excerpt: ai.sample
-              ? `Question: ${ai.sample.question}\nProvider: ${ai.sample.provider}\nAsked: ${ai.sample.askedAt}\nAnswer: ${ai.sample.answer}\nCitations: ${ai.sample.citations.join(' ')}`
-              : `Named in ${ai.namedIn} of ${ai.questions} questions. Others named: ${strong.map((o) => `${o.name} (${o.answers})`).join(', ')}`,
-          },
-        ],
-      },
-    ];
+    const f = aiFinding(site.business.name, ai);
+    return f ? [f] : [];
   },
 };
 

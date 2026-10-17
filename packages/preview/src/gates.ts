@@ -5,7 +5,7 @@ import { dirname, extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createGzip } from 'node:zlib';
 import { AxeBuilder } from '@axe-core/playwright';
-import { chromium, type Browser } from 'playwright';
+import { chromium, type Browser, type BrowserContext, type BrowserContextOptions } from 'playwright';
 import { median } from '@plumbline/core';
 import { scanPage, splitPage, ownSiteHtml, ownSiteText, type CopyIssue } from './copy.ts';
 import { BASE_PATH } from './build.ts';
@@ -79,12 +79,15 @@ export interface GateReport {
   axe: { tab: string; id: string; impact: string; help: string; nodes: number; first: string }[];
   overflow: { width: number; tab: string; scrollWidth: number }[];
   links: LinkCheck[];
+  /** What the page reported about the visit: nothing in its first three seconds on screen, then one view with its own token. */
+  beacon: { early: number; views: number; tokens: string[]; ok: boolean };
   copy: CopyIssue[];
   screenshots: string[];
   failures: string[];
 }
 
-export const LIMITS = { performance: 90, accessibility: 95, lcpMs: 2500 };
+/** Motion adds script, so performance is held to 85, with layout shift and blocking time held as well. */
+export const LIMITS = { performance: 85, accessibility: 95, lcpMs: 2500, cls: 0.05, tbtMs: 200 };
 const WIDTHS = [360, 390, 430];
 const TABS = [
   { name: 'demo', hash: '' },
@@ -107,7 +110,7 @@ export function validMailto(href: string): boolean {
 }
 
 async function checkLinks(browser: Browser, url: string, bookingHosts: RegExp, ownSiteHtml: string): Promise<LinkCheck[]> {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const ctx = await quietContext(browser, { viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();
   await page.goto(url, { waitUntil: 'load' });
   const found = await page.evaluate(() => {
@@ -133,7 +136,7 @@ async function checkLinks(browser: Browser, url: string, bookingHosts: RegExp, o
     else if (l.href.startsWith('#')) check = { kind: 'anchor', label: l.label, href: l.href, ok: !!l.anchorOk, note: l.anchorOk ? 'target exists' : 'no element with that id' };
     else if (/^https?:/.test(l.href)) {
       // Opened in a real browser, the way a visitor's tap opens it.
-      const c = await browser.newContext({ viewport: { width: 390, height: 844 } });
+      const c = await quietContext(browser, { viewport: { width: 390, height: 844 } });
       const p = await c.newPage();
       let status: number | null = null;
       let title: string;
@@ -160,6 +163,50 @@ async function checkLinks(browser: Browser, url: string, bookingHosts: RegExp, o
     out.push(check);
   }
   return out;
+}
+
+/**
+ * A browser for a gate to look at a page in. A page reports a visit once it has been on screen for
+ * three seconds, and a gate stays longer than that, so the report is answered here and never
+ * reaches the real address: a check is not counted as a visit.
+ */
+export async function quietContext(browser: Browser, options: BrowserContextOptions = {}): Promise<BrowserContext> {
+  const ctx = await browser.newContext(options);
+  await ctx.route('**/api/demo-visit', (route) => route.fulfill({ status: 204, body: '' }));
+  return ctx;
+}
+
+/**
+ * Opens the page as a visitor would and listens for what it reports. Nothing may leave in the
+ * first three seconds, and after that exactly one view, carrying the page's own token. The report
+ * is answered here and never reaches the real address, so a check is not counted as a visit.
+ */
+export async function checkBeacon(browser: Browser, url: string, token: string): Promise<GateReport['beacon']> {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const posts: { at: number; token: string; kind: string }[] = [];
+  let start = Date.now();
+  await ctx.route('**/api/demo-visit', async (route) => {
+    let body: { token?: string; kind?: string } = {};
+    try {
+      body = JSON.parse(route.request().postData() ?? '{}') as { token?: string; kind?: string };
+    } catch {
+      // A report that cannot be read is counted as one with no token.
+    }
+    posts.push({ at: Date.now() - start, token: String(body.token ?? ''), kind: String(body.kind ?? '') });
+    await route.fulfill({ status: 204, body: '' });
+  });
+  const page = await ctx.newPage();
+  await page.goto(url, { waitUntil: 'load' });
+  start = Date.now();
+  // The scripts wake on the first touch, as they do for a person.
+  await page.mouse.move(120, 300);
+  await page.touchscreen.tap(195, 420).catch(() => undefined);
+  await page.waitForTimeout(2600);
+  const early = posts.length;
+  await page.waitForTimeout(7400);
+  await ctx.close();
+  const views = posts.filter((p) => p.kind === 'view');
+  return { early, views: views.length, tokens: [...new Set(posts.map((p) => p.token))], ok: early === 0 && views.length === 1 && posts.every((p) => p.token === token) };
 }
 
 export interface CheckOptions {
@@ -190,6 +237,8 @@ export async function checkPage(data: PageData, opts: CheckOptions): Promise<Gat
     if (lighthouse.performance === null || lighthouse.performance < LIMITS.performance) failures.push(`performance ${lighthouse.performance ?? 'not measured'} is under ${LIMITS.performance}`);
     if (lighthouse.accessibility === null || lighthouse.accessibility < LIMITS.accessibility) failures.push(`accessibility ${lighthouse.accessibility ?? 'not measured'} is under ${LIMITS.accessibility}`);
     if (lighthouse.lcpMs === null || lighthouse.lcpMs >= LIMITS.lcpMs) failures.push(`largest contentful paint ${lighthouse.lcpMs === null ? 'not measured' : `${(lighthouse.lcpMs / 1000).toFixed(2)} s`} is not under ${LIMITS.lcpMs / 1000} s`);
+    if (lighthouse.cls === null || lighthouse.cls >= LIMITS.cls) failures.push(`layout shift ${lighthouse.cls === null ? 'not measured' : lighthouse.cls.toFixed(3)} is not under ${LIMITS.cls}`);
+    if (lighthouse.tbtMs === null || lighthouse.tbtMs >= LIMITS.tbtMs) failures.push(`total blocking time ${lighthouse.tbtMs === null ? 'not measured' : `${Math.round(lighthouse.tbtMs)} ms`} is not under ${LIMITS.tbtMs} ms`);
   }
 
   const browser = await chromium.launch();
@@ -201,7 +250,7 @@ export async function checkPage(data: PageData, opts: CheckOptions): Promise<Gat
   let html = '';
   try {
     for (const width of WIDTHS) {
-      const ctx = await browser.newContext({ viewport: { width, height: 800 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+      const ctx = await quietContext(browser, { viewport: { width, height: 800 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
       const page = await ctx.newPage();
       for (const tab of TABS) {
         await page.goto(`${url}${tab.hash}`, { waitUntil: 'networkidle' });
@@ -215,7 +264,7 @@ export async function checkPage(data: PageData, opts: CheckOptions): Promise<Gat
     for (const o of overflow) failures.push(`the ${o.tab} tab scrolls sideways at ${o.width} px (content is ${o.scrollWidth} px wide)`);
 
     for (const width of [390, 1440]) {
-      const ctx = await browser.newContext({ viewport: { width, height: width === 390 ? 844 : 900 }, deviceScaleFactor: width === 390 ? 2 : 1, isMobile: width === 390, hasTouch: width === 390, reducedMotion: 'reduce' });
+      const ctx = await quietContext(browser, { viewport: { width, height: width === 390 ? 844 : 900 }, deviceScaleFactor: width === 390 ? 2 : 1, isMobile: width === 390, hasTouch: width === 390, reducedMotion: 'reduce' });
       const page = await ctx.newPage();
       for (const tab of TABS) {
         await page.goto(`${url}${tab.hash}`, { waitUntil: 'networkidle' });
@@ -239,14 +288,17 @@ export async function checkPage(data: PageData, opts: CheckOptions): Promise<Gat
     }
     for (const v of axe) failures.push(`axe ${v.impact}: ${v.id} on ${v.tab} (${v.nodes} elements) ${v.first}`);
 
-    const links = await checkLinks(browser, url, /rezdy|fareharbor|lodgify|bookeo|checkfront/i, ownSiteHtml(data.slug));
+    const links = await checkLinks(browser, url, /rezdy|fareharbor|lodgify|bookeo|checkfront|ibisnz|rtbslive|bookit|eveve|resdiary|bookme|bokun/i, ownSiteHtml(data.slug));
     for (const l of links.filter((x) => !x.ok)) failures.push(`link "${l.label}" ${l.href}: ${l.note}`);
     if (!links.some((l) => l.kind === 'tel')) failures.push('no tap to call link on the page');
     if (!links.some((l) => l.kind === 'mailto')) failures.push('no email link on the page');
 
-    const copy = scanPage(splitPage(html), { ownSite: ownSiteText(data.slug), measured: JSON.stringify({ findings: data.findings, strengths: data.strengths, secondCheck: data.secondCheck }), offer: opts.offerText });
+    const beacon = await checkBeacon(browser, url, data.path);
+    if (!beacon.ok) failures.push(`visit report: ${beacon.early} sent in the first three seconds, ${beacon.views} view(s) in all, token(s) ${beacon.tokens.join(', ') || 'none'} (one view with ${data.path} is expected, and nothing early)`);
+
+    const copy = scanPage(splitPage(html), { ownSite: ownSiteText(data.slug), measured: JSON.stringify({ findings: data.findings, strengths: data.strengths, secondCheck: data.secondCheck, rating: data.rating }), offer: opts.offerText });
     for (const c of copy) failures.push(`copy ${c.kind} in ${c.where}: "${c.text}" in "${c.context}"`);
-    return { slug: data.slug, url, lighthouse, axe, overflow, links, copy, screenshots, failures };
+    return { slug: data.slug, url, lighthouse, axe, overflow, links, beacon, copy, screenshots, failures };
   } finally {
     await browser.close();
   }

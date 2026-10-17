@@ -1,0 +1,12 @@
+{
+  "name": "@plumbline/wave",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./facts": "./src/facts.ts",
+    "./list": "./src/list.ts",
+    "./rank": "./src/rank.ts"
+  }
+}

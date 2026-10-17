@@ -1,11 +1,12 @@
 import type { Metadata } from 'next';
 import { preload } from 'react-dom';
 import { Found } from '@/components/Found';
-import { Motion } from '@/components/Motion';
+import { MotionLayer } from '@/components/MotionLayer';
 import { Shell } from '@/components/Shell';
 import { DESIGNS } from '@/designs';
 import { allPages, pageByPath, pic } from '@/lib/data';
-import { BASE, SENDER, SENDER_SITE, barLead } from '@/lib/offer';
+import { PHONE_MEDIA } from '@/components/Pic';
+import { BASE, FOUND_LINK, SENDER, SENDER_SITE } from '@/lib/offer';
 import { Visits } from '@/components/Visits';
 
 export const dynamicParams = false;
@@ -25,15 +26,19 @@ export default async function Page({ params }: { params: Promise<{ page: string 
   if (!design) throw new Error(`${data.slug}: no design called "${data.design}"`);
 
   // The first things a phone needs: the type the page is set in and the photo at the top.
-  for (const font of design.fonts) preload(`${BASE}/fonts/${font}.woff2`, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
+  const fonts = typeof design.fonts === 'function' ? design.fonts(data) : design.fonts;
+  const heroSizes = typeof design.heroSizes === 'function' ? design.heroSizes(data) : design.heroSizes;
+  for (const font of fonts) preload(`${BASE}/fonts/${font}.woff2`, { as: 'font', type: 'font/woff2', crossOrigin: 'anonymous' });
   const hero = pic(data, 'hero').sources[0]!;
-  preload(hero.srcset.split(' ')[0]!, { as: 'image', type: hero.type, imageSrcSet: hero.srcset, imageSizes: design.heroSizes, fetchPriority: 'high' });
+  const phoneHero = data.images.heroPhone?.sources[0];
 
   const Demo = design.Demo;
   return (
     <>
-      <Shell lead={barLead(data.name)} sender={{ name: SENDER, href: SENDER_SITE }} demo={<Demo data={data} />} found={<Found data={data} />} />
-      <Motion />
+      {phoneHero && <link rel="preload" as="image" type={phoneHero.type} imageSrcSet={phoneHero.srcset} imageSizes="100vw" media={PHONE_MEDIA} fetchPriority="high" />}
+      <link rel="preload" as="image" type={hero.type} imageSrcSet={hero.srcset} imageSizes={heroSizes} media={phoneHero ? `not all and ${PHONE_MEDIA}` : undefined} fetchPriority="high" />
+      <Shell business={data.name} foundLink={FOUND_LINK} sender={{ name: SENDER, href: SENDER_SITE }} demo={<Demo data={data} />} found={<Found data={data} />} />
+      <MotionLayer />
       <Visits token={data.path} />
     </>
   );

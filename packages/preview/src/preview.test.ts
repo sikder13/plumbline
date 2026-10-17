@@ -1,8 +1,12 @@
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { chromium } from 'playwright';
 import { describe, expect, it } from 'vitest';
-import { nzReadable, plainDates, plainImpact, plainSeen } from './build.ts';
+import { cropInPixels, mediaDir, nzReadable, plainDates, plainImpact, plainSeen, secondCheckList, secondCheckOf, withoutDashes } from './build.ts';
 import { bannedIssues, dashIssues, numberIssues, numberSet, scanPage, splitPage, visibleText } from './copy.ts';
 import { holds, kindOf, pageFacts } from './crawlmouse.ts';
-import { validMailto, validTel } from './gates.ts';
+import { quietContext, validMailto, validTel } from './gates.ts';
+import type { ContentFile } from './types.ts';
 import { summarise } from './visits.ts';
 
 describe('finding text for a page', () => {
@@ -23,6 +27,65 @@ describe('finding text for a page', () => {
 
   it('shows the time in New Zealand', () => {
     expect(nzReadable('2026-10-11T03:52:01.000Z')).toBe('11 October 2026, 4:52 pm');
+  });
+});
+
+describe('words quoted from a site on a recipe page', () => {
+  it('lose a dash set off by spaces, which the copy rules do not allow anywhere on a page', () => {
+    expect(withoutDashes('2023 © Copyright - Alpha Penguins. All rights reserved.')).toBe('2023 © Copyright, Alpha Penguins. All rights reserved.');
+    expect(withoutDashes('Open daily — bookings essential')).toBe('Open daily, bookings essential');
+    expect(withoutDashes('A family-run business')).toBe('A family-run business');
+    expect(withoutDashes(null)).toBeNull();
+  });
+
+  it('keep a range of prices as a range, written with "to" and never as a list of two prices', () => {
+    expect(withoutDashes('Tastings $45 - $60 per person')).toBe('Tastings $45 to $60 per person');
+    expect(withoutDashes('From NZ$1,250 – NZ$1,650, twin share')).toBe('From NZ$1,250 to NZ$1,650, twin share');
+    expect(withoutDashes('Adult $12.50—$14.00')).toBe('Adult $12.50 to $14.00');
+    expect(withoutDashes('Platters $25-40')).toBe('Platters $25 to 40');
+    expect(withoutDashes('$45pp - $60pp')).toBe('$45pp to $60pp');
+  });
+
+  it('keep opening hours as a range too', () => {
+    expect(withoutDashes('Open 9am – 5pm — every day')).toBe('Open 9am to 5pm, every day');
+    expect(withoutDashes('Cellar door 10:30am-4.30pm')).toBe('Cellar door 10:30am to 4.30pm');
+  });
+
+  it('do not take a price followed by something else for a range', () => {
+    expect(withoutDashes('Kayak hire $45 - 2 hours on the water')).toBe('Kayak hire $45, 2 hours on the water');
+    expect(withoutDashes('Call 03 123 4567 - 021 123 456')).toBe('Call 03 123 4567, 021 123 456');
+  });
+});
+
+describe('a crop given in fractions of a photograph', () => {
+  it('is turned into whole pixels that never reach past the edge', () => {
+    expect(cropInPixels({ left: 0.5, top: 0, width: 0.5, height: 1 }, 2000, 1000)).toEqual({ left: 1000, top: 0, width: 1000, height: 1000 });
+    // 0.3 and 0.7 of 1875 round to 563 and 1313, one pixel more than the photograph has.
+    expect(cropInPixels({ left: 0, top: 0.3, width: 1, height: 0.7 }, 2500, 1875)).toEqual({ left: 0, top: 563, width: 2500, height: 1312 });
+    expect(cropInPixels({ left: 0.9, top: 0.9, width: 0.5, height: 0.5 }, 1000, 1000)).toEqual({ left: 900, top: 900, width: 100, height: 100 });
+  });
+
+  it('is left as it is when it is already given in pixels', () => {
+    expect(cropInPixels({ left: 120, top: 40, width: 800, height: 600 }, 2000, 1000)).toEqual({ left: 120, top: 40, width: 800, height: 600 });
+  });
+});
+
+describe('where a page reads its photographs from', () => {
+  const own: ContentFile = { design: 'coastal', images: {}, demo: {} };
+
+  it('is its own content folder for a page whose business was not prepared as part of a wave', () => {
+    expect(mediaDir('alpha-tours', own)).toMatch(/previews[\\/]content[\\/]alpha-tours$/);
+  });
+
+  it('is the folder its wave was researched into, for a page with a design of its own as much as for a recipe page', () => {
+    expect(mediaDir('alpha-tours', { ...own, wave: true })).toMatch(/data[\\/]wave[\\/]alpha-tours$/);
+  });
+});
+
+describe('the words a visitor can read', () => {
+  it('leave out what is hidden from a screen reader as decoration, and keep a label that stands in for it', () => {
+    const html = '<h1 aria-label="Meet the penguins"><span aria-hidden="true">Meet the</span><span aria-hidden="true">penguins</span></h1><p aria-hidden="true">01 / 04</p><p>Four tours.</p>';
+    expect(visibleText(html)).toBe('Meet the penguins Four tours.');
   });
 });
 
@@ -51,6 +114,7 @@ describe('copy scan', () => {
     expect(copy.rest).toBe('Bar');
     const issues = scanPage(copy, { ownSite: 'nothing', measured: 'Score 28', offer: '' });
     expect(issues.map((i) => `${i.kind}:${i.where}`).sort()).toEqual(['dash:demo', 'number:demo']);
+    expect(scanPage({ demo: 'Rated 28', found: '', rest: '' }, { ownSite: '', measured: 'Score 28', offer: '' })).toEqual([]);
   });
 });
 
@@ -95,5 +159,86 @@ describe('visits', () => {
       { token: 'a-abc123', firstView: '2026-10-12T01:00:00Z', lastView: '2026-10-13T01:00:00Z', views: 2, findingsTab: true, replyOrCall: false },
       { token: 'b-def456', firstView: null, lastView: null, views: 0, findingsTab: false, replyOrCall: false },
     ]);
+  });
+});
+
+describe('a browser opened by a gate', () => {
+  it('answers the visit report itself, so a check is never counted as a visit', async () => {
+    let reports = 0;
+    const server = createServer((req, res) => {
+      if (req.url === '/api/demo-visit') {
+        reports += 1;
+        res.writeHead(204).end();
+        return;
+      }
+      res.writeHead(200, { 'content-type': 'text/html' }).end('<!doctype html><title>waiting</title><script>fetch("/api/demo-visit",{method:"POST",body:"{}"}).then(function(){document.title="sent"})</script>');
+    });
+    await new Promise<void>((done) => server.listen(0, '127.0.0.1', done));
+    const browser = await chromium.launch();
+    try {
+      const ctx = await quietContext(browser, { viewport: { width: 390, height: 844 } });
+      const page = await ctx.newPage();
+      await page.goto(`http://127.0.0.1:${(server.address() as AddressInfo).port}/`);
+      await page.waitForFunction(() => document.title === 'sent');
+      expect(reports).toBe(0);
+    } finally {
+      await browser.close();
+      server.close();
+    }
+  }, 60_000);
+});
+
+describe('what a recipe page says of the second crawl', () => {
+  const summary = { site_score: 66.06, grade: 'C+', ai_readiness_score: 92, ai_crawler_access: 'All major AI crawlers are allowed by robots.txt. A strength, not a finding.' };
+
+  it('gives the scores of a summary filed for a wave, and the approved findings in the words they are put in', () => {
+    expect(secondCheckOf(summary, ['The page at /old is still live.'])).toEqual({ score: '66 out of 100 (grade C+)', aiReadiness: '92 out of 100', crawlerAccess: 'All major AI crawlers are allowed by robots.txt.', findings: ['The page at /old is still live.'] });
+  });
+
+  it('carries the approved findings even where no summary is on file, and at most three of them', () => {
+    expect(secondCheckOf(null, ['a.', 'b.', 'c.', 'd.'])).toEqual({ score: null, aiReadiness: null, crawlerAccess: null, findings: ['a.', 'b.', 'c.'] });
+  });
+
+  it('carries no dash, even inside a page title it quotes', () => {
+    expect(secondCheckOf(null, ['The page at /old is still live, under the title "Cellar Door - Wine Sales Only | Alpha Wines".'])?.findings).toEqual(['The page at /old is still live, under the title "Cellar Door, Wine Sales Only | Alpha Wines".']);
+  });
+
+  it('is left off the page when there is neither a summary nor a finding', () => {
+    expect(secondCheckOf(null, [])).toBeNull();
+  });
+
+  it('sets a note a person confirmed after the findings, within the same three lines', () => {
+    expect(secondCheckOf(summary, ['a.', 'b.'], ['A minor tidy up: c.'])?.findings).toEqual(['a.', 'b.', 'A minor tidy up: c.']);
+    expect(secondCheckOf(summary, ['a.', 'b.', 'c.'], ['A minor tidy up: d.'])?.findings).toEqual(['a.', 'b.', 'c.']);
+    expect(secondCheckOf(null, [], ['A minor tidy up: c.'])?.findings).toEqual(['A minor tidy up: c.']);
+  });
+
+  it('says that no broken links were found when the summary says so, and nothing about links otherwise', () => {
+    expect(secondCheckOf({ ...summary, broken_links: 'None found. All 9 pages answered 200 and none is orphaned.' }, [])?.brokenLinks).toBe('None found');
+    expect(secondCheckOf({ ...summary, broken_links: '2 links lead to missing pages.' }, [])?.brokenLinks).toBeUndefined();
+    expect(secondCheckOf(summary, [])?.brokenLinks).toBeUndefined();
+  });
+});
+
+describe("which of the second tool's findings a wave page lists", () => {
+  const rows = [
+    { id: 1, status: 'approved', reproduced: 1 },
+    { id: 2, status: 'rejected', reproduced: 1 },
+    { id: 3, status: 'rejected', reproduced: 1 },
+    { id: 4, status: 'rejected', reproduced: 0 },
+    { id: 5, status: 'resolved', reproduced: 1 },
+  ];
+  const ids = (also?: number[]) => secondCheckList(rows, also).map((r) => r.id);
+
+  it('lists the approved ones, and after them any the content file names, each once', () => {
+    expect(ids()).toEqual([1]);
+    expect(ids([3, 2])).toEqual([1, 3, 2]);
+    expect(ids([1, 2])).toEqual([1, 2]);
+  });
+
+  it('refuses a named finding that did not hold on our own reading, or that is not the second tool\'s', () => {
+    expect(() => ids([4])).toThrow('finding 4 did not hold when we opened its pages ourselves');
+    expect(() => ids([5])).toThrow('finding 5 did not hold when we opened its pages ourselves');
+    expect(() => ids([9])).toThrow('finding 9 is not one of the second check\'s findings for this business');
   });
 });

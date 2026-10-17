@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./ids": "./src/ids.ts",
-    "./review": "./src/review.ts"
+    "./review": "./src/review.ts",
+    "./testing": "./src/testing.ts"
   }
 }

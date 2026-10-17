@@ -5,14 +5,15 @@ import { Command } from 'commander';
 import { ROOT, db } from '@plumbline/core';
 import { CHECK_IDS } from '@plumbline/checks';
 import { loadLibraryRaw, validateLibrary } from '@plumbline/impact';
+import { exportIfClear } from './approve.ts';
 import { auditBatch, type RunKind } from './audit.ts';
 import { calibrate, writeCalibration } from './calibrate.ts';
 import { aiCommand, aiSummary, brandCommand, contactsCommand, evaluateStoredCommand, costCommand, discoverCommand, purgeCommand, qualifyCommand } from './commands.ts';
-import { exportBusiness } from '@plumbline/export';
 import { writeReport } from '@plumbline/report';
 import { registerPreview } from './preview.ts';
 import { seed } from './seed.ts';
 import { selectBatch } from './select.ts';
+import { registerWave } from './wave.ts';
 
 /** Limits of this build that anyone reading a report should know. */
 const UNCERTAIN = [
@@ -127,7 +128,7 @@ program
   .requiredOption('--business <slug>', 'business slug')
   .option('--batch <name>', 'batch name')
   .action((o: { business: string; batch?: string }) => {
-    const r = exportBusiness(db(), o.business, { batch: o.batch });
+    const r = exportIfClear(db(), o.business, { batch: o.batch });
     if (r.ok) return void console.log(`Exported ${r.exported} findings to ${r.dir}`);
     console.error(`Export refused for ${o.business}:`);
     for (const f of r.failures) console.error(`  ${f.check ?? ''} [${f.gate}] ${f.reason}`);
@@ -188,5 +189,6 @@ program
   });
 
 registerPreview(program);
+registerWave(program);
 
 await program.parseAsync();

@@ -1,7 +1,7 @@
 import pLimit from 'p-limit';
 import { domainOf, env, foldName, requireEnv, utcDay, utcIso, type Business, type Db } from '@plumbline/core';
 import { BudgetStop, guard, loadPrices, record, tokenCost, type GuardOptions, type Prices } from '@plumbline/budget';
-import { questionsFor, type AiQuestion, type AiSummary } from '@plumbline/checks';
+import { ANSWERS_NEEDED, ownActivities, questionsFor, type AiQuestion, type AiSummary, type HomepageWords } from '@plumbline/checks';
 
 export type ProviderName = 'openai' | 'perplexity';
 
@@ -177,7 +177,22 @@ export interface AiPlan {
   perCall: Record<ProviderName, number>;
 }
 
+/** A business that gets no activity question, or fewer than were stated for it, and why. */
+export interface Unasked {
+  businessId: number;
+  slug: string;
+  reason: string;
+}
+
+export interface BatchPlan extends AiPlan {
+  unasked: Unasked[];
+}
+
 export interface PlanOptions {
+  /** What the business's homepage says, from its newest stored capture, or null when none has been read. */
+  homepage: (b: Business) => HomepageWords | null;
+  /** Activities a person has written down for the business, main one first. */
+  stated?: (b: Business) => string[];
   runs?: number;
   brandQuestions?: number;
   providers?: ProviderName[];
@@ -204,16 +219,27 @@ export function perCallEstimate(db: Db, prices: Prices): Record<ProviderName, nu
   return { openai: o.n >= 5 && o.a ? o.a * 1.15 : openaiDefault, perplexity: p.n >= 5 && p.a ? p.a * 1.15 : pplxDefault };
 }
 
-export function plan(db: Db, opts: PlanOptions): AiPlan {
+export function plan(db: Db, opts: PlanOptions): BatchPlan {
   const runs = opts.runs ?? 3;
   const providers = opts.providers ?? ['openai', 'perplexity'];
   const day = opts.day ?? utcDay();
   const byKey = new Map<string, PlanItem>();
+  const unasked: Unasked[] = [];
+  const brands = opts.brandQuestions ?? 2;
+  // A run that asks no neutral questions leaves the ones linked before, with their answers, where they are.
+  const clear = db.prepare(`DELETE FROM ai_question_links WHERE batch = ? AND business_id = ?${brands ? '' : " AND kind != 'brand'"}`);
   const link = db.prepare('INSERT OR REPLACE INTO ai_question_links (business_id, batch, question_key, kind) VALUES (?, ?, ?, ?)');
   db.transaction(() => {
-    db.prepare('DELETE FROM ai_question_links WHERE batch = ?').run(opts.batch);
     for (const b of opts.businesses) {
-      for (const q of questionsFor(b, opts.brandQuestions ?? 2)) {
+      // Only the businesses asked about are touched, so a run for a few leaves the rest of the batch as it was.
+      clear.run(opts.batch, b.id);
+      const home = opts.homepage(b);
+      const stated = opts.stated?.(b) ?? [];
+      const questions = questionsFor(b, home, { stated, brandQuestions: brands });
+      const refused = home ? ownActivities(home, stated).unconfirmed : [];
+      const why = !home ? 'no homepage has been read' : refused.length ? `the homepage does not show: ${refused.join(', ')}` : !b.town && !b.region ? 'no town is stored' : questions.some((q) => q.kind === 'activity') ? null : 'the homepage shows no activity';
+      if (why) unasked.push({ businessId: b.id, slug: b.slug, reason: why });
+      for (const q of questions) {
         const item = byKey.get(q.key) ?? { question: q, businessIds: [] };
         item.businessIds.push(b.id);
         byKey.set(q.key, item);
@@ -250,6 +276,7 @@ export function plan(db: Db, opts: PlanOptions): AiPlan {
     estimateUsd,
     totalUsd: estimateUsd.openai + estimateUsd.perplexity,
     perCall,
+    unasked,
   };
 }
 
@@ -314,9 +341,9 @@ export async function runPlan(db: Db, p: AiPlan, opts: RunOptions): Promise<RunR
   return result;
 }
 
-/** Works out, for every stored answer in a batch, which businesses it names. */
-export function indexMentions(db: Db, batch: string): number {
-  const links = db.prepare('SELECT l.business_id, l.question_key FROM ai_question_links l WHERE l.batch = ?').all(batch) as { business_id: number; question_key: string }[];
+/** Works out, for every stored answer in a batch, which businesses it names. Given some businesses, only the answers to their questions are gone through. */
+export function indexMentions(db: Db, batch: string, businessIds?: number[]): number {
+  const links = (db.prepare('SELECT l.business_id, l.question_key FROM ai_question_links l WHERE l.batch = ?').all(batch) as { business_id: number; question_key: string }[]).filter((l) => !businessIds || businessIds.includes(l.business_id));
   const all = db.prepare("SELECT id, name, domain, town, region FROM businesses WHERE status != 'excluded' OR exclude_reason LIKE 'large_group%'").all() as { id: number; name: string; domain: string | null; town: string | null; region: string | null }[];
   const keys = [...new Set(links.map((l) => l.question_key))];
   const answers = db.prepare(`SELECT id, question_key, answer, citations FROM ai_answers WHERE question_key IN (${keys.map(() => '?').join(',') || "''"})`).all(...keys) as { id: number; question_key: string; answer: string; citations: string }[];
@@ -351,19 +378,25 @@ export function indexMentions(db: Db, batch: string): number {
 }
 
 /**
- * How a business fares in the shared questions asked about its place. Each question has several
- * answers (runs times providers). The figure reported is from the question where the business does
- * best, so the finding only fires when it is absent everywhere it was looked for.
+ * How a business fares in the questions asked about its own activities. Each question has several
+ * answers (runs times providers) and is kept apart in `asked`. The headline figures, the others
+ * named and the sample are all from the one question where the business does best, so a sentence
+ * built from them is true of that question. A finding built on this needs every question to leave
+ * the business out.
  */
 export function aiSummary(db: Db, business: Pick<Business, 'id' | 'name'>, batch: string): AiSummary | null {
-  const keys = (db.prepare("SELECT question_key FROM ai_question_links WHERE business_id = ? AND batch = ? AND kind != 'brand'").all(business.id, batch) as { question_key: string }[]).map((r) => r.question_key);
-  let best: AiSummary | null = null;
+  const keys = (db.prepare("SELECT question_key FROM ai_question_links WHERE business_id = ? AND batch = ? AND kind != 'brand' ORDER BY rowid").all(business.id, batch) as { question_key: string }[]).map((r) => r.question_key);
+  type Row = { id: number; question: string; provider: string; asked_at: string; answer: string; citations: string };
+  const sampleOf = (a: Row) => ({ provider: a.provider, askedAt: a.asked_at, answer: a.answer, citations: (JSON.parse(a.citations) as Citation[]).map((c) => c.url) });
+  const asked: AiSummary['asked'] = [];
+  const times: number[] = [];
+  let best: { ratio: number; question: AiSummary['asked'][number]; text: string } | null = null;
   for (const key of keys) {
-    const answers = db.prepare('SELECT id, question, provider, asked_at, answer, citations FROM ai_answers WHERE question_key = ? ORDER BY provider, run_index').all(key) as { id: number; question: string; provider: string; asked_at: string; answer: string; citations: string }[];
-    if (answers.length < 4) continue;
+    const answers = db.prepare('SELECT id, question, provider, asked_at, answer, citations FROM ai_answers WHERE question_key = ? ORDER BY provider, run_index').all(key) as Row[];
+    if (!answers.length) continue;
     const ids = answers.map((a) => a.id);
-    const mentions = db.prepare(`SELECT answer_id, business_id, name, confirmed FROM ai_mentions WHERE answer_id IN (${ids.map(() => '?').join(',')}) AND (confirmed IS NULL OR confirmed = 1)`).all(...ids) as { answer_id: number; business_id: number | null; name: string }[];
-    const namedIn = new Set(mentions.filter((m) => m.business_id === business.id).map((m) => m.answer_id)).size;
+    const mentions = db.prepare(`SELECT answer_id, business_id, name FROM ai_mentions WHERE answer_id IN (${ids.map(() => '?').join(',')}) AND (confirmed IS NULL OR confirmed = 1)`).all(...ids) as { answer_id: number; business_id: number | null; name: string }[];
+    const named = new Set(mentions.filter((m) => m.business_id === business.id).map((m) => m.answer_id));
     const others = new Map<string, { name: string; answers: Set<number> }>();
     for (const m of mentions) {
       if (m.business_id === business.id) continue;
@@ -372,26 +405,37 @@ export function aiSummary(db: Db, business: Pick<Business, 'id' | 'name'>, batch
       e.answers.add(m.answer_id);
       others.set(k, e);
     }
-    const withoutTarget = answers.find((a) => !mentions.some((m) => m.answer_id === a.id && m.business_id === business.id)) ?? answers[0]!;
-    // Split the answers into those asked within an hour of the first, and those asked later.
-    const times = answers.map((a) => new Date(a.asked_at).getTime());
-    const first = Math.min(...times);
+    const otherList = [...others.values()].map((o) => ({ name: o.name, answers: o.answers.size, ids: o.answers })).sort((x, y) => y.answers - x.answers);
+    // Split this question's answers into those asked within an hour of its first, and those asked later.
+    const at = answers.map((a) => new Date(a.asked_at).getTime());
+    const first = Math.min(...at);
     const early = new Set(answers.filter((a) => new Date(a.asked_at).getTime() - first < 60 * 60_000).map((a) => a.id));
     const late = new Set(answers.filter((a) => !early.has(a.id)).map((a) => a.id));
-    const otherList = [...others.values()].map((o) => ({ name: o.name, answers: o.answers.size, ids: o.answers })).sort((x, y) => y.answers - x.answers);
     const strong = otherList.filter((o) => o.answers >= 3);
-    const targetAnswers = new Set(mentions.filter((m) => m.business_id === business.id).map((m) => m.answer_id));
-    const namedLess = (ids: Set<number>) => [...ids].filter((id) => targetAnswers.has(id)).length <= 1;
-    const othersIn = (ids: Set<number>) => strong.filter((o) => [...o.ids].some((id) => ids.has(id))).length >= 2;
-    const summary: AiSummary = {
-      questions: answers.length,
-      namedIn,
+    const unnamedIn = (set: Set<number>) => ![...set].some((id) => named.has(id));
+    const othersIn = (set: Set<number>) => strong.filter((o) => [...o.ids].some((id) => set.has(id))).length >= 2;
+    const question = {
+      question: answers[0]!.question,
+      answers: answers.length,
+      namedIn: named.size,
       others: otherList.map(({ name, answers: n }) => ({ name, answers: n })).slice(0, 12),
-      sample: { question: withoutTarget.question, provider: withoutTarget.provider, askedAt: withoutTarget.asked_at, answer: withoutTarget.answer, citations: (JSON.parse(withoutTarget.citations) as Citation[]).map((c) => c.url) },
-      spanMinutes: (Math.max(...times) - first) / 60_000,
-      holdsInBothPasses: late.size > 0 && early.size > 0 && namedLess(early) && namedLess(late) && othersIn(early) && othersIn(late),
+      sample: sampleOf(answers.find((a) => !named.has(a.id)) ?? answers[0]!),
+      holdsInBothPasses: late.size > 0 && early.size > 0 && unnamedIn(early) && unnamedIn(late) && othersIn(early) && othersIn(late),
     };
-    if (!best || summary.namedIn / summary.questions > best.namedIn / best.questions) best = summary;
+    asked.push(question);
+    times.push(...at);
+    const ratio = named.size / answers.length;
+    if (answers.length >= ANSWERS_NEEDED && (!best || ratio > best.ratio)) best = { ratio, question, text: answers[0]!.question };
   }
-  return best;
+  if (!best) return null;
+  return {
+    questions: best.question.answers,
+    namedIn: best.question.namedIn,
+    others: best.question.others,
+    sample: best.question.sample ? { question: best.text, ...best.question.sample } : null,
+    asked,
+    lastAskedAt: new Date(Math.max(...times)).toISOString(),
+    spanMinutes: (Math.max(...times) - Math.min(...times)) / 60_000,
+    holdsInBothPasses: asked.every((q) => q.answers >= ANSWERS_NEEDED && q.holdsInBothPasses),
+  };
 }

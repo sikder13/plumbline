@@ -1,16 +1,14 @@
 .root {
   --cream: #fff3e4;
   --ink: #222223;
-  --red: #c53c3c;
-  --red-deep: #b23232;
+  --red: #b23232;
   --sea: #cdd8e3;
-  --sticky-bg: var(--cream);
-  --sticky-main-bg: var(--red-deep);
-  --sticky-call-ink: var(--ink);
-  --sticky-radius: 0;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --float-bg: rgba(178, 50, 50, 0.92);
+  --float-font: 'Karla', system-ui, sans-serif;
   font-family: 'Karla', system-ui, sans-serif;
   font-size: 17px;
-  line-height: 1.55;
+  line-height: 1.5;
   color: var(--ink);
   background: var(--cream);
 }
@@ -19,587 +17,1010 @@
 .root h2,
 .root h3,
 .wordmark {
+  margin: 0;
   font-family: 'DM Serif Display', Georgia, serif;
   font-weight: 400;
-}
-
-.root h1,
-.root h2,
-.root h3 {
-  margin: 0;
   line-height: 1;
 }
 
 .root h2 {
-  font-size: clamp(44px, 8.5vw, 96px);
+  font-size: clamp(48px, 8vw, 104px);
   letter-spacing: -0.01em;
 }
 
 .root p {
-  margin: 0 0 1em;
+  margin: 0;
 }
 
 .root a:focus-visible,
 .root button:focus-visible {
-  outline: 3px solid var(--ink);
+  outline: 3px solid currentColor;
   outline-offset: 3px;
-}
-
-.wrap {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
 }
 
 .wordmark {
   display: inline-flex;
   flex-direction: column;
-  font-size: 15px;
-  line-height: 0.98;
+  font-size: 14px;
+  line-height: 1;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-}
-
-/* Hero: a tall photo and a headline as large as the screen allows. */
-.hero {
-  position: relative;
-  min-height: min(calc(100svh - var(--bar-h) - var(--sticky-h)), 940px);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  color: #fff;
-  background: var(--ink);
-}
-
-.heroPhoto {
-  position: absolute;
-  inset: 0;
-}
-
-.heroPhoto img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.heroPhoto::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(20, 20, 22, 0.62) 0%, rgba(20, 20, 22, 0.25) 30%, rgba(20, 20, 22, 0.45) 62%, rgba(20, 20, 22, 0.82) 100%);
-}
-
-.top {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 18px 20px;
-}
-
-.homeLink {
-  color: #fff;
-  text-decoration: none;
-}
-
-.nav {
-  display: none;
-  gap: 30px;
-}
-
-.nav a {
-  color: #fff;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.nav a:hover {
-  text-decoration: underline;
-  text-underline-offset: 6px;
-}
-
-.topBook {
-  display: none;
-}
-
-.heroText {
-  position: relative;
-  z-index: 2;
-  margin: auto 0 0;
-  padding: 40px 20px 34px;
-  text-align: center;
-}
-
-.place {
-  margin: 0 0 14px !important;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-}
-
-.hero h1 {
-  max-width: 13ch;
-  margin: 0 auto;
-  font-size: clamp(50px, 13.4vw, 156px);
-  line-height: 0.92;
-  text-wrap: balance;
-}
-
-.line {
-  max-width: 40ch;
-  margin: 22px auto 0 !important;
-  font-size: 18px;
 }
 
 .red {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 54px;
-  padding: 0 30px;
-  background: var(--red-deep);
+  min-height: 56px;
+  padding: 0 32px;
+  border-radius: 999px;
+  background: var(--red);
   color: #fff;
   font-weight: 700;
-  font-size: 16px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: 17px;
   text-decoration: none;
-  transition: background 0.2s ease, transform 0.2s ease;
+  will-change: transform;
 }
 
-.red:hover {
-  background: #9c2828;
-  transform: translateY(-1px);
+/* A frosted bar that floats over the page on large screens. */
+.nav {
+  display: none;
 }
 
-/* The coast. */
-.coast {
-  padding: 72px 0;
-  background: var(--sea);
-  scroll-margin-top: var(--bar-h);
-}
-
-.lead {
-  max-width: 48ch;
-  margin: 16px 0 28px !important;
-  font-size: 19px;
-}
-
-.map {
-  display: grid;
-  gap: 20px;
-}
-
-.map [data-map] {
+/* Hero: their own film under a headline that rises line by line. */
+.hero {
   position: relative;
-  width: 100%;
-  max-width: 520px;
-  margin: 0 auto;
+  min-height: calc(100svh - var(--bar-h));
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  color: #fff;
+  background: var(--ink);
 }
 
-.map svg {
+.heroMedia {
+  position: absolute;
+  inset: 0;
+}
+
+.heroMedia picture,
+.heroMedia img,
+.film {
+  display: block;
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  overflow: visible;
 }
 
-.map [data-land] {
+.heroMedia img,
+.film {
+  object-fit: cover;
+}
+
+.film {
+  opacity: 0;
+  transition: opacity 0.9s var(--ease);
+}
+
+.film[data-playing] {
+  opacity: 1;
+}
+
+.heroMedia::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(20, 20, 22, 0.38) 0%, rgba(20, 20, 22, 0.04) 24%, rgba(20, 20, 22, 0.42) 56%, rgba(20, 20, 22, 0.9) 100%);
+}
+
+.heroMark {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  z-index: 2;
+  color: #fff;
+  text-decoration: none;
+}
+
+.heroText {
+  position: relative;
+  z-index: 2;
+  padding: 0 24px 40px;
+}
+
+.place {
+  margin-bottom: 16px !important;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.hero h1 {
+  font-size: clamp(52px, 14.6vw, 168px);
+  line-height: 0.9;
+  letter-spacing: -0.015em;
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+}
+
+.line > span {
+  display: block;
+}
+
+.sub {
+  max-width: 30ch;
+  margin: 20px 0 28px !important;
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+/* Statement and rating. */
+.intro {
+  display: grid;
+  gap: 40px;
+  padding: 72px 24px;
+}
+
+.statement {
+  max-width: 18ch;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(34px, 5.2vw, 72px);
+  line-height: 1.04;
+}
+
+.rating {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.rating b {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(72px, 10vw, 136px);
+  line-height: 0.8;
+  color: var(--red);
+}
+
+.rating > span {
+  font-weight: 700;
+}
+
+.rating small {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+/* The coast, held in view while its spots light up. */
+.coast {
+  background: var(--sea);
+}
+
+.story {
+  position: relative;
+  height: calc(var(--steps) * 58svh + 100svh);
+}
+
+.story [data-frame] {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 24px 88px;
+  overflow: hidden;
+}
+
+.storyHead h2 {
+  font-size: clamp(40px, 6vw, 88px);
+}
+
+.storyHead p {
+  display: none;
+}
+
+/* The map and its credit are one block, so nothing below can ride up over them. */
+.story [data-chart] {
+  flex: 0 0 auto;
+  margin: 12px -24px 12px;
+}
+
+.story [data-map] {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  counter-reset: dot;
+}
+
+.story svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.story path {
   fill: var(--cream);
   stroke: var(--ink);
-  stroke-width: 0.5;
+  stroke-width: 1.5px;
   stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
 }
 
-.map [data-island] {
-  fill: var(--cream);
-  stroke: var(--ink);
-  stroke-width: 0.5;
-  stroke-linejoin: round;
-}
-
-.map button {
+.story [data-map] button {
   position: absolute;
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-height: 44px;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
   padding: 0;
   border: 0;
   background: none;
   color: var(--ink);
-  font: 700 13px/1.1 'Karla', system-ui, sans-serif;
-  text-align: left;
+  font: 700 14px/1 'Karla', system-ui, sans-serif;
   cursor: pointer;
-  transform: translate(-11px, -50%);
 }
 
-.map button[data-side='left'] {
-  flex-direction: row-reverse;
-  text-align: right;
-  transform: translate(calc(-100% + 11px), -50%);
-}
-
-.map button i {
+.story [data-map] button i {
+  counter-increment: dot;
   flex: 0 0 auto;
-  width: 22px;
-  height: 22px;
-  border: 2px solid var(--ink);
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: 0 8px;
   border-radius: 50%;
   background: var(--cream);
-  transition: transform 0.2s ease, background 0.2s ease;
+  box-shadow: 0 0 0 1.5px var(--ink);
+  font: normal 700 14px/1 'Karla', system-ui, sans-serif;
+  transition: transform 0.5s var(--ease), background-color 0.3s var(--ease), color 0.3s var(--ease), box-shadow 0.5s var(--ease);
 }
 
-.map button span {
-  padding: 3px 6px;
-  background: rgba(255, 243, 228, 0.86);
+.story [data-map] button i::before {
+  content: counter(dot);
 }
 
-.map button:hover i {
-  transform: scale(1.15);
-}
-
-.map button[aria-pressed='true'] i {
-  background: var(--red);
-  border-color: var(--ink);
-}
-
-.map button[aria-pressed='true'] span {
+.story [data-map] button[data-state='done'] i {
   background: var(--ink);
   color: var(--cream);
 }
 
-.map [data-panel] {
-  padding: 24px 22px;
-  background: var(--cream);
-  border: 2px solid var(--ink);
-  min-height: 210px;
+.story [data-map] button[data-state='on'] i {
+  background: var(--red);
+  color: #fff;
+  transform: scale(1.22);
+  box-shadow: 0 0 0 1.5px var(--red), 0 0 0 9px rgba(178, 50, 50, 0.22);
 }
 
-.map [data-tag] {
-  margin: 0 0 8px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--red-deep);
+/* The name of the lit spot is shown on the map on large screens only. On a phone the list below carries it. */
+.story [data-map] button span {
+  display: none;
 }
 
-.map [data-panel] h3 {
-  margin-bottom: 12px;
-  font-size: 34px;
+.story [data-credit] {
+  margin: 6px 24px 0 !important;
+  font-size: 11px;
+  color: #454a52;
 }
 
-.map [data-panel] p:last-child {
+.story ol {
+  counter-reset: spot;
+}
+
+.story [data-legend] {
+  list-style: none;
   margin: 0;
+  padding: 0;
+  border-top: 1.5px solid var(--ink);
 }
 
-/* Trips: big alternating blocks. */
-.trips {
-  padding: 72px 0 24px;
-  scroll-margin-top: var(--bar-h);
+.story [data-legend] li {
+  counter-increment: spot;
+  border-bottom: 1px solid rgba(34, 34, 35, 0.3);
 }
 
-.trips h2 {
-  margin-bottom: 32px;
-}
-
-.trip {
-  display: grid;
-  margin-bottom: 48px;
-}
-
-.tripPhoto img {
+.story [data-legend] button {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
   width: 100%;
-  aspect-ratio: 16 / 10;
-  object-fit: cover;
+  min-height: 34px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #454a52;
+  font: 700 16px/1.2 'Karla', system-ui, sans-serif;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.3s var(--ease);
 }
 
-.tripBody {
-  padding: 24px 0 0;
+.story [data-legend] button::before {
+  content: counter(spot);
+  flex: 0 0 16px;
+  font-size: 13px;
+}
+
+.story [data-legend] li[data-state='on'] button {
+  color: var(--ink);
+}
+
+.story [data-legend] li[data-state='on'] [data-name] {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.story [data-tag] {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: #8a1f1f;
+  visibility: hidden;
+}
+
+.story li[data-state='on'] [data-tag] {
+  visibility: visible;
+}
+
+.story [data-text] {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.5s var(--ease);
+}
+
+.story li[data-state='on'] [data-text] {
+  grid-template-rows: 1fr;
+}
+
+.story [data-text] p {
+  overflow: hidden;
+  padding-left: 26px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.story li[data-state='on'] [data-text] p {
+  padding-bottom: 10px;
+}
+
+/* Trips: wide panels in a row, prices as large as headlines. */
+.trips {
+  padding: 72px 0;
+  scroll-margin-top: 8px;
+}
+
+.tripsHead {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+  padding: 0 24px 32px;
+}
+
+.tripsHead p {
+  max-width: 34ch;
+}
+
+.side [data-side-wrap] {
+  position: relative;
+}
+
+.side [data-side-track] {
+  display: flex;
+  gap: 12px;
+  padding: 0 24px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 24px;
+  scrollbar-width: none;
+}
+
+.side [data-side-track]::-webkit-scrollbar {
+  display: none;
+}
+
+.side [data-side-cue] {
+  display: none;
+}
+
+.panel {
+  position: relative;
+  flex: 0 0 84vw;
+  min-height: 520px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  scroll-snap-align: start;
+  background: var(--ink);
+  color: #fff;
+  transition: transform 0.6s var(--ease), box-shadow 0.6s var(--ease);
+}
+
+.panelPhoto {
+  position: absolute;
+  inset: 0;
+}
+
+.panelPhoto picture,
+.panelPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.panelPhoto img {
+  object-fit: cover;
+  transition: transform 0.9s var(--ease);
+}
+
+.panelPhoto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(20, 20, 22, 0) 18%, rgba(20, 20, 22, 0.68) 58%, rgba(20, 20, 22, 0.94) 100%);
+}
+
+.panelBody {
+  position: relative;
+  width: 100%;
+  padding: 24px;
 }
 
 .duration {
-  margin: 0 0 8px !important;
-  font-size: 14px;
+  margin-bottom: 8px !important;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--red-deep);
+  font-size: 15px;
 }
 
-.trip h3 {
-  margin-bottom: 14px;
-  font-size: clamp(34px, 5vw, 56px);
+.panel h3 {
+  font-size: clamp(34px, 3.6vw, 56px);
+}
+
+.panelText {
+  max-width: 36ch;
+  margin: 12px 0 0 !important;
+  font-size: 16px;
+  line-height: 1.4;
 }
 
 .prices {
-  list-style: none;
-  margin: 20px 0 24px;
-  padding: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 36px;
-  border-top: 2px solid var(--ink);
-  padding-top: 14px;
+  gap: 32px;
+  margin: 24px 0 0;
 }
 
-.prices li {
+.prices div {
   display: grid;
 }
 
-.prices span {
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+.prices dd {
+  margin: 0;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(64px, 7vw, 112px);
+  line-height: 0.86;
 }
 
-.prices b {
+.prices dt {
+  order: 2;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.poa {
+  margin-top: 24px !important;
   font-family: 'DM Serif Display', Georgia, serif;
-  font-weight: 400;
-  font-size: 46px;
+  font-size: 34px;
   line-height: 1;
 }
 
-/* Us. */
+/* Hayden and Richie. */
 .us {
-  padding: 72px 0;
   background: var(--ink);
   color: var(--cream);
 }
 
-.usGrid {
-  display: grid;
-  gap: 32px;
+.usPhoto {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+}
+
+.usPhoto picture,
+.usPhoto img {
+  display: block;
+  width: 100%;
 }
 
 .usPhoto img {
-  width: 100%;
   aspect-ratio: 1;
   object-fit: cover;
 }
 
-.us h2 {
-  font-size: clamp(40px, 6.4vw, 76px);
+.usPhoto figcaption {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 56px 24px 16px;
+  background: linear-gradient(180deg, rgba(20, 20, 22, 0), rgba(20, 20, 22, 0.86));
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.usText {
+  padding: 56px 24px 72px;
+}
+
+.usText h2 {
+  font-size: 17px;
+  font-family: 'Karla', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.usStatement {
+  margin: 16px 0 32px !important;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(36px, 4.4vw, 64px);
+  line-height: 1.02;
 }
 
 .person {
-  padding: 18px 0;
-  border-top: 1px solid rgba(255, 243, 228, 0.35);
+  padding: 16px 0;
+  border-top: 1px solid rgba(255, 243, 228, 0.3);
 }
 
 .person h3 {
-  margin-bottom: 8px;
-  font-size: 28px;
+  margin-bottom: 4px;
+  font-size: 24px;
 }
 
 .person p {
-  margin: 0;
+  max-width: 40ch;
+  font-size: 16px;
 }
 
-/* Before you board. */
-.board {
-  scroll-margin-top: var(--bar-h);
-  padding-bottom: 72px;
+/* How to book: a card resting over open water. */
+.book {
+  position: relative;
+  padding: 0 0 72px;
+  background: var(--cream);
+  scroll-margin-top: 8px;
 }
 
-.boardPhoto img {
+.bookPhoto {
+  overflow: hidden;
+  height: 300px;
+}
+
+.bookPhoto picture,
+.bookPhoto img {
+  display: block;
   width: 100%;
-  height: clamp(200px, 36vw, 460px);
+  height: 100%;
+}
+
+.bookPhoto img {
   object-fit: cover;
 }
 
-.board h2 {
-  margin: 56px 0 24px;
-  font-size: clamp(40px, 6.4vw, 76px);
+.bookCard {
+  position: relative;
+  margin: -88px 16px 0;
+  padding: 32px 24px;
+  background: var(--cream);
+  border-radius: 4px;
 }
 
-.list {
-  margin: 0;
-  display: grid;
-  border-top: 2px solid var(--ink);
+.bookCard h2 {
+  font-size: clamp(44px, 5vw, 72px);
 }
 
-.list div {
-  padding: 18px 0;
-  border-bottom: 1px solid rgba(34, 34, 35, 0.35);
+.bookCard ol {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  counter-reset: step;
 }
 
-.list dt {
+.bookCard li {
+  position: relative;
+  padding: 16px 0 16px 56px;
+  border-top: 1px solid rgba(34, 34, 35, 0.25);
+  counter-increment: step;
+}
+
+.bookCard li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 10px;
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 26px;
-  line-height: 1.1;
+  font-size: 44px;
+  line-height: 1;
+  color: var(--red);
 }
 
-.list dd {
-  margin: 8px 0 0;
+.bookCard li h3 {
+  font-family: 'Karla', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.3;
 }
 
-/* Book. */
-.end {
-  padding: 72px 0;
-  background: var(--sea);
+.bookCard li p {
+  font-size: 16px;
 }
 
-.endGrid {
+.provided {
+  padding: 16px 0 24px;
+  border-top: 1px solid rgba(34, 34, 35, 0.25);
+  font-size: 16px;
+}
+
+.bookRow {
   display: grid;
-  gap: 32px;
+  gap: 8px;
+  justify-items: start;
 }
 
-.end p {
-  max-width: 46ch;
-  margin: 18px 0 26px;
-  font-size: 19px;
-}
-
-.endRow {
+.reach {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 0 20px;
 }
 
-.plain {
-  display: inline-flex;
-  align-items: center;
-  min-height: 54px;
-  padding: 0 24px;
-  border: 2px solid var(--ink);
-  color: var(--ink);
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.mail {
+.reach a {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  margin-top: 16px;
   color: var(--ink);
   font-weight: 700;
   overflow-wrap: anywhere;
 }
 
-.sign img {
-  width: 70%;
-  max-width: 320px;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border: 2px solid var(--ink);
-}
-
 .foot {
   display: grid;
-  gap: 14px;
-  padding: 36px 20px 40px;
+  gap: 16px;
+  padding: 40px 24px 104px;
   background: var(--ink);
   color: var(--cream);
 }
 
-@media (min-width: 900px) {
-  .top {
-    padding: 26px 40px;
+@media (hover: hover) and (pointer: fine) {
+  .panel:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 28px 48px -24px rgba(20, 20, 22, 0.55);
   }
-  .nav {
-    display: flex;
+  .panel:hover .panelPhoto img {
+    transform: scale(1.05);
   }
-  .topBook {
-    display: inline-flex;
-    align-items: center;
-    min-height: 46px;
-    padding: 0 22px;
-    background: var(--red-deep);
-    color: #fff;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    text-decoration: none;
-  }
-  .heroText {
-    padding-bottom: 64px;
-  }
-  .line {
-    font-size: 22px;
-  }
-  .wrap {
-    padding: 0 40px;
-  }
-  .coast,
-  .us,
-  .end {
-    padding: 128px 0;
-  }
-  .map {
-    grid-template-columns: minmax(0, 520px) 1fr;
-    gap: 64px;
-    align-items: center;
-  }
-  .map [data-map] {
-    margin: 0;
-  }
-  .map button {
-    font-size: 15px;
-  }
-  .map [data-panel] {
-    padding: 40px;
-  }
-  .map [data-panel] h3 {
-    font-size: 52px;
-  }
-  .trips {
-    padding-top: 128px;
-  }
-  .trip {
-    grid-template-columns: 1.25fr 1fr;
-    gap: 56px;
-    align-items: center;
-    margin-bottom: 96px;
-  }
-  .trip.flip .tripPhoto {
-    order: 2;
-  }
-  .tripBody {
-    padding: 0;
-  }
-  .usGrid {
-    grid-template-columns: 440px 1fr;
-    gap: 72px;
-    align-items: center;
-  }
-  .board {
-    padding-bottom: 128px;
-  }
-  .board h2 {
-    margin-top: 96px;
-  }
-  .list {
-    grid-template-columns: 1fr 1fr;
-    gap: 0 56px;
-  }
-  .endGrid {
-    grid-template-columns: 1fr 320px;
-    align-items: center;
-    gap: 72px;
-  }
-  .sign img {
-    width: 100%;
+  .navLinks a:hover {
+    opacity: 1;
   }
 }
 
+@media (max-width: 899px) {
+  .panel:active {
+    transform: scale(0.985);
+  }
+  /* The floating action is on screen here, so the section does not repeat it. */
+  .tripsHead .red {
+    display: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .nav {
+    position: fixed;
+    top: calc(var(--bar-h) + 14px);
+    left: 50%;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    padding: 8px 8px 8px 24px;
+    border-radius: 999px;
+    background: rgba(34, 34, 35, 0.42);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    backdrop-filter: blur(20px) saturate(1.4);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 0 0 1px rgba(255, 255, 255, 0.2);
+    color: #fff;
+    transform: translateX(-50%);
+    transition: top 0.4s var(--ease);
+  }
+  :global([data-strip-away]) .nav {
+    top: 14px;
+  }
+  .navName {
+    color: #fff;
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 19px;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .navLinks {
+    display: flex;
+    gap: 28px;
+  }
+  .navLinks a {
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+    text-decoration: none;
+    white-space: nowrap;
+    opacity: 0.86;
+    transition: opacity 0.3s var(--ease);
+  }
+  .navBook {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 22px;
+    border-radius: 999px;
+    background: var(--red);
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .heroMark {
+    display: none;
+  }
+  .heroText {
+    padding: 0 56px 64px;
+  }
+  .hero h1 {
+    font-size: clamp(96px, 11.4vw, 184px);
+  }
+  .sub {
+    max-width: 34ch;
+    font-size: 21px;
+  }
+  .intro {
+    grid-template-columns: 1.4fr 1fr;
+    align-items: end;
+    gap: 64px;
+    padding: 120px 56px;
+  }
+  .rating {
+    justify-self: end;
+  }
+  .story {
+    height: calc(var(--steps) * 64vh + 100vh);
+  }
+  .story [data-frame] {
+    height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 64px;
+    align-content: center;
+    padding: 96px 56px 56px 0;
+  }
+  .storyHead {
+    grid-column: 2;
+    align-self: end;
+    padding-bottom: 24px;
+  }
+  .storyHead p {
+    display: block;
+    max-width: 36ch;
+    margin-top: 16px;
+    font-size: 19px;
+  }
+  .story [data-chart] {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: center;
+    margin: 0;
+  }
+  .story [data-map] button i {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+  }
+  .story [data-map] button span {
+    display: block;
+    position: absolute;
+    left: 54px;
+    white-space: nowrap;
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-weight: 400;
+    font-size: 24px;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity 0.35s var(--ease), transform 0.5s var(--ease);
+    pointer-events: none;
+    text-shadow: 0 0 3px var(--sea), 0 0 6px var(--sea), 0 0 10px var(--sea);
+  }
+  .story [data-map] button[data-side='left'] span {
+    left: auto;
+    right: 54px;
+    transform: translateX(6px);
+  }
+  /* Where a name beside the marker would run into a neighbour, the list alone carries it. */
+  .story [data-map] button[data-side='none'] span {
+    display: none;
+  }
+  .story [data-map] button[data-state='on'] span {
+    opacity: 1;
+    transform: none;
+  }
+  .story [data-credit] {
+    margin: 8px 0 0 56px !important;
+  }
+  .story [data-legend] {
+    grid-column: 2;
+    align-self: start;
+  }
+  .story [data-legend] button {
+    min-height: 46px;
+    font-size: 18px;
+  }
+  .story [data-legend] li[data-state='on'] [data-name] {
+    font-size: 40px;
+  }
+  .story [data-text] p {
+    max-width: 44ch;
+    font-size: 18px;
+    line-height: 1.5;
+  }
+  .trips {
+    padding: 120px 0;
+  }
+  .tripsHead {
+    grid-template-columns: auto 1fr auto;
+    align-items: end;
+    gap: 40px;
+    padding: 0 56px 40px;
+  }
+  /* The row starts with its first panel whole at the content's left edge, and runs off the right. */
+  .side [data-side-track] {
+    gap: 20px;
+    padding: 0 56px;
+    scroll-padding-left: 56px;
+    cursor: grab;
+    user-select: none;
+  }
+  .side [data-side-track][data-dragging] {
+    cursor: grabbing;
+    scroll-snap-type: none;
+  }
+  .side [data-side-cue] {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    display: grid;
+    place-items: center;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: rgba(255, 243, 228, 0.82);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 0 1px rgba(34, 34, 35, 0.14);
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 15px;
+    pointer-events: none;
+    transform: translateY(-50%);
+    transition: opacity 0.5s var(--ease), transform 0.6s var(--ease);
+  }
+  .side[data-dragged] [data-side-cue] {
+    opacity: 0;
+    transform: translateY(-50%) scale(0.8);
+  }
+  .panel {
+    flex: 0 0 44vw;
+    min-height: 0;
+    height: min(66vh, 660px);
+  }
+  .panelBody {
+    padding: 40px;
+  }
+  .us {
+    display: grid;
+    grid-template-columns: 0.9fr 1fr;
+    align-items: center;
+  }
+  .usPhoto img {
+    aspect-ratio: 4 / 5;
+    height: 100%;
+  }
+  .usText {
+    padding: 120px 72px;
+  }
+  .book {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 0;
+  }
+  .bookPhoto {
+    order: 2;
+    height: auto;
+    min-height: 720px;
+  }
+  .bookCard {
+    align-self: center;
+    max-width: 600px;
+    margin: 0 0 0 auto;
+    padding: 120px 72px 120px 56px;
+  }
+  .foot {
+    padding: 48px 56px;
+  }
+}
+
+/* The opening: the picture settles, the headline rises line by line, then the rest arrives. */
 @media (prefers-reduced-motion: no-preference) {
-  .heroPhoto img {
-    animation: rise 45s ease-out infinite alternate;
+  .heroMedia img {
+    animation: settle 1.6s var(--ease) both;
+  }
+  .line > span {
+    animation: rise 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--i) * 60ms + 120ms);
+  }
+  .place,
+  .sub,
+  .heroText .red,
+  .heroMark {
+    animation: arrive 0.6s var(--ease) both;
+    animation-delay: 0.62s;
+  }
+  .sub {
+    animation-delay: 0.7s;
+  }
+  .heroText .red {
+    animation-delay: 0.78s;
+  }
+  .story [data-map] svg {
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 1.4s cubic-bezier(0.65, 0, 0.35, 1);
+  }
+  .story[data-seen] [data-map] svg {
+    clip-path: inset(0 0 0 0);
+  }
+  .story [data-map] button {
+    opacity: 0;
+    transition: opacity 0.5s var(--ease) 0.9s;
+  }
+  .story[data-seen] [data-map] button {
+    opacity: 1;
+  }
+  @keyframes settle {
+    from {
+      transform: scale(1.08);
+    }
+    to {
+      transform: scale(1);
+    }
   }
   @keyframes rise {
     from {
-      transform: scale(1);
+      transform: translateY(105%);
     }
     to {
-      transform: scale(1.12);
+      transform: translateY(0);
+    }
+  }
+  @keyframes arrive {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
     }
   }
 }

@@ -3,11 +3,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { memoryDb, type Business } from '@plumbline/core';
+import { businessSuppressed, clearToContact, exportIfClear, verdictStands } from './approve.ts';
 import { calibrate, calibrationReport } from './calibrate.ts';
 import { importResearchContacts } from './commands.ts';
 import { parseCsv, toCsv } from './csv.ts';
 import { dossierSection, readDossiers, seed, storefrontBelongs } from './seed.ts';
 import { fit, rank, selectBatch } from './select.ts';
+import { readWaveList } from './wave.ts';
 
 describe('CSV', () => {
   it('reads quoted fields, doubled quotes and line breaks inside quotes', () => {
@@ -138,5 +140,86 @@ describe('calibration', () => {
     const md = calibrationReport(c, 'c');
     expect(md).toContain('| False findings (must be zero) | 2 |');
     expect(md).toContain('| one | reproduced | C02 | 1 | C11, C70 | C20 |');
+  });
+});
+
+describe('a wave list', () => {
+  it('reads the order, the slug and whether a row is in the wave or a reserve', () => {
+    const csv = 'order,status,slug,name,town\n1,wave 2,fixture-kayakers,Fixture Kayakers,"Paihia, Northland"\n2,dropped,third-tours,Third Tours,Napier\n21,reserve,second-charters,Second Charters,Taupō\n,wave 2,,No slug,\n';
+    expect(readWaveList(csv)).toEqual([
+      { slug: 'fixture-kayakers', position: 1, status: 'wave' },
+      { slug: 'third-tours', position: 2, status: 'dropped' },
+      { slug: 'second-charters', position: 21, status: 'reserve' },
+    ]);
+  });
+});
+
+describe('a kept verdict of the independent check', () => {
+  it('holds for the sentence it was given on, and a flag against the finding holds however it is reworded', () => {
+    const ok = { verdict: 'ok' as const, reason: '', sentence: 'Mobile speed score 31 out of 100' };
+    expect(verdictStands(ok, 'Mobile speed score 31 out of 100')).toBe(true);
+    expect(verdictStands(ok, 'Mobile speed score 40 out of 100')).toBe(false);
+    const flag = { verdict: 'flag' as const, reason: 'the menu item opens a dropdown', sentence: '1 menu item leads nowhere' };
+    expect(verdictStands(flag, 'One menu item leads nowhere')).toBe(true);
+    expect(verdictStands({ ...flag, scope: 'sentence' }, 'One menu item leads nowhere')).toBe(false);
+    expect(verdictStands({ ...flag, scope: 'sentence' }, '1 menu item leads nowhere')).toBe(true);
+    // A verdict kept without its sentence speaks for the finding as a whole.
+    expect(verdictStands({ verdict: 'ok', reason: '' }, 'anything')).toBe(true);
+  });
+
+  it('holds for a speed sentence while a new run has only nudged its figures', () => {
+    const passed = { verdict: 'ok' as const, reason: '', sentence: 'Mobile speed score 30 out of 100, main content after 6.0 s' };
+    expect(verdictStands(passed, 'Mobile speed score 34 out of 100, main content after 5.8 s')).toBe(true);
+    expect(verdictStands(passed, 'Mobile speed score 55 out of 100, main content after 3.1 s')).toBe(false);
+    const worded = { verdict: 'flag' as const, reason: 'say it scored about 30', scope: 'sentence' as const, sentence: 'Mobile speed score 30 out of 100, main content after 6.0 s' };
+    expect(verdictStands(worded, 'Mobile speed score 34 out of 100, main content after 5.8 s')).toBe(true);
+  });
+});
+
+describe('a business that must not be built for or written to', () => {
+  function seeded() {
+    const db = memoryDb();
+    const add = db.prepare("INSERT INTO businesses (id, slug, name, website, source, status, created_at) VALUES (?, ?, ?, ?, 'discovered', ?, 'x')");
+    add.run(1, 'alpha', 'Alpha', 'https://alpha.co.nz/', 'audited');
+    add.run(2, 'bravo', 'Bravo', 'https://bravo.co.nz/', 'excluded');
+    add.run(3, 'charlie', 'Charlie', 'https://charlie.co.nz/', 'audited');
+    add.run(4, 'delta', 'Delta', 'https://delta.co.nz/', 'audited');
+    db.prepare("INSERT INTO contacts (business_id, role, email, captured_at) VALUES (4, 'general', 'Info@Delta.co.nz', 'x')").run();
+    db.prepare("INSERT INTO consent_checks (business_id, pages_checked, no_unsolicited_statement_found, quote, checked_at) VALUES (3, '[]', 1, 'No unsolicited marketing please.', 'x')").run();
+    return db;
+  }
+
+  it('is one on the suppression list by slug or address, one we excluded, or one whose site refuses unsolicited messages', () => {
+    const db = seeded();
+    const list = new Set(['info@delta.co.nz']);
+    expect(businessSuppressed(db, { id: 1, slug: 'alpha' }, list)).toBeNull();
+    expect(businessSuppressed(db, { id: 1, slug: 'alpha' }, new Set(['alpha']))).toBe('on the suppression list');
+    expect(businessSuppressed(db, { id: 2, slug: 'bravo' }, list)).toBe('excluded');
+    expect(businessSuppressed(db, { id: 3, slug: 'charlie' }, list)).toBe('their site refuses unsolicited messages: "No unsolicited marketing please."');
+    expect(businessSuppressed(db, { id: 4, slug: 'delta' }, list)).toBe('on the suppression list');
+  });
+
+  it('is one whose site is on a suppressed domain, though no address of theirs is on file', () => {
+    const db = seeded();
+    expect(businessSuppressed(db, { id: 1, slug: 'alpha' }, new Set(['alpha.co.nz']))).toBe('on the suppression list');
+    expect(businessSuppressed(db, { id: 4, slug: 'delta' }, new Set(['delta.co.nz']))).toBe('on the suppression list');
+    expect(businessSuppressed(db, { id: 1, slug: 'alpha' }, new Set(['delta.co.nz']))).toBeNull();
+  });
+
+  it('is refused an export, whatever its findings', () => {
+    const db = seeded();
+    const file = join(mkdtempSync(join(tmpdir(), 'plumbline-suppression-')), 'suppression.csv');
+    writeFileSync(file, 'domain,emails,date,reason\ndelta.co.nz,info@delta.co.nz,2026-10-13,replied no thanks\n');
+    const r = exportIfClear(db, 'delta', { suppression: file });
+    expect(r).toMatchObject({ ok: false, dir: null, exported: 0 });
+    expect(r.failures).toEqual([{ findingId: null, check: null, gate: 'suppressed', reason: 'on the suppression list' }]);
+    // A business that is clear goes on to the gates every export has to pass.
+    expect(() => exportIfClear(db, 'alpha', { suppression: file })).toThrow('alpha has not been audited');
+  });
+
+  it('is sorted out of any list of pages to publish or drafts to mark, with the reason', () => {
+    const db = seeded();
+    const all = [{ id: 1, slug: 'alpha' }, { id: 2, slug: 'bravo' }, { id: 4, slug: 'delta' }];
+    expect(clearToContact(db, all, new Set(['info@delta.co.nz']))).toEqual({ clear: [{ id: 1, slug: 'alpha' }], held: [{ slug: 'bravo', why: 'excluded' }, { slug: 'delta', why: 'on the suppression list' }] });
   });
 });

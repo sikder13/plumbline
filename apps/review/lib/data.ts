@@ -3,6 +3,9 @@ import { db, nzTime } from '@plumbline/core';
 import { CHECKS } from '@plumbline/checks/ids';
 import { top3Eligible } from '@plumbline/checks/review';
 import { readEntries, type ImpactEntry } from '@plumbline/impact';
+import { factsFor, type Fact } from '@plumbline/wave/facts';
+import { waveMembers, waves as storedWaves } from '@plumbline/wave/list';
+import { CRAWLMOUSE_TITLES, factCaution, rankFindings, type Ranked } from '@plumbline/wave/rank';
 
 export { nzTime };
 
@@ -13,6 +16,19 @@ export function batches(): string[] {
 export function currentBatch(requested?: string): string | null {
   const all = batches();
   return requested && all.includes(requested) ? requested : (all[0] ?? null);
+}
+
+export function waves(): string[] {
+  return storedWaves(db());
+}
+
+export function currentWave(requested?: string): string | null {
+  return requested && waves().includes(requested) ? requested : null;
+}
+
+/** "wave-2" reads as "Wave 2". */
+export function waveLabel(wave: string): string {
+  return wave.replace(/[-_]+/g, ' ').replace(/^./, (c) => c.toUpperCase());
 }
 
 export interface BusinessRow {
@@ -28,10 +44,15 @@ export interface BusinessRow {
   reproduced: number;
   approved: number;
   rejected: number;
+  /** Findings from Crawlmouse among those waiting or approved. */
+  crawlmouse: number;
   top: { check_id: string; status: string; score: number }[];
+  /** The place in the wave list, when the rows are those of a wave. */
+  position?: number;
 }
 
-export function businessRows(batch: string): BusinessRow[] {
+/** The businesses of a batch. Given a wave, only its businesses, in list order, each with the findings ranked for its owner. */
+export function businessRows(batch: string, wave?: string | null): BusinessRow[] {
   const rows = db()
     .prepare(
       `SELECT b.id, b.slug, b.name, b.town, b.region, b.status,
@@ -40,11 +61,19 @@ export function businessRows(batch: string): BusinessRow[] {
         (SELECT COUNT(*) FROM findings f WHERE f.business_id = b.id AND f.batch = m.batch AND f.status = 'candidate') AS candidate,
         (SELECT COUNT(*) FROM findings f WHERE f.business_id = b.id AND f.batch = m.batch AND f.status = 'reproduced') AS reproduced,
         (SELECT COUNT(*) FROM findings f WHERE f.business_id = b.id AND f.batch = m.batch AND f.status = 'approved') AS approved,
-        (SELECT COUNT(*) FROM findings f WHERE f.business_id = b.id AND f.batch = m.batch AND f.status = 'rejected') AS rejected
+        (SELECT COUNT(*) FROM findings f WHERE f.business_id = b.id AND f.batch = m.batch AND f.status = 'rejected') AS rejected,
+        (SELECT COUNT(*) FROM findings f WHERE f.business_id = b.id AND f.batch = m.batch AND f.source = 'crawlmouse' AND f.status IN ('reproduced', 'approved')) AS crawlmouse
        FROM businesses b JOIN batch_members m ON m.business_id = b.id WHERE m.batch = ? ORDER BY reproduced DESC, b.name`,
     )
     .all(batch) as Omit<BusinessRow, 'top'>[];
   const top = db().prepare("SELECT check_id, status, score, detail FROM findings WHERE business_id = ? AND batch = ? AND status IN ('reproduced', 'approved') ORDER BY (status = 'approved') DESC, score DESC, id");
+  if (wave) {
+    const place = new Map(waveMembers(db(), wave).map((b) => [b.id, b.position]));
+    return rows
+      .filter((r) => place.has(r.id))
+      .map((r) => ({ ...r, position: place.get(r.id)!, top: rankedFindings(r.id, batch).filter((x) => x.kept).map((x) => ({ check_id: x.finding.check_id, status: x.finding.status, score: x.finding.score })) }))
+      .sort((a, b) => a.position - b.position);
+  }
   return rows.map((r) => {
     const seen = new Set<string>();
     const list = (top.all(r.id, batch) as (BusinessRow['top'][number] & { detail: string })[])
@@ -80,6 +109,9 @@ export interface Finding {
   viewport: string | null;
   top3: number;
   last_verified_at: string | null;
+  /** Which tool produced it: plumbline or crawlmouse. */
+  source: string;
+  detail: string;
   note: string | null;
   evidence: Evidence[];
   entry: ImpactEntry | null;
@@ -102,12 +134,21 @@ export function findingsFor(businessId: number, batch: string): Finding[] {
     ...r,
     evidence: (ev.all(r.id) as Evidence[]).map((e) => ({ ...e, path: e.path && existsSync(e.path) ? e.path : null })),
     entry: lib.get(r.check_id) ?? null,
-    checkTitle: CHECKS.find((c) => c.id === r.check_id)?.title ?? r.check_id,
+    checkTitle: CHECKS.find((c) => c.id === r.check_id)?.title ?? CRAWLMOUSE_TITLES[r.check_id] ?? r.check_id,
   }));
 }
 
-export function neighbours(batch: string, slug: string): { prev: string | null; next: string | null } {
-  const order = businessRows(batch).map((b) => b.slug);
+/** One business's findings in the order they would matter to its owner, with the three to five put forward marked. */
+export function rankedFindings(businessId: number, batch: string): Ranked<Finding>[] {
+  return rankFindings(findingsFor(businessId, batch));
+}
+
+export function facts(businessId: number): Fact[] {
+  return factsFor(db(), businessId);
+}
+
+export function neighbours(batch: string, slug: string, wave?: string | null): { prev: string | null; next: string | null } {
+  const order = wave ? waveMembers(db(), wave).map((b) => b.slug) : businessRows(batch).map((b) => b.slug);
   const i = order.indexOf(slug);
   return { prev: i > 0 ? order[i - 1]! : null, next: i >= 0 && i < order.length - 1 ? order[i + 1]! : null };
 }
@@ -164,4 +205,17 @@ export function contactRows(batch: string | null): ContactRow[] {
   const sql = `SELECT c.*, b.slug, b.name AS business FROM contacts c JOIN businesses b ON b.id = c.business_id ${batch ? 'JOIN batch_members m ON m.business_id = b.id AND m.batch = ?' : ''}
      ORDER BY b.name, CASE c.role WHEN 'owner' THEN 0 WHEN 'second' THEN 1 ELSE 2 END, c.id`;
   return (batch ? db().prepare(sql).all(batch) : db().prepare(sql).all()) as ContactRow[];
+}
+
+/** Cautions for findings that the stored facts speak against, by finding id. */
+export function cautions(businessId: number, list: Finding[]): Map<number, string> {
+  const fact = factsFor(db(), businessId, 'booking')[0];
+  const value = fact?.value as { system: string | null; link: string | null } | undefined;
+  const booking = fact && value ? { system: value.system, link: value.link, sourceUrl: fact.sourceUrl } : null;
+  const out = new Map<number, string>();
+  for (const f of list) {
+    const c = factCaution(f.check_id, booking);
+    if (c) out.set(f.id, c);
+  }
+  return out;
 }
