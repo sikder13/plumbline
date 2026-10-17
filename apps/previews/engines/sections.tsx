@@ -1,15 +1,127 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { EngineDemo } from '@plumbline/preview/engine';
 import { DemoFoot } from '@/components/DemoFoot';
+import { Pinned } from '@/components/Pinned';
 import type { PageData } from '@/lib/data';
-import { Photo, type Cls } from './kit';
+import { Go, Lines, Photo, ways, type Cls } from './kit';
+import { SPLIT_SIZES } from './sizes';
 
 /**
  * Sections every engine can carry. The markup is shared and each engine's stylesheet gives it its
  * own form. A section whose data is missing is not drawn, and nothing stands in for it.
  */
 
-/** Their own words, set large, with the facts that go with them. */
+/**
+ * The opening screen. A photo hero runs their photo full bleed; a split hero frames it on desktop and
+ * runs it the full width of a phone; a typographic hero sets the headline big on a ground made from
+ * their palette, with their best remaining photo as an inset below the action. The action always
+ * comes before the facts, so a phone's first screen holds it. No drawing, icon or ornament.
+ */
+export function Hero({ c, data, cls }: { c: EngineDemo; data: PageData; cls: Cls }) {
+  const w = ways(c);
+  const kind = c.heroKind;
+  const media = kind !== 'type' ? data.images.hero : undefined;
+  const inset = kind === 'type' && c.hero.inset ? data.images[c.hero.inset] : undefined;
+  return (
+    <section className={cls.hero} data-kind={kind} id="top" data-hero>
+      {media && (
+        <div className={cls.heroMedia} style={{ '--px': `${media.width}px` } as CSSProperties}>
+          <Photo data={data} id="hero" sizes={kind === 'photo' ? '100vw' : SPLIT_SIZES} first />
+        </div>
+      )}
+      <header className={cls.heroTop}>
+        <a className={cls.mark} href="#top">
+          {c.wordmark ?? c.name}
+        </a>
+        <span className={cls.place}>
+          {c.place.town}
+          {c.place.region ? `, ${c.place.region}` : ''}
+        </span>
+      </header>
+      <div className={cls.heroBody}>
+        <div className={cls.heroWords}>
+          <Lines lines={c.hero.lines} cls={cls} className={cls.heroTitle} />
+          {c.hero.sub && <p className={cls.heroSub}>{c.hero.sub.text}</p>}
+        </div>
+        <div className={cls.heroActions}>
+          <Go action={w.main} cls={cls} />
+          {w.main.kind !== 'phone' && w.phone ? (
+            <a className={cls.quietLink} href={w.phone.href}>
+              Call {w.phone.label}
+            </a>
+          ) : (
+            w.email &&
+            w.main.kind !== 'email' && (
+              <a className={cls.quietLink} href={w.email.href}>
+                {w.email.label}
+              </a>
+            )
+          )}
+        </div>
+        {c.hero.facts.length > 0 && (
+          <dl className={cls.heroFacts} style={{ '--n': c.hero.facts.length } as CSSProperties}>
+            {c.hero.facts.map((f) => (
+              <div key={f.label}>
+                <dt>{f.label}</dt>
+                <dd>{f.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </div>
+      {inset && c.hero.inset && (
+        <figure className={cls.heroInset} style={{ '--px': `${inset.width}px` } as CSSProperties} data-wipe>
+          <Photo data={data} id={c.hero.inset} sizes="(min-width: 1100px) 40vw, 100vw" />
+        </figure>
+      )}
+    </section>
+  );
+}
+
+/**
+ * Their account in three or four steps, each a photo and their words. On screens 600 px and wider
+ * the steps take turns in one held frame, half a screen of scroll each and two screens at most; on
+ * a phone they simply follow one another, each revealed as it arrives. The progress line under the
+ * frame names each step: it counts the steps read, nothing else.
+ */
+export function Story({ c, data, cls, id }: { c: EngineDemo; data: PageData; cls: Cls; id: string }) {
+  if (!c.story) return null;
+  const steps = c.story.steps;
+  return (
+    <section className={cls.story} id={id} aria-labelledby="story-h">
+      <Pinned steps={steps.length} className={cls.storyPin}>
+        <h2 id="story-h" className={cls.storyTitle}>
+          {c.story.heading}
+        </h2>
+        <ol className={cls.steps}>
+          {steps.map((st, i) => (
+            <li key={st.title} className={cls.step} data-step={i} data-state={i === 0 ? 'on' : 'off'} data-photo={st.photo && data.images[st.photo] ? '' : undefined}>
+              {st.photo && data.images[st.photo] && (
+                <div className={cls.stepPhoto} style={{ '--px': `${data.images[st.photo]!.width}px` } as CSSProperties}>
+                  <Photo data={data} id={st.photo} sizes="(min-width: 1100px) 50vw, 100vw" />
+                </div>
+              )}
+              <div className={cls.stepWords} data-reveal>
+                {st.mark && <p className={cls.stepMark}>{st.mark}</p>}
+                <h3 className={cls.stepTitle}>{st.title}</h3>
+                <p className={cls.stepText}>{st.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <ol className={cls.progress} aria-hidden="true">
+          {steps.map((st, i) => (
+            <li key={st.title} data-step={i} data-state={i === 0 ? 'on' : 'off'}>
+              {st.mark ?? st.title}
+            </li>
+          ))}
+        </ol>
+      </Pinned>
+    </section>
+  );
+}
+
+/** Their own words, as a short heading and a lede at reading size. */
 export function Intro({ c, cls, label }: { c: EngineDemo; cls: Cls; label?: string }) {
   if (!c.intro) return null;
   return (

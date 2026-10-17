@@ -56,12 +56,12 @@ export function Builder({ units, maxNights, maxGuests, book, email, phone, cls }
             Nights
           </span>
           <div className={cls.stepper} role="group" aria-labelledby="nights-l">
-            <button type="button" aria-label="One night fewer" onClick={step(setNights, maxNights, -1)} disabled={n <= 1}>
-              <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" focusable="false"><path d="M4 10h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+            <button type="button" onClick={step(setNights, maxNights, -1)} disabled={n <= 1}>
+              Fewer
             </button>
             <output aria-live="polite">{WORDS[n - 1]}</output>
-            <button type="button" aria-label="One night more" onClick={step(setNights, maxNights, 1)} disabled={n >= maxNights}>
-              <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" focusable="false"><path d="M4 10h12M10 4v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+            <button type="button" onClick={step(setNights, maxNights, 1)} disabled={n >= maxNights}>
+              More
             </button>
           </div>
         </div>
@@ -71,12 +71,12 @@ export function Builder({ units, maxNights, maxGuests, book, email, phone, cls }
               Guests
             </span>
             <div className={cls.stepper} role="group" aria-labelledby="guests-l">
-              <button type="button" aria-label="One guest fewer" onClick={step(setGuests, maxGuests, -1)} disabled={guests <= 1}>
-                <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" focusable="false"><path d="M4 10h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+              <button type="button" onClick={step(setGuests, maxGuests, -1)} disabled={guests <= 1}>
+                Fewer
               </button>
               <output aria-live="polite">{WORDS[guests - 1]}</output>
-              <button type="button" aria-label="One guest more" onClick={step(setGuests, maxGuests, 1)} disabled={guests >= maxGuests}>
-                <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" focusable="false"><path d="M4 10h12M10 4v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+              <button type="button" onClick={step(setGuests, maxGuests, 1)} disabled={guests >= maxGuests}>
+                More
               </button>
             </div>
           </div>

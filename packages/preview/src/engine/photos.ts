@@ -6,10 +6,38 @@ import type { EngineName, HeroKind, PhotoPick } from './schema.ts';
 
 /** The photo pipeline: their best photos picked by size and sharpness, graded to one look, and cut for phones and desktops at their own pixels. */
 
-/** The least width a photo needs for each place on a page. Smaller photos are not used there. */
-export const MIN_WIDTH = { hero: 1800, framed: 1000, small: 640 } as const;
+/**
+ * The least width a photo needs for each place. A photo hero needs 1200 px (a phone at 3x is about
+ * 1170 px wide); a full bleed one 1800 px. Framed photos inside the page need 640.
+ */
+export const MIN_WIDTH = { fullBleed: 1800, hero: 1200, framed: 1000, small: 640 } as const;
 /** Below this, a photo is plainly soft (the measure of `packages/wave/src/assets.ts`). */
 export const MIN_SHARPNESS = 0.8;
+/**
+ * Sharpness as the variance of a Laplacian over the photo scaled to 800 px wide (`sharpnessScore`).
+ * Under 150 a photo is soft and is not used anywhere; a hero needs 300. Sharpness beats size.
+ */
+export const MIN_SCORE = { any: 150, hero: 300 } as const;
+
+/** The variance of a Laplacian over a greyscale copy 800 px wide: how much fine edge the photo holds. */
+export async function sharpnessScore(file: string): Promise<number> {
+  const { data } = await sharp(file)
+    .rotate()
+    .resize({ width: 800, withoutEnlargement: true })
+    .greyscale()
+    .convolve({ width: 3, height: 3, kernel: [0, 1, 0, 1, -4, 1, 0, 1, 0], scale: 1, offset: 128 })
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  let sum = 0;
+  let squares = 0;
+  for (const v of data) {
+    const x = v - 128;
+    sum += x;
+    squares += x * x;
+  }
+  const n = data.length || 1;
+  return Math.round((squares / n - (sum / n) ** 2) * 10) / 10;
+}
 
 export interface Candidate {
   file: string;
@@ -36,6 +64,7 @@ export function rankPhotos(photos: { file: string | null; url: string; alt: stri
     seen.add(key);
     const soft = p.sharpness < MIN_SHARPNESS;
     const fit = soft ? 'none' : p.width >= MIN_WIDTH.hero && p.width / p.height >= 1.2 ? 'hero' : p.width >= MIN_WIDTH.framed ? 'framed' : p.width >= MIN_WIDTH.small ? 'small' : 'none';
+    // Width decides where a photo may go; the sharpness score, measured when it is graded, can still turn it down.
     const score = Math.min(p.width, 3000) / 3000 + Math.min(p.sharpness, 4) / 8 + p.entropy / 16;
     out.push({ file: p.file, url: p.url, alt: p.alt, width: p.width, height: p.height, sharpness: p.sharpness, entropy: p.entropy, fit, score: Math.round(score * 1000) / 1000 });
   }
@@ -43,17 +72,19 @@ export function rankPhotos(photos: { file: string | null; url: string; alt: stri
 }
 
 /**
- * The hero a page can have. A photo or split hero needs a photo at least 1800 px wide; with none,
- * the page opens on its words alone. A full bleed hero also needs the height for a phone crop at 2x
- * (1080 px); a wide, shallow photo is framed in a split hero instead.
+ * The hero the photo allows. A photo hero is the default: any sharp photo at least 1200 px wide gets
+ * one. At 1800 px or wider, and with the height for a phone crop at 2x (1080 px), it may run full
+ * bleed; otherwise it is framed in the split hero on desktop and runs the full width of a phone. A
+ * soft photo, or none at least 1200 px wide, leaves the typographic hero. `asked` only chooses between
+ * full bleed and split where both are allowed; it never turns a photo hero down.
  */
-export function heroFor(asked: HeroKind, photo: { width: number; height?: number; sharpness?: number } | null): { kind: HeroKind; note: string | null } {
-  if (asked === 'type') return { kind: 'type', note: null };
-  if (!photo) return { kind: 'type', note: `no photo was chosen for a ${asked} hero` };
-  if (photo.sharpness !== undefined && photo.sharpness < MIN_SHARPNESS) return { kind: 'type', note: `the hero photo is soft (${photo.sharpness})` };
-  if (photo.width < MIN_WIDTH.hero) return { kind: 'type', note: `the hero photo is ${photo.width} px wide, under ${MIN_WIDTH.hero}` };
-  if (asked === 'photo' && photo.height !== undefined && photo.height < 1080) return { kind: 'split', note: `the hero photo is ${photo.height} px high, too shallow for a phone's full screen: framed instead` };
-  return { kind: asked, note: null };
+export function heroFor(asked: HeroKind, photo: { width: number; height?: number; score?: number | null } | null): { kind: HeroKind; note: string | null } {
+  if (!photo) return { kind: 'type', note: asked === 'type' ? null : 'no photo was chosen for the hero' };
+  if (photo.score !== undefined && photo.score !== null && photo.score < MIN_SCORE.hero) return { kind: 'type', note: `the best photo is soft (sharpness ${photo.score}, under ${MIN_SCORE.hero})` };
+  if (photo.width < MIN_WIDTH.hero) return { kind: 'type', note: `the best photo is ${photo.width} px wide, under ${MIN_WIDTH.hero}` };
+  const fullBleed = photo.width >= MIN_WIDTH.fullBleed && (photo.height === undefined || photo.height >= 1080);
+  if (!fullBleed) return { kind: 'split', note: asked === 'photo' ? `the photo is ${photo.width}x${photo.height ?? '?'}: framed on desktop, full width on a phone` : null };
+  return { kind: asked === 'split' ? 'split' : 'photo', note: asked === 'type' ? 'a sharp photo at least 1200 px wide: a photo hero is the default' : null };
 }
 
 /** One grade per engine, the same for every photo on a page: contrast, saturation, warmth. */
@@ -84,18 +115,23 @@ export function cropAround(width: number, height: number, ratio: number, focus: 
   return { left, top, width: w, height: h };
 }
 
-/** The shapes a photo is cut to. The hero's phone crop is taller, to fill a phone's first screen. */
-export const SHAPES = { heroWide: 16 / 9, heroTall: 2 / 3, wide: 3 / 2, tall: 4 / 5 } as const;
+/** The shapes a photo is cut to. The hero's phone crop is close to the box it fills, about square, so no pixel is sent that is not shown. */
+export const SHAPES = { heroWide: 16 / 9, heroTall: 4 / 5, heroBand: 4 / 3, wide: 3 / 2, tall: 4 / 5 } as const;
 
 export interface Graded {
   id: string;
   wide: string;
   tall: string;
+  /** For a hero only: the crop a split hero runs across a phone's full width. */
+  band: string | null;
   width: number;
   height: number;
   /** Where the focus point falls inside each crop, as CSS object-position. */
   wideAt: string;
   tallAt: string;
+  bandAt: string | null;
+  /** The sharpness score of the source, from `sharpnessScore`. */
+  score: number;
 }
 
 function at(cut: Cut, width: number, height: number, focus: [number, number]): string {
@@ -117,7 +153,7 @@ export async function gradePhoto(engine: EngineName, pick: PhotoPick, source: st
   const height = meta.autoOrient?.height ?? meta.height ?? 0;
   const wide = join(outDir, `${pick.id}-wide.jpg`);
   const tall = join(outDir, `${pick.id}-tall.jpg`);
-  const made = `${source}|${statSync(source).mtimeMs}|${JSON.stringify(pick.focus)}|${deep}|${role}|${JSON.stringify(g)}`;
+  const made = `${source}|${statSync(source).mtimeMs}|${JSON.stringify(pick.focus)}|${deep}|${role}|${JSON.stringify(g)}|${JSON.stringify(SHAPES)}`;
   const madeFile = join(outDir, `${pick.id}.made`);
 
   const [r, gg, b] = parseHex(deep);
@@ -139,11 +175,15 @@ export async function gradePhoto(engine: EngineName, pick: PhotoPick, source: st
   const [wideCut, tallCut] = shapes.map((ratio) => cropAround(width, height, ratio, pick.focus)) as [Cut, Cut];
   // A photo already close to the wide shape keeps all of itself.
   const wideKeep = Math.abs(width / height - shapes[0]!) < 0.18 ? { left: 0, top: 0, width, height } : wideCut;
-  const result = { id: pick.id, wide, tall, width, height, wideAt: at(wideKeep, width, height, pick.focus), tallAt: at(tallCut, width, height, pick.focus) };
-  if (existsSync(madeFile) && readFileSync(madeFile, 'utf8') === made && existsSync(wide) && existsSync(tall)) return result;
+  const bandCut = role === 'hero' ? cropAround(width, height, SHAPES.heroBand, pick.focus) : null;
+  const bandFile = role === 'hero' ? join(outDir, `${pick.id}-band.jpg`) : null;
+  const score = await sharpnessScore(source);
+  const result: Graded = { id: pick.id, wide, tall, band: bandFile, width, height, wideAt: at(wideKeep, width, height, pick.focus), tallAt: at(tallCut, width, height, pick.focus), bandAt: bandCut ? at(bandCut, width, height, pick.focus) : null, score };
+  if (existsSync(madeFile) && readFileSync(madeFile, 'utf8') === made && existsSync(wide) && existsSync(tall) && (!bandFile || existsSync(bandFile))) return result;
   const full = await (await graded()).toBuffer();
   await sharp(full).extract(wideKeep).jpeg({ quality: 92, mozjpeg: true }).toFile(wide);
   await sharp(full).extract(tallCut).jpeg({ quality: 92, mozjpeg: true }).toFile(tall);
+  if (bandCut && bandFile) await sharp(full).extract(bandCut).jpeg({ quality: 92, mozjpeg: true }).toFile(bandFile);
   writeFileSync(madeFile, made);
   return result;
 }

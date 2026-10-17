@@ -22,16 +22,16 @@ export interface TypePair {
   preload: string[];
 }
 
-/** Three pairs of faces for each engine. No pair is shared with another engine or with any earlier page. */
+/** Three pairs of faces for each engine, every one with a serif headline. No pair is shared with another engine or with any earlier page. */
 export const ENGINE_TYPE_PAIRS: Record<EngineName, Record<string, TypePair>> = {
   fishing: {
-    'bigshoulders-hanken': { display: 'Big Shoulders Display', text: 'Hanken Grotesk', preload: ['big-shoulders-display-latin-wght-normal', 'hanken-grotesk-latin-wght-normal'] },
-    'unbounded-intertight': { display: 'Unbounded', text: 'Inter Tight', preload: ['unbounded-latin-wght-normal', 'inter-tight-latin-wght-normal'] },
-    'bricolage-librefranklin': { display: 'Bricolage Grotesque', text: 'Libre Franklin', preload: ['bricolage-grotesque-latin-wght-normal', 'libre-franklin-latin-wght-normal'] },
+    'bitter-hanken': { display: 'Bitter', text: 'Hanken Grotesk', preload: ['bitter-latin-wght-normal', 'hanken-grotesk-latin-wght-normal'] },
+    'robotoslab-intertight': { display: 'Roboto Slab', text: 'Inter Tight', preload: ['roboto-slab-latin-wght-normal', 'inter-tight-latin-wght-normal'] },
+    'alegreya-librefranklin': { display: 'Alegreya', text: 'Libre Franklin', preload: ['alegreya-latin-wght-normal', 'libre-franklin-latin-wght-normal'] },
   },
   paddle: {
     'fraunces-instrumentsans': { display: 'Fraunces', text: 'Instrument Sans', preload: ['fraunces-latin-wght-normal', 'instrument-sans-latin-wght-normal'] },
-    'sora-literata': { display: 'Sora', text: 'Literata', preload: ['sora-latin-wght-normal', 'literata-latin-wght-normal'] },
+    'literata-sora': { display: 'Literata', text: 'Sora', preload: ['literata-latin-wght-normal', 'sora-latin-wght-normal'] },
     'instrumentserif-dmsans': { display: 'Instrument Serif', text: 'DM Sans', preload: ['instrument-serif-latin-400-normal', 'dm-sans-latin-wght-normal'] },
   },
   stay: {
@@ -40,9 +40,9 @@ export const ENGINE_TYPE_PAIRS: Record<EngineName, Record<string, TypePair>> = {
     'gloock-outfit': { display: 'Gloock', text: 'Outfit', preload: ['gloock-latin-400-normal', 'outfit-latin-wght-normal'] },
   },
   physio: {
-    'plusjakarta-lora': { display: 'Plus Jakarta Sans', text: 'Lora', preload: ['plus-jakarta-sans-latin-wght-normal', 'lora-latin-wght-normal'] },
-    'onest-sourceserif': { display: 'Onest', text: 'Source Serif 4', preload: ['onest-latin-wght-normal', 'source-serif-4-latin-wght-normal'] },
-    'geologica-crimsonpro': { display: 'Geologica', text: 'Crimson Pro', preload: ['geologica-latin-wght-normal', 'crimson-pro-latin-wght-normal'] },
+    'lora-plusjakarta': { display: 'Lora', text: 'Plus Jakarta Sans', preload: ['lora-latin-wght-normal', 'plus-jakarta-sans-latin-wght-normal'] },
+    'sourceserif-onest': { display: 'Source Serif 4', text: 'Onest', preload: ['source-serif-4-latin-wght-normal', 'onest-latin-wght-normal'] },
+    'crimsonpro-geologica': { display: 'Crimson Pro', text: 'Geologica', preload: ['crimson-pro-latin-wght-normal', 'geologica-latin-wght-normal'] },
   },
 };
 
@@ -217,8 +217,10 @@ export const EngineConfig = z
       source: Source,
       sub: Quote.optional(),
       facts: z.array(Fact).max(4).default([]),
-      /** The photo for a photo or split hero. Without one big enough, the engine sets the typographic hero. */
+      /** The photo for the hero, if a person chose one. Without it, or if it is soft or under 1200 px, the engine chooses their best sharp photo, or sets the typographic hero. */
       photo: z.string().optional(),
+      /** For a typographic hero: a photo of theirs shown as an inset. The engine chooses one when this is left out. */
+      inset: z.string().optional(),
     }),
     intro: z.object({ heading: z.string().optional(), quote: Quote }).optional(),
     /** A run of their own words for a moving band: the fish they target, the places they go, the rooms they have. */
@@ -239,7 +241,7 @@ export const EngineConfig = z
     if (c.signature && !ENGINE_SIGNATURES[c.engine].includes(c.signature.kind)) ctx.addIssue({ code: 'custom', path: ['signature', 'kind'], message: `${c.signature.kind} is not a signature of the ${c.engine} engine` });
     if (!c.contact.booking && !c.contact.phone && !c.contact.email) ctx.addIssue({ code: 'custom', path: ['contact'], message: 'a page needs one of their own ways to book: a booking link, a phone or an email' });
     const ids = new Set(c.photos.map((p) => p.id));
-    const named = [c.hero.photo, ...(c.story?.steps.map((s) => s.photo) ?? []), ...(c.offers?.items.map((i) => i.photo) ?? []), ...(c.people?.items.map((i) => i.photo) ?? []), ...(c.signature?.kind === 'rooms' ? c.signature.units.map((u) => u.photo) : []), ...c.gallery].filter((x): x is string => !!x);
+    const named = [c.hero.photo, c.hero.inset, ...(c.story?.steps.map((s) => s.photo) ?? []), ...(c.offers?.items.map((i) => i.photo) ?? []), ...(c.people?.items.map((i) => i.photo) ?? []), ...(c.signature?.kind === 'rooms' ? c.signature.units.map((u) => u.photo) : []), ...c.gallery].filter((x): x is string => !!x);
     for (const id of named) if (!ids.has(id)) ctx.addIssue({ code: 'custom', path: ['photos'], message: `the photo "${id}" is named but not picked` });
     const twice = named.filter((id, i) => named.indexOf(id) !== i);
     if (twice.length) ctx.addIssue({ code: 'custom', path: ['photos'], message: `each photo is used once on a page: ${[...new Set(twice)].join(', ')} appear more than once` });

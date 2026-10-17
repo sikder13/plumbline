@@ -1,105 +1,23 @@
 import type { CSSProperties } from 'react';
 import type { EngineDemo } from '@plumbline/preview/engine';
-import { Pinned } from '@/components/Pinned';
 import { SectionLinks } from '@/components/SectionLinks';
 import { StickyBar } from '@/components/StickyBar';
 import type { PageData } from '@/lib/data';
 import { engineStyles } from '@/lib/styles';
-import { SPLIT_SIZES } from '../sizes';
-import { Go, Lines, Photo, rootVars, ways, type Cls } from '../kit';
-import { Band, Foot, Gallery, Intro, Offers, People, Practical } from '../sections';
+import { Go, Photo, rootVars, ways, type Cls } from '../kit';
+import { Band, Foot, Gallery, Hero, Intro, Offers, People, Practical, Story } from '../sections';
 import { Around } from './Around';
 import { Builder } from './Builder';
 import { Rooms } from './Rooms';
 
 /**
- * The stay engine. Its device is the view: the opening photograph is a window that opens as the
- * page loads, the story is told through a pane that widens and changes its light from morning to
- * evening as the visitor scrolls, and each room is shown by the view from it. Warm paper, a
- * serif set large, plenty of air.
+ * The stay engine. Their own photo first, through a window that opens as the page loads; a serif
+ * headline on the warm ground and the facts as chips; their stay told in steps; their rooms, a stay
+ * builder or what is around them, in their own distances.
  */
 
 function pick(cls: Cls, names: string[]): Cls {
   return Object.fromEntries(names.map((n) => [n, cls[n]!]));
-}
-
-function Hero({ c, data, cls }: { c: EngineDemo; data: PageData; cls: Cls }) {
-  const w = ways(c);
-  const kind = c.heroKind;
-  return (
-    <section className={cls.hero} data-kind={kind} id="top" data-hero>
-      <header className={cls.heroTop}>
-        <a className={cls.mark} href="#top">
-          {c.wordmark ?? c.name}
-        </a>
-        <span className={cls.place}>
-          {c.place.town}
-          {c.place.region ? `, ${c.place.region}` : ''}
-        </span>
-      </header>
-      {kind !== 'type' && data.images.hero && (
-        <div className={cls.window} style={{ '--px': `${data.images.hero.width}px` } as CSSProperties}>
-          <Photo data={data} id="hero" sizes={kind === 'photo' ? '100vw' : SPLIT_SIZES} first />
-        </div>
-      )}
-      {kind === 'type' && <span className={cls.pane0} aria-hidden="true" />}
-      <div className={cls.heroWords}>
-        <Lines lines={c.hero.lines} cls={cls} className={cls.heroTitle} />
-        {c.hero.sub && <p className={cls.heroSub}>{c.hero.sub.text}</p>}
-      </div>
-      {c.hero.facts.length > 0 && (
-        <dl className={cls.stayLine}>
-          {c.hero.facts.map((f) => (
-            <div key={f.label}>
-              <dt>{f.label}</dt>
-              <dd>{f.value}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      <div className={cls.heroActions}>
-        <Go action={w.main} cls={cls} />
-        {w.phone && w.main.kind !== 'phone' && (
-          <a className={cls.quietLink} href={w.phone.href}>
-            Call {w.phone.label}
-          </a>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function Story({ c, data, cls }: { c: EngineDemo; data: PageData; cls: Cls }) {
-  if (!c.story) return null;
-  const steps = c.story.steps;
-  return (
-    <section className={cls.story} id="stay" aria-labelledby="story-h">
-      <Pinned steps={steps.length} className={cls.storyPin}>
-        <h2 id="story-h" className={cls.storyTitle}>
-          {c.story.heading}
-        </h2>
-        <div className={cls.pane} aria-hidden="true">
-          {steps.map((st, i) =>
-            st.photo && data.images[st.photo] ? (
-              <div key={st.photo} className={cls.panePhoto} data-step={i} data-state={i === 0 ? 'on' : 'off'}>
-                <Photo data={data} id={st.photo} sizes="(min-width: 1100px) 56vw, 100vw" />
-              </div>
-            ) : null,
-          )}
-          <span className={cls.light} />
-        </div>
-        <ol className={cls.moments}>
-          {steps.map((st, i) => (
-            <li key={st.title} data-step={i} data-state={i === 0 ? 'on' : 'off'}>
-              {st.mark && <p className={cls.momentMark}>{st.mark}</p>}
-              <h3 className={cls.momentTitle}>{st.title}</h3>
-              <p className={cls.momentText}>{st.text}</p>
-            </li>
-          ))}
-        </ol>
-      </Pinned>
-    </section>
-  );
 }
 
 function Signature({ c, data, cls }: { c: EngineDemo; data: PageData; cls: Cls }) {
@@ -115,7 +33,7 @@ function Signature({ c, data, cls }: { c: EngineDemo; data: PageData; cls: Cls }
     return (
       <section className={cls.aroundSection} id="around" aria-labelledby="around-h">
         {head('around-h')}
-        <Around here={c.wordmark ?? c.name} places={sig.places} cls={pick(cls, ['around', 'rings', 'ringLine', 'ringWords', 'ringLabel', 'ringDot', 'placeOn', 'hereDot', 'hereHalo', 'hereName', 'placeList', 'placeCard', 'placeName', 'placeFar', 'placeNote', 'ringKey'])} />
+        <Around here={c.wordmark ?? c.name} places={sig.places} cls={pick(cls, ['around', 'rings', 'ringLine', 'ringLabel', 'hereDot', 'aroundList', 'hereName', 'placeGroups', 'groupHead', 'groupPlaces', 'placeName', 'placeNote', 'ringKey'])} />
       </section>
     );
   if (sig.kind === 'builder')
@@ -206,7 +124,7 @@ function Demo({ data }: { data: PageData }) {
       <Hero c={c} data={data} cls={s} />
       <main>
         <Intro c={c} cls={s} />
-        <Story c={c} data={data} cls={s} />
+        <Story c={c} data={data} cls={s} id="stay" />
         <Signature c={c} data={data} cls={s} />
         <Offers c={c} data={data} cls={s} />
         <Band c={c} cls={s} />
@@ -215,11 +133,7 @@ function Demo({ data }: { data: PageData }) {
         <Practical c={c} cls={s} />
         <Close c={c} cls={s} />
       </main>
-      <Foot c={c} cls={s}>
-        <p className={s.footMark} aria-hidden="true">
-          {c.wordmark ?? c.name}
-        </p>
-      </Foot>
+      <Foot c={c} cls={s} />
       <StickyBar main={{ label: w.main.kind === 'phone' ? 'Call to book' : w.main.label, href: w.main.href, external: w.main.external }} call={{ label: w.phone ? `Call ${w.phone.label}` : 'Email', tel: w.phone?.href ?? w.email?.href ?? w.main.href }} />
     </div>
   );

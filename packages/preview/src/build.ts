@@ -95,7 +95,7 @@ export async function buildPicture(source: string, outDir: string, urlBase: stri
   const widths = [...new Set((spec.widths ?? DEFAULT_WIDTHS).map((w) => Math.min(w, full.width)))].sort((a, b) => a - b);
   // What the stored versions were made from. A key that now points at another photo, or another crop of it, is made again.
   // A photograph with no quality of its own is recorded as it always was, so nothing already made is made again.
-  const made = `${source}|${JSON.stringify(crop ?? null)}|${statSync(source).mtimeMs}${spec.quality ? `|q${spec.quality}` : ''}`;
+  const made = `${source}|${JSON.stringify(crop ?? null)}|${statSync(source).mtimeMs}${spec.quality ? `|q${spec.quality}` : ''}${spec.sharpen ? '|sharpen' : ''}`;
   const madeFile = join(outDir, `${key}.made`);
   const current = existsSync(madeFile) && readFileSync(madeFile, 'utf8') === made;
   const formats = [
@@ -108,7 +108,11 @@ export async function buildPicture(source: string, outDir: string, urlBase: stri
     for (const w of widths) {
       const name = `${key}-${w}.${f.ext}`;
       const file = join(outDir, name);
-      if (!current || !existsSync(file)) await f.write(base().resize({ width: w, withoutEnlargement: true })).toFile(file);
+      if (!current || !existsSync(file)) {
+        // A light, even sharpen, after the resize and never before it.
+        const sized = base().resize({ width: w, withoutEnlargement: true });
+        await f.write(spec.sharpen ? sharp(await sized.toBuffer()).sharpen({ sigma: 0.55, m1: 0.6, m2: 1.2 }) : sized).toFile(file);
+      }
       parts.push(`${urlBase}/${name} ${w}w`);
     }
     sources.push({ type: f.type, srcset: parts.join(', ') });

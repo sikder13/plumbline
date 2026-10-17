@@ -17,16 +17,17 @@ Rules that hold for every field:
 | Photos | `data/wave/<slug>/photos/` | `data/wave-4/design-samples/<slug>/photos/` |
 | Graded crops | `data/wave/<slug>/graded/` | `data/wave-4/design-samples/<slug>/graded/` |
 
-A content folder with `engine.json` is picked up by `plumb preview build` like any other page (`loadContent` in `packages/preview/src/build.ts`): the settings become the page's content, the graded crops its images, and its look (hero, type pair, palette family) is recorded for the variety rules. Run `plumb engine photos` and grade before building.
+A content folder with `engine.json` is picked up by `plumb preview build` like any other page (`loadContent` in `packages/preview/src/build.ts`): the settings become the page's content, the graded crops its images, and its look (hero, type pair, palette family) is recorded for the variety rules. Run `plumb engine grade <slug>` before building.
 
 ## Commands
 
 - `plumb engine pull --list inputs/NZ-WAVE-4-LIST.csv --only <slugs>`: reads each homepage (text, links, logo, colours, photos) into `data/wave-4/design-samples/<slug>/`. No database, no audit.
 - `plumb engine palette <slug> --engine <name>`: writes `palette.json` from the logo, the site's colours and the photos, and prints any pair that fails AA (none should).
 - `plumb engine photos <slug>`: ranks their photos by width, sharpness and detail, marks where each may go (hero, framed, small), and writes a numbered sheet for choosing by eye.
+- `plumb engine grade <slug>`: for a real page, scores, grades and cuts its picked photos and chooses the hero.
 - `plumb engine build [--only <slugs>]`: grades the picked photos, writes the page data and builds the local sample site in `previews/engine-samples/site/`.
 - `plumb engine variety`: the variety rules across waves 1 to 4 and Wine Hopper.
-- `plumb engine gates [--only <slugs>]`: the gates of the standard on the sample site.
+- `plumb engine gates [--only <slugs>]`: the gates of the standard on the sample site, including the type scale, signature labels and pacing.
 - `plumb engine shots --out <dir> [--only <slugs> | --url <address>]`: phone screenshots, 390 wide JPEG, first three screens and one mid page. The visit report is answered inside the browser and never sent.
 
 ## Fields
@@ -48,7 +49,8 @@ A content folder with `engine.json` is picked up by `plumb preview build` like a
 | `hero.lines` | yes | the headline, one to five lines, their words |
 | `hero.sub` | no | one sentence of theirs under the headline |
 | `hero.facts` | no | up to four `{ label, value, source }` |
-| `hero.photo` | no | the id of the hero photo |
+| `hero.photo` | no | the id of the hero photo, if a person chose one |
+| `hero.inset` | no | for a typographic hero, the photo shown as an inset |
 | `intro` | no | `heading` and a `quote` of theirs, set large |
 | `band` | no | three or more of their words for a moving band (fish, places, rooms) |
 | `photos` | no | the picked photos: `id`, `file` (under the photo folder), `alt`, `focus` [x, y] from 0 to 1, `source` |
@@ -64,18 +66,23 @@ At least one of booking, phone or email is required. The main button is the firs
 
 ### The hero the photos allow
 
-- `photo` and `split` need a hero photo at least 1800 px wide and sharpness at least 0.8. Without one the page opens on the typographic hero.
-- A full bleed `photo` hero also needs 1080 px of height for the phone crop at 2x; a wide, shallow photo is framed in a `split` hero instead.
-- The build reports the change (`heroNote`), and the variety rules use the hero actually shown.
+The photos decide the hero; `look.hero` only chooses between full bleed and split where both are allowed.
+
+- Every picked photo is scored for sharpness (variance of a Laplacian on an 800 px wide copy). Under 150 it is not used anywhere; a hero needs 300. `plumb engine build` (and `plumb engine grade`) logs each score, and `graded/index.json` keeps them with the hero and inset chosen.
+- The hero photo is `hero.photo` if it is sharp and at least 1200 px wide; otherwise their best such photo not used elsewhere on the page, full bleed ones first.
+- 1800 px or wider and 1080 px high: `photo` (full bleed). 1200 to 1800 px, or wide and shallow: `split` (a panel on desktop, a full width 4:3 band on a phone). Below 1200 px or soft: `type`.
+- A typographic hero shows `hero.inset` (or, if left out, their best remaining sharp photo) as an inset.
+- The hero's phone image is encoded at the highest quality (42 down to 34) that keeps it within 54 KB at 750 px, recorded as `phoneQuality` in the index.
+- The build reports any change from `look.hero` (`heroNote`), and the variety rules use the hero actually shown.
 
 ### Type pairs
 
-| Engine | Pairs (display with text) |
+| Engine | Pairs (display with text), every one a serif headline |
 |---|---|
-| fishing | `bigshoulders-hanken`, `unbounded-intertight`, `bricolage-librefranklin` |
-| paddle | `fraunces-instrumentsans`, `sora-literata`, `instrumentserif-dmsans` |
+| fishing | `bitter-hanken`, `robotoslab-intertight`, `alegreya-librefranklin` |
+| paddle | `fraunces-instrumentsans`, `literata-sora`, `instrumentserif-dmsans` |
 | stay | `cormorant-manrope`, `youngserif-worksans`, `gloock-outfit` |
-| physio | `plusjakarta-lora`, `onest-sourceserif`, `geologica-crimsonpro` |
+| physio | `lora-plusjakarta`, `sourceserif-onest`, `crimsonpro-geologica` |
 
 No pair is used by any earlier page or by another engine (`plumb engine variety` checks this against every design in the repository and the wave 2 library).
 
@@ -86,14 +93,14 @@ No pair is used by any earlier page or by another engine (`plumb engine variety`
 | fishing | `tripboard` | `trips[]`: `name`, `target`, `duration`, `departs`, `price`, `group`, `bar` (the bar's length from a figure they state: price or length), `barOf`, `note` |
 | fishing | `seasons` | `species[]`: `name`, `months` (1 to 12, only as they state), `where`, `note` |
 | fishing | `day` | `steps[]`: `time` (as they state), `text` |
-| paddle | `route` | `trip`, `stops[]` (`name`, `note`), `facts`. Drawn as order, labelled not to scale |
+| paddle | `route` | `trip`, `stops[]` (`name`, `note`), `facts`. The stops in order on a plain rule, labelled not to scale |
 | paddle | `chooser` | `trips[]`: `name`, `text`, `duration`, `level`, `price`. Ends at their booking link or a prepared email |
 | paddle | `conditions` | `items[]`: `label`, `text` (their own rules) |
 | stay | `rooms` | `units[]`: `name`, `text`, `sleeps`, `price`, `photo` (the view from it) |
 | stay | `builder` | `units[]` (`name`, `price`), `maxNights`, `maxGuests` (only as they state). Ends at booking, email or phone |
-| stay | `around` | `places[]`: `name`, `distance` (their words), `reach` (orders the rings only), `note` |
+| stay | `around` | `places[]`: `name`, `distance` (their words), `reach` (orders the groups only), `note`. A list by distance on a phone; rings beside it from 600 px |
 | physio | `firstVisit` | `steps[]`: `title`, `text` |
 | physio | `acc` | `points[]`: `title` (a plain question), `text` (their words only) |
-| physio | `treats` | `areas[]`: `area` (`head`, `neck`, `shoulder`, `back`, `hip`, `knee`, `ankle`, `hand`, `whole`), `name` (their wording) |
+| physio | `treats` | `areas[]`: `area` (`head`, `neck`, `shoulder`, `back`, `hip`, `knee`, `ankle`, `hand`, `whole`), `name` (their wording). Found by part of the body; no drawing |
 
 Every signature plays once when first in view (at most 2.4 s), stops at the visitor's first touch or key, and does nothing with reduced motion asked for.

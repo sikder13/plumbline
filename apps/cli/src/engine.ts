@@ -9,7 +9,7 @@ import { fingerprintUrl } from '@plumbline/collect';
 import { HostLimiter, Polite, RobotsCache } from '@plumbline/fetch';
 import { Renderer, type PageCapture } from '@plumbline/render';
 import { AxeBuilder } from '@axe-core/playwright';
-import { BASE_PATH, ENGINES, EngineConfig, buildEngineSample, checkBeacon, checkLinks, contentDir, engineLook, engineVarietyIssues, gradeEnginePhotos, heroFor, lighthouseOnce, paletteChecks, paletteFrom, previewPaths, quietContext, rankPhotos, scanPage, serveSite, splitPage, swatchesOf, type EngineName, type LighthouseRun, type Look, type PageData, type Swatch } from '@plumbline/preview';
+import { BASE_PATH, ENGINES, EngineConfig, buildEngineSample, checkBeacon, checkLinks, contentDir, engineLook, engineVarietyIssues, gradeEnginePhotos, heroFor, lighthouseOnce, paletteChecks, paletteFrom, previewPaths, quietContext, rankPhotos, scanPage, serveSite, splitPage, swatchesOf, type EngineName, type GradedIndex, type LighthouseRun, type Look, type PageData, type Swatch } from '@plumbline/preview';
 import { chromium } from 'playwright';
 import { collectPhotos, fullSize, imageUrlsIn, type FoundImage } from '@plumbline/wave';
 import sharp from 'sharp';
@@ -156,10 +156,8 @@ export function sampleSlugs(): string[] {
 export async function buildSample(slug: string): Promise<PageData> {
   const dir = join(SAMPLES_DIR, slug);
   const config = EngineConfig.parse(JSON.parse(readFileSync(join(dir, 'config.json'), 'utf8')));
-  const pulled = samplePulled(slug);
-  const sharpness: Record<string, number> = {};
-  for (const p of pulled.photos) if (p.file) sharpness[p.file.slice(dir.length + 1)] = p.sharpness;
-  await gradeEnginePhotos(config, dir, sharpness);
+  // Each picked photo's sharpness score is logged as it is graded.
+  await gradeEnginePhotos(config, dir, (line) => console.log(`${slug}${line}`));
   const call = env().CAL_LINK || `mailto:${REPLY_EMAIL}?subject=${encodeURIComponent('15 minute call')}`;
   const path = `${slug}-${SAMPLE_TOKEN}`;
   const data = await buildEngineSample(config, { media: dir, assets: join(SAMPLE_OUT, 'assets', path), urlBase: `${BASE_PATH}/${path}`, reply: { email: REPLY_EMAIL, subject: `${config.name} website`, call }, token: SAMPLE_TOKEN });
@@ -219,6 +217,57 @@ export async function phoneShots(url: string, out: string, name: string, opts: {
   }
   return files;
 }
+
+/**
+ * The type scale, the labels and the pacing of the standard, measured in the page as a visitor gets
+ * it. Only h1 and h2 may be set at display sizes. Running text (60 characters or more in a
+ * paragraph, item or definition) stays at 22 px on a phone and 24 px on a desktop, and at most about
+ * 72 characters a line; any other text stays at 28 px and 36 px. Words in the signature section are
+ * 14 px or more and never turned. At most one section is held in place, never on a phone, and for
+ * no more than two screens of scroll.
+ */
+const TYPE_SCALE_CHECK = (): string[] => {
+  const phone = window.innerWidth < 600;
+  const out: string[] = [];
+  const demo = document.querySelector('#demo');
+  if (!demo) return ['no demo tab'];
+  const own = (el: Element) => [...el.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent ?? '').join('').trim();
+  const shown = (el: Element) => {
+    const cs = getComputedStyle(el);
+    return cs.display !== 'none' && cs.visibility !== 'hidden' && el.getBoundingClientRect().width > 0;
+  };
+  for (const el of demo.querySelectorAll('*')) {
+    if (!own(el) || el.closest('h1, h2, svg') || !shown(el)) continue;
+    const size = parseFloat(getComputedStyle(el).fontSize);
+    const all = (el.textContent ?? '').replace(/\s+/g, ' ').trim();
+    const running = /^(P|LI|DD|BLOCKQUOTE|FIGCAPTION)$/.test(el.tagName) && all.length >= 60;
+    const cap = running ? (phone ? 22.5 : 24.5) : phone ? 28.5 : 36.5;
+    if (size > cap) out.push(`${el.tagName.toLowerCase()} "${all.slice(0, 36)}" is ${size.toFixed(1)} px (${running ? 'running text' : 'not a heading'}, at most ${cap - 0.5})`);
+    if (running && !phone) {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const lines = new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
+      if (lines >= 2 && all.length / lines > 76) out.push(`"${all.slice(0, 36)}" runs ${Math.round(all.length / lines)} characters a line`);
+    }
+  }
+  const signature = demo.querySelector('#board, #choose, #around, #treat');
+  if (signature)
+    for (const el of signature.querySelectorAll('*')) {
+      if (!own(el) || el.closest('svg') || !shown(el)) continue;
+      const cs = getComputedStyle(el);
+      if (parseFloat(cs.fontSize) < 13.5) out.push(`signature label "${own(el).slice(0, 30)}" is ${cs.fontSize}`);
+      const m = /matrix\(([^)]+)\)/.exec(cs.transform);
+      if (m && Math.abs(Number(m[1]!.split(',')[1])) > 0.01) out.push(`signature label "${own(el).slice(0, 30)}" is turned`);
+    }
+  const held = [...demo.querySelectorAll('[data-frame]')].filter((f) => getComputedStyle(f).position === 'sticky');
+  if (phone && held.length) out.push('a section is held in place on a phone');
+  if (held.length > 1) out.push(`${held.length} sections are held in place`);
+  for (const f of held) {
+    const extra = (f.parentElement?.getBoundingClientRect().height ?? 0) - window.innerHeight;
+    if (extra > 2.05 * window.innerHeight) out.push(`a held section takes ${(extra / window.innerHeight).toFixed(1)} screens of scroll`);
+  }
+  return out;
+};
 
 /** The bar of the Premium Standard for every sample. Stricter than the earlier pages' gate on speed. */
 export const SAMPLE_LIMITS = { performance: 90, accessibility: 95, lcpMs: 2500, cls: 0.05, tbtMs: 200 };
@@ -288,6 +337,16 @@ export async function gateSample(slug: string, base: string, opts: { runs?: numb
       }
       await ctx.close();
     }
+    if (!skip.has('type'))
+      for (const width of [390, 1280]) {
+        const ctx = await quietContext(browser, { viewport: { width, height: width === 390 ? 844 : 900 }, deviceScaleFactor: 1, isMobile: width === 390, hasTouch: width === 390 });
+        const page = await ctx.newPage();
+        await page.goto(url, { waitUntil: 'networkidle' });
+        // The runner that compiles this file names inner functions with a helper the page does not have.
+        await page.evaluate('globalThis.__name = (f) => f');
+        for (const issue of await page.evaluate(TYPE_SCALE_CHECK)) failures.push(`type at ${width}: ${issue}`);
+        await ctx.close();
+      }
     for (const t of texts) {
       const m = PLACEHOLDER.exec(t);
       if (m) failures.push(`placeholder text "${m[0]}"`);
@@ -316,9 +375,10 @@ export function engineLooks(): { slug: string; look: Look }[] {
   const out: { slug: string; look: Look }[] = [];
   const add = (slug: string, raw: unknown, media: string) => {
     const c = EngineConfig.parse(raw);
-    const index = join(media, 'graded', 'index.json');
-    const p = c.hero.photo && existsSync(index) ? (JSON.parse(readFileSync(index, 'utf8')) as Record<string, { width: number; height: number; sharpness: number | null }>)[c.hero.photo] : undefined;
-    const hero = heroFor(c.look.hero, p ? { width: p.width, height: p.height, sharpness: p.sharpness ?? undefined } : null).kind;
+    const file = join(media, 'graded', 'index.json');
+    const index = existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as GradedIndex) : null;
+    const p = index?.hero && index.photos ? index.photos[index.hero] : undefined;
+    const hero = heroFor(c.look.hero, p ? { width: p.width, height: p.height, score: p.score } : null).kind;
     out.push({ slug, look: engineLook(c, hero) });
   };
   for (const slug of sampleSlugs()) add(`${slug} (sample)`, JSON.parse(readFileSync(join(SAMPLES_DIR, slug, 'config.json'), 'utf8')), join(SAMPLES_DIR, slug));
@@ -484,8 +544,8 @@ export function registerEngine(program: Command): void {
     .description("Grade a real engine page's picked photos (previews/content/<slug>/engine.json, photos under data/wave/<slug>/) before plumb preview build")
     .action(async (slug: string) => {
       const config = EngineConfig.parse(JSON.parse(readFileSync(join(contentDir(slug), 'engine.json'), 'utf8')));
-      const index = await gradeEnginePhotos(config, join(paths.data, 'wave', slug));
-      console.log(`${slug}: ${Object.keys(index).length} photos graded`);
+      const index = await gradeEnginePhotos(config, join(paths.data, 'wave', slug), (line) => console.log(`${slug}${line}`));
+      console.log(`${slug}: ${Object.keys(index.photos).length} photos graded, hero ${index.hero ?? 'none (typographic)'}${index.inset ? `, inset ${index.inset}` : ''}`);
     });
 
   engine
@@ -502,10 +562,10 @@ export function registerEngine(program: Command): void {
 
   engine
     .command('gates')
-    .description('The gates of the Premium Standard on the sample site: speed and accessibility, sideways scroll, contrast, links, placeholder text, dashes and figures, and the visit report')
+    .description('The gates of the Premium Standard on the sample site: speed and accessibility, sideways scroll, contrast, the type scale, labels and pacing, links, placeholder text, dashes and figures, and the visit report')
     .option('--only <slugs>', 'comma separated slugs')
     .option('--runs <n>', 'Lighthouse runs per page (median)', (v) => Number(v), 3)
-    .option('--skip <gates>', 'comma separated: lighthouse, overflow, axe, copy, links, beacon')
+    .option('--skip <gates>', 'comma separated: lighthouse, overflow, axe, type, copy, links, beacon')
     .action(async (o: { only?: string; runs: number; skip?: string }) => {
       const { server, base } = await serveSite(join(SAMPLE_OUT, 'site'), 4332);
       const results: SampleGate[] = [];

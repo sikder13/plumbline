@@ -45,19 +45,21 @@ describe('palettes', () => {
 });
 
 describe('the hero the photos allow', () => {
-  it('opens on words alone without a photo 1800 px wide', () => {
-    expect(heroFor('photo', { width: 1600, height: 1200 }).kind).toBe('type');
-    expect(heroFor('split', { width: 1700, height: 1200 }).kind).toBe('type');
+  it('makes a photo hero the default for any sharp photo 1200 px wide or more', () => {
+    expect(heroFor('type', { width: 2400, height: 1600, score: 900 }).kind).toBe('photo');
+    expect(heroFor('photo', { width: 1920, height: 1440, score: 900 }).kind).toBe('photo');
+  });
+
+  it('frames a photo between 1200 and 1800 px wide, or a wide shallow one, in the split hero', () => {
+    expect(heroFor('photo', { width: 1600, height: 1200, score: 500 }).kind).toBe('split');
+    expect(heroFor('photo', { width: 1280, height: 720, score: 400 }).kind).toBe('split');
+    expect(heroFor('photo', { width: 1900, height: 700, score: 2500 }).kind).toBe('split');
+  });
+
+  it('opens on words alone below 1200 px, without a photo, or with a soft one however large', () => {
+    expect(heroFor('photo', { width: 1023, height: 522, score: 900 }).kind).toBe('type');
     expect(heroFor('photo', null).kind).toBe('type');
-  });
-
-  it('frames a wide, shallow photo instead of stretching it over a phone', () => {
-    expect(heroFor('photo', { width: 1900, height: 700 }).kind).toBe('split');
-    expect(heroFor('photo', { width: 1920, height: 1440 }).kind).toBe('photo');
-  });
-
-  it('turns down a soft photo', () => {
-    expect(heroFor('photo', { width: 2400, height: 1600, sharpness: 0.5 }).kind).toBe('type');
+    expect(heroFor('photo', { width: 4000, height: 2667, score: 120 }).kind).toBe('type');
   });
 });
 
@@ -93,7 +95,7 @@ describe('settings', () => {
     name: 'A Charter',
     domain: 'example.co.nz',
     place: { town: 'Town', source: U },
-    look: { hero: 'type', type: 'bigshoulders-hanken', family: 'ocean' },
+    look: { hero: 'type', type: 'bitter-hanken', family: 'ocean' },
     palette: { family: 'ocean', paper: '#ffffff', ink: '#111111', soft: '#eeeeee', deep: '#000022', onDeep: '#ffffff', accent: '#0044aa', onAccent: '#ffffff', accentInk: '#0044aa' },
     contact: { phone: { display: '021 000 000', tel: 'tel:+6421000000', source: U } },
     hero: { lines: ['Out'], source: U },
