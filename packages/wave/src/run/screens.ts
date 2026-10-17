@@ -75,11 +75,13 @@ export interface MenuPage {
   text: string;
 }
 
-/** The internal pages in a homepage's menu, once each. */
+/** The internal pages in a homepage's menu, once each. A page with no marked menu gives its header links, then its links above the footer. */
 export function menuTargets(home: PageCapture, max = 14): { label: string; url: string }[] {
+  const internal = (l: PageCapture['links'][number]) => /^https?:/i.test(l.href) && domainOf(l.href) === domainOf(home.finalUrl);
+  const tiers = [home.links.filter((l) => l.inNav && internal(l)), home.links.filter((l) => l.inHeader && internal(l)), home.links.filter((l) => !l.inFooter && internal(l) && l.text.trim().split(/\s+/).length <= 4)];
+  const links = tiers.find((t) => t.length) ?? [];
   const out: { label: string; url: string }[] = [];
-  for (const l of home.links) {
-    if (!l.inNav || !/^https?:/i.test(l.href) || domainOf(l.href) !== domainOf(home.finalUrl)) continue;
+  for (const l of links) {
     const url = l.href.split('#')[0]!.replace(/\/$/, '');
     if (!url || url === home.finalUrl.replace(/\/$/, '') || out.some((o) => o.url === url)) continue;
     out.push({ label: l.text.replace(/\s+/g, ' ').trim(), url });
@@ -109,7 +111,7 @@ export function faithFlags(pages: MenuPage[]): FaithFlag[] {
 
 // ---- Whoever built the site, named in a credit anywhere in its words ----
 
-const CREDIT_WORDS = /\b(?:[Ww]eb ?[Ss]ite|[Ww]eb ?[Dd]esign|[Ss]ite|[Dd]esign(?:ed)?|[Dd]evelop(?:ed|ment)|[Bb]uilt|[Cc]reated|[Hh]osted|[Pp]owered|[Mm]aintained)(?: (?:and|&) \w+| [Dd]esign| [Dd]evelopment)? by:?\s+([A-Z][^\n|\u00a9.,]{2,40}?)(?=\s+(?:Copyright|Privacy|Terms|All rights|\u00a9)|[|\u00a9.,\n]|$)/g;
+const CREDIT_WORDS = /\b(?:[Ww]eb ?[Ss]ite|[Ww]eb ?[Dd]esign|[Ss]ite|[Dd]esign(?:ed)?|[Dd]evelop(?:ed|ment)|[Bb]uilt|[Cc]reated|[Hh]osted|[Pp]owered|[Mm]aintained)(?: (?:and|&) \w+| [Dd]esign| [Dd]evelopment)? by:?\s+([A-Za-z][^\n|\u00a9.,]{2,40}?)(?=\s+(?:Copyright|Privacy|Terms|All rights|\u00a9)|[|\u00a9.,\n]|$)/g;
 const BUILDERS = /^(?:weebly|wix(?:\.com)?|squarespace|wordpress(?:\.com)?|shopify|rocketspark|godaddy|webflow|jimdo|google sites|square|duda|zyro|webnode|strikingly)$/i;
 
 /** The names given in a "website by" or "designed by" credit, other than a site builder. */
@@ -117,7 +119,7 @@ export function creditsIn(text: string): string[] {
   const names = new Set<string>();
   for (const m of text.replace(/\s+/g, ' ').matchAll(CREDIT_WORDS)) {
     const name = m[1]!.trim();
-    if (name.split(' ').length <= 5 && !BUILDERS.test(name)) names.add(name);
+    if (name.split(' ').length <= 5 && !BUILDERS.test(name) && !/^(?:the|our|us|me|you|a|an|my|its|their|owner|owners|hand|hands|nature|design)\b/i.test(name)) names.add(name);
   }
   return [...names];
 }

@@ -52,7 +52,18 @@ export function pageName(url: string | undefined): string {
 
 const q = (s: string | undefined) => `"${noDash(s ?? 'link').replace(/"/g, '')}"`;
 const here = (f: Facts) => f.page ?? 'homepage';
+/** "The \"Book\" link", or "A link" when the link has no words on it. */
+const linkRef = (f: Facts) => (f.label && !/^link$/i.test(f.label) ? `The ${q(f.label)} link` : 'A link');
 const n = (count: number | undefined, one: string, many: string) => ((count ?? 1) === 1 ? one : many);
+
+/** "None of the 7 pages we read has X", "3 of the 7 pages we read lack X", or for a single page "Your homepage has no X". */
+function lacking(f: Facts, what: string): string {
+  const count = f.count ?? 1;
+  const of = f.of ?? 1;
+  if (of <= 1) return `Your homepage has no ${what.replace(/^a /, '')}.`;
+  if (count >= of) return `None of the ${of} pages we read has ${what}.`;
+  return `${count} of the ${of} pages we read ${count === 1 ? 'has' : 'have'} no ${what.replace(/^a /, '')}.`;
+}
 
 export type FindingType =
   | 'no_way_to_book'
@@ -68,6 +79,7 @@ export type FindingType =
   | 'physio_testimonials'
   | 'slow_phone'
   | 'phone_sideways'
+  | 'phone_wider'
   | 'phone_no_action'
   | 'hello_world'
   | 'template_post'
@@ -78,10 +90,11 @@ export type FindingType =
   | 'placeholder_text'
   | 'copy_of_address'
   | 'passed_notice'
-  | 'seasonal_notice'
+  | 'covid_wording'
   | 'stale_copyright'
   | 'broken_images'
   | 'broken_link'
+  | 'social_link_broken'
   | 'dead_menu_item'
   | 'outdated_software'
   | 'no_description'
@@ -98,7 +111,7 @@ interface Kind {
 export const KINDS: Record<FindingType, Kind> = {
   no_way_to_book: { tier: 1, order: 0, sentence: (f) => `Your website shows prices for ${f.noun ?? 'tours'} but gives no way to book or enquire.` },
   book_button_missing: { tier: 1, order: 1, sentence: (f) => `The ${q(f.label)} button on your ${here(f)} opens a page that is not found.` },
-  book_link_broken: { tier: 1, order: 2, sentence: (f) => `The ${q(f.label)} link on your ${here(f)} opens a page that is not found.` },
+  book_link_broken: { tier: 1, order: 2, sentence: (f) => `${linkRef(f)} on your ${here(f)} opens a page that is not found.` },
   book_button_section_missing: { tier: 1, order: 3, sentence: (f) => `The ${q(f.label)} button on your ${here(f)} jumps to a section that is not on the page.` },
   book_button_contact: { tier: 1, order: 4, sentence: (f) => `The ${q(f.label)} button on your ${here(f)} opens your contact page, not a booking page.` },
   form_not_loading: { tier: 1, order: 5, sentence: (f) => `The ${f.what ?? 'enquiry form'} on your ${here(f)} does not load.` },
@@ -109,25 +122,27 @@ export const KINDS: Record<FindingType, Kind> = {
   physio_testimonials: { tier: 2, order: 1, sentence: (f) => `Your homepage shows ${f.what ?? 'testimonials from clients'}.` },
   slow_phone: { tier: 3, order: 1, sentence: (f) => `Your homepage scores ${f.score ?? 0} out of 100 on a phone, and its main content appears after ${f.seconds ?? 0} seconds.` },
   phone_sideways: { tier: 4, order: 1, sentence: () => 'Your homepage scrolls sideways on a phone.' },
-  phone_no_action: { tier: 4, order: 2, sentence: () => 'The first phone screen of your homepage has no button to book, call or email.' },
+  phone_wider: { tier: 4, order: 2, sentence: () => 'Your homepage is wider than a phone screen.' },
+  phone_no_action: { tier: 4, order: 3, sentence: () => 'The first phone screen of your homepage has no button to book, call or email.' },
   hello_world: { tier: 5, order: 1, sentence: () => 'The default "Hello world!" post is still live on your website.' },
   template_post: { tier: 5, order: 2, sentence: (f) => `A template blog post titled ${q(f.title)} is still live on your website.` },
   demo_page: { tier: 5, order: 3, sentence: (f) => `A page titled ${q(f.title)} is still live on your website.` },
   coming_soon_page: { tier: 5, order: 4, sentence: () => 'A "coming soon" page is still live on your website.' },
   maintenance_page: { tier: 5, order: 5, sentence: (f) => `A page titled ${q(f.title)} is still live on your website.` },
-  blank_page: { tier: 5, order: 6, sentence: (f) => `${n(f.count, 'A blank page', `${f.count} blank pages`)} titled ${q(f.title)} ${n(f.count, 'is', 'are')} still live on your website.` },
+  blank_page: { tier: 5, order: 6, sentence: (f) => `${n(f.count, 'A blank page', `${f.count} blank pages`)} called ${q(f.title)} ${n(f.count, 'is', 'are')} still live on your website.` },
   placeholder_text: { tier: 5, order: 7, sentence: (f) => `Placeholder text, ${q(f.text)}, is showing on your ${here(f)}.` },
   copy_of_address: { tier: 5, order: 8, sentence: (f) => `${f.count ?? 1} of your pages ${n(f.count, 'has a web address', 'have web addresses')} that ${n(f.count, 'starts', 'start')} with copy of, so the address names a different page from its content.` },
   passed_notice: { tier: 5, order: 9, sentence: (f) => `A notice about a date that has passed is still showing on your ${here(f)}.` },
-  seasonal_notice: { tier: 5, order: 10, sentence: (f) => `A ${f.season ?? 'seasonal'} message is still showing on your ${here(f)}, out of season.` },
-  stale_copyright: { tier: 5, order: 11, sentence: (f) => `The footer on your ${here(f)} still says ${f.year ?? 'an old year'}.` },
-  broken_images: { tier: 5, order: 12, sentence: (f) => `${n(f.count, '1 image', `${f.count} images`)} on your ${here(f)} ${n(f.count, 'does', 'do')} not load.` },
-  broken_link: { tier: 5, order: 13, sentence: (f) => `The ${q(f.label)} link on your ${here(f)} opens a page that is not found.` },
+  broken_images: { tier: 5, order: 10, sentence: (f) => `${n(f.count, '1 image', `${f.count} images`)} on your ${here(f)} ${n(f.count, 'does', 'do')} not load.` },
+  covid_wording: { tier: 5, order: 11, sentence: (f) => `COVID wording is still showing on your ${here(f)}.` },
+  stale_copyright: { tier: 5, order: 12, sentence: (f) => `The footer on your ${here(f)} still says ${f.year ?? 'an old year'}.` },
+  broken_link: { tier: 5, order: 13, sentence: (f) => `${linkRef(f)} on your ${here(f)} opens a page that is not found.` },
   dead_menu_item: { tier: 5, order: 14, sentence: (f) => `The menu item ${q(f.label)} on your ${here(f)} leads nowhere.` },
+  social_link_broken: { tier: 5, order: 15, sentence: (f) => `The ${f.kind ?? 'social'} link on your ${here(f)} does not work.` },
   outdated_software: { tier: 6, order: 1, sentence: (f) => `Your website runs ${noDash(f.product ?? 'software')} ${f.version ?? ''}, which has had no support since ${f.since ?? 'an earlier date'}.`.replace(/\s+,/, ',') },
-  no_description: { tier: 7, order: 1, sentence: (f) => (f.of && f.of > 1 ? `${f.count} of the ${f.of} pages we read have no description for search results.` : 'Your homepage has no description for search results.') },
-  no_heading: { tier: 7, order: 2, sentence: (f) => (f.of && f.of > 1 ? `${f.count} of the ${f.of} pages we read have no main heading.` : 'Your homepage has no main heading.') },
-  no_structured_data: { tier: 7, order: 3, sentence: (f) => (f.of && f.of > 1 ? `${f.count} of the ${f.of} pages we read carry no structured data describing the business.` : 'Your homepage carries no structured data describing the business.') },
+  no_description: { tier: 7, order: 1, sentence: (f) => lacking(f, 'a description for search results') },
+  no_heading: { tier: 7, order: 2, sentence: (f) => lacking(f, 'a main heading') },
+  no_structured_data: { tier: 7, order: 3, sentence: (f) => lacking(f, 'structured data describing the business') },
 };
 
 export const sentenceFor = (type: FindingType, facts: Facts): string => {
@@ -179,7 +194,7 @@ export function dropReason(f: RawFinding, ctx: RankContext): string | null {
   if (f.unlinked) return 'a missing page that nothing links to';
   if (f.steady === false) return 'speed unstable or unavailable';
   const text = `${f.measured} ${f.evidenceUrl} ${f.linkedFrom ?? ''} ${Object.values(f.facts).join(' ')}`.toLowerCase();
-  const agency = ctx.agencies.find((a) => a.length >= 4 && text.includes(a.toLowerCase()));
+  const agency = ctx.agencies.find((a) => a.trim().length >= 3 && new RegExp(`\\b${a.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i').test(text));
   if (agency) return `names a web agency (${agency})`;
   return null;
 }

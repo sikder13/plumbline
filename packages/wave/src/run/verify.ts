@@ -90,6 +90,9 @@ async function firstThat(read: Reader, url: string, test: (p: PageRead) => boole
   return { page, found: false, via: page?.via ?? null };
 }
 
+/** The address in a list cell that may carry a note after it: "https://x.co.nz/ (guest testimonial)". */
+export const urlIn = (cell: string): string => /https?:\/\/[^\s)]+/i.exec(cell)?.[0] ?? cell.trim();
+
 /** Checks the list's facts for one business against the live site, with plain HTTP and string matching. Nothing is guessed or replaced. */
 export async function verifyFacts(row: WaveRow, read: Reader, now: Date = new Date()): Promise<FactCheck> {
   const changed: string[] = [];
@@ -106,7 +109,7 @@ export async function verifyFacts(row: WaveRow, read: Reader, now: Date = new Da
   else if (!row.emailSourceUrl) changed.push('the list names no page for the email address');
   else {
     const want = row.email.toLowerCase();
-    const r = await firstThat(read, row.emailSourceUrl, (p) => emailsInSource(p.html).includes(want));
+    const r = await firstThat(read, urlIn(row.emailSourceUrl), (p) => emailsInSource(p.html).includes(want));
     email = { address: row.email, sourceUrl: row.emailSourceUrl, found: r.found, via: r.found ? r.via : null, seenOnPage: r.found || !r.page ? [] : emailsInSource(r.page.html).slice(0, 4) };
     if (!r.found) changed.push(r.page?.ok ? `${row.email} no longer appears on ${row.emailSourceUrl}` : `${row.emailSourceUrl} could not be read to find ${row.email}`);
   }
@@ -118,7 +121,7 @@ export async function verifyFacts(row: WaveRow, read: Reader, now: Date = new Da
   else {
     const forms = new Map(names.map((n) => [n, nameForms(n, row.ownerNames)]));
     const allFound = (p: PageRead) => names.every((n) => nameOnText(p.text || textOf(p.html), forms.get(n)!));
-    const r = await firstThat(read, row.ownerSource1, allFound);
+    const r = await firstThat(read, urlIn(row.ownerSource1), allFound);
     const text = r.page?.ok ? r.page.text || textOf(r.page.html) : '';
     owners = { sourceUrl: row.ownerSource1, names: names.map((name) => ({ name, found: !!text && nameOnText(text, forms.get(name)!) })), via: r.via, read: !!r.page?.ok };
     for (const n of owners.names) if (!n.found) changed.push(r.page?.ok ? `${n.name} does not appear on ${row.ownerSource1}` : `${row.ownerSource1} could not be read to find ${n.name}`);

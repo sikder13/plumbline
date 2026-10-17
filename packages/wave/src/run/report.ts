@@ -108,7 +108,7 @@ export function buildFactPack(row: WaveRow, m: RunMeasured | null, extras: { wor
       refuses_unsolicited: m?.refusal ?? null,
       speed: m ? speedLine(m) : 'not measured',
     },
-    booking: { path: m?.booking?.path ?? 'not read', csv_says: row.bookingSystem, links_followed: (m?.booking?.landings ?? []).map((l) => ({ text: l.text, lands_on: l.landsOn, status: l.status, final_url: l.finalUrl })) },
+    booking: { path: /^(?:Tripadvisor|Tripadvisor \+ Booking\.com)$/.test(m?.booking?.path ?? '') ? 'none found (review and listing links only)' : (m?.booking?.path ?? 'not read'), csv_says: row.bookingSystem, links_followed: (m?.booking?.landings ?? []).map((l) => ({ text: l.text, lands_on: l.landsOn, status: l.status, final_url: l.finalUrl })) },
     phone: m?.phone ?? null,
     pelorus: m?.pelorus ?? null,
     recheck: { measured_at: measuredAt, not_before: addMinutes(measuredAt, 60), fresh_until: addMinutes(measuredAt, 24 * 60), command: `pnpm plumb wave run --wave wave-4 --only ${row.slug}` },
@@ -143,7 +143,7 @@ export function factPackLines(p: FactPack): string[] {
   if (p.flags.security_review.length) flags.push(`security review: ${p.flags.security_review.join('; ')}`);
   if (p.flags.refuses_unsolicited) flags.push(`refuses unsolicited messages: "${clip(p.flags.refuses_unsolicited, 120)}"`);
   L.push(`Flags: ${flags.length ? clip(flags.join(' | '), 400) : 'none'}`);
-  L.push(`Speed: ${p.flags.speed} | Booking: ${p.booking.path} (list says: ${clip(p.booking.csv_says || 'n/a', 60)}) | Phone screen: ${p.phone ? `${p.phone.actionVisible ? 'action visible' : 'no action'}, ${p.phone.sideways ? 'scrolls sideways' : 'fits'}` : 'not read'}`);
+  L.push(`Speed: ${p.flags.speed} | Booking: ${p.booking.path} (list says: ${clip(p.booking.csv_says || 'n/a', 60)}) | Phone screen: ${p.phone ? `${p.phone.actionVisible ? 'action visible' : 'no action'}, ${p.phone.sideways ? 'scrolls sideways' : p.phone.wider ? 'wider than the screen' : 'fits'}` : 'not read'}`);
   if (p.pelorus) L.push(`Header only: ${p.pelorus.requests.map((r) => `${r.url} ${r.status ?? r.error}`).join(' | ')}`);
   L.push(`Recheck: not before ${p.recheck.not_before.slice(0, 16)}Z, fresh until ${p.recheck.fresh_until.slice(0, 16)}Z`);
   return L.slice(0, 30);

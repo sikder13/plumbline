@@ -1,10 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as cheerio from 'cheerio';
-import { domainOf, utcIso, type Business } from '@plumbline/core';
+import { VIEWPORTS, domainOf, utcIso, type Business } from '@plumbline/core';
 import { captureBrand, type BrandCapture } from '@plumbline/brand';
 import { evaluateSite, foldActions } from '@plumbline/checks';
-import { allPages, collectSite, prices } from '@plumbline/collect';
+import { allPages, collectSite, emailsIn, phonesIn, prices } from '@plumbline/collect';
 import { refusalStatement } from '@plumbline/contacts';
 import { Polite } from '@plumbline/fetch';
 import { Renderer, type PageCapture } from '@plumbline/render';
@@ -59,10 +59,15 @@ const businessFor = (row: WaveRow, at: string): Business => ({
 
 const unavailable = (reason: string): SpeedResult => ({ source: 'PageSpeed Insights API', status: 'unavailable', runs: [], spread: null, performance: null, lcpMs: null, reason, measuredAt: utcIso() });
 
-/** The phone screen at 390 by 844, read from the capture the run already made of the homepage. */
-export function phoneScreen(page: PageCapture): PhoneScreen {
+/**
+ * The first phone screen, read from the capture the run already made of the homepage. The screen is
+ * 390 by 844. A page that really moves sideways when scrolled is told apart from one that is only
+ * laid out wider than the screen, which a phone shrinks to fit.
+ */
+export function phoneScreen(page: PageCapture, scrollX: number | null): PhoneScreen {
   const actions = foldActions(page);
-  return { url: page.finalUrl, width: page.layout.innerWidth, height: page.layout.innerHeight, actions: actions.slice(0, 8), actionVisible: actions.length > 0, sideways: page.layout.horizontalScroll, scrollWidth: page.layout.scrollWidth };
+  const sideways = (scrollX ?? 0) > 0;
+  return { url: page.finalUrl, width: VIEWPORTS.mobile.width, height: VIEWPORTS.mobile.height, actions: actions.slice(0, 8), actionVisible: actions.length > 0, sideways, wider: page.layout.horizontalScroll && !sideways, scrollWidth: page.layout.scrollWidth, scrollX };
 }
 
 const unique = (xs: string[]) => [...new Set(xs)];
@@ -123,7 +128,23 @@ export async function measureBusiness(row: WaveRow, opts: MeasureOptions): Promi
     const htmlOf = (p: PageCapture) => savedHtml(p);
 
     // 3. The first phone screen
-    const phone = homeMobile ? phoneScreen(homeMobile) : null;
+    let scrollX: number | null = null;
+    if (homeMobile && !site.blocked) {
+      // Scroll the live page sideways, as a thumb would, and see whether it moves.
+      await renderer
+        .render({
+          url: homepage,
+          viewport: 'mobile',
+          onPage: async (page) => {
+            scrollX = await page.evaluate(() => {
+              window.scrollTo(300, 0);
+              return window.scrollX;
+            });
+          },
+        })
+        .catch(() => undefined);
+    }
+    const phone = homeMobile ? phoneScreen(homeMobile, scrollX) : null;
 
     // 4. How a visitor books
     let booking: BookingScan | null = null;
@@ -139,7 +160,8 @@ export async function measureBusiness(row: WaveRow, opts: MeasureOptions): Promi
       const forms = await checkForms(polite, formRefs(sources.filter((s) => s.url === homepage || /contact|book|enquir/i.test(s.url)).slice(0, 8)));
       const homeLinks = home.links;
       const showsPrices = pages.some((p) => prices(p).length > 0);
-      const anyWay = ctas.length > 0 || systems.some((s) => s.kind === 'system' || s.kind === 'builder') || homeLinks.some((l) => /^(?:mailto|tel):/i.test(l.raw)) || pages.some((p) => p.controls.some((c) => c.tag === 'form' && c.hasEmailField));
+      // A phone number or an email address written out in the words of the page lets a visitor reach them too.
+      const anyWay = ctas.length > 0 || systems.length > 0 || homeLinks.some((l) => /^(?:mailto|tel):/i.test(l.raw)) || phonesIn(home.text).length > 0 || emailsIn(home.text).length > 0 || pages.some((p) => p.controls.some((c) => c.tag === 'form' && c.fields >= 2));
       booking = { systems, path: bookingPath(systems, landings, homeLinks), landings, unlinked, forms, noWay: showsPrices && !anyWay };
       log(`booking ${booking.path}; ${landings.length} Book/Enquire links followed`);
     }
@@ -215,6 +237,14 @@ export async function measureBusiness(row: WaveRow, opts: MeasureOptions): Promi
     }
 
     // 9. Who built it, whether the site refuses unsolicited messages, signs of a sale
+    const footerCredits = [homeDesktop, homeMobile]
+      .filter((x): x is PageCapture => !!x)
+      .flatMap((p) => {
+        const footer = p.blocks.filter((b) => b.inFooter).map((b) => b.text).join(' ');
+        if (!/\b(?:design(?:ed)?|develop(?:ed|ment)|built|created|web ?site|site|by)\b/i.test(footer)) return [];
+        return p.links.filter((l) => l.inFooter && l.text.trim().split(/\s+/).length <= 3 && (domainOf(l.href) !== domainOf(p.finalUrl) || /\/(?:www\.)?[a-z0-9-]+\.(?:com|co\.nz|nz|net|co)\b/i.test(new URL(l.href, p.finalUrl).pathname))).map((l) => l.text.trim());
+      })
+      .filter((t) => t.length >= 3 && !/^(?:facebook|instagram|twitter|youtube|tiktok|linkedin|tripadvisor|email|privacy|terms|home)\b/i.test(t));
     const agencies = unique([
       ...[homeDesktop, homeMobile]
         .filter((x): x is PageCapture => !!x)
@@ -222,6 +252,7 @@ export async function measureBusiness(row: WaveRow, opts: MeasureOptions): Promi
         .filter((s) => s.kind !== 'platform')
         .map((s) => s.agency),
       ...[homeDesktop, homeMobile].filter((x): x is PageCapture => !!x).flatMap((p) => creditsIn(p.text)),
+      ...footerCredits,
     ]);
     const refusal = pages.map((p) => refusalStatement(p.text)).find((x) => !!x) ?? null;
     const trading = unique([homeDesktop, homeMobile].filter((x): x is PageCapture => !!x).flatMap((p) => tradingFlags(p)).map((t) => `${t.kind}: "${t.quote}" (${t.url})`));

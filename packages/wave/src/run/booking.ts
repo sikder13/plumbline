@@ -64,9 +64,9 @@ export function bookingSystemsIn(sources: { url: string; html: string }[]): Syst
       else if (named) add(named.system, named.kind, r.how, r.value, pageUrl);
     }
     for (const s of HTML_SIGNS) if (s.test.test(html)) add(s.system, s.kind, 'html', s.system, pageUrl);
-    // Wix Bookings sells through pages of the site itself.
-    if (/wix\.com website builder|static\.parastorage\.com|wixstatic\.com/i.test(html) && (/\/booking-calendar\/|\/service-page\/|wix-?bookings|bookings\.wixapps|bookings-widget/i.test(html) || $('a[href*="/booking-calendar"], a[href*="/book-online"]').length)) {
-      add('Wix Bookings', 'builder', 'html', 'Wix Bookings', pageUrl);
+    // Wix Bookings sells through pages of the site itself, so it is a link to one of them on a Wix site, not a word in the code.
+    if (/wix\.com website builder|static\.parastorage\.com|wixstatic\.com/i.test(html) && $('a[href*="/booking-calendar"], a[href*="/book-online"], a[href*="/service-page/"]').length) {
+      add('Wix Bookings', 'builder', 'link', 'Wix Bookings', pageUrl);
     }
   }
   return hits;
@@ -139,7 +139,13 @@ export async function followCta(polite: Polite, homeUrl: string, homeHtml: strin
   }
 
   const res = await polite.get(target.toString(), { maxRedirects: 5, timeoutMs: 20_000, maxBytes: 400_000 });
-  if (res.status === null) return { ...base, kind: 'page', finalUrl: res.finalUrl, landsOn: res.error === 'robots' ? 'a page we may not read (robots.txt)' : 'a page that did not answer', problem: null, error: res.error ?? 'no answer' };
+  if (res.status === null) {
+    // A booking system's own robots.txt may not allow it to be opened. Where the link goes is still plain from its address.
+    const host = target.hostname.replace(/^www\./, '');
+    const known = fingerprintHost(target.hostname)?.system ?? HTML_SIGNS.find((s) => s.test.test(host))?.system ?? null;
+    const reason = res.error === 'robots' ? 'not opened, its robots.txt does not allow it' : (res.error ?? 'no answer');
+    return { ...base, kind: 'page', finalUrl: res.finalUrl, system: known, landsOn: known ?? `a page on ${host}`, problem: null, error: reason };
+  }
   const $ = cheerio.load(res.body);
   const title = $('title').first().text().trim();
   const h1 = $('h1').first().text().trim();
@@ -159,7 +165,8 @@ export async function followCta(polite: Polite, homeUrl: string, homeHtml: strin
 export function bookingPath(systems: SystemHit[], landings: Landing[], homeLinks: PageCapture['links']): string {
   const real = systems.filter((s) => s.kind === 'system' || s.kind === 'builder');
   if (real.length) return real.map((s) => s.system).join(' + ');
-  const platforms = systems.filter((s) => s.kind !== 'system');
+  // A link to a review site is not a way to book.
+  const platforms = systems.filter((s) => s.kind === 'platform' && !['Tripadvisor', 'Booking.com', 'Expedia'].includes(s.system));
   if (platforms.length) return platforms.map((s) => s.system).join(' + ');
   const ways = new Set<string>();
   for (const l of homeLinks) {

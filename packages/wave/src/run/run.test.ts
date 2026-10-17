@@ -5,7 +5,7 @@ import { greetingNames, nameForms, waveRows } from './list.ts';
 import { creditsIn, faithFlags, testimonialsOn } from './screens.ts';
 import { isSlowOnPhone, speedVerdict } from './speed.ts';
 import { KINDS, rankRunFindings, recommendation, sentenceFor, type FindingType, type RawFinding } from './tiers.ts';
-import { decodeCfEmail, emailsInSource, nameOnText, textOf, verifyFacts, type PageRead, type Reader } from './verify.ts';
+import { decodeCfEmail, emailsInSource, nameOnText, textOf, urlIn, verifyFacts, type PageRead, type Reader } from './verify.ts';
 
 const row = waveRows([{ order: '1', status: 'wave 4', slug: 'x', business_name: 'X', website: 'https://x.co.nz', email: 'info@x.co.nz', email_source_url: 'https://x.co.nz/contact', greeting: 'Mike and Nans', owner_names: 'Mike Kirkpatrick (owner/guide), wife Nans Kirkpatrick-Stolk', owner_source_url_1: 'https://x.co.nz/about' }])[0]!;
 
@@ -57,6 +57,11 @@ describe('checking the list against the site', () => {
     const r = await verifyFacts(row, reader({ 'https://x.co.nz': '<p>hi</p>', 'https://x.co.nz/contact': '<div id=app></div>', 'https://x.co.nz/about': '<div id=app></div>' }, { 'https://x.co.nz/contact': '<a href="mailto:info@x.co.nz">m</a>', 'https://x.co.nz/about': '<p>Mike and Nans</p>' }));
     expect(r.changed).toEqual([]);
     expect(r.email.via).toBe('browser');
+  });
+
+  it('reads the address in a list cell that has a note after it', () => {
+    expect(urlIn('https://riverstonekaramea.co.nz/ (guest testimonial)')).toBe('https://riverstonekaramea.co.nz/');
+    expect(urlIn('https://x.co.nz/about')).toBe('https://x.co.nz/about');
   });
 
   it('flags a site that does not answer', async () => {
@@ -240,5 +245,40 @@ describe('findings from what was measured', () => {
     const signs = [{ kind: 'widget' as const, text: 'Elfsight reviews widget', url: 'https://x.co.nz/', source: 'https://static.elfsight.com/p.js' }];
     expect(rankRunFindings(buildFindings(base({ category: 'physio', physio: signs })), { agencies: [] }).top[0]!.tier).toBe(2);
     expect(buildFindings(base({ category: 'kayak', physio: null })).some((x) => x.type === 'physio_testimonials')).toBe(false);
+  });
+
+  it('states minor search items as none, some or one', () => {
+    expect(sentenceFor('no_heading', { count: 7, of: 7 })).toBe('None of the 7 pages we read has a main heading.');
+    expect(sentenceFor('no_description', { count: 1, of: 3 })).toBe('1 of the 3 pages we read has no description for search results.');
+    expect(sentenceFor('no_structured_data', { count: 2, of: 3 })).toBe('2 of the 3 pages we read have no structured data describing the business.');
+    expect(sentenceFor('no_description', { count: 1, of: 1 })).toBe('Your homepage has no description for search results.');
+  });
+
+  it('does not repeat the word link when a link has no words on it', () => {
+    expect(sentenceFor('broken_link', { label: '', page: 'homepage' })).toBe('A link on your homepage opens a page that is not found.');
+  });
+
+  const check = (checkId: string, title: string, detail: Record<string, unknown>) => ({ checkId, title, pageUrl: 'https://x.co.nz/', detail, excerpt: title, evidenceUrl: 'https://x.co.nz/' });
+  const mBase = (over: Partial<RunMeasured>) => ({ slug: 'x', measuredAt: '2026-10-17T00:00:00.000Z', category: 'kayak', homepage: 'https://x.co.nz/', collection: { blocked: null, errors: [], pagesRead: 3, checkErrors: [] }, checks: [], eol: [], speed: { source: 'PageSpeed Insights API', status: 'unavailable', runs: [], spread: null, performance: null, lcpMs: null, reason: 'x', measuredAt: '' }, phone: null, booking: null, crawlmouse: [], pages: [], physio: null, faith: [], agencies: [], refusal: null, pelorus: null, trading: [], aiCrawlers: { allowed: true, blocked: [] }, ...over }) as RunMeasured;
+
+  it('leaves out a share button, a menu toggle and a seasonal word, and names a social link for what it is', () => {
+    const types = buildFindings(
+      mBase({
+        checks: [
+          check('C10_broken_contact_links', 'The WhatsApp link is broken', { kind: 'whatsapp', href: 'https://api.whatsapp.com/send?text=https%3A%2F%2Fx.co.nz%2Fp', problem: 'no number' }),
+          check('C10_broken_contact_links', 'A contact link has a malformed address', { kind: 'scheme', href: 'https://https://www.facebook.com/x/', problem: 'repeats the scheme' }),
+          check('C11_dead_navigation', '1 menu item leads nowhere', { items: [{ text: 'Click for menu' }] }),
+          check('C04_seasonal_mismatch', 'A winter message is showing out of season', { season: 'winter' }),
+          check('C03_stale_dated_notice', 'COVID wording is still showing', { kind: 'covid', text: 'ot offered due to Covid 19' }),
+        ],
+      }),
+    ).map((f) => f.type);
+    expect(types).toEqual(['social_link_broken', 'covid_wording']);
+  });
+
+  it('tells a page that really scrolls sideways from one that is only laid out wider', () => {
+    const phone = { url: 'https://x.co.nz/', width: 390, height: 844, actions: ['phone link'], actionVisible: true, scrollWidth: 812, scrollX: 0 };
+    expect(buildFindings(mBase({ phone: { ...phone, sideways: false, wider: true } })).map((f) => f.type)).toEqual(['phone_wider']);
+    expect(buildFindings(mBase({ phone: { ...phone, sideways: true, wider: false, scrollX: 11 } })).map((f) => f.type)).toEqual(['phone_sideways']);
   });
 });

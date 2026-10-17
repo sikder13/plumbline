@@ -45,8 +45,12 @@ export interface PhoneScreen {
   height: number;
   actions: string[];
   actionVisible: boolean;
+  /** The page really moves sideways when scrolled. */
   sideways: boolean;
+  /** The page is laid out wider than the screen but does not move when scrolled (a phone shrinks it to fit). */
+  wider: boolean;
   scrollWidth: number;
+  scrollX: number | null;
 }
 
 export interface PageSummary {
@@ -96,7 +100,7 @@ export interface RunMeasured {
 }
 
 /** Checks whose findings are ranked above, or replaced by the run's own measurements, or kept apart for a person to look at. */
-const HANDLED = new Set(['C01_placeholder_text', 'C02_stale_copyright', 'C03_stale_dated_notice', 'C04_seasonal_mismatch', 'C06_broken_images', 'C10_broken_contact_links', 'C11_dead_navigation', 'C12_broken_internal_links', 'C41_outdated_platform', 'T02_booking_system_not_linked', 'C13_no_action_above_fold', 'C20_slow_mobile', 'C23_not_mobile_friendly', 'C31_no_structured_data', 'C05_possible_compromise', 'C05b_hidden_injected_content']);
+const HANDLED = new Set(['C01_placeholder_text', 'C02_stale_copyright', 'C03_stale_dated_notice', 'C06_broken_images', 'C10_broken_contact_links', 'C11_dead_navigation', 'C12_broken_internal_links', 'C41_outdated_platform', 'T02_booking_system_not_linked', 'C13_no_action_above_fold', 'C20_slow_mobile', 'C23_not_mobile_friendly', 'C31_no_structured_data', 'C05_possible_compromise', 'C05b_hidden_injected_content']);
 
 /** What the checks measured that the tiers do not rank, kept so a person can see it. */
 export function otherObservations(m: RunMeasured): string[] {
@@ -151,8 +155,9 @@ export function buildFindings(m: RunMeasured): RawFinding[] {
 
   // The first phone screen
   if (m.phone) {
-    const where = `${m.phone.width} by ${m.phone.height} phone screen`;
-    if (m.phone.sideways) push({ type: 'phone_sideways', key: 'phone:sideways', facts: {}, evidenceUrl: m.phone.url, measured: `At ${where} the page is ${m.phone.scrollWidth} px wide` });
+    const where = '390 by 844 phone screen';
+    if (m.phone.sideways) push({ type: 'phone_sideways', key: 'phone:sideways', facts: {}, evidenceUrl: m.phone.url, measured: `At ${where} the page is ${m.phone.scrollWidth} px wide and moves sideways by ${m.phone.scrollX} px when scrolled` });
+    else if (m.phone.wider) push({ type: 'phone_wider', key: 'phone:wider', facts: {}, evidenceUrl: m.phone.url, measured: `At ${where} the page is laid out ${m.phone.scrollWidth} px wide` });
     if (!m.phone.actionVisible) push({ type: 'phone_no_action', key: 'phone:action', facts: {}, evidenceUrl: m.phone.url, measured: `At ${where} no book, call or email action is visible without scrolling` });
   }
 
@@ -188,27 +193,36 @@ export function buildFindings(m: RunMeasured): RawFinding[] {
       case 'C02_stale_copyright':
         push({ type: 'stale_copyright', key: 'copyright', facts: { year: String(d.year ?? ''), page }, evidenceUrl: url, measured: `The footer says ${String(d.year ?? '')} and the year is now ${String(d.currentYear ?? '')}`, checkId: c.checkId });
         break;
-      case 'C03_stale_dated_notice':
-        push({ type: 'passed_notice', key: `notice:${String(d.date ?? c.title)}`, facts: { page }, evidenceUrl: url, measured: `${c.title}: ${String(d.text ?? c.excerpt).slice(0, 200)}`, checkId: c.checkId });
+      case 'C03_stale_dated_notice': {
+        // The excerpt can begin in the middle of a word.
+        const text = String(d.text ?? c.excerpt).replace(/^[a-z]\S*\s+/, '').slice(0, 200);
+        if (d.kind === 'covid') push({ type: 'covid_wording', key: `covid:${page}`, facts: { page }, evidenceUrl: url, measured: `${c.title}: ${text}`, checkId: c.checkId });
+        else push({ type: 'passed_notice', key: `notice:${String(d.date ?? c.title)}:${page}`, facts: { page }, evidenceUrl: url, measured: `${c.title}: ${text}`, checkId: c.checkId });
         break;
-      case 'C04_seasonal_mismatch':
-        push({ type: 'seasonal_notice', key: `season:${String(d.season ?? '')}`, facts: { season: String(d.season ?? ''), page }, evidenceUrl: url, measured: c.excerpt || c.title, checkId: c.checkId });
-        break;
+      }
       case 'C06_broken_images': {
         const count = Array.isArray(d.images) ? d.images.length : 1;
         push({ type: 'broken_images', key: 'images', facts: { count, page: 'homepage' }, evidenceUrl: url, measured: c.title, checkId: c.checkId });
         break;
       }
       case 'C10_broken_contact_links': {
+        const href = String(d.href ?? '');
+        // A WhatsApp or similar link that carries a text to share and no number is a share button.
+        if (/[?&]text=/i.test(href) && !/[?&]phone=|wa\.me\/\d/i.test(href)) break;
+        const social = /(?:facebook|instagram|twitter|x|tiktok|youtube|linkedin)\.com/i.exec(href)?.[0]?.split('.')[0];
+        if (social) {
+          push({ type: 'social_link_broken', key: `contact:${href}`, facts: { kind: social[0]!.toUpperCase() + social.slice(1), page }, evidenceUrl: url, measured: `${c.title}: ${href} (${String(d.problem ?? '')})`, checkId: c.checkId });
+          break;
+        }
         const kind = ({ mailto: 'email', tel: 'phone', whatsapp: 'WhatsApp', messenger: 'Messenger' } as Record<string, string>)[String(d.kind)] ?? 'contact';
-        push({ type: 'contact_link_broken', key: `contact:${String(d.href)}`, facts: { kind, page }, evidenceUrl: url, measured: `${c.title}: ${String(d.href ?? '')} (${String(d.problem ?? '')})`, checkId: c.checkId });
+        push({ type: 'contact_link_broken', key: `contact:${href}`, facts: { kind, page }, evidenceUrl: url, measured: `${c.title}: ${href} (${String(d.problem ?? '')})`, checkId: c.checkId });
         break;
       }
       case 'C11_dead_navigation': {
         const items = (Array.isArray(d.items) ? d.items : []) as { text?: string }[];
         for (const it of items.slice(0, 3)) {
           const label = String(it.text ?? '').trim();
-          if (label) push({ type: bookingish(label) ? 'dead_menu_booking' : 'dead_menu_item', key: `menu:${label.toLowerCase()}`, facts: { label, page: 'homepage' }, evidenceUrl: url, measured: `${c.title}`, checkId: c.checkId });
+          if (label && !/\b(?:menu|navigation|toggle|open|close|search|skip)\b/i.test(label)) push({ type: bookingish(label) ? 'dead_menu_booking' : 'dead_menu_item', key: `menu:${label.toLowerCase()}`, facts: { label, page: 'homepage' }, evidenceUrl: url, measured: `${c.title}`, checkId: c.checkId });
         }
         break;
       }
@@ -216,7 +230,7 @@ export function buildFindings(m: RunMeasured): RawFinding[] {
         const links = (Array.isArray(d.links) ? d.links : []) as { url: string; status: number | null; text: string; foundOn: string }[];
         for (const l of links.filter((x) => x.status === 404 || x.status === 410).slice(0, 4)) {
           const booking = bookingish(`${l.text} ${l.url}`);
-          push({ type: booking ? 'book_link_broken' : 'broken_link', key: `missing:${norm(l.url)}`, facts: { label: l.text || 'link', page: pageName(l.foundOn) }, linkedFrom: l.foundOn, evidenceUrl: l.url, measured: `"${l.text}" on ${l.foundOn} goes to ${l.url}, which answers ${l.status}`, checkId: c.checkId });
+          push({ type: booking ? 'book_link_broken' : 'broken_link', key: `missing:${norm(l.url)}`, facts: { label: l.text, page: pageName(l.foundOn) }, linkedFrom: l.foundOn, evidenceUrl: l.url, measured: `${l.text ? `"${l.text}"` : 'A link with no words on it'} on ${l.foundOn} goes to ${l.url}, which answers ${l.status}`, checkId: c.checkId });
         }
         break;
       }
@@ -233,14 +247,13 @@ export function buildFindings(m: RunMeasured): RawFinding[] {
   // Crawlmouse sentences, kept only as far as opening their pages today bore them out.
   for (const s of m.crawlmouse) {
     const claims = new Set(s.claims);
-    const cm = (f: Omit<RawFinding, 'measuredAt' | 'source' | 'reproduced'>) => out.push({ ...f, source: 'crawlmouse', measuredAt: at, reproduced: s.confirmed });
+    const cm = (f: Omit<RawFinding, 'measuredAt' | 'source' | 'reproduced'>) => out.push({ ...f, measured: s.caution ? `${f.measured} Caution from Crawlmouse: ${s.caution}` : f.measured, source: 'crawlmouse', measuredAt: at, reproduced: s.confirmed });
     if (!s.confirmed) continue;
     if (claims.has('missing_page')) {
       for (const e of s.examples) {
         const link = e.linkedFrom[0];
-        const label = link?.text || 'link';
-        const booking = bookingish(`${label} ${e.url}`);
-        cm({ type: booking ? 'book_link_broken' : 'broken_link', key: `missing:${norm(e.url)}`, facts: { label, page: pageName(link?.pageUrl) }, linkedFrom: link?.pageUrl, unlinked: !link, evidenceUrl: e.url, measured: s.measured ?? '' });
+        const booking = bookingish(`${link?.text ?? ''} ${e.url}`);
+        cm({ type: booking ? 'book_link_broken' : 'broken_link', key: `missing:${norm(e.url)}`, facts: { label: link?.text ?? '', page: pageName(link?.pageUrl) }, linkedFrom: link?.pageUrl, unlinked: !link, evidenceUrl: e.url, measured: s.measured ?? '' });
       }
     }
     if (claims.has('orphan_page')) {
@@ -261,8 +274,8 @@ export function buildFindings(m: RunMeasured): RawFinding[] {
   const read = m.pages.length;
   const lacking = (pick: (p: PageSummary) => boolean) => m.pages.filter(pick).length;
   const minor: [FindingType, number, string][] = [
-    ['no_description', lacking((p) => !p.hasDescription), 'a description for search results'],
-    ['no_heading', lacking((p) => !p.hasHeading), 'a main heading'],
+    ['no_description', lacking((p) => !p.hasDescription), 'description for search results'],
+    ['no_heading', lacking((p) => !p.hasHeading), 'main heading'],
     ['no_structured_data', lacking((p) => !p.hasStructuredData), 'structured data'],
   ];
   const homeSummary = m.pages[0];
