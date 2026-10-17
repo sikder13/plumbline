@@ -54,7 +54,10 @@ export const EOL_TABLE: EolRule[] = [
     match: /^drupal$/i,
     sourceUrl: 'https://endoflife.date/drupal',
     verifiedOn: '2026-10-10',
+    // Each major version has a date of its own: Drupal 7 was supported long after Drupal 8 and 9.
     cycles: [
+      { upTo: '7', eolDate: '2025-01-05' },
+      { upTo: '8', eolDate: '2021-11-02' },
       { upTo: '9', eolDate: '2023-11-01' },
       { upTo: '10.4', eolDate: '2025-12-10' },
     ],

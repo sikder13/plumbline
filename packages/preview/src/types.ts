@@ -79,7 +79,21 @@ export interface ContentFile {
   video?: { file: string };
   /** Awards and certifications shown on the business's own site, each with the page it is shown on. */
   strengths?: Strength[];
+  /**
+   * A page made to order says how it looks at a glance, for the variety rules across every wave: how
+   * its first screen is built (such as "photo", "split", "type", "video" or a name of its own), its
+   * pair of faces ("fraunces-instrumentsans") and the family of its palette ("ocean", "night" ...).
+   */
+  look?: Look;
+  /** The art direction it was built to: free text for people, never shown on the page. */
+  brief?: Record<string, unknown>;
   demo: unknown;
+}
+
+export interface Look {
+  hero: string;
+  type: string;
+  family: string;
 }
 
 /** A page put together from the section library: previews/recipes/<slug>.json. */

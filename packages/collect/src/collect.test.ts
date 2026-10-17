@@ -94,10 +94,13 @@ describe('content analysis', () => {
 describe('contact link validation', () => {
   const problem = (raw: string, text = '') => contactLinkProblem({ raw, href: raw, text })?.kind ?? null;
   it('accepts well formed links', () => {
+    // A share button leaves the address for the visitor to fill in.
+    for (const ok of ['mailto:?subject=A%20tour&body=I%20found%20this', 'mailto:?body=Look%20at%20this']) expect(problem(ok)).toBeNull();
     for (const ok of ['mailto:info@fixture.co.nz', 'mailto:a@b.nz?subject=Hi', 'tel:+6494028105', 'tel:09 402 8105', 'https://wa.me/64274983323', 'https://m.me/fixturetours', 'https://example.com/', '/contact']) expect(problem(ok)).toBeNull();
   });
   it('rejects empty and malformed links', () => {
     expect(problem('mailto:')).toBe('mailto');
+    expect(problem('mailto:?subject=')).toBe('mailto');
     expect(problem('mailto:info at fixture')).toBe('mailto');
     expect(problem('tel:')).toBe('tel');
     expect(problem('tel:123')).toBe('tel');
@@ -135,7 +138,10 @@ describe('end of life table', () => {
     expect(eolFor('WordPress', '4.5.3', '2026-10-10')).toMatchObject({ product: 'WordPress' });
     expect(eolFor('WordPress', '6.2', '2026-10-10')).toBeNull();
     expect(eolFor('Joomla', '3.9.1', '2026-10-10')).not.toBeNull();
-    expect(eolFor('Drupal', '7.98', '2026-10-10')).not.toBeNull();
+    expect(eolFor('Drupal', '7.98', '2026-10-10')).toMatchObject({ eolDate: '2025-01-05' });
+    expect(eolFor('Drupal', '8.9.20', '2026-10-10')).toMatchObject({ eolDate: '2021-11-02' });
+    expect(eolFor('Drupal', '9.5.11', '2026-10-10')).toMatchObject({ eolDate: '2023-11-01' });
+    expect(eolFor('Drupal', '7.98', '2024-06-01')).toBeNull();
     expect(eolFor('PHP', null, '2026-10-10')).toBeNull();
     expect(eolFor('PHP', '7', '2026-10-10')).toBeNull();
     expect(eolFor('Squarespace', '7.1', '2026-10-10')).toBeNull();

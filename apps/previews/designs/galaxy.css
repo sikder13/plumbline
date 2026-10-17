@@ -1,0 +1,2729 @@
+/* galaxy: a visit underground as your eyes adjust. Cave black, glowworm light, their teal for daylight. */
+.root {
+  --night: #030607;
+  --cave: #070c0d;
+  --rock: #111614;
+  --text: #e7efee;
+  --muted: #a7b8b6;
+  --glow: #9af6ff;
+  --glow-soft: rgba(154, 246, 255, 0.18);
+  --teal: #0094a6;
+  --teal-deep: #006f7c;
+  --ink: #021417;
+  --sky: #dfe9e6;
+  --line: rgba(233, 241, 240, 0.14);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --serif: 'Bodoni Moda', 'Bodoni 72', Didot, Georgia, 'Times New Roman', serif;
+  --sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --pad: 24px;
+  --float-bg: rgba(154, 246, 255, 0.94);
+  --float-ink: #031014;
+  --float-call-bg: rgba(3, 6, 7, 0.86);
+  --float-call-ink: #9af6ff;
+  --float-font: 'Manrope', system-ui, sans-serif;
+  interpolate-size: allow-keywords;
+  position: relative;
+  overflow-x: clip;
+  font-family: var(--sans);
+  font-size: 16.5px;
+  line-height: 1.55;
+  color: var(--text);
+  background: var(--night);
+}
+
+.root h1,
+.root h2,
+.root h3 {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.root h2 {
+  font-size: 44px;
+  line-height: 1.02;
+}
+
+.root p,
+.root figure,
+.root blockquote {
+  margin: 0;
+}
+
+.root a:focus-visible,
+.root button:focus-visible,
+.root summary:focus-visible {
+  outline: 3px solid var(--glow);
+  outline-offset: 3px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* The thread and its bead: a glowworm's line of silk with a drop of light at its end. */
+.label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  font: 700 11.5px/1.2 var(--sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--glow);
+}
+
+.label i {
+  position: relative;
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #dffcff;
+  box-shadow: 0 0 0 3px rgba(154, 246, 255, 0.16), 0 0 14px 3px rgba(154, 246, 255, 0.55);
+}
+
+.hang {
+  position: absolute;
+  top: 0;
+  left: calc(var(--pad) + 4px);
+  width: 1.5px;
+  height: 66px;
+  background: linear-gradient(rgba(154, 246, 255, 0), rgba(154, 246, 255, 0.75));
+  transform-origin: 50% 0;
+}
+
+.hang::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  border-radius: 50%;
+  background: #e6fdff;
+  box-shadow: 0 0 14px 4px rgba(154, 246, 255, 0.6);
+}
+
+/* The one action: a drop of glowworm light. */
+.go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 22px 0 26px;
+  border-radius: 999px;
+  background: var(--glow);
+  color: #031014;
+  font: 800 16.5px/1 var(--sans);
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 0 0 1px rgba(154, 246, 255, 0.5), 0 0 36px rgba(154, 246, 255, 0.32);
+  will-change: transform;
+}
+
+.go svg {
+  transition: transform 0.5s var(--ease);
+}
+
+.go:hover svg {
+  transform: translateX(4px);
+}
+
+/* ---------- Desktop menu, after the first screen ---------- */
+.nav {
+  display: none;
+}
+
+/* ---------- Hero: a field of glowworm light, and a lamp that opens the real cave inside it ---------- */
+.hero {
+  --lx: 50%;
+  --ly: 52%;
+  --r: 146px;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: auto auto minmax(310px, 1fr) auto auto;
+  justify-items: center;
+  min-height: calc(100svh - var(--bar-h));
+  padding: 16px var(--pad) 22px;
+  overflow: hidden;
+  color: #fff;
+  text-align: center;
+  background: #000;
+}
+
+.heroMedia {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.field,
+.lit {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.field picture,
+.field img,
+.lit picture,
+.lit img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.field img,
+.lit img {
+  object-fit: cover;
+}
+
+.lit img {
+  filter: brightness(1.2) contrast(1.06);
+}
+
+/* The whole first screen is the glowworms' own light, taken from their photograph. */
+.field img {
+  filter: url(#galaxy-glow-hero);
+}
+
+.veil {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  animation: lift 1.1s cubic-bezier(0.55, 0, 0.25, 1) 0.05s both;
+}
+
+/* The lamp: inside its circle the cave shows as it is. */
+.lit {
+  clip-path: circle(var(--r) at var(--lx) var(--ly));
+  animation: lamp 1.1s var(--ease) 0.55s both;
+}
+
+.ring {
+  position: absolute;
+  left: var(--lx);
+  top: var(--ly);
+  width: calc(var(--r) * 2);
+  height: calc(var(--r) * 2);
+  margin: calc(var(--r) * -1) 0 0 calc(var(--r) * -1);
+  border-radius: 50%;
+  box-shadow: inset 0 0 34px 6px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 238, 210, 0.34), 0 0 90px 18px rgba(255, 226, 180, 0.16);
+  animation: ring 1.1s var(--ease) 0.55s both;
+}
+
+.heroMedia::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 32%, rgba(0, 0, 0, 0) 64%, rgba(0, 0, 0, 0.72) 100%);
+}
+
+.mark {
+  grid-row: 1;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  animation: fade 0.8s var(--ease) 0.15s both;
+}
+
+.mark span {
+  font: italic 500 24px/1 var(--serif);
+  text-shadow: 0 0 18px rgba(154, 246, 255, 0.45);
+}
+
+.mark small {
+  font: 600 9.5px/1.3 var(--sans);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(233, 241, 240, 0.85);
+}
+
+.title {
+  grid-row: 2;
+  display: grid;
+  justify-items: center;
+  margin-top: 16px !important;
+  font: italic 400 50px/0.98 var(--serif) !important;
+  letter-spacing: -0.02em !important;
+  text-shadow: 0 0 26px rgba(154, 246, 255, 0.38), 0 2px 22px rgba(0, 0, 0, 0.6);
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+  padding: 0 0.1em 0.1em;
+}
+
+.line > span {
+  display: block;
+  animation: rise 1s var(--ease) both;
+  animation-delay: calc(0.3s + var(--i) * 0.1s);
+}
+
+.heroAside {
+  grid-row: 4;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  animation: fade 0.9s var(--ease) 0.95s both;
+}
+
+.heroSub {
+  max-width: 30ch;
+  font-size: 15.5px;
+  line-height: 1.45;
+  color: rgba(244, 251, 251, 0.95);
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.8);
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 18px;
+  font: italic 400 16px/1.5 var(--serif);
+  color: var(--glow);
+  text-shadow: 0 0 14px rgba(154, 246, 255, 0.35);
+}
+
+.heroAct {
+  grid-row: 5;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  animation: arrive 0.7s var(--spring) 1.2s both;
+}
+
+/* The action in two parts: the glowing half books, the other half says what it costs. */
+.heroGo {
+  display: inline-flex;
+  align-items: stretch;
+  min-height: 58px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: rgba(3, 6, 7, 0.62);
+  box-shadow: inset 0 0 0 1.5px rgba(154, 246, 255, 0.8), 0 0 40px rgba(154, 246, 255, 0.28);
+  color: #fff;
+  text-decoration: none;
+  will-change: transform;
+}
+
+.heroGo span {
+  display: flex;
+  align-items: center;
+  padding: 0 20px 0 22px;
+  background: var(--glow);
+  color: #031014;
+  font: 800 16.5px/1 var(--sans);
+}
+
+.heroGo b {
+  display: flex;
+  align-items: center;
+  padding: 0 22px 0 18px;
+  font: italic 500 26px/1 var(--serif);
+}
+
+.heroNote {
+  font-size: 12px;
+  color: rgba(233, 241, 240, 0.82);
+}
+
+/* ---------- Through our eyes ---------- */
+.eyes {
+  position: relative;
+  padding: 96px var(--pad) 84px;
+  background: radial-gradient(120% 60% at 80% 0%, rgba(0, 148, 166, 0.12), rgba(0, 0, 0, 0) 60%), var(--night);
+}
+
+.eyes h2 {
+  margin-bottom: 26px !important;
+}
+
+.eyesGrid {
+  display: grid;
+  gap: 30px;
+}
+
+.fill p {
+  font: italic 400 31px/1.2 var(--serif);
+  letter-spacing: -0.01em;
+}
+
+.fill span {
+  color: #f4fbfb;
+  text-shadow: 0 0 18px rgba(154, 246, 255, 0.45);
+}
+
+.eyesPic {
+  position: relative;
+  justify-self: end;
+  width: min(84%, 320px);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(154, 246, 255, 0.28), 0 0 80px 10px rgba(154, 246, 255, 0.12);
+}
+
+.eyesPic picture,
+.eyesPic img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.eyesPic img {
+  object-fit: cover;
+  transform: scale(1.24);
+  transform-origin: 82% 64%;
+}
+
+.eyesText {
+  display: grid;
+  gap: 18px;
+}
+
+.family {
+  font: italic 500 22px/1.3 var(--serif);
+  color: #fff;
+}
+
+.years {
+  color: var(--text);
+}
+
+.years b {
+  font: italic 500 34px/1 var(--serif);
+  color: var(--glow);
+  text-shadow: 0 0 18px rgba(154, 246, 255, 0.55);
+}
+
+.people {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.people li {
+  position: relative;
+  display: grid;
+  gap: 3px;
+  font-size: 15.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.people b {
+  font: italic 500 20px/1.2 var(--serif);
+  color: #fff;
+}
+
+.member {
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+/* ---------- The tour, in order: the cross section is the whole frame ---------- */
+.tour {
+  position: relative;
+  background: #111614;
+}
+
+/* From the dark of the cave up into the farm's daylight, where the drawing begins. */
+.tourHead {
+  position: relative;
+  padding: 150px var(--pad) 44px;
+  background: linear-gradient(180deg, var(--night) 0%, #3d4f4b 30%, #b9cdc8 74%);
+  color: var(--ink);
+}
+
+.tourHead h2 {
+  color: var(--ink);
+}
+
+.tourHead p {
+  max-width: 34ch;
+  margin-top: 10px !important;
+  font-size: 16px;
+  color: #1d2b2a;
+}
+
+.tourHead p span {
+  color: #34433f;
+}
+
+.story {
+  --s: 0.5;
+  --t: 0;
+  position: relative;
+  height: calc(var(--steps) * 62svh + 100svh);
+}
+
+.frame {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  background: #0d1211;
+}
+
+.world {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(var(--ww) * var(--s) * 1px);
+  height: calc(var(--wh) * var(--s) * 1px);
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.world > ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.drawing {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.world [data-hill='far'] {
+  fill: #c4d5d0;
+}
+
+.world [data-hill='near'] {
+  fill: #a9c0ba;
+}
+
+.root [data-grass] {
+  fill: none;
+  stroke: #6d8d77;
+  stroke-width: 7;
+}
+
+.root [data-strata] path {
+  fill: none;
+  stroke: rgba(233, 241, 240, 0.075);
+  stroke-width: 2;
+}
+
+.root [data-passage] path {
+  fill: none;
+  stroke: #020404;
+  stroke-width: 132;
+  stroke-linecap: round;
+}
+
+.root [data-void] {
+  fill: #020404;
+  stroke: rgba(154, 246, 255, 0.2);
+  stroke-width: 3;
+}
+
+.root [data-water] {
+  fill: rgba(0, 148, 166, 0.16);
+}
+
+.root [data-waterline] {
+  stroke: rgba(154, 246, 255, 0.5);
+  stroke-width: 2;
+}
+
+.root [data-raft] {
+  fill: #a8322f;
+}
+
+.root [data-glow] {
+  opacity: 0.55;
+  transition: opacity 1.4s var(--ease);
+}
+
+.story[data-scene='water'] [data-glow] {
+  opacity: 1;
+}
+
+.root [data-lights] circle {
+  fill: #b8f9ff;
+}
+
+.root [data-threads] path {
+  stroke: rgba(184, 249, 255, 0.3);
+  stroke-width: 1.4;
+}
+
+.root [data-mirror] circle {
+  fill: rgba(184, 249, 255, 0.3);
+}
+
+.root [data-formations] path {
+  fill: rgba(214, 224, 221, 0.15);
+}
+
+.root [data-fossils] path {
+  fill: none;
+  stroke: rgba(214, 224, 221, 0.24);
+  stroke-width: 2.2;
+}
+
+.root [data-surface] path {
+  fill: none;
+  stroke: #56685f;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.root [data-surface] [data-wire] {
+  stroke: #7f9088;
+  stroke-width: 1.4;
+}
+
+.root [data-surface] [data-trunk] {
+  stroke: #4f5f58;
+  stroke-width: 5;
+}
+
+.root [data-surface] [data-crown] {
+  fill: #8fa79e;
+}
+
+.root [data-surface='path'] path {
+  stroke: #6d8d77;
+  stroke-width: 2.4;
+}
+
+.root [data-trail] {
+  fill: none;
+  stroke: rgba(150, 172, 170, 0.6);
+  stroke-width: 3;
+  stroke-dasharray: 3 14;
+  stroke-linecap: round;
+}
+
+.world [data-halo],
+.world [data-travelled] {
+  fill: none;
+  stroke-linecap: round;
+  stroke-dasharray: 1px 1px;
+  stroke-dashoffset: calc((1 - var(--t)) * 1px);
+}
+
+.world [data-halo] {
+  stroke: rgba(154, 246, 255, 0.24);
+  stroke-width: 24;
+}
+
+.world [data-travelled] {
+  stroke: var(--glow);
+  stroke-width: 6;
+}
+
+/* Each step is written into the drawing where it happens: in the sky over the farm, or in the rock under a cave. */
+.place {
+  position: absolute;
+  left: calc(var(--x) * var(--s) * 1px);
+  top: calc(var(--y) * var(--s) * 1px);
+  display: grid;
+  gap: 6px;
+  width: 300px;
+  color: var(--ink);
+  text-align: center;
+  opacity: 0;
+  transform: translate(-50%, calc(-100% - 58px));
+  transition: opacity 0.5s var(--ease);
+}
+
+.place[data-under] {
+  color: #f1f7f6;
+  transform: translate(-50%, calc(var(--s) * 140px + 26px));
+}
+
+.place[data-state='on'] {
+  opacity: 1;
+  transition-delay: 0.1s;
+}
+
+.place h3 {
+  font: italic 500 30px/1.05 var(--serif);
+}
+
+.placeText {
+  font-size: 15.5px;
+  line-height: 1.45;
+}
+
+.note {
+  font-size: 13px;
+  line-height: 1.45;
+  color: #34433f;
+}
+
+.place[data-under] .note {
+  color: var(--muted);
+}
+
+/* Underground, the lamp lights a circle of their own photograph inside the cave. */
+.pool {
+  position: absolute;
+  left: calc(var(--x) * var(--s) * 1px);
+  top: calc(var(--y) * var(--s) * 1px);
+  width: 132px;
+  aspect-ratio: 1;
+  margin: -66px 0 0 -66px;
+  overflow: hidden;
+  border-radius: 50%;
+  clip-path: circle(0% at 50% 50%);
+  transition: clip-path 0.9s var(--ease);
+}
+
+.pool picture,
+.pool img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.pool img {
+  object-fit: cover;
+}
+
+.pool[data-state='on'] {
+  clip-path: circle(50% at 50% 50%);
+  transition-delay: 0.2s;
+}
+
+/* ---------- Lights out ---------- */
+.dark {
+  position: relative;
+  background: #000;
+}
+
+.darkStory {
+  position: relative;
+  height: calc(var(--steps) * 70svh + 100svh);
+}
+
+.darkStory [data-frame] {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  background: #000;
+}
+
+.darkMedia {
+  position: absolute;
+  inset: 0;
+  touch-action: pan-y;
+}
+
+.darkLit,
+.darkGlow {
+  position: absolute;
+  inset: 0;
+}
+
+.darkLit picture,
+.darkLit img,
+.darkGlow picture,
+.darkGlow img,
+.lensInner picture,
+.lensInner img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.darkLit img,
+.darkGlow img,
+.lensInner img {
+  object-fit: cover;
+}
+
+.darkLit {
+  opacity: clamp(0, calc(1 - (var(--p) - 0.27) * 4.6), 1);
+}
+
+.darkGlow {
+  background: #000;
+  opacity: clamp(0, calc((var(--p) - 0.28) * 4.6), 1);
+  transition: transform 1.2s var(--ease), filter 1.2s var(--ease);
+}
+
+/* The cave is still there in the dark, only just. */
+.darkGlow img {
+  opacity: 0.2;
+}
+
+.stars {
+  position: absolute;
+  inset: -3% -4%;
+  display: block;
+  will-change: transform;
+}
+
+.still,
+.shimmer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.shimmer {
+  animation: shimmer 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+.darkStory:not([data-active='0']) .stars {
+  animation: downstream 26s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+.darkStory[data-active='2'] .darkGlow {
+  transform: scale(1.04);
+  filter: brightness(1.3);
+}
+
+.dark[data-lamp='on'] .darkLit {
+  opacity: 1;
+}
+
+.dark[data-lamp='on'] .darkGlow {
+  opacity: 0;
+}
+
+.darkMedia::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.66) 32%, rgba(0, 0, 0, 0) 54%, rgba(0, 0, 0, 0) 78%, rgba(0, 0, 0, 0.6) 100%);
+  pointer-events: none;
+}
+
+.flash {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #f4feff;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.darkStory[data-active='2'] .flash {
+  animation: flash 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+/* The viewfinder that closes round the galaxy when the camera comes out. */
+.finder {
+  position: absolute;
+  inset: 48% 8% 16%;
+  z-index: 1;
+  opacity: 0;
+  transform: scale(1.12);
+  transition: opacity 0.5s var(--ease), transform 0.9s var(--ease);
+  pointer-events: none;
+}
+
+.finder i {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 0 solid var(--glow);
+}
+
+.finder i:nth-child(1) {
+  left: 0;
+  top: 0;
+  border-width: 2px 0 0 2px;
+}
+
+.finder i:nth-child(2) {
+  right: 0;
+  top: 0;
+  border-width: 2px 2px 0 0;
+}
+
+.finder i:nth-child(3) {
+  left: 0;
+  bottom: 0;
+  border-width: 0 0 2px 2px;
+}
+
+.finder i:nth-child(4) {
+  right: 0;
+  bottom: 0;
+  border-width: 0 2px 2px 0;
+}
+
+.darkStory[data-active='2'] .finder {
+  opacity: 1;
+  transform: none;
+}
+
+/* The head torch. */
+.lens {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  width: 190px;
+  height: 190px;
+  overflow: hidden;
+  border-radius: 50%;
+  opacity: 0;
+  box-shadow: 0 0 0 1px rgba(255, 238, 210, 0.4), 0 0 70px 16px rgba(255, 226, 180, 0.24);
+  transition: opacity 0.35s var(--ease);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.lens[data-show] {
+  opacity: 1;
+}
+
+.lensInner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  will-change: transform;
+}
+
+.lens::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 236, 205, 0.12) 0%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+.controls {
+  position: absolute;
+  left: 14px;
+  bottom: 96px;
+  z-index: 3;
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.5s var(--ease), transform 0.7s var(--ease);
+  pointer-events: none;
+}
+
+.darkStory:not([data-active='0']) .controls {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.lampButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 18px 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(3, 6, 7, 0.78);
+  box-shadow: inset 0 0 0 1px rgba(255, 236, 205, 0.35);
+  color: #fff3e2;
+  font: 700 14px/1 var(--sans);
+  cursor: pointer;
+}
+
+.lampButton i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid #ffe6c4;
+  transition: background 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+
+.lampButton[aria-pressed='true'] i {
+  background: #ffe9c9;
+  box-shadow: 0 0 14px 4px rgba(255, 220, 170, 0.6);
+}
+
+.hint {
+  font-size: 12.5px;
+  color: rgba(233, 241, 240, 0.86);
+}
+
+.hintPointer {
+  display: none;
+}
+
+.darkHead {
+  position: absolute;
+  top: calc(var(--bar-h) + 18px);
+  left: var(--pad);
+  right: var(--pad);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.darkHead h2 {
+  font-size: 50px !important;
+  font-style: italic;
+  text-shadow: 0 0 30px rgba(154, 246, 255, 0.4);
+}
+
+.strength {
+  margin-top: 8px !important;
+  font-size: 13.5px;
+  color: rgba(233, 241, 240, 0.9);
+}
+
+.darkSteps {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 2;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.darkSteps li {
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  top: calc(var(--bar-h) + 112px);
+  display: grid;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.45s var(--ease), transform 0.8s var(--ease);
+}
+
+.darkSteps li[data-state='on'] {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.1s;
+}
+
+.darkSteps li[data-state='done'] {
+  transform: translateY(-16px);
+}
+
+.darkSteps h3 {
+  font: italic 500 19px/1.2 var(--serif) !important;
+  color: var(--glow);
+}
+
+.darkSteps p {
+  max-width: 32ch;
+  font-size: 17px;
+  line-height: 1.45;
+  color: #f4fbfb;
+}
+
+.darkSteps blockquote p {
+  font: italic 400 25px/1.22 var(--serif);
+  max-width: 24ch;
+}
+
+.darkSteps blockquote footer {
+  margin-top: 10px;
+  font: italic 400 15px/1.3 var(--serif);
+  color: var(--muted);
+}
+
+/* ---------- Tours and prices ---------- */
+.tours,
+.questions,
+.here {
+  position: relative;
+  padding: 96px var(--pad) 84px;
+}
+
+.tours {
+  background: linear-gradient(180deg, #000 0%, var(--night) 18%, #061113 100%);
+}
+
+.toursLead {
+  margin-top: 12px !important;
+  font: italic 500 19px/1.3 var(--serif);
+  color: var(--glow);
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 26px;
+}
+
+.tab {
+  position: relative;
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 4px;
+  min-height: 44px;
+  padding: calc(var(--len) * 96px + 34px) 10px 14px 12px;
+  border: 0;
+  border-radius: 16px;
+  background: rgba(233, 241, 240, 0.045);
+  box-shadow: inset 0 0 0 1px rgba(233, 241, 240, 0.12);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+
+.tab[aria-selected='true'] {
+  background: rgba(154, 246, 255, 0.09);
+  box-shadow: inset 0 0 0 1.5px rgba(154, 246, 255, 0.7);
+}
+
+.tabThread {
+  position: absolute;
+  left: 16px;
+  top: 0;
+  width: 1.5px;
+  height: calc(var(--len) * 96px + 16px);
+  background: linear-gradient(rgba(154, 246, 255, 0), rgba(154, 246, 255, 0.75));
+}
+
+.tabThread::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  border-radius: 50%;
+  background: #3a4a49;
+  transition: background 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+
+.tab[aria-selected='true'] .tabThread::after {
+  background: #effdff;
+  box-shadow: 0 0 14px 4px rgba(154, 246, 255, 0.65);
+}
+
+.tabName {
+  font: italic 500 16px/1.15 var(--serif);
+  color: #fff;
+}
+
+.tabTag {
+  font: italic 400 13px/1.25 var(--serif);
+  color: var(--muted);
+}
+
+.tabPrice {
+  margin-top: 6px;
+  font: 500 24px/1 var(--serif);
+  color: var(--glow);
+}
+
+.ticket {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 18px 18px 20px;
+  border-radius: 22px;
+  background: #0a1315;
+  box-shadow: inset 0 0 0 1px rgba(154, 246, 255, 0.16);
+  animation: fade 0.6s var(--ease) both;
+}
+
+.mini {
+  margin: -4px -6px 4px;
+}
+
+.mini svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+
+.mini [data-sky] {
+  fill: #dfe9e6;
+}
+
+.mini [data-rock] {
+  fill: #141b19;
+}
+
+.mini [data-ground] {
+  stroke: #6d8d77;
+  stroke-width: 4;
+}
+
+.mini [data-cave] {
+  opacity: 0.3;
+}
+
+.mini [data-cave][data-on] {
+  opacity: 1;
+}
+
+.mini [data-void] {
+  fill: #030505;
+  stroke: rgba(154, 246, 255, 0.25);
+  stroke-width: 1.5;
+}
+
+.mini [data-dots] circle {
+  fill: #b8f9ff;
+}
+
+.mini [data-water] {
+  stroke: rgba(154, 246, 255, 0.55);
+  stroke-width: 1.5;
+}
+
+.mini [data-forms] path {
+  fill: rgba(214, 224, 221, 0.35);
+}
+
+.mini [data-thread] {
+  fill: none;
+  stroke: var(--glow);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 1px 1px;
+  animation: draw 1.3s var(--ease) 0.15s both;
+}
+
+.mini [data-bead] {
+  fill: #effdff;
+  stroke: rgba(154, 246, 255, 0.45);
+  stroke-width: 6;
+  animation: pop 0.6s var(--spring) 0.9s both;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.tTag {
+  font: 700 11px/1.2 var(--sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--glow);
+}
+
+.tName {
+  font: italic 500 30px/1.06 var(--serif) !important;
+  color: #fff;
+}
+
+.tText {
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.tFacts {
+  display: grid;
+  gap: 2px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.buy {
+  display: grid;
+  gap: 14px;
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(233, 241, 240, 0.12);
+}
+
+.prices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 26px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.prices li {
+  display: grid;
+  gap: 2px;
+}
+
+.prices b {
+  font: 500 38px/1 var(--serif);
+  color: #fff;
+}
+
+.prices span {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.buyGo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: start;
+  min-height: 54px;
+  padding: 0 26px;
+  border-radius: 14px;
+  background: var(--glow);
+  color: #031014;
+  font: 800 16px/1 var(--sans);
+  text-decoration: none;
+  box-shadow: 0 0 30px rgba(154, 246, 255, 0.3);
+  will-change: transform;
+}
+
+.tNote {
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.bring {
+  margin-top: 22px !important;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.bring b {
+  margin-right: 6px;
+  font: italic 500 17px/1.2 var(--serif);
+  color: var(--glow);
+}
+
+/* ---------- Questions ---------- */
+.questions {
+  background: #061113;
+}
+
+.qGrid {
+  display: grid;
+  gap: 34px;
+  margin-top: 26px;
+}
+
+.qList {
+  position: relative;
+}
+
+.q {
+  position: relative;
+  border-top: 1px solid rgba(233, 241, 240, 0.12);
+}
+
+.q:last-child {
+  border-bottom: 1px solid rgba(233, 241, 240, 0.12);
+}
+
+.q summary {
+  position: relative;
+  display: block;
+  min-height: 44px;
+  padding: 17px 8px 17px 30px;
+  font: italic 500 20px/1.25 var(--serif);
+  color: #fff;
+  list-style: none;
+  cursor: pointer;
+}
+
+.q summary::-webkit-details-marker {
+  display: none;
+}
+
+.q summary i {
+  position: absolute;
+  left: 4px;
+  top: 0;
+  width: 1.5px;
+  height: 32px;
+  background: linear-gradient(rgba(154, 246, 255, 0), rgba(154, 246, 255, 0.55));
+  transform-origin: 50% 0;
+  transition: height 0.6s var(--ease);
+}
+
+.q summary i::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 9px;
+  height: 9px;
+  margin-left: -4.5px;
+  border-radius: 50%;
+  background: #3a4a49;
+  transition: background 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+
+.q[open] summary i {
+  height: 38px;
+}
+
+.q[open] summary i::after {
+  background: #effdff;
+  box-shadow: 0 0 14px 4px rgba(154, 246, 255, 0.6);
+}
+
+.q::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition: block-size 0.55s var(--ease), content-visibility 0.55s allow-discrete;
+}
+
+.q[open]::details-content {
+  block-size: auto;
+}
+
+.answer {
+  display: grid;
+  gap: 8px;
+  padding: 0 8px 20px 30px;
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.qBeads {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.qBeads i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #effdff;
+  box-shadow: 0 0 10px 2px rgba(154, 246, 255, 0.55);
+}
+
+.q[open] .qBeads i {
+  animation: pop 0.5s var(--spring) both;
+  animation-delay: calc(0.25s + var(--k) * 0.09s);
+}
+
+.qSide {
+  display: grid;
+  gap: 20px;
+}
+
+.qPic {
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.qPic picture,
+.qPic img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.qPic img {
+  object-fit: cover;
+}
+
+.voice p {
+  font: italic 400 23px/1.25 var(--serif);
+  color: #fff;
+}
+
+.voice footer {
+  margin-top: 10px;
+  font: italic 400 15px/1.3 var(--serif);
+  color: var(--muted);
+}
+
+/* ---------- Getting here ---------- */
+.here {
+  background: linear-gradient(180deg, #061113, var(--night));
+}
+
+.hereGrid {
+  display: grid;
+  gap: 30px;
+  margin-top: 22px;
+}
+
+.hereText {
+  display: grid;
+  gap: 14px;
+}
+
+.hereLead {
+  font: italic 400 24px/1.25 var(--serif);
+  color: #fff;
+}
+
+.far {
+  font-size: 16px;
+  color: var(--text);
+}
+
+.address {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 500 22px/1.2 var(--serif);
+  color: var(--glow);
+}
+
+.way {
+  position: relative;
+}
+
+.ways {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 18px;
+}
+
+.ask {
+  margin-bottom: 10px !important;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.wayOption {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  min-height: 44px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 16px;
+  font: inherit;
+  text-align: left;
+  color: var(--text);
+  background: rgba(233, 241, 240, 0.045);
+  box-shadow: inset 0 0 0 1px rgba(233, 241, 240, 0.14);
+  cursor: pointer;
+  transition: background 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+
+.wayOption span {
+  font: italic 500 19px/1.15 var(--serif);
+  color: #fff;
+}
+
+.wayOption small {
+  font: 700 10px/1.2 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.wayOption[aria-selected='true'] {
+  background: rgba(154, 246, 255, 0.09);
+  box-shadow: inset 0 0 0 1.5px rgba(154, 246, 255, 0.7);
+}
+
+.routes {
+  position: relative;
+}
+
+.sketch {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+
+.sketch svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  max-height: 170px;
+  overflow: visible;
+}
+
+.sketch path {
+  fill: none;
+  stroke: var(--glow);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 1px 1px;
+  animation: draw 0.5s var(--ease) both;
+  animation-delay: calc(0.1s + var(--k) * 0.32s);
+}
+
+.sketch circle {
+  fill: #dffcff;
+  animation: pop 0.45s var(--spring) both;
+  animation-delay: calc(0.05s + var(--k) * 0.32s);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.sketch circle[data-open] {
+  fill: var(--night);
+  stroke: #dffcff;
+  stroke-width: 2;
+  stroke-dasharray: 3 3;
+}
+
+.sketch circle[data-end] {
+  fill: var(--glow);
+  stroke: rgba(154, 246, 255, 0.35);
+  stroke-width: 8;
+}
+
+.sketchNote {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.turns {
+  position: relative;
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.turns li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+  padding: 11px 0;
+  font-size: 15.5px;
+  line-height: 1.4;
+  animation: rise-in 0.55s var(--ease) both;
+  animation-delay: calc(var(--k) * 70ms);
+}
+
+.turns svg {
+  position: relative;
+  padding: 2px;
+  border-radius: 50%;
+  background: var(--night);
+  color: var(--glow);
+  box-sizing: content-box;
+  margin: -2px;
+}
+
+.turns li[data-dir='end'] span {
+  font: italic 500 22px/1.2 var(--serif);
+  color: var(--glow);
+  text-shadow: 0 0 16px rgba(154, 246, 255, 0.4);
+}
+
+
+/* ---------- The way out: the cave mouth opens onto daylight ---------- */
+.end {
+  position: relative;
+  background: var(--night);
+}
+
+.mouth {
+  display: grid;
+  gap: 30px;
+  padding: 120px var(--pad) 110px;
+  background: var(--teal);
+  color: var(--ink);
+}
+
+.endTitle {
+  display: grid;
+  font-size: 56px !important;
+  line-height: 0.98 !important;
+  color: var(--ink);
+}
+
+.endTitle span:nth-child(2) {
+  font-style: italic;
+  font-weight: 400;
+}
+
+.endNote {
+  max-width: 30ch;
+  font-size: 16.5px;
+  color: var(--ink);
+}
+
+/* The ways to book hang from the lip of the cave mouth, each on its own thread. */
+.drops {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  justify-items: center;
+  gap: 26px;
+  margin: -6px -6px 0;
+  padding: 56px 6px 8px;
+  overflow: hidden;
+}
+
+.dropItem {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 15px 28px 17px;
+  border-radius: 999px;
+  background: #e3f7f8;
+  color: var(--ink);
+  text-align: center;
+  text-decoration: none;
+  box-shadow: 0 14px 30px -18px rgba(2, 20, 23, 0.6);
+  will-change: transform;
+}
+
+.dropItem::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  z-index: -1;
+  width: 1.5px;
+  height: 28px;
+  background: rgba(2, 20, 23, 0.5);
+}
+
+/* On a phone the three hang on one thread, like drops strung along a glowworm's line. */
+.dropItem:first-child::before {
+  height: 60px;
+}
+
+.dropItem span {
+  font: italic 400 16px/1.2 var(--serif);
+}
+
+.dropItem b {
+  font: 500 22px/1.15 var(--serif);
+  overflow-wrap: anywhere;
+}
+
+.dropItem small {
+  font-size: 12px;
+}
+
+.dropBook {
+  padding: 20px 40px 22px;
+  background: var(--ink);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(154, 246, 255, 0.35), 0 20px 44px -16px rgba(2, 20, 23, 0.85);
+}
+
+.dropBook span {
+  font: 800 15px/1.2 var(--sans);
+  color: var(--glow);
+}
+
+.dropBook b {
+  font: italic 500 32px/1 var(--serif);
+}
+
+.dropBook small {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.dropItem:focus-visible {
+  outline-color: var(--ink) !important;
+}
+
+.depart {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font: 500 19px/1.3 var(--serif);
+}
+
+.depart span {
+  display: grid;
+  gap: 4px;
+}
+
+.depart small {
+  font: italic 400 16px/1.2 var(--serif);
+}
+
+/* ---------- The small print, in the daylight of the cave mouth ---------- */
+.small {
+  display: grid;
+  gap: 10px;
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(2, 20, 23, 0.28);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.small p {
+  max-width: 62ch;
+}
+
+.ack {
+  max-width: 36ch;
+  font: italic 400 19px/1.35 var(--serif);
+}
+
+.small :global(.demo-foot-note) {
+  color: var(--ink);
+  opacity: 1;
+}
+
+/* ---------- Keyframes ---------- */
+@keyframes settle {
+  from {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes lamp {
+  from {
+    clip-path: circle(30px at var(--lx) var(--ly));
+  }
+}
+
+@keyframes ring {
+  from {
+    opacity: 0.3;
+    transform: scale(0.2);
+  }
+}
+
+@keyframes lift {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes glowin {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.42;
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(110%);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.92);
+  }
+}
+
+@keyframes drop {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes draw {
+  from {
+    stroke-dashoffset: 1px;
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+}
+
+@keyframes flash {
+  0% {
+    opacity: 0.32;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes downstream {
+  from {
+    transform: translateX(-2.5%);
+  }
+  to {
+    transform: translateX(2.5%);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.25;
+  }
+}
+
+@keyframes lit {
+  from {
+    color: rgba(233, 241, 240, 0.16);
+    text-shadow: 0 0 0 rgba(154, 246, 255, 0);
+  }
+  to {
+    color: #f4fbfb;
+    text-shadow: 0 0 18px rgba(154, 246, 255, 0.45);
+  }
+}
+
+@keyframes torch {
+  from {
+    clip-path: circle(6% at 72% 62%);
+  }
+  to {
+    clip-path: circle(71% at 50% 50%);
+  }
+}
+
+@keyframes hang {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes open {
+  from {
+    clip-path: polygon(24% 100%, 25% 82%, 29% 66%, 35% 55%, 42% 48%, 50% 45%, 57% 47%, 64% 53%, 70% 62%, 74% 74%, 77% 88%, 78% 100%);
+  }
+  to {
+    clip-path: polygon(-60% 100%, -55% 40%, -40% 0%, -20% -30%, 10% -50%, 50% -60%, 90% -50%, 120% -30%, 140% 0%, 155% 40%, 160% 80%, 160% 100%);
+  }
+}
+
+/* Scroll-linked touches, where the browser runs them itself. Elsewhere the finished state simply shows. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .fill span {
+      animation: lit both;
+      animation-timing-function: var(--ease);
+      animation-timeline: view();
+      animation-range: cover calc(16% + var(--i) * 1.7%) cover calc(26% + var(--i) * 1.7%);
+    }
+
+    .hang {
+      animation: hang both;
+      animation-timing-function: var(--ease);
+      animation-timeline: view();
+      animation-range: entry 0% entry 80%;
+    }
+
+    .eyesPic {
+      animation: torch both;
+      animation-timing-function: var(--ease);
+      animation-timeline: view();
+      animation-range: entry 10% cover 42%;
+    }
+
+    .mouth {
+      animation: open both;
+      animation-timing-function: cubic-bezier(0.3, 0.1, 0.3, 1);
+      animation-timeline: view();
+      animation-range: entry 0% cover 42%;
+    }
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hintTouch {
+    display: none;
+  }
+
+  .hintPointer {
+    display: inline;
+  }
+}
+
+/* ---------- Wider screens ---------- */
+@media (min-width: 600px) {
+  .root {
+    --pad: 40px;
+  }
+
+  .hero {
+    --r: 200px;
+  }
+
+  .title {
+    font-size: 66px !important;
+  }
+
+  .tabName {
+    font-size: 19px;
+  }
+}
+
+@media (min-width: 900px) {
+  .root {
+    --pad: 56px;
+    font-size: 17px;
+  }
+
+  .root h2 {
+    font-size: 64px;
+  }
+
+  .nav {
+    position: fixed;
+    top: calc(var(--bar-h) + 14px);
+    left: 50%;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    padding: 6px 6px 6px 22px;
+    border-radius: 999px;
+    background: rgba(3, 6, 7, 0.86);
+    box-shadow: inset 0 0 0 1px rgba(154, 246, 255, 0.18), 0 10px 40px rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -12px);
+    transition: opacity 0.4s var(--ease), transform 0.6s var(--ease), visibility 0.4s;
+  }
+
+  :global([data-past-hero]) .nav {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+  }
+
+  .navMark {
+    font: italic 500 21px/1 var(--serif);
+    color: #fff;
+    text-decoration: none;
+  }
+
+  .navLinks {
+    display: flex;
+    gap: 20px;
+  }
+
+  .navLinks a {
+    position: relative;
+    white-space: nowrap;
+    padding: 12px 0;
+    font: 600 13.5px/1 var(--sans);
+    color: rgba(233, 241, 240, 0.88);
+    text-decoration: none;
+  }
+
+  .navLinks a:hover,
+  .navLinks a[aria-current] {
+    color: #fff;
+  }
+
+  .navLinks a[aria-current]::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 1px;
+    width: 6px;
+    height: 6px;
+    margin-left: -3px;
+    border-radius: 50%;
+    background: var(--glow);
+    box-shadow: 0 0 10px 2px rgba(154, 246, 255, 0.7);
+  }
+
+  .navBook {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 12px 18px;
+    border-radius: 999px;
+    background: var(--glow);
+    color: #031014;
+    font: 800 14px/1 var(--sans);
+    text-decoration: none;
+  }
+
+  .navBook small {
+    font: italic 500 14px/1 var(--serif);
+  }
+
+  /* Hero */
+  /* The circle sits below the headline at every height: its top stays clear of the second line. */
+  .hero {
+    --lx: 45%;
+    --ly: 58%;
+    --r: min(250px, 23svh);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr);
+    grid-template-rows: auto auto 1fr;
+    justify-items: stretch;
+    padding: 24px var(--pad) 40px;
+    text-align: left;
+  }
+
+  /* The photograph a little larger from the top, so the guide stands inside the circle under the headline. */
+  .field img,
+  .lit img {
+    transform: scale(1.1);
+    transform-origin: 50% 0;
+  }
+
+  .mark,
+  .title {
+    grid-column: 1 / -1;
+  }
+
+  .mark span {
+    font-size: 28px;
+  }
+
+  .title {
+    display: block;
+    margin-top: 6px !important;
+    font-size: 80px !important;
+    text-align: center;
+  }
+
+  .line {
+    display: inline-block;
+    vertical-align: top;
+  }
+
+  .line:nth-child(3) {
+    display: block;
+  }
+
+  .heroAside {
+    grid-column: 1;
+    grid-row: 3;
+    align-self: center;
+    justify-items: start;
+    max-width: 300px;
+  }
+
+  .heroSub {
+    font-size: 18px;
+  }
+
+  .facts {
+    display: grid;
+    justify-content: start;
+    gap: 2px;
+    font-size: 19px;
+  }
+
+  .heroAct {
+    grid-column: 3;
+    grid-row: 3;
+    align-self: center;
+    justify-self: end;
+    justify-items: end;
+    margin-top: 0;
+  }
+
+  .heroGo {
+    min-height: 64px;
+  }
+
+  .heroGo b {
+    font-size: 30px;
+  }
+
+  /* Through our eyes */
+  .eyes {
+    padding: 140px var(--pad) 120px;
+  }
+
+  .eyes h2 {
+    margin-bottom: 44px !important;
+  }
+
+  .eyesGrid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.9fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 64px;
+    row-gap: 40px;
+  }
+
+  .fill {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .fill p {
+    font-size: 50px;
+    line-height: 1.12;
+  }
+
+  .eyesPic {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: start;
+    max-width: 440px;
+    justify-self: end;
+    width: 100%;
+  }
+
+  .eyesText {
+    grid-column: 1;
+    grid-row: 2;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 40px;
+    align-items: start;
+  }
+
+  .family,
+  .years {
+    grid-column: 1;
+  }
+
+  .people {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+
+  .member {
+    grid-column: 1;
+  }
+
+  /* The tour */
+  .tourHead {
+    padding: 190px var(--pad) 60px;
+  }
+
+  .tourHead p {
+    font-size: 18px;
+  }
+
+  .story {
+    --s: 0.8;
+  }
+
+  .place {
+    width: 470px;
+    transform: translate(-50%, calc(-100% - 92px));
+  }
+
+  .place[data-under] {
+    transform: translate(-50%, calc(var(--s) * 140px + 30px));
+  }
+
+  .place h3 {
+    font-size: 46px;
+  }
+
+  .placeText {
+    font-size: 18px;
+  }
+
+  .note {
+    font-size: 14.5px;
+  }
+
+  .pool {
+    width: 230px;
+    margin: -115px 0 0 -115px;
+  }
+
+  /* Lights out */
+  .darkHead {
+    top: calc(var(--bar-h) + 80px);
+  }
+
+  .darkHead h2 {
+    font-size: 96px !important;
+  }
+
+  .darkSteps li {
+    right: auto;
+    width: min(44%, 560px);
+    top: calc(var(--bar-h) + 212px);
+  }
+
+  .darkSteps p {
+    font-size: 19px;
+  }
+
+  .darkSteps blockquote p {
+    font-size: 34px;
+  }
+
+  .controls {
+    left: auto;
+    right: var(--pad);
+    top: auto;
+    bottom: 64px;
+    justify-items: end;
+  }
+
+  .lens {
+    width: 280px;
+    height: 280px;
+  }
+
+  .finder {
+    inset: 40% 22% 12%;
+  }
+
+  /* Tours */
+  .tours,
+  .questions,
+  .here {
+    padding: 140px var(--pad) 120px;
+  }
+
+  .hang {
+    height: 110px;
+  }
+
+  .chooser {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 28px;
+    align-items: start;
+    margin-top: 40px;
+  }
+
+  .tabs {
+    margin-top: 0;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .tab {
+    padding: calc(var(--len) * 160px + 40px) 14px 18px 18px;
+    border-radius: 20px;
+  }
+
+  .tabThread {
+    left: 22px;
+    height: calc(var(--len) * 160px + 22px);
+  }
+
+  .tabName {
+    font-size: 21px;
+  }
+
+  .tabPrice {
+    font-size: 32px;
+  }
+
+  .ticket {
+    margin-top: 0;
+    padding: 24px 28px 28px;
+  }
+
+  .tName {
+    font-size: 40px !important;
+  }
+
+  .buy {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+
+  .prices b {
+    font-size: 48px;
+  }
+
+  /* Questions */
+  .qGrid {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.8fr);
+    column-gap: 72px;
+    margin-top: 44px;
+  }
+
+  .q summary {
+    font-size: 25px;
+    padding: 22px 8px 22px 34px;
+  }
+
+  .answer {
+    padding: 0 8px 24px 34px;
+    font-size: 16.5px;
+  }
+
+  .voice p {
+    font-size: 28px;
+  }
+
+  /* Getting here */
+  .hereGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 72px;
+    margin-top: 44px;
+  }
+
+  .hereLead {
+    font-size: 34px;
+  }
+
+  .far {
+    font-size: 18px;
+  }
+
+  .address {
+    font-size: 28px;
+  }
+
+  /* The way out */
+  .mouth {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    column-gap: 64px;
+    row-gap: 48px;
+    padding: 180px var(--pad) 96px;
+  }
+
+  .endTitle {
+    grid-column: 1 / -1;
+    font-size: 132px !important;
+  }
+
+  .endNote {
+    grid-column: 1 / -1;
+    font-size: 20px;
+  }
+
+  .drops {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, auto);
+    justify-content: space-between;
+    align-items: start;
+    column-gap: 36px;
+    padding-top: 70px;
+  }
+
+  .dropItem::before,
+  .dropItem:first-child::before {
+    height: 1200px;
+  }
+
+  .dropItem:nth-child(2) {
+    margin-top: 74px;
+  }
+
+  .dropItem:nth-child(3) {
+    margin-top: 28px;
+  }
+
+  .dropItem b {
+    font-size: 26px;
+  }
+
+  .dropBook b {
+    font-size: 40px;
+  }
+
+  .depart,
+  .small {
+    grid-column: 1 / -1;
+  }
+
+  .depart {
+    font-size: 22px;
+  }
+
+  .small {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    column-gap: 64px;
+    align-items: start;
+  }
+
+  .ack {
+    grid-row: span 3;
+    font-size: 22px;
+  }
+
+}
+
+@media (min-width: 1200px) {
+  .title {
+    font-size: 80px !important;
+  }
+
+  .fill p {
+    font-size: 58px;
+  }
+
+  .endTitle {
+    font-size: 150px !important;
+  }
+}
+
+@media (min-width: 1600px) {
+  .hero {
+    --ly: 56%;
+    --r: min(290px, 23svh);
+  }
+
+  .field img,
+  .lit img {
+    transform: none;
+  }
+
+  .title {
+    font-size: 104px !important;
+  }
+}
+
+@media (min-width: 900px) and (max-height: 760px) {
+  .hero {
+    --r: min(205px, 23svh);
+  }
+
+  .title {
+    font-size: 72px !important;
+  }
+}
+
+@media (max-width: 899px) and (max-height: 700px) {
+  .hero {
+    --r: 116px;
+    grid-template-rows: auto auto minmax(250px, 1fr) auto auto;
+  }
+
+  .title {
+    font-size: 42px !important;
+  }
+}
+
+/* ---------- With reduced motion asked for, everything simply shows, in order, with no held screens ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .veil {
+    display: none;
+  }
+
+  .story,
+  .darkStory {
+    height: auto;
+  }
+
+  .frame,
+  .darkStory [data-frame] {
+    position: relative;
+    height: auto;
+    overflow: visible;
+  }
+
+  .frame {
+    position: relative;
+    height: auto;
+    overflow: visible;
+    padding: 0 var(--pad) 56px;
+    background: #111614;
+  }
+
+  /* The whole drawing, as one strip above the steps: its deepest rock is cut away. */
+  .story {
+    --t: 1 !important;
+  }
+
+  .world {
+    position: relative;
+    width: 100%;
+    height: auto;
+    transform: none !important;
+  }
+
+  .drawing {
+    position: relative;
+    display: block;
+    height: auto;
+    margin-bottom: calc(-1 * (var(--wh) - 1820) / var(--ww) * 100%);
+    border-radius: 12px;
+    clip-path: inset(0 0 calc((var(--wh) - 1820) / var(--wh) * 100%) 0 round 12px);
+  }
+
+  .world > ol {
+    display: grid;
+    margin-top: 18px;
+  }
+
+  .place,
+  .place[data-under] {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: auto;
+    padding: 18px 0;
+    border-top: 1px solid rgba(233, 241, 240, 0.12);
+    color: #f1f7f6;
+    text-align: left;
+    opacity: 1;
+    transform: none;
+  }
+
+  .note,
+  .place[data-under] .note {
+    color: var(--muted);
+  }
+
+  .pool {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    max-width: 420px;
+    aspect-ratio: 3 / 2;
+    margin: 8px 0 0;
+    border-radius: 4px;
+    clip-path: none;
+  }
+
+  .darkStory [data-frame] {
+    display: grid;
+    padding: 0 0 48px;
+  }
+
+  .darkMedia,
+  .darkSteps {
+    display: contents;
+  }
+
+  .darkHead {
+    position: static;
+    order: 0;
+    padding: 72px var(--pad) 22px;
+  }
+
+  .darkLit,
+  .darkGlow {
+    position: relative;
+    inset: auto;
+    aspect-ratio: 16 / 10;
+    opacity: 1;
+  }
+
+  .darkLit {
+    order: 1;
+  }
+
+  .darkGlow {
+    order: 3;
+  }
+
+  .darkMedia::after,
+  .flash,
+  .finder,
+  .lens,
+  .controls {
+    display: none;
+  }
+
+  .darkSteps li {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    width: auto;
+    padding: 20px var(--pad) 28px;
+    opacity: 1;
+    transform: none;
+  }
+
+  .darkSteps li:nth-child(1) {
+    order: 2;
+  }
+
+  .darkSteps li:nth-child(2) {
+    order: 4;
+  }
+
+  .darkSteps li:nth-child(3) {
+    order: 5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) and (min-width: 900px) {
+  .darkStory [data-frame] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 0;
+  }
+
+  .darkHead {
+    grid-column: 1 / -1;
+  }
+
+  .darkLit {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .darkGlow {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .darkSteps li:nth-child(1) {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .darkSteps li:nth-child(2) {
+    grid-column: 2;
+    grid-row: 3;
+  }
+
+  .darkSteps li:nth-child(3) {
+    grid-column: 1 / -1;
+    grid-row: 4;
+  }
+
+}

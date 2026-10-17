@@ -35,6 +35,8 @@ export interface PackBusiness {
     colours: { role: string; hex: string }[];
     fonts: { headings: string | null; body: string | null } | null;
     voice: { quote: string; url: string | null }[];
+    /** The idea the business is built on, in its own words. */
+    coreIdea: { quote: string; url: string | null }[];
   };
   agency: { name: string | null; signs: { agency: string; kind: string; quote: string | null; url: string | null }[]; note: string | null };
   unknowns: string[];
@@ -137,6 +139,7 @@ export function packBusiness(db: Db, b: WaveMember, batch: string, extras: PackE
       colours: of('colour').map((f) => ({ role: f.label, hex: (f.value as { hex: string }).hex })),
       fonts: fonts ? { headings: fonts.headings, body: fonts.body } : null,
       voice: of('voice').map((f) => ({ quote: String(f.value), url: f.sourceUrl })),
+      coreIdea: of('core_idea').map((f) => ({ quote: String(f.value), url: f.sourceUrl })),
     },
     agency: { name: agency?.name ?? null, signs: of('agency').filter((f) => f.label !== 'summary').map((f) => ({ agency: f.label, kind: String(f.value), quote: f.quote, url: f.sourceUrl })), note: agency?.note ?? null },
     unknowns: of('unknown').map((f) => String(f.value)),
@@ -184,6 +187,7 @@ export function packSection(p: PackBusiness): string[] {
   if (!p.assets.videos.length) out.push('  - Video: none of their own found.');
   out.push(`  - Logo: ${p.assets.logo?.file ?? p.assets.logo?.from ?? 'not found'}. Colours: ${p.assets.colours.slice(0, 5).map((c) => `${c.hex} ${c.role}`).join(', ') || 'not read'}. Fonts: ${p.assets.fonts ? `${p.assets.fonts.headings ?? '?'} (headings), ${p.assets.fonts.body ?? '?'} (body)` : 'not read'}.`);
   for (const v of p.assets.voice.slice(0, 5)) out.push(`  - Voice: "${short(v.quote, 200)}" (${v.url})`);
+  for (const v of p.assets.coreIdea.slice(0, 3)) out.push(`  - Core idea: "${short(v.quote, 200)}" (${v.url})`);
   out.push('- **Risks and unknowns:**');
   const risks = [
     ...(p.agency.name ? [`Agency: ${p.agency.name} appears to look after the site${p.agency.signs[0]?.quote ? ` ("${short(p.agency.signs[0].quote, 100)}")` : ''}. Never criticise it.`] : []),

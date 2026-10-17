@@ -1,0 +1,2574 @@
+/* sunpath: a stay told by the sun crossing the harbour. Mobile first; the wide layout is at the foot. */
+
+.root {
+  --ink: #0f2a33;
+  --ink-soft: #35505a;
+  --sea: #2ec4b6;
+  --sun: #ff6340;
+  --sun-soft: #ff8a65;
+  --sand: #f3d49b;
+  --c-dawn: #ffe9db;
+  --c-noon: #c6efe8;
+  --c-night: #1b2a5e;
+  --deep: #101b40;
+  --mist: #e4f5f1;
+  --paper: #ffffff;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --display: 'Yeseva One', 'Georgia', 'Times New Roman', serif;
+  --text: 'Outfit', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --pad: 20px;
+  --float-bg: rgba(255, 99, 64, 0.97);
+  --float-ink: #0f2a33;
+  --float-call-bg: rgba(255, 255, 255, 0.97);
+  --float-call-ink: #0f2a33;
+  --float-font: 'Outfit', system-ui, sans-serif;
+  overflow-x: clip;
+  font-family: var(--text);
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.root h1,
+.root h2,
+.root h3 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.root h2 {
+  font-size: clamp(40px, 11.4vw, 46px);
+  line-height: 1.02;
+}
+
+.root p {
+  margin: 0;
+}
+
+.root a:focus-visible,
+.root button:focus-visible,
+.root input:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The small line that opens a section: a sun on its horizon, then the words. */
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 600 13px/1.2 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.kicker::before,
+.mark i,
+.dock i {
+  content: '';
+  flex: 0 0 auto;
+  width: 18px;
+  height: 9px;
+  border-radius: 18px 18px 0 0;
+  background: var(--sun);
+  box-shadow: 0 2px 0 0 currentColor;
+}
+
+/* The one action: the colour of the sun. */
+.go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 20px 0 22px;
+  border-radius: 4px;
+  background: var(--sun);
+  color: var(--ink);
+  font: 700 17px/1 var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.go svg,
+.send svg {
+  transition: transform 0.5s var(--ease);
+}
+
+.go:hover svg,
+.send:hover svg {
+  transform: translateX(4px);
+}
+
+.dock {
+  display: none;
+}
+
+/* ---------- The first screen: their photograph of the harbour and the dune, its sky carried up to the top of the screen. ---------- */
+
+.hero {
+  --band: min(484px, 60svh);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - var(--bar-h));
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(180deg, #1d54a5 0%, #3d88d6 calc(100% - var(--band) * 0.9), #4593df calc(100% - var(--band) * 0.7), #4593df 100%);
+}
+
+.heroPhoto {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--band);
+  overflow: hidden;
+}
+
+/* The photograph keeps its own shape, so the sun and the waterline stay where they are in it. Its own sky melts into the drawn one. */
+.heroFrame {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 100%;
+  translate: calc(var(--focus) * -100%) 0;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 26%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 26%);
+  animation: settle 1.8s var(--ease) both;
+}
+
+.heroFrame picture,
+.heroFrame img,
+.heroFrame svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.heroFrame img {
+  object-fit: cover;
+}
+
+.sun {
+  fill: var(--sun);
+  animation: sun-up 1.7s var(--ease) 0.1s both;
+}
+
+.heroPhoto::after {
+  content: '';
+  position: absolute;
+  inset: 48% 0 0 0;
+  background: linear-gradient(180deg, rgba(6, 28, 42, 0) 0%, rgba(6, 28, 42, 0.5) 45%, rgba(6, 28, 42, 0.82) 100%);
+}
+
+.heroTop {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px var(--pad) 0;
+}
+
+.mark {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  column-gap: 10px;
+  color: #fff;
+  font: 700 13px/1.25 var(--text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.mark i {
+  grid-row: span 2;
+}
+
+.heroNav {
+  display: none;
+}
+
+.place {
+  padding-top: 1px;
+  font: 500 13px/1.25 var(--text);
+  letter-spacing: 0.04em;
+  text-align: right;
+}
+
+.heroWords {
+  position: relative;
+  z-index: 3;
+  padding: 26px var(--pad) 0;
+}
+
+.leadSmall {
+  display: block;
+  font: 600 15px/1.2 var(--text);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  animation: fade 0.6s var(--ease) 0.1s both;
+}
+
+/* The letters of the word start scattered down the sky and gather into tight type as the page opens. */
+.gather {
+  display: block;
+  margin-top: 6px;
+  font: 800 clamp(40px, 12.6vw, 52px)/0.95 var(--text);
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.gather span {
+  display: inline-block;
+  animation: gather 1.05s cubic-bezier(0.2, 1.25, 0.4, 1) both;
+  animation-delay: calc(0.28s + var(--k) * 32ms);
+}
+
+.root h1 {
+  margin-top: 8px;
+  font-size: min(19vw, 84px);
+  line-height: 0.94;
+  letter-spacing: -0.015em;
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+.line > span {
+  display: inline-block;
+  animation: rise 0.95s var(--ease) both;
+  animation-delay: calc(0.45s + var(--i) * 0.12s);
+}
+
+.line + .line {
+  padding-left: 9vw;
+}
+
+/* The words and the action stand on the water, in reach of a thumb. */
+.heroFoot {
+  position: relative;
+  z-index: 3;
+  margin-top: auto;
+  padding: 0 var(--pad) 20px;
+  animation: fade 0.6s var(--ease) 0.75s both;
+}
+
+.sub {
+  max-width: 32ch;
+  font: 500 17px/1.38 var(--text);
+}
+
+.act {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.price {
+  display: grid;
+  flex: 1 1 auto;
+  gap: 3px;
+  min-width: 0;
+  font: 500 14px/1.2 var(--text);
+}
+
+.price b {
+  font: 400 26px/1 var(--display);
+}
+
+.price small {
+  color: #dbe9f2;
+  font: 500 13px/1.25 var(--text);
+}
+
+.hero a:focus-visible {
+  outline-color: #fff;
+}
+
+/* ---------- Packed with adventures: a drawn map of the harbour with a pin where each thing happens. ---------- */
+
+.play {
+  position: relative;
+  padding: 76px 0 72px;
+  background: var(--paper);
+}
+
+.playHead {
+  padding: 0 var(--pad);
+}
+
+.playHead h2 {
+  max-width: 10ch;
+  margin-top: 14px;
+  font-size: clamp(44px, 12.6vw, 52px);
+  line-height: 0.98;
+}
+
+.mapBox {
+  margin-top: 26px;
+}
+
+.map {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+}
+
+.mapSvg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mLand {
+  fill: #e3f1d9;
+}
+
+.mShape[data-kind='sea'] {
+  fill: #1c98a0;
+}
+
+.mShape[data-kind='harbour'] {
+  fill: var(--sea);
+}
+
+.mShape[data-kind='dune'] {
+  fill: var(--sand);
+}
+
+.mShape[data-kind='beach'] {
+  fill: #f8e6c2;
+}
+
+.mShape[data-kind='bush'] {
+  fill: #93c79c;
+}
+
+.mShape[data-kind='peak'] {
+  fill: #6aa57b;
+}
+
+.mShape[data-kind='road'] {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 4px;
+  stroke-dasharray: 16 12;
+}
+
+.mShape[data-kind='falls'] {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 6px;
+  stroke-linecap: round;
+}
+
+.mPlace {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%);
+  color: var(--ink);
+  font: 700 11px/1 var(--text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.mDrawn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  padding: 3px 7px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--ink);
+  font: 500 11px/1.2 var(--text);
+}
+
+.pin {
+  position: absolute;
+  z-index: 2;
+  left: var(--x);
+  top: var(--y);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.pin i {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--sun);
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--ink);
+  transition: transform 0.5s var(--spring), background-color 0.3s var(--ease);
+}
+
+.pin:hover i {
+  transform: scale(1.2);
+}
+
+.pin[data-on] i {
+  transform: scale(1.5);
+}
+
+.pin[data-on]::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--sun);
+  animation: ping 1.4s var(--ease) 2;
+  opacity: 0;
+}
+
+.pin[data-wished] i {
+  background: var(--ink);
+}
+
+.pinTag {
+  position: absolute;
+  z-index: 3;
+  left: var(--x);
+  top: var(--y);
+  padding: 7px 11px;
+  border-radius: 4px;
+  background: var(--ink);
+  color: #fff;
+  font: 600 13px/1.1 var(--text);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 22px));
+  animation: fade 0.4s var(--ease) both;
+}
+
+.hint {
+  padding: 12px var(--pad) 0;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+
+.panel {
+  display: grid;
+  margin-top: 18px;
+  padding: 0 var(--pad);
+}
+
+.card {
+  grid-area: 1 / 1;
+  min-width: 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
+  transition: opacity 0.4s var(--ease), transform 0.6s var(--ease), visibility 0.4s;
+}
+
+.card[data-on] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+.cardPhoto {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  border-radius: 4px;
+  background: var(--c-noon);
+}
+
+.cardPhoto picture,
+.cardPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardPhoto[data-empty] {
+  display: flex;
+  align-items: flex-end;
+  padding: 18px;
+  background: var(--sand);
+}
+
+.cardPhoto[data-empty] span {
+  font: 44px/0.95 var(--display);
+}
+
+.cardPlace {
+  margin-top: 16px !important;
+  font: 600 12.5px/1.2 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.cardName {
+  margin-top: 6px !important;
+  font-size: 30px;
+  line-height: 1.05;
+}
+
+.cardText {
+  max-width: 38ch;
+  margin-top: 8px !important;
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+.add {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 0 16px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  font: 600 15px/1 var(--text);
+  cursor: pointer;
+}
+
+.add span {
+  font-size: 18px;
+}
+
+.add[aria-pressed='true'] {
+  background: var(--ink);
+  color: #fff;
+}
+
+.playNotes {
+  display: grid;
+  gap: 8px;
+  max-width: 44ch;
+  margin-top: 30px;
+  padding: 0 var(--pad);
+}
+
+.playNotes p:first-child {
+  font: 600 18px/1.35 var(--text);
+}
+
+.playNotes p + p {
+  color: var(--ink-soft);
+  font-size: 15.5px;
+  line-height: 1.4;
+}
+
+/* ---------- Two nights equals three days: the sun crosses each day and the moon each night, one screen a step. ---------- */
+
+.days {
+  position: relative;
+  background: var(--c-noon);
+}
+
+.daysTrack {
+  --hz: 31%;
+  --d: 84px;
+  --dm: 64px;
+  --lane-top: calc(var(--bar-h) + 98px);
+  position: relative;
+  height: calc(var(--steps) * 62svh + 100svh);
+}
+
+.daysTrack [data-frame] {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--c-noon);
+}
+
+.stage {
+  position: absolute;
+  inset: 0 0 calc(100% - var(--hz)) 0;
+  overflow: hidden;
+}
+
+.skyDawn,
+.skyDusk,
+.skyNight,
+.stars {
+  position: absolute;
+  inset: 0;
+}
+
+.skyDawn {
+  background: var(--c-dawn);
+  opacity: var(--dawn);
+}
+
+.skyDusk {
+  background: linear-gradient(0deg, #ff9a6b 0%, #ffb995 46%, #ffd7bd 100%);
+  opacity: var(--dusk);
+}
+
+/* Night comes down from the top of the sky. */
+.skyNight {
+  inset: auto 0;
+  top: -200%;
+  height: 200%;
+  background: linear-gradient(180deg, var(--c-night) 0%, var(--c-night) 56%, rgba(27, 42, 94, 0.7) 74%, rgba(27, 42, 94, 0) 100%);
+  transform: translateY(calc(var(--night) * 100%));
+}
+
+.stars {
+  opacity: var(--night);
+  background-image: radial-gradient(1.6px 1.6px at 12% 22%, #fff 99%, transparent), radial-gradient(1.4px 1.4px at 31% 9%, #fff 99%, transparent),
+    radial-gradient(1.8px 1.8px at 47% 30%, #fff 99%, transparent), radial-gradient(1.3px 1.3px at 63% 14%, #fff 99%, transparent),
+    radial-gradient(1.6px 1.6px at 78% 34%, #fff 99%, transparent), radial-gradient(1.4px 1.4px at 88% 11%, #fff 99%, transparent),
+    radial-gradient(1.2px 1.2px at 22% 48%, #fff 99%, transparent), radial-gradient(1.5px 1.5px at 92% 52%, #fff 99%, transparent),
+    radial-gradient(1.3px 1.3px at 55% 56%, #fff 99%, transparent), radial-gradient(1.2px 1.2px at 6% 64%, #fff 99%, transparent),
+    radial-gradient(1.4px 1.4px at 40% 70%, #fff 99%, transparent), radial-gradient(1.2px 1.2px at 70% 72%, #fff 99%, transparent),
+    radial-gradient(1.7px 1.7px at 18% 82%, #fff 99%, transparent), radial-gradient(1.3px 1.3px at 84% 80%, #fff 99%, transparent),
+    radial-gradient(1.5px 1.5px at 36% 42%, #fff 99%, transparent), radial-gradient(1.2px 1.2px at 96% 28%, #fff 99%, transparent);
+}
+
+/* The sun and the moon keep to a lane of their own, between the heading and the horizon. */
+.lane {
+  position: absolute;
+  top: var(--lane-top);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  container-type: size;
+}
+
+.daySun,
+.nightMoon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  will-change: transform;
+}
+
+.daySun {
+  width: var(--d);
+  height: var(--d);
+  background: var(--sun);
+  transform: translate(calc((0.06 + 0.88 * var(--sx)) * 100cqw - var(--d) / 2), calc(100cqh - var(--sy) * (100cqh - var(--d) / 2) - var(--d) / 2));
+}
+
+.nightMoon {
+  width: var(--dm);
+  height: var(--dm);
+  box-shadow: inset calc(var(--dm) * -0.3) calc(var(--dm) * 0.12) 0 0 var(--sand);
+  opacity: var(--night);
+  transform: translate(calc((0.06 + 0.88 * var(--mx)) * 100cqw - var(--dm) / 2), calc(100cqh - var(--my) * (100cqh - var(--dm) / 2) - var(--dm) / 2)) rotate(-18deg);
+}
+
+.water {
+  position: absolute;
+  inset: var(--hz) 0 0 0;
+  overflow: hidden;
+  background: var(--sea);
+  border-top: 2px solid var(--ink);
+}
+
+.waterNight {
+  position: absolute;
+  inset: 0;
+  background: var(--deep);
+  opacity: calc(var(--night) * 0.92);
+}
+
+.moonGlint {
+  position: absolute;
+  top: 8px;
+  left: calc((0.06 + 0.88 * var(--mx)) * 100% - 28px);
+  width: 56px;
+  height: 40%;
+  background: repeating-linear-gradient(180deg, var(--sand) 0 2px, transparent 2px 12px);
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent);
+  mask-image: linear-gradient(180deg, #000, transparent);
+  opacity: calc(var(--night) * var(--my));
+}
+
+.daysHead {
+  position: absolute;
+  z-index: 4;
+  top: calc(var(--bar-h) + 14px);
+  left: var(--pad);
+  right: var(--pad);
+  transition: color 0.6s var(--ease);
+}
+
+.daysHead .kicker {
+  display: none;
+}
+
+.daysHead h2 {
+  font-size: clamp(20px, 5.9vw, 24px);
+  line-height: 1.1;
+}
+
+/* A sun for each day and a moon for each night, lit as they come; the one being told stands larger. */
+.tally {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px !important;
+}
+
+.tally i {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  transition: transform 0.5s var(--spring), background-color 0.4s var(--ease), box-shadow 0.4s var(--ease), opacity 0.4s var(--ease);
+}
+
+.tally i[data-kind='day'] {
+  box-shadow: inset 0 0 0 2.5px currentColor;
+}
+
+.tally i[data-kind='day'][data-lit] {
+  background: var(--sun);
+  box-shadow: inset 0 0 0 2.5px var(--sun);
+}
+
+.tally i[data-kind='night'] {
+  box-shadow: inset -8px 3px 0 0 currentColor;
+  opacity: 0.4;
+  transform: rotate(-18deg);
+}
+
+.tally i[data-kind='night'][data-lit] {
+  box-shadow: inset -8px 3px 0 0 var(--sand);
+  opacity: 1;
+}
+
+.daysTrack[data-active='0'] .tally i[data-k='0'],
+.daysTrack[data-active='1'] .tally i[data-k='1'],
+.daysTrack[data-active='2'] .tally i[data-k='2'],
+.daysTrack[data-active='3'] .tally i[data-k='3'],
+.daysTrack[data-active='4'] .tally i[data-k='4'],
+.daysTrack[data-active='5'] .tally i[data-k='5'],
+.daysTrack[data-active='6'] .tally i[data-k='6'] {
+  scale: 1.3;
+}
+
+.stepName {
+  position: absolute;
+  z-index: 3;
+  left: calc(var(--pad) - 0.04em);
+  bottom: calc(100% - var(--hz));
+  font: 15.5vw/0.8 var(--display);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(0.55em);
+  transition: opacity 0.4s var(--ease), transform 0.9s var(--ease);
+}
+
+.step[data-state='on'] .stepName {
+  opacity: 1;
+  transform: translateY(0.13em);
+}
+
+.stepBody {
+  position: absolute;
+  z-index: 3;
+  top: calc(var(--hz) + 26px);
+  left: 0;
+  right: 0;
+  bottom: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease);
+}
+
+.step[data-state='on'] .stepBody {
+  opacity: 1;
+}
+
+/* The step's photograph is its hero, and takes the light of the hour. */
+.stepPhoto {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 120px;
+  margin: 0 var(--pad);
+  overflow: hidden;
+  border-radius: 3px;
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 0.9s var(--ease);
+}
+
+.step[data-state='on'] .stepPhoto {
+  clip-path: inset(0);
+}
+
+.step[data-kind='night'] .stepPhoto {
+  clip-path: inset(0);
+  transition: none;
+}
+
+.stepPhoto picture,
+.stepPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.stepPhoto::before,
+.stepPhoto::after {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.stepPhoto::before {
+  background: #ff8f5a;
+  opacity: calc(var(--dusk) * 0.55 + var(--dawn) * 0.3);
+}
+
+.stepPhoto::after {
+  background: #1b2a5e;
+  opacity: calc(var(--night) * 0.74);
+}
+
+.stepText {
+  flex: 0 0 auto;
+  padding: 0 var(--pad);
+  transition: color 0.6s var(--ease);
+}
+
+.stepText h3 {
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.beats {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.beats li {
+  position: relative;
+  max-width: 38ch;
+  padding-left: 18px;
+  font-size: 16.5px;
+  line-height: 1.32;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.5s var(--ease), transform 0.7s var(--ease);
+}
+
+.beats li::before {
+  content: '';
+  position: absolute;
+  top: 0.45em;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--sun);
+}
+
+.step[data-kind='night'] .beats li::before {
+  background: var(--sand);
+}
+
+.beats li[data-on] {
+  opacity: 1;
+  transform: none;
+}
+
+.beats b {
+  font-weight: 700;
+}
+
+.daysTrack[data-night-top] .daysHead,
+.daysTrack[data-night] .stepName,
+.daysTrack[data-night] .stepText {
+  color: #fff;
+}
+
+@media (max-height: 760px) {
+  .daysTrack {
+    --hz: 29%;
+    --d: 70px;
+    --dm: 54px;
+    --lane-top: calc(var(--bar-h) + 90px);
+  }
+
+  .stepText h3 {
+    font-size: 21px;
+  }
+
+  .beats li {
+    font-size: 15px;
+  }
+
+  .stepBody {
+    gap: 10px;
+    bottom: 80px;
+  }
+}
+
+/* ---------- Kia ora: the words come up out of the horizon with the sun. ---------- */
+
+.welcome {
+  position: relative;
+  background: var(--paper);
+}
+
+.welcomeSky {
+  position: relative;
+  overflow: hidden;
+  padding: 96px var(--pad) 0;
+  border-bottom: 2px solid var(--ink);
+}
+
+.lowSun {
+  position: absolute;
+  bottom: 0;
+  left: 44%;
+  width: 78vw;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--sun);
+  transform: translateY(calc(100% - var(--s) * 50%));
+}
+
+.welcome h2 {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  padding-top: 0.12em;
+  font-size: clamp(84px, 25vw, 104px);
+  line-height: 0.8;
+}
+
+.welcome h2 span {
+  display: inline-block;
+  transform: translateY(calc((1 - clamp(0, var(--s) * 1.7 - var(--i) * 0.1, 1)) * 108%));
+  will-change: transform;
+}
+
+.welcomeBody {
+  display: grid;
+  gap: 32px;
+  padding: 34px var(--pad) 80px;
+}
+
+.hosts {
+  min-width: 0;
+}
+
+.hostsText {
+  max-width: 30ch;
+  font: 500 21px/1.38 var(--text);
+}
+
+.sign {
+  margin-top: 14px !important;
+  font: 600 13px/1.3 var(--text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.aims {
+  margin-top: 30px;
+}
+
+.aims > p {
+  max-width: 32ch;
+  color: var(--ink-soft);
+  font-size: 16px;
+}
+
+.aims ol {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.aims li {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font: 600 23px/1.2 var(--text);
+  letter-spacing: -0.01em;
+}
+
+.aims li::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 18px;
+  height: 9px;
+  border-radius: 18px 18px 0 0;
+  background: var(--sun);
+  box-shadow: 0 2px 0 0 var(--ink);
+}
+
+.welcomePic {
+  overflow: hidden;
+  border-radius: 3px;
+  aspect-ratio: 4 / 3;
+}
+
+.welcomePic picture,
+.welcomePic img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The guests in one voice: a single pull quote with the rating beside its name. */
+.quote {
+  position: relative;
+  margin: 0;
+  padding-top: 52px;
+}
+
+.quote::before {
+  content: '\201C';
+  position: absolute;
+  top: 0;
+  left: -4px;
+  color: var(--sun);
+  font: 110px/1 var(--display);
+}
+
+.quote blockquote {
+  margin: 0;
+}
+
+.quote p {
+  font: 40px/1.04 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.quote figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 18px;
+  margin-top: 18px;
+  font: 500 15px/1.4 var(--text);
+}
+
+.by {
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.rated b {
+  font: 400 26px/1 var(--display);
+}
+
+.rated small {
+  display: block;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+/* ---------- Plan your stay: the house is the booking. A window a couple, moons for the nights. ---------- */
+
+.plan {
+  position: relative;
+  padding: 80px var(--pad) 92px;
+  background: var(--mist);
+  scroll-margin-top: 8px;
+}
+
+.planHead h2 {
+  margin-top: 14px;
+  font-size: clamp(32px, 9.4vw, 40px);
+}
+
+.sentence {
+  display: block;
+}
+
+.planLead {
+  display: grid;
+  gap: 6px;
+  max-width: 40ch;
+  margin-top: 14px;
+  color: var(--ink-soft);
+  font-size: 16px;
+  line-height: 1.42;
+}
+
+.houseBox {
+  display: grid;
+  gap: 26px;
+  margin-top: 28px;
+}
+
+.scene {
+  position: relative;
+  min-width: 0;
+}
+
+.house {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+.house [data-part='sky'] {
+  fill: #ffcfb2;
+  transition: fill 0.8s var(--ease);
+}
+
+.houseBox[data-pack='1'] .house [data-part='sky'] {
+  fill: #ffb894;
+}
+
+.house [data-part='sun'] {
+  fill: var(--sun);
+}
+
+.house [data-part='dune'] {
+  fill: var(--sand);
+}
+
+.house [data-part='water'] {
+  fill: var(--sea);
+}
+
+.house [data-part='glint'] {
+  fill: none;
+  stroke: var(--sun-soft);
+  stroke-width: 5px;
+  stroke-linecap: round;
+}
+
+.house [data-part='beach'] {
+  fill: #f8e3b9;
+}
+
+.house [data-part='land'] {
+  fill: #284a45;
+}
+
+.house [data-part='road'] {
+  fill: #15262b;
+}
+
+.house [data-part='lines'] {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2px;
+}
+
+.house [data-part='roof'] {
+  fill: var(--ink);
+}
+
+.house [data-part='floor'] {
+  fill: #fff7ef;
+  stroke: var(--ink);
+  stroke-width: 3px;
+}
+
+.house [data-part='floor'][data-low] {
+  fill: #f6ece1;
+}
+
+.house [data-part='deck'] {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3px;
+}
+
+.house [data-part='pane'] {
+  fill: #3a4c78;
+  stroke: var(--ink);
+  stroke-width: 3px;
+  transition: fill 0.45s var(--ease);
+  transition-delay: var(--d);
+}
+
+.house [data-on] [data-part='pane'] {
+  fill: #ffd166;
+  filter: drop-shadow(0 0 10px rgba(255, 196, 70, 0.9));
+}
+
+.house [data-part='couple'] {
+  fill: #a36a2a;
+  opacity: 0;
+  transform: translateY(14px);
+  transform-box: fill-box;
+  transition: opacity 0.4s var(--ease), transform 0.6s var(--spring);
+  transition-delay: calc(var(--d) + 120ms);
+}
+
+.house [data-on] [data-part='couple'] {
+  opacity: 0.75;
+  transform: none;
+}
+
+.house [data-part='sill'] {
+  stroke: var(--ink);
+  stroke-width: 3px;
+}
+
+.house [data-part='label'] {
+  fill: var(--ink);
+  font: 600 19px/1 var(--text);
+  letter-spacing: 0.06em;
+  text-anchor: middle;
+  text-transform: uppercase;
+}
+
+.house [data-part='label'][data-light] {
+  fill: #fff;
+}
+
+.win {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  height: var(--h);
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.win:hover {
+  background: rgba(255, 209, 102, 0.25);
+}
+
+.moons {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.moonBtn {
+  display: inline-flex;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 600 15px/1 var(--text);
+  cursor: pointer;
+  transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.moonBtn span {
+  display: inline-flex;
+  gap: 4px;
+}
+
+@media (max-width: 899px) {
+  .moonBtn {
+    flex-direction: column;
+    gap: 6px;
+    min-height: 62px;
+    padding: 8px 10px;
+  }
+}
+
+.moonBtn i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-shadow: inset -4px 2px 0 0 currentColor;
+  transform: rotate(-18deg);
+}
+
+.moonBtn[aria-pressed='true'] {
+  background: var(--c-night);
+  border-color: var(--c-night);
+  color: #fff;
+}
+
+.moonBtn[aria-pressed='true'] i {
+  box-shadow: inset -4px 2px 0 0 var(--sand);
+}
+
+.tapHint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px !important;
+  color: var(--ink-soft);
+  font: 500 15px/1.3 var(--text);
+}
+
+.tapHint::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 18px;
+  height: 14px;
+  border: 2px solid var(--ink);
+  border-radius: 2px;
+  background: #ffd166;
+}
+
+.houseSide {
+  min-width: 0;
+}
+
+.dayRow ol {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dayRow li {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  margin-right: 22px;
+  border-radius: 50%;
+  background: var(--sun);
+  animation: day-up 0.7s var(--spring) both;
+  animation-delay: calc(var(--i) * 90ms);
+}
+
+.dayRow li:last-child {
+  margin-right: 0;
+}
+
+/* Between two days, a night. */
+.dayRow li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 5px);
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  border-radius: 50%;
+  box-shadow: inset -4px 2px 0 0 var(--c-night);
+}
+
+.daysLine {
+  margin-top: 10px !important;
+  font: 600 16px/1.3 var(--text);
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px !important;
+  font: 500 15px/1.3 var(--text);
+}
+
+.meta i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.minimum {
+  margin-top: 2px !important;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.minimum[data-nudge] {
+  animation: nudge 0.5s var(--ease);
+}
+
+.costRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  margin-top: 6px;
+}
+
+.figure {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.figure b {
+  display: inline-block;
+  font: 400 54px/1.05 var(--display);
+  animation: price-in 0.55s var(--spring) both;
+}
+
+.figure span {
+  font: 600 15px/1 var(--text);
+}
+
+.send {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 20px 0 22px;
+  border-radius: 4px;
+  background: var(--sun);
+  color: var(--ink);
+  font: 700 17px/1 var(--text);
+  text-decoration: none;
+  will-change: transform;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  margin-top: 16px;
+  font: 600 16px/1.3 var(--text);
+  cursor: pointer;
+}
+
+.toggle input {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  accent-color: var(--ink);
+}
+
+.extra {
+  max-width: 40ch;
+  color: var(--ink-soft);
+  font-size: 14.5px;
+  line-height: 1.4;
+}
+
+.wish {
+  margin-top: 12px !important;
+  padding: 10px 12px;
+  border-radius: 4px;
+  background: var(--paper);
+  font-size: 15px;
+  line-height: 1.4;
+  animation: fade 0.4s var(--ease) both;
+}
+
+.sendNote {
+  max-width: 42ch;
+  margin-top: 12px !important;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+
+.plus {
+  margin-top: 26px;
+  padding-top: 18px;
+  border-top: 2px solid var(--ink);
+}
+
+.plus > p:first-child {
+  font: 600 12.5px/1.3 var(--text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.plus > p:last-child {
+  max-width: 40ch;
+  margin-top: 14px;
+  color: var(--ink-soft);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.plus ul {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plus li {
+  position: relative;
+  padding-left: 26px;
+  font: 500 16.5px/1.35 var(--text);
+  animation: fade 0.5s var(--ease) both;
+  animation-delay: calc(var(--i) * 60ms);
+}
+
+.plus li::before {
+  content: '+';
+  position: absolute;
+  top: -0.1em;
+  left: 2px;
+  font: 500 23px/1 var(--text);
+}
+
+/* ---------- The close: the sun goes down into the harbour; the way to reach them stands on the horizon. ---------- */
+
+.end {
+  position: relative;
+  background: var(--c-night);
+}
+
+.dusk {
+  position: relative;
+}
+
+.duskSky {
+  position: relative;
+  overflow: hidden;
+  padding: 88px var(--pad) 22px;
+  background: linear-gradient(180deg, #ffe0cc 0%, #ffbf9b 62%, #ffa27a 100%);
+  color: var(--ink);
+}
+
+.duskSky > :not(.setSun) {
+  position: relative;
+  z-index: 1;
+}
+
+.duskSky h2 {
+  max-width: 10ch;
+}
+
+.travel {
+  display: grid;
+  gap: 10px;
+  max-width: 32ch;
+  margin-top: 18px;
+  font: 500 17px/1.4 var(--text);
+}
+
+.setSun {
+  position: absolute;
+  right: -10vw;
+  bottom: 0;
+  width: 46vw;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--sun);
+  transform: translateY(calc(32% + var(--s) * 68%));
+}
+
+.onLine {
+  display: grid;
+  gap: 2px;
+  max-width: 62%;
+  margin-top: 64px;
+}
+
+.linePlace {
+  font: 700 12.5px/1.3 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.lineLink {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  min-height: 40px;
+  padding-top: 8px;
+  color: var(--ink);
+  font: 700 18px/1.2 var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.lineLink span {
+  min-width: 3.4em;
+  font: 600 12.5px/1 var(--text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.lineLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.duskSea {
+  position: relative;
+  overflow: hidden;
+  padding: 30px var(--pad) 104px;
+  border-top: 2px solid var(--ink);
+  color: #fff;
+}
+
+.setGlint {
+  position: absolute;
+  top: 6px;
+  right: 8vw;
+  width: 22vw;
+  height: 90px;
+  background: repeating-linear-gradient(180deg, var(--sun) 0 3px, transparent 3px 14px);
+  -webkit-mask-image: linear-gradient(180deg, #000 10%, transparent);
+  mask-image: linear-gradient(180deg, #000 10%, transparent);
+  opacity: calc(1 - var(--s) * 0.7);
+}
+
+.hours {
+  position: relative;
+  max-width: 30ch;
+  color: #e3e8f6;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.duskSea .go {
+  position: relative;
+  margin-top: 22px;
+}
+
+.end a:focus-visible,
+.foot a:focus-visible,
+.foot button:focus-visible {
+  outline-color: #fff;
+}
+
+.duskSky a:focus-visible {
+  outline-color: var(--ink);
+}
+
+/* ---------- Night: the guitar comes out. ---------- */
+
+.foot {
+  position: relative;
+  overflow: hidden;
+  padding: 72px 0 104px;
+  background: var(--deep);
+  color: #fff;
+}
+
+.crescent {
+  position: absolute;
+  top: 34px;
+  right: 30px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  box-shadow: inset -13px 5px 0 0 var(--sand);
+  transform: rotate(-18deg);
+}
+
+.footLine {
+  max-width: 15ch;
+  padding: 0 var(--pad);
+  font: 28px/1.15 var(--display);
+}
+
+.strings {
+  margin-top: 26px;
+}
+
+.strings svg {
+  display: block;
+  width: 100%;
+  height: 148px;
+  touch-action: pan-y;
+}
+
+.strings path {
+  fill: none;
+  stroke: var(--sand);
+  vector-effect: non-scaling-stroke;
+}
+
+.strum {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin: 10px var(--pad) 0;
+  padding: 0 16px;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  border-radius: 4px;
+  background: transparent;
+  color: #fff;
+  font: 600 14px/1 var(--text);
+  cursor: pointer;
+}
+
+.footBase {
+  display: grid;
+  gap: 16px;
+  margin-top: 46px;
+  padding: 26px var(--pad) 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.footName {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 10px;
+  font: 700 14px/1.3 var(--text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.footName i {
+  width: 18px;
+  height: 9px;
+  border-radius: 18px 18px 0 0;
+  background: var(--sun);
+  box-shadow: 0 2px 0 0 #fff;
+}
+
+.footName span {
+  grid-column: 2;
+  color: #cfd6ea;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+.foot :global(.demo-foot-note) {
+  margin: 0;
+  color: #cfd6ea;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.foot :global(.demo-foot-note a) {
+  color: #fff;
+}
+
+.root :global(.float-main),
+.root :global(.float-call) {
+  box-shadow: 0 0 0 2px var(--ink);
+}
+
+
+/* ---------- Motion ---------- */
+
+@keyframes rise {
+  from {
+    transform: translateY(105%);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes gather {
+  from {
+    transform: translate(var(--fx), var(--fy)) rotate(var(--fr));
+  }
+}
+
+@keyframes sun-up {
+  from {
+    transform: translateY(260px);
+  }
+}
+
+@keyframes settle {
+  from {
+    scale: 1.06;
+  }
+}
+
+@keyframes ping {
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+
+@keyframes day-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.4);
+  }
+}
+
+@keyframes price-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.3em);
+  }
+}
+
+@keyframes nudge {
+  20% {
+    transform: translateX(-6px);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+  80% {
+    transform: translateX(-2px);
+  }
+}
+
+/* With reduced motion asked for: the days and nights stand one after another, each simply shown. */
+@media (prefers-reduced-motion: reduce) {
+  .daysTrack {
+    height: auto;
+  }
+
+  .daysTrack [data-frame] {
+    position: relative;
+    height: auto;
+    overflow: visible;
+    background: transparent;
+  }
+
+  .stage,
+  .water,
+  .tally {
+    display: none;
+  }
+
+  .daysHead {
+    position: static;
+    padding: 76px var(--pad) 10px;
+  }
+
+  .daysHead .kicker {
+    display: inline-flex;
+  }
+
+  .daysHead h2 {
+    margin-top: 12px;
+    font-size: clamp(32px, 9vw, 40px);
+  }
+
+  .step {
+    position: relative;
+    display: grid;
+    overflow: hidden;
+    padding: 30px var(--pad) 34px;
+  }
+
+  .step[data-kind='night'] {
+    background: var(--c-night);
+    color: #fff;
+  }
+
+  .step + .step {
+    border-top: 2px solid var(--ink);
+  }
+
+  .stepName,
+  .stepBody,
+  .stepPhoto {
+    position: static;
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+  }
+
+  .stepName {
+    font-size: 60px;
+    line-height: 1;
+  }
+
+  .stepBody {
+    display: grid;
+    gap: 16px;
+    margin-top: 12px;
+  }
+
+  .stepPhoto {
+    order: 2;
+    height: 58vw;
+    max-height: 420px;
+    margin: 0;
+  }
+
+  .stepPhoto::before,
+  .stepPhoto::after {
+    display: none;
+  }
+
+  .step[data-kind='night'] .stepPhoto {
+    display: none;
+  }
+
+  .stepText {
+    padding: 0;
+  }
+
+  .beats li {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) and (min-width: 900px) {
+  .stepBody {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 64px;
+    align-items: start;
+  }
+
+  .stepPhoto {
+    order: 0;
+    grid-column: 2;
+    height: 360px;
+  }
+
+  .stepText {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+/* ---------- Wide screens ---------- */
+
+@media (min-width: 760px) {
+  .dock {
+    position: fixed;
+    right: 24px;
+    bottom: 22px;
+    z-index: 44;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+    padding: 0 22px 0 18px;
+    border-radius: 4px;
+    background: var(--sun);
+    color: var(--ink);
+    box-shadow: 0 0 0 2px var(--ink);
+    font: 700 16px/1 var(--text);
+    text-decoration: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(16px);
+    transition: opacity 0.4s var(--ease), transform 0.5s var(--ease), visibility 0.4s;
+  }
+
+  .dock i {
+    box-shadow: 0 2px 0 0 var(--ink);
+  }
+
+  .dock small {
+    padding-left: 12px;
+    border-left: 1.5px solid rgba(15, 42, 51, 0.4);
+    font: 500 14px/1 var(--text);
+  }
+
+  :global([data-past-hero]) .dock {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+}
+
+@media (min-width: 900px) {
+  .root {
+    --pad: 56px;
+    font-size: 18px;
+  }
+
+  .root h2 {
+    font-size: clamp(58px, 5.4vw, 88px);
+  }
+
+  .kicker {
+    font-size: 14px;
+  }
+
+  /* The first screen: their photograph at its own size along the foot of the screen, its sky carried up behind the words. */
+  .hero {
+    --band: calc(min(100vw, 1535px) * var(--ar));
+    min-height: max(calc(100svh - var(--bar-h)), calc(var(--band) + 160px));
+    background: linear-gradient(180deg, #1d54a5 0%, #3d88d6 calc(100% - var(--band) * 0.92), #4593df calc(100% - var(--band) * 0.76), #4593df 100%);
+  }
+
+  .heroFrame {
+    top: auto;
+    bottom: 0;
+    width: min(100vw, 1535px);
+    height: auto;
+    translate: -50% 0;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 24%);
+    mask-image: linear-gradient(180deg, transparent 0, #000 24%);
+  }
+
+  .heroTop {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 32px;
+    padding-top: 24px;
+  }
+
+  .mark {
+    display: inline-flex;
+    gap: 0.45em;
+    font-size: 14px;
+  }
+
+  .mark i {
+    margin-right: 6px;
+  }
+
+  .heroNav {
+    display: block;
+    justify-self: end;
+  }
+
+  .heroLinks {
+    display: flex;
+    gap: 30px;
+  }
+
+  .heroLinks a {
+    position: relative;
+    display: inline-block;
+    padding: 12px 0;
+    color: #fff;
+    font: 600 15px/1 var(--text);
+    text-decoration: none;
+  }
+
+  .heroLinks a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 6px;
+    height: 2px;
+    background: var(--sun);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform 0.5s var(--ease);
+  }
+
+  .heroLinks a:hover::after {
+    transform: none;
+  }
+
+  .place {
+    font-size: 14px;
+  }
+
+  .heroWords {
+    padding-top: 24px;
+  }
+
+  .lead {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+  }
+
+  .leadSmall {
+    display: inline;
+    font-size: 20px;
+  }
+
+  .gather {
+    display: inline-block;
+    margin-top: 0;
+    font-size: clamp(48px, 4.4vw, 72px);
+  }
+
+  .root h1 {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 0.26em;
+    margin-top: 6px;
+    font-size: clamp(96px, 8.8vw, 152px);
+  }
+
+  .line + .line {
+    padding-left: 0;
+  }
+
+  .heroFoot {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+    padding-bottom: 40px;
+  }
+
+  .sub {
+    max-width: 26ch;
+    font-size: 24px;
+    line-height: 1.3;
+  }
+
+  .act {
+    margin-top: 0;
+    gap: 22px;
+  }
+
+  .price b {
+    font-size: 32px;
+  }
+
+  .price {
+    font-size: 15px;
+  }
+
+  /* Adventures: the map on the left, the card for the pin on the right. */
+  .play {
+    padding: 112px 0 112px;
+  }
+
+  .playHead h2 {
+    max-width: none;
+    font-size: clamp(72px, 6.6vw, 112px);
+  }
+
+  .mapBox {
+    display: grid;
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+    column-gap: 56px;
+    align-items: start;
+    margin-top: 48px;
+    padding: 0 var(--pad);
+  }
+
+  .map {
+    grid-column: 1;
+    border-radius: 6px;
+  }
+
+  .mPlace {
+    font-size: 13px;
+  }
+
+  .mDrawn {
+    font-size: 12.5px;
+  }
+
+  .hint {
+    grid-column: 1;
+    padding: 12px 0 0;
+  }
+
+  .panel {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    margin-top: 0;
+    padding: 0;
+  }
+
+  .cardPhoto {
+    aspect-ratio: 4 / 3;
+  }
+
+  .cardPhoto[data-empty] span {
+    font-size: 72px;
+  }
+
+  .cardName {
+    font-size: 46px;
+  }
+
+  .cardText {
+    font-size: 19px;
+  }
+
+  .playNotes {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 48px;
+    max-width: none;
+    margin-top: 44px;
+  }
+
+  .playNotes p:first-child {
+    font-size: 22px;
+  }
+
+  /* The days: the sky's lane across the top half, the words and the photograph in the water below. */
+  .daysTrack {
+    --hz: 50%;
+    --d: 130px;
+    --dm: 96px;
+    --lane-top: calc(var(--bar-h) + 196px);
+  }
+
+  .daysHead {
+    top: calc(var(--bar-h) + 36px);
+  }
+
+  .daysHead .kicker {
+    display: inline-flex;
+  }
+
+  .daysHead h2 {
+    margin-top: 10px;
+    font-size: clamp(44px, 4vw, 64px);
+  }
+
+  .tally {
+    gap: 16px;
+    margin-top: 16px !important;
+  }
+
+  .tally i {
+    width: 32px;
+    height: 32px;
+  }
+
+  .stepName {
+    font-size: 9.4vw;
+  }
+
+  .stepBody {
+    top: calc(var(--hz) + 30px);
+    bottom: 34px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 46vw;
+    gap: 56px;
+    padding: 0 var(--pad);
+  }
+
+  .stepPhoto {
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 0;
+    margin: 0;
+  }
+
+  .stepText {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 0;
+  }
+
+  .stepText h3 {
+    font-size: 36px;
+  }
+
+  .beats {
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .beats li {
+    font-size: 20px;
+  }
+
+  .moonGlint {
+    width: 90px;
+    margin-left: -17px;
+  }
+
+  /* Kia ora: the heading on its horizon, the hosts and the photograph side by side, the guests' words wide below. */
+  .welcomeSky {
+    padding-top: 140px;
+  }
+
+  .lowSun {
+    left: 50%;
+    width: 46vw;
+  }
+
+  .welcome h2 {
+    font-size: clamp(150px, 15vw, 250px);
+  }
+
+  .welcomeBody {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 64px 72px;
+    padding: 64px var(--pad) 120px;
+  }
+
+  .hostsText {
+    font-size: clamp(24px, 2vw, 30px);
+  }
+
+  .aims li {
+    font-size: clamp(28px, 2.4vw, 36px);
+  }
+
+  .welcomePic {
+    aspect-ratio: auto;
+    min-height: 100%;
+  }
+
+  .quote {
+    grid-column: 1 / -1;
+    padding-top: 92px;
+  }
+
+  .quote::before {
+    font-size: 190px;
+  }
+
+  .quote p {
+    max-width: 18ch;
+    font-size: clamp(64px, 6.2vw, 104px);
+    line-height: 0.98;
+  }
+
+  .quote figcaption {
+    margin-top: 28px;
+    font-size: 17px;
+  }
+
+  .rated b {
+    font-size: 34px;
+  }
+
+  /* The plan: the house large on the left, the price and the send on the right. */
+  .plan {
+    padding: 128px var(--pad) 140px;
+  }
+
+  .planHead {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+    column-gap: 64px;
+    align-items: end;
+  }
+
+  .planHead .kicker {
+    grid-column: 1 / -1;
+  }
+
+  .planHead h2 {
+    grid-column: 1;
+    font-size: clamp(54px, 4.6vw, 78px);
+  }
+
+  .planLead {
+    grid-column: 2;
+    font-size: 17px;
+  }
+
+  .houseBox {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+    gap: 64px;
+    align-items: start;
+    margin-top: 48px;
+  }
+
+  .moons {
+    position: absolute;
+    top: 3.5%;
+    right: 3%;
+    z-index: 2;
+    margin: 0;
+  }
+
+  .moonBtn {
+    flex: 0 0 auto;
+    background: rgba(255, 255, 255, 0.85);
+    border-color: transparent;
+  }
+
+  .tapHint {
+    position: absolute;
+    left: 3%;
+    bottom: 4%;
+    margin: 0 !important;
+    padding: 8px 12px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .figure b {
+    font-size: 84px;
+  }
+
+  .houseSide {
+    padding-top: 8px;
+  }
+
+  .send {
+    min-height: 62px;
+    font-size: 18px;
+  }
+
+  /* The close: the words in the evening sky, the way to reach them on the horizon, the sun going down beside it. */
+  .duskSky {
+    padding: 128px var(--pad) 26px;
+  }
+
+  .duskSky h2 {
+    max-width: 12ch;
+  }
+
+  .travel {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 40px;
+    max-width: 880px;
+    font-size: 21px;
+  }
+
+  .setSun {
+    right: 8%;
+    width: 30vw;
+  }
+
+  .onLine {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 44px;
+    max-width: 62%;
+    margin-top: 76px;
+  }
+
+  .linePlace {
+    flex: 1 0 100%;
+  }
+
+  .lineLink {
+    font-size: 24px;
+  }
+
+  .duskSea {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 56px;
+    padding: 40px var(--pad) 64px;
+  }
+
+  .setGlint {
+    right: calc(8% + 6vw);
+    width: 18vw;
+    height: 140px;
+  }
+
+  .hours {
+    font-size: 19px;
+  }
+
+  .duskSea .go {
+    margin-top: 0;
+    min-height: 62px;
+    font-size: 18px;
+  }
+
+  .foot {
+    padding: 112px 0 64px;
+  }
+
+  .crescent {
+    top: 64px;
+    right: 9%;
+    width: 64px;
+    height: 64px;
+    box-shadow: inset -18px 7px 0 0 var(--sand);
+  }
+
+  .footLine {
+    max-width: 22ch;
+    font-size: 44px;
+  }
+
+  .strings {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .strings svg {
+    height: 200px;
+  }
+
+  .footBase {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 40px;
+  }
+}
+
+/* Past the photograph's own width it is not drawn any larger: it stands centred, its sides fading into the sky and the water. */
+@media (min-width: 1536px) {
+  .heroPhoto {
+    background: linear-gradient(180deg, rgba(69, 147, 223, 0) 0%, #4c9fe6 30%, #6f9fc4 38%, #2f80b6 46%, #2a6f86 100%);
+  }
+
+  .heroFrame {
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 24%), linear-gradient(90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(180deg, transparent 0, #000 24%), linear-gradient(90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
+    mask-composite: intersect;
+  }
+}
+
+@media (min-width: 900px) and (max-height: 800px) {
+  .root h1 {
+    font-size: clamp(88px, 7.6vw, 130px);
+  }
+
+  .daysTrack {
+    --lane-top: calc(var(--bar-h) + 176px);
+  }
+
+  .stepText h3 {
+    font-size: 30px;
+  }
+
+  .beats li {
+    font-size: 17.5px;
+  }
+}

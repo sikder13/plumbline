@@ -1,0 +1,1854 @@
+/* backyard: a small local crew's backyard told by its tide. A palette drawn from the place: deep sea teal, turquoise
+   shallows, sand gold for every action, dark bush green, a pale sea mist. The page goes from sky to sea to sand:
+   it opens at low tide, the sea comes in over the headline, a lagoon fills as you scroll, and it ends on the beach. */
+
+.root {
+  --mist: #eef3f1;
+  --white: #ffffff;
+  --ink: #0b2e36;
+  --ink-2: #3a575d;
+  --pale: #8fb4b3;
+  --deep: #0c4a56;
+  --deep-2: #0a3d47;
+  --foam: #d3ece8;
+  --sand: #ecc47c;
+  --sand-2: #f3dcaa;
+  --sand-ink: #6e4b17;
+  --bush: #1b4a33;
+  --sky: linear-gradient(to bottom, #d3e9ec 0%, #e8f1ee 46%, #f7eedb 100%);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring: cubic-bezier(0.34, 1.3, 0.5, 1);
+  --tide-ease: cubic-bezier(0.45, 0.05, 0.15, 1);
+  --display: 'League Spartan', 'Avenir Next', 'Futura', system-ui, sans-serif;
+  --mono: 'DM Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --hand: 'Bradley Hand', cursive;
+  --pad: 20px;
+  --float-bg: rgba(236, 196, 124, 0.97);
+  --float-ink: #0b2e36;
+  --float-font: 'League Spartan', system-ui, sans-serif;
+  --float-call-bg: rgba(238, 243, 241, 0.95);
+  --float-call-ink: #0b2e36;
+  font-family: var(--display);
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--mist);
+  overflow-x: clip;
+}
+
+.root :where(h1, h2, h3, p, figure, blockquote, ul, ol) {
+  margin: 0;
+}
+
+.root :where(h2, h3) {
+  font-family: var(--display);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.root h2 {
+  font-size: clamp(44px, 12.4vw, 60px);
+  line-height: 0.92;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.lead {
+  max-width: 36ch;
+  margin-top: 18px;
+  font-size: 19px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+/* The one action: a sand block led by a small wave. */
+.go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 60px;
+  padding: 0 28px 0 24px;
+  border-radius: 6px;
+  background: var(--sand);
+  color: var(--ink);
+  font: 700 20px/1 var(--display);
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 14px 30px -16px rgba(0, 0, 0, 0.55);
+  will-change: transform;
+}
+
+.go svg,
+.tripBook svg {
+  flex: none;
+  transition: transform 0.6s var(--ease);
+}
+
+.go:hover svg,
+.tripBook:hover svg {
+  transform: translateX(-3px) scaleX(1.15);
+}
+
+/* ---------- Hero: low tide on golden sand, and the sea comes in over the headline ---------- */
+
+.hero {
+  --fs: min(16vw, 64px);
+  --line: clamp(330px, 51svh, 540px);
+  --cut: 0.5;
+  --title-top: calc(var(--line) - var(--fs) * (1.8 + var(--cut)));
+  position: relative;
+  isolation: isolate;
+  min-height: calc(100svh - var(--bar-h));
+  padding-top: calc(var(--line) + var(--fs) * 0.62);
+  overflow: hidden;
+  background: var(--sky);
+}
+
+.coast {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: var(--line);
+  z-index: 0;
+  line-height: 0;
+  pointer-events: none;
+}
+
+.coast svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.wide {
+  display: none !important;
+}
+
+/* Rippled sand where the sea has gone out. */
+.flats {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: var(--line);
+  bottom: 0;
+  z-index: 0;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='44'%3E%3Cpath d='M0 12C27 5 53 5 80 12S133 19 160 12M-40 34C-13 27 13 27 40 34S93 41 120 34S173 27 200 34' fill='none' stroke='%23c4914a' stroke-width='2' opacity='.45'/%3E%3C/svg%3E") 0 6px / 160px 44px,
+    linear-gradient(to bottom, #f1d697, #e3b86c 60%, #d8a95a);
+}
+
+.top {
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  top: 0;
+  z-index: 4;
+  display: grid;
+  gap: 6px;
+  padding-top: 18px;
+}
+
+.mark {
+  justify-self: start;
+  font: 800 17px/1 var(--display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.place {
+  font: 400 11px/1.2 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.title {
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  top: var(--title-top);
+  z-index: 2;
+  font: 800 var(--fs) / 0.9 var(--display);
+  letter-spacing: -0.045em;
+  color: var(--ink);
+}
+
+.line {
+  display: block;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+  white-space: nowrap;
+}
+
+.line > span {
+  display: inline-block;
+  animation: lift 0.8s var(--ease) both;
+  animation-delay: calc(var(--i) * 0.07s);
+}
+
+/* The sea: the whole hero's size, shown only below a wavy surface at the waterline, and rising from the
+   foot of the screen to it. What it carries inside, the copy of the headline, holds still while it rises. */
+.sea {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent var(--line), rgba(86, 200, 189, 0.86) var(--line), #1e8e92 calc(var(--line) + 28px), #11666f calc(var(--line) + 120px), var(--deep) 100%);
+  -webkit-mask:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='20'%3E%3Cpath d='M0 10C33 3 67 3 100 10S167 17 200 10V20H0Z'/%3E%3C/svg%3E") 0 calc(var(--line) - 10px) / 200px 20px repeat-x,
+    linear-gradient(#000, #000) 0 calc(var(--line) + 9px) / 100% 100% no-repeat;
+  mask:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='20'%3E%3Cpath d='M0 10C33 3 67 3 100 10S167 17 200 10V20H0Z'/%3E%3C/svg%3E") 0 calc(var(--line) - 10px) / 200px 20px repeat-x,
+    linear-gradient(#000, #000) 0 calc(var(--line) + 9px) / 100% 100% no-repeat;
+  animation: tide-in 1.6s var(--tide-ease) 0.1s both;
+}
+
+.seaIn {
+  position: absolute;
+  inset: 0;
+  animation: tide-hold 1.6s var(--tide-ease) 0.1s both;
+}
+
+/* The headline seen through the water: lighter, and shifted a little, as water bends it. */
+.titleUnder {
+  z-index: auto;
+  color: #c6f0e8;
+  transform: translateX(3px);
+}
+
+.foam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--line) - 10px);
+  height: 20px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='20'%3E%3Cpath d='M0 10C33 3 67 3 100 10S167 17 200 10' fill='none' stroke='white' stroke-width='3'/%3E%3C/svg%3E") 0 0 / 200px 20px repeat-x;
+  opacity: 0.9;
+}
+
+/* A double kayak paddles in on the new water, then rides it. It rises with the sea. */
+.boat {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  animation: tide-in 1.6s var(--tide-ease) 0.1s both;
+}
+
+.paddlers {
+  position: absolute;
+  left: 70%;
+  top: calc(var(--line) - 26px);
+  width: 96px;
+  height: auto;
+  animation:
+    paddle-in 2.4s var(--ease) 1.05s both,
+    bob 2.6s cubic-bezier(0.45, 0, 0.55, 1) 3.4s infinite alternate;
+}
+
+.hull {
+  fill: #f2b23e;
+}
+
+.offer {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  gap: 22px;
+  padding: 0 var(--pad) 40px;
+  color: var(--white);
+}
+
+.offer > * {
+  animation: surface 0.8s var(--ease) both;
+}
+
+.offer > :nth-child(1) {
+  animation-delay: 1s;
+}
+
+.offer > :nth-child(2) {
+  animation-delay: 1.12s;
+}
+
+.offerText {
+  display: grid;
+  gap: 8px;
+}
+
+.sub {
+  max-width: 22ch;
+  font: 600 22px/1.2 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.small {
+  max-width: 34ch;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--foam);
+}
+
+.offerAct {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 22px;
+}
+
+.from {
+  font: 500 17px/1.25 var(--display);
+  color: var(--foam);
+}
+
+.from b {
+  display: inline-block;
+  margin: 0 2px;
+  font: 800 38px/1 var(--display);
+  letter-spacing: -0.03em;
+  color: var(--sand);
+  vertical-align: -4px;
+}
+
+/* ---------- Heaven on earth: the sea carries on, and the backyard drifts past ---------- */
+
+.heaven {
+  padding: 64px var(--pad) 72px;
+  overflow: clip;
+  background: var(--deep);
+  color: var(--white);
+}
+
+.heavenLine {
+  display: grid;
+  font-size: clamp(36px, 10.4vw, 50px) !important;
+  line-height: 0.98 !important;
+}
+
+.heavenLine span + span {
+  font-weight: 300;
+  color: var(--sand);
+}
+
+.sightsLabel {
+  margin-top: 44px;
+  font: 400 12px/1.2 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--foam);
+}
+
+.sightsWrap {
+  margin: 12px calc(var(--pad) * -1) 0;
+  padding: 0 var(--pad);
+}
+
+.sights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 0;
+  padding: 0;
+  list-style: none;
+  font: 700 22px/1.2 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.sights li {
+  white-space: nowrap;
+}
+
+.sights li::after {
+  content: '';
+  display: inline-block;
+  width: 0.3em;
+  height: 0.3em;
+  margin: 0 0.55em;
+  border-radius: 50%;
+  background: var(--sand);
+  vertical-align: 0.18em;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .sightsWrap {
+      overflow: clip;
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+      mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+    }
+
+    .sights {
+      flex-wrap: nowrap;
+      width: max-content;
+      font-size: clamp(28px, 7.4vw, 72px);
+      animation: drift linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
+    }
+  }
+}
+
+/* ---------- The crew, led by their faces ---------- */
+
+.crew {
+  display: grid;
+  gap: 36px;
+  padding: 88px var(--pad) 84px;
+  background: var(--mist);
+}
+
+.stage {
+  display: grid;
+  justify-items: start;
+}
+
+.deck {
+  position: relative;
+  width: min(80vw, 360px);
+  aspect-ratio: 4 / 5;
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+}
+
+.card {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--deep);
+  box-shadow: 0 30px 56px -30px rgba(11, 46, 54, 0.7);
+  transform-origin: 50% 100%;
+  transition:
+    transform 0.75s var(--spring),
+    opacity 0.45s var(--ease);
+}
+
+.card[data-pos='0'] {
+  z-index: 4;
+}
+
+.card[data-pos='1'] {
+  z-index: 3;
+  transform: translate(7%, 3%) scale(0.95);
+}
+
+.card[data-pos='2'] {
+  z-index: 2;
+  transform: translate(14%, 6%) scale(0.9);
+}
+
+.card[data-pos='back'] {
+  z-index: 1;
+  opacity: 0;
+  transform: translate(14%, 6%) scale(0.9);
+}
+
+.card[data-pos='out'] {
+  z-index: 5;
+  opacity: 0;
+  transform: translate(-108%, 0) rotate(-5deg);
+}
+
+.cardPhoto {
+  width: 100%;
+  height: 100%;
+}
+
+.cardPhoto picture,
+.cardPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cardPhoto img {
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* The one place the page writes by hand: each crew member's nickname. */
+.tag {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  max-width: calc(100% - 28px);
+  padding: 2px 12px 4px;
+  border-radius: 6px;
+  background: var(--mist);
+  color: var(--bush);
+  font: 700 36px/1.05 var(--hand);
+}
+
+.caption {
+  display: grid;
+  gap: 6px;
+  min-height: 6.6em;
+  max-width: 32ch;
+  margin-top: 24px;
+}
+
+.who {
+  font: 400 12px/1.2 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--bush);
+}
+
+.said {
+  font: 500 21px/1.3 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.cue {
+  margin-top: 8px;
+  font: 400 12px/1.2 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.faces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.face,
+.nextBtn {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 50%;
+  background: var(--deep);
+  cursor: pointer;
+  box-shadow: 0 0 0 0 var(--sand);
+  transition:
+    box-shadow 0.35s var(--ease),
+    transform 0.35s var(--spring);
+}
+
+.face picture,
+.face img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.face img {
+  object-fit: cover;
+}
+
+.face[aria-pressed='true'] {
+  box-shadow: 0 0 0 3px var(--mist), 0 0 0 6px var(--sand);
+  transform: scale(1.06);
+}
+
+.nextBtn {
+  background: var(--ink);
+  color: var(--mist);
+}
+
+.crewFoot {
+  display: grid;
+  gap: 18px;
+}
+
+.crewLine {
+  max-width: 28ch;
+  font: 500 24px/1.25 var(--display);
+  letter-spacing: -0.015em;
+  color: var(--ink-2);
+}
+
+.others {
+  max-width: 44ch;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+/* ---------- The tide: a lagoon in cross section; the water follows the scroll ---------- */
+
+.tide {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(58svh, 1fr);
+  min-height: max(100svh, 760px);
+  overflow: clip;
+  background: var(--sky);
+}
+
+.tideSky {
+  position: relative;
+  z-index: 5;
+  padding: 72px var(--pad) 8px;
+}
+
+.tideWords {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.tideLead {
+  max-width: 38ch;
+  font-size: 17px;
+  line-height: 1.42;
+  color: var(--ink-2);
+}
+
+.tideNote {
+  max-width: 44ch;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.tideNote a {
+  color: var(--ink);
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+
+.basin {
+  position: relative;
+  min-height: 420px;
+}
+
+.ground {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+}
+
+.tideWater,
+.surface {
+  position: absolute;
+  inset: 0;
+  transform: translateY(50%);
+}
+
+.tideWater {
+  z-index: 2;
+  background: linear-gradient(to bottom, rgba(70, 190, 182, 0.92) 0, #1d8a8f 6%, #11666f 22%, var(--deep) 50%);
+}
+
+.tideFoam {
+  position: absolute;
+  inset: -3px 0 auto;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.85);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='6'%3E%3Cpath d='M0 3C20 0 40 0 60 3S100 6 120 3V6H0Z'/%3E%3C/svg%3E") 0 0 / 120px 6px repeat-x;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='6'%3E%3Cpath d='M0 3C20 0 40 0 60 3S100 6 120 3V6H0Z'/%3E%3C/svg%3E") 0 0 / 120px 6px repeat-x;
+}
+
+.sandWord {
+  position: absolute;
+  left: 30%;
+  top: 62%;
+  z-index: 1;
+  display: none;
+  white-space: nowrap;
+  font: 800 clamp(22px, 2.6vw, 38px) / 1 var(--display);
+  letter-spacing: -0.02em;
+  color: var(--sand-ink);
+}
+
+.lowMark {
+  position: absolute;
+  left: 52%;
+  right: 0;
+  top: 85%;
+  z-index: 4;
+  display: none;
+  border-top: 2px dashed rgba(11, 46, 54, 0.45);
+}
+
+.lowMark span {
+  position: absolute;
+  right: var(--pad);
+  top: 6px;
+  font: 400 11px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.surface {
+  z-index: 4;
+  pointer-events: none;
+}
+
+/* The rise, riding the surface. */
+.rider {
+  position: absolute;
+  right: var(--pad);
+  bottom: calc(100% + 6px);
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  color: var(--ink);
+}
+
+.rider small {
+  font: 400 12px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.rider b {
+  font: 800 clamp(38px, 10vw, 60px) / 0.8 var(--display);
+  letter-spacing: -0.05em;
+}
+
+.arrival {
+  position: absolute;
+  left: 28%;
+  top: -21px;
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  width: 46%;
+}
+
+.tideKayak {
+  width: 72px;
+  height: auto;
+}
+
+.kayakTag {
+  font: 700 17px/1.15 var(--display);
+  color: var(--white);
+}
+
+/* With scroll timelines, the scroll alone brings the tide in: no script and no pinning. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .basin {
+      view-timeline: --bytide block;
+    }
+
+    .lowMark {
+      display: block;
+    }
+
+    .tideWater,
+    .surface,
+    .arrival {
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: --bytide;
+    }
+
+    .tideWater,
+    .surface {
+      animation-name: tide-scroll;
+      animation-range: contain 0% contain 100%;
+    }
+
+    .arrival {
+      animation-name: arrive;
+      animation-range: contain 70% contain 100%;
+    }
+  }
+}
+
+/* ---------- Reviews: their words, filled in as they are read ---------- */
+
+.proof {
+  display: grid;
+  gap: 30px;
+  padding: 88px var(--pad) 96px;
+  background: var(--deep);
+  color: var(--white);
+}
+
+.quote p {
+  font: 600 clamp(28px, 7.6vw, 34px) / 1.18 var(--display);
+  letter-spacing: -0.025em;
+}
+
+.fillWord {
+  color: color-mix(in srgb, var(--white) calc(clamp(0, var(--f) * var(--n) - var(--i), 1) * 100%), var(--pale));
+}
+
+.quote footer {
+  margin-top: 18px;
+  font: 400 12px/1.2 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--foam);
+}
+
+.proofPhoto {
+  order: 2;
+  width: min(100%, 420px);
+}
+
+.proofPhoto picture,
+.proofPhoto img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.proofPhoto img {
+  aspect-ratio: 800 / 658;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.proofPhoto figcaption {
+  margin-top: 10px;
+  font: 400 11px/1.3 var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--foam);
+}
+
+.score {
+  order: 3;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+}
+
+.score b {
+  font: 800 54px/1 var(--display);
+  letter-spacing: -0.04em;
+  color: var(--sand);
+}
+
+.score span {
+  font: 600 18px/1.2 var(--display);
+}
+
+.score small {
+  flex-basis: 100%;
+  font: 400 11px/1.2 var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--foam);
+}
+
+/* ---------- Book: a sentence that becomes the one trip to book ---------- */
+
+.trips {
+  padding: 92px var(--pad) 72px;
+  background: var(--mist);
+}
+
+.day {
+  margin-top: 40px;
+}
+
+.sentence {
+  font: 800 clamp(30px, 8.4vw, 40px) / 1.24 var(--display);
+  letter-spacing: -0.03em;
+}
+
+.slot {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  min-height: 44px;
+  margin: 2px 0;
+  padding: 0.05em 0.26em 0;
+  border: 0;
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--sand);
+  font: inherit;
+  letter-spacing: inherit;
+  vertical-align: baseline;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    background-color 0.3s var(--ease),
+    color 0.3s var(--ease);
+}
+
+.slot:hover,
+.slot[data-pressed] {
+  background: var(--sand);
+  color: var(--ink);
+}
+
+.fixed {
+  cursor: default;
+}
+
+.fixed:hover {
+  background: var(--ink);
+  color: var(--sand);
+}
+
+.slot svg {
+  flex: none;
+  width: 0.42em;
+  height: 0.42em;
+}
+
+.word {
+  display: inline-block;
+  animation: roll 0.55s var(--ease) both;
+}
+
+.hint {
+  margin-top: 14px;
+  font: 400 12px/1.2 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+/* The trip, set as a card on the sand. */
+.answer {
+  display: grid;
+  gap: 18px;
+  margin-top: 30px;
+  padding: 24px 20px 22px;
+  border-radius: 18px;
+  background: var(--white);
+  box-shadow: 0 34px 70px -40px rgba(11, 46, 54, 0.55);
+  animation: rise-in 0.6s var(--ease) both;
+}
+
+.tripName {
+  font-size: clamp(36px, 10vw, 50px);
+  line-height: 0.95;
+}
+
+.when {
+  margin-top: -8px;
+  font: 400 13px/1.35 var(--mono);
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+}
+
+/* The trip's day across a waterline: on foot above it, in a kayak below it, on the water taxi along it. */
+.legs {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  padding: 4px 0;
+  list-style: none;
+}
+
+.legs::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: #1d8a8f;
+}
+
+.legs::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  right: 0;
+  border-radius: 0 10px 10px 0;
+  background: rgba(29, 138, 143, 0.12);
+}
+
+.legs li {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  animation: rise-in 0.55s var(--ease) both;
+  animation-delay: calc(0.1s + var(--j) * 0.09s);
+}
+
+.legs b {
+  font: 700 13px/1 var(--display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.legs span {
+  font: 400 12px/1.3 var(--mono);
+}
+
+.legs [data-leg='walk'],
+.legs [data-leg='beach'] {
+  grid-column: 1;
+  background: var(--sand-2);
+  color: var(--ink);
+}
+
+.legs [data-leg='kayak'] {
+  grid-column: 2;
+  background: #11666f;
+  color: var(--white);
+}
+
+.legs [data-leg='taxi'] {
+  grid-column: 1 / -1;
+  justify-self: center;
+  min-width: 60%;
+  background: var(--white);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px #1d8a8f;
+  text-align: center;
+}
+
+.tripText {
+  max-width: 46ch;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.buy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(11, 46, 54, 0.12);
+}
+
+.price {
+  font: 800 clamp(34px, 9.4vw, 46px) / 1 var(--display);
+  letter-spacing: -0.03em;
+}
+
+.price small {
+  font: 500 16px/1 var(--display);
+  letter-spacing: 0;
+  color: var(--ink-2);
+}
+
+.noPrice {
+  font: 500 17px/1.3 var(--display);
+  color: var(--ink-2);
+}
+
+.tripBook {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 60px;
+  padding: 0 28px 0 24px;
+  border-radius: 6px;
+  background: var(--sand);
+  color: var(--ink);
+  font: 700 20px/1 var(--display);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.notes {
+  display: grid;
+  gap: 10px;
+  max-width: 62ch;
+  margin-top: 30px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+/* ---------- The page ends on the beach ---------- */
+
+.foot {
+  position: relative;
+  display: grid;
+  gap: 26px;
+  padding: 72px var(--pad) 120px;
+  color: var(--ink);
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='44'%3E%3Cpath d='M0 12C27 5 53 5 80 12S133 19 160 12M-40 34C-13 27 13 27 40 34S93 41 120 34S173 27 200 34' fill='none' stroke='%23c4914a' stroke-width='2' opacity='.4'/%3E%3C/svg%3E") 0 0 / 160px 44px,
+    linear-gradient(to bottom, #f3dcaa, #ebc887);
+}
+
+.foot::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: 22px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='22'%3E%3Cpath d='M0 0H200V8C167 16 133 16 100 9S33 1 0 8Z' fill='%23eef3f1'/%3E%3Cpath d='M0 8C33 1 67 1 100 9S167 16 200 8' fill='none' stroke='white' stroke-width='3'/%3E%3C/svg%3E") 0 0 / 200px 22px repeat-x;
+}
+
+.kristin {
+  max-width: 30ch;
+  font: 600 24px/1.25 var(--display);
+  letter-spacing: -0.015em;
+}
+
+.lines {
+  display: grid;
+  gap: 14px;
+}
+
+.lines a {
+  display: grid;
+  gap: 4px;
+  justify-self: start;
+  min-height: 44px;
+  font: 800 clamp(26px, 7.6vw, 34px) / 1.05 var(--display);
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.lines a span {
+  font: 400 11px/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sand-ink);
+}
+
+.alt {
+  font-size: 16px;
+}
+
+.alt a {
+  color: var(--ink);
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+
+.footBase {
+  display: grid;
+  gap: 8px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(110, 75, 23, 0.25);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.welcome {
+  max-width: 40ch;
+  font-weight: 600;
+}
+
+.foot :global(.demo-foot-note) {
+  margin-top: 8px;
+  color: var(--sand-ink);
+  opacity: 1;
+}
+
+/* Sections below the opening are laid out only as they come near, so their photographs and the handwriting
+   are not fetched while the first screen is still loading. */
+.crew,
+.proof,
+.trips,
+.foot {
+  content-visibility: auto;
+}
+
+.crew {
+  contain-intrinsic-size: auto 1500px;
+}
+
+.proof {
+  contain-intrinsic-size: auto 1100px;
+}
+
+.trips {
+  contain-intrinsic-size: auto 1500px;
+}
+
+.foot {
+  contain-intrinsic-size: auto 700px;
+}
+
+[data-awake] {
+  --hand: 'Caveat', 'Bradley Hand', cursive;
+}
+
+/* ---------- Desktop dock and the tide gauge on the edge ---------- */
+
+.dock,
+.gauge {
+  display: none;
+}
+
+/* ---------- Keyframes ---------- */
+
+@keyframes lift {
+  from {
+    transform: translateY(0.12em);
+  }
+}
+
+@keyframes tide-in {
+  from {
+    transform: translateY(calc(100% - var(--line)));
+  }
+}
+
+@keyframes tide-hold {
+  from {
+    transform: translateY(calc(var(--line) - 100%));
+  }
+}
+
+@keyframes paddle-in {
+  from {
+    translate: 60vw 0;
+  }
+}
+
+@keyframes bob {
+  from {
+    rotate: -2deg;
+  }
+  to {
+    rotate: 2deg;
+  }
+}
+
+@keyframes surface {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+}
+
+@keyframes roll {
+  from {
+    opacity: 0;
+    transform: translateY(70%);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translateX(8vw);
+  }
+  to {
+    transform: translateX(calc(-100% + 40vw));
+  }
+}
+
+@keyframes now-in {
+  from {
+    transform: translateY(110%);
+  }
+}
+
+@keyframes gauge {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes tide-scroll {
+  from {
+    transform: translateY(85%);
+  }
+  to {
+    transform: translateY(50%);
+  }
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateX(70vw);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Large screens ---------- */
+
+@media (min-width: 900px) {
+  .root {
+    --pad: 56px;
+    font-size: 19px;
+  }
+
+  .root h2 {
+    font-size: clamp(64px, 6.6vw, 112px);
+  }
+
+  .wide {
+    display: block !important;
+  }
+
+  .narrow {
+    display: none !important;
+  }
+
+  .hero {
+    --fs: min(10.4vw, 18.5vh, 168px);
+    --line: clamp(440px, 64svh, 720px);
+    padding-top: calc(var(--line) + var(--fs) * 0.56);
+  }
+
+  .top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-top: 30px;
+  }
+
+  .mark {
+    font-size: 20px;
+  }
+
+  .place {
+    font-size: 12px;
+  }
+
+  .paddlers {
+    left: 58%;
+    top: calc(var(--line) - 40px);
+    width: 150px;
+  }
+
+  .offer {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 28px 56px;
+    padding-bottom: 44px;
+  }
+
+  .sub {
+    max-width: 30ch;
+    font-size: 28px;
+  }
+
+  .small {
+    font-size: 17px;
+    max-width: 46ch;
+  }
+
+  .offerAct {
+    gap: 18px 28px;
+  }
+
+  .go {
+    min-height: 66px;
+    padding: 0 32px 0 28px;
+    font-size: 22px;
+  }
+
+  .from {
+    font-size: 19px;
+  }
+
+  .from b {
+    font-size: 48px;
+  }
+
+  .heaven {
+    padding: 104px var(--pad) 96px;
+  }
+
+  .heavenLine {
+    font-size: clamp(64px, 6.4vw, 112px) !important;
+  }
+
+  .sightsLabel {
+    margin-top: 72px;
+  }
+
+  .crew {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    column-gap: 6vw;
+    padding: 136px var(--pad) 120px;
+  }
+
+  .crewHead {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .stage {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    justify-self: end;
+  }
+
+  .deck {
+    width: min(32vw, 440px);
+  }
+
+  .crewFoot {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: end;
+  }
+
+  .crewLine {
+    font-size: 34px;
+  }
+
+  .face,
+  .nextBtn {
+    width: 54px;
+    height: 54px;
+  }
+
+  .tide {
+    min-height: max(100vh, 820px);
+    grid-template-rows: auto minmax(62vh, 1fr);
+  }
+
+  .tideSky {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    column-gap: 6vw;
+    padding-top: 110px;
+  }
+
+  .tideWords {
+    margin-top: 6px;
+  }
+
+  .tideLead {
+    font-size: 20px;
+  }
+
+  .tideNote {
+    font-size: 15px;
+  }
+
+  .sandWord {
+    left: 39%;
+    font-size: clamp(22px, 2.1vw, 32px);
+  }
+
+  .rider {
+    right: 5%;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+
+  .rider small {
+    font-size: 14px;
+  }
+
+  .rider b {
+    font-size: clamp(96px, 9vw, 150px);
+  }
+
+  .arrival {
+    left: 36%;
+    top: -38px;
+    width: 26%;
+  }
+
+  .tideKayak {
+    width: 150px;
+    margin-left: 0;
+  }
+
+  .kayakTag {
+    font-size: 26px;
+  }
+
+  .lowMark span {
+    font-size: 12px;
+  }
+
+  .proof {
+    grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 6vw;
+    row-gap: 40px;
+    padding: 136px var(--pad) 136px;
+  }
+
+  .proofPhoto {
+    order: 0;
+    grid-column: 1;
+    grid-row: 1 / 3;
+    align-self: center;
+  }
+
+  .quote {
+    grid-column: 2;
+    align-self: end;
+  }
+
+  .quote p {
+    font-size: clamp(38px, 3.4vw, 56px);
+  }
+
+  .score {
+    grid-column: 2;
+    align-self: start;
+  }
+
+  .score b {
+    font-size: 72px;
+  }
+
+  .score span {
+    font-size: 22px;
+  }
+
+  .trips {
+    padding: 136px var(--pad) 112px;
+  }
+
+  .tripsHead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: end;
+    column-gap: 64px;
+  }
+
+  .tripsHead .lead {
+    margin: 0;
+    justify-self: end;
+  }
+
+  .day {
+    margin-top: 64px;
+  }
+
+  .sentence {
+    max-width: 24ch;
+    font-size: clamp(48px, 4.6vw, 74px);
+  }
+
+  .answer {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 56px;
+    row-gap: 18px;
+    margin-top: 44px;
+    padding: 40px 44px 36px;
+    border-radius: 24px;
+  }
+
+  .tripName {
+    grid-column: 1;
+    font-size: clamp(54px, 5vw, 84px);
+  }
+
+  .when {
+    grid-column: 1;
+    margin-top: -4px;
+    font-size: 14px;
+  }
+
+  .legs {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    align-self: start;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-template-rows: 1fr 1fr;
+    gap: 8px;
+    height: 220px;
+    padding: 0;
+  }
+
+  .legs::before {
+    top: 50%;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    width: auto;
+    height: 2px;
+    margin: -1px 0 0;
+  }
+
+  .legs::after {
+    top: 50%;
+    left: 0;
+    border-radius: 0 0 10px 10px;
+  }
+
+  .legs li {
+    padding: 14px 16px;
+  }
+
+  .legs b {
+    font-size: 15px;
+  }
+
+  .legs span {
+    font-size: 13px;
+  }
+
+  .legs [data-leg='walk'],
+  .legs [data-leg='beach'] {
+    grid-column: auto;
+    grid-row: 1;
+    align-self: stretch;
+    align-content: end;
+    margin-bottom: 10px;
+  }
+
+  .legs [data-leg='kayak'] {
+    grid-column: auto;
+    grid-row: 2;
+    align-self: stretch;
+    align-content: start;
+    margin-top: 10px;
+  }
+
+  .legs [data-leg='taxi'] {
+    grid-column: auto;
+    grid-row: 1 / 3;
+    align-self: center;
+    justify-self: stretch;
+    min-width: 0;
+  }
+
+  .tripText {
+    grid-column: 1;
+    font-size: 19px;
+  }
+
+  .buy {
+    grid-column: 1 / -1;
+    gap: 18px 32px;
+    padding-top: 26px;
+  }
+
+  .price {
+    font-size: 64px;
+  }
+
+  .tripBook {
+    min-height: 68px;
+    padding: 0 34px 0 30px;
+    font-size: 22px;
+  }
+
+  .notes {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    max-width: none;
+  }
+
+  .foot {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 6vw;
+    row-gap: 30px;
+    padding: 110px var(--pad) 56px;
+  }
+
+  .kristin {
+    grid-column: 1;
+    font-size: 34px;
+  }
+
+  .lines {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+
+  .lines a {
+    font-size: clamp(36px, 3.2vw, 52px);
+  }
+
+  .alt {
+    grid-column: 1;
+    align-self: end;
+  }
+
+  .footBase {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    column-gap: 40px;
+  }
+
+  .address {
+    text-align: right;
+  }
+
+  .foot :global(.demo-foot-note) {
+    grid-column: 1 / -1;
+  }
+
+  .dock {
+    position: fixed;
+    top: 16px;
+    left: var(--pad);
+    right: var(--pad);
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-14px);
+    transition:
+      opacity 0.45s var(--ease),
+      transform 0.6s var(--ease);
+  }
+
+  :global([data-past-hero]) .dock {
+    opacity: 1;
+    transform: none;
+  }
+
+  :global([data-past-hero]) .dock > * {
+    pointer-events: auto;
+  }
+
+  .dockMark,
+  .dockNow,
+  .dockBook {
+    display: inline-flex;
+    align-items: center;
+    height: 44px;
+    border-radius: 8px;
+    font: 800 15px/1 var(--display);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .dockMark {
+    padding: 0 18px;
+    background: var(--ink);
+    color: var(--mist);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .dockNow {
+    padding: 0 16px;
+    overflow: hidden;
+    background: rgba(238, 243, 241, 0.94);
+    box-shadow: inset 0 0 0 1.5px var(--ink);
+    color: var(--ink);
+    font: 400 12px/1 var(--mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    clip-path: inset(0 100% 0 0 round 8px);
+    transition: clip-path 0.6s var(--ease);
+  }
+
+  .dockNow[data-on] {
+    clip-path: inset(0 0 0 0 round 8px);
+  }
+
+  .dockNow > span {
+    display: inline-block;
+    animation: now-in 0.5s var(--ease) both;
+  }
+
+  .dockBook {
+    margin-left: auto;
+    padding: 0 24px;
+    background: var(--sand);
+    color: var(--ink);
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .gauge {
+      position: fixed;
+      top: 50%;
+      right: 18px;
+      z-index: 39;
+      display: block;
+      width: 14px;
+      height: 34vh;
+      padding: 3px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.86);
+      box-shadow:
+        inset 0 0 0 1.5px rgba(11, 46, 54, 0.3),
+        0 8px 20px -10px rgba(11, 46, 54, 0.5);
+      opacity: 0;
+      transform: translateY(-50%);
+      transition: opacity 0.45s var(--ease);
+    }
+
+    :global([data-past-hero]) .gauge {
+      opacity: 1;
+    }
+
+    .gaugeFill {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 999px;
+      background: #1d8a8f;
+      transform-origin: 50% 100%;
+      animation: gauge linear both;
+      animation-timeline: scroll(root);
+    }
+  }
+}
+
+/* ---------- Reduced motion: every state simply shows ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .sightsWrap {
+    overflow: visible;
+  }
+
+  .card {
+    transition: none;
+  }
+
+  .paddlers {
+    animation: none;
+  }
+
+  .gaugeFill {
+    animation: none;
+  }
+}

@@ -1,0 +1,2413 @@
+/* Skyline: Fiordland drawn as one profile, from the lake over the pass to the sea. */
+
+@property --f {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 100%;
+}
+
+.root {
+  --fiord: #0b1513;
+  --night: #12221d;
+  --land: #0b1513;
+  --lime: #c5ef5a;
+  --ink: #0b1513;
+  --paper: #ffffff;
+  --mist: #a7b8b0;
+  --stone: #46574f;
+  --rule: rgba(11, 21, 19, 0.16);
+  --rule-dark: rgba(255, 255, 255, 0.16);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --display: 'Oswald', 'Arial Narrow', 'Liberation Sans Narrow', system-ui, sans-serif;
+  --text: 'IBM Plex Sans', system-ui, sans-serif;
+  --serif: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  --pad: 20px;
+  --peak: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 12'%3E%3Cpath d='M1 11L8 4l3 3 4-6 10 10' fill='none' stroke='%23000' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --float-bg: rgba(197, 239, 90, 0.96);
+  --float-ink: #0b1513;
+  --float-call-bg: rgba(11, 21, 19, 0.94);
+  --float-call-ink: #c5ef5a;
+  --float-font: 'IBM Plex Sans', system-ui, sans-serif;
+  font-family: var(--text);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--fiord);
+  overflow-x: clip;
+}
+
+.root h1,
+.root h2,
+.root h3 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: 0.004em;
+  text-transform: uppercase;
+}
+
+.root h2 {
+  font-size: clamp(46px, 13vw, 116px);
+}
+
+.root p {
+  margin: 0;
+}
+
+.root a:focus-visible,
+.root button:focus-visible,
+.root select:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* A section's small label, led by a little ridge drawn in its own colour. */
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  font: 600 12px/1.2 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.kicker::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 26px;
+  height: 12px;
+  background: currentColor;
+  -webkit-mask: var(--peak) no-repeat center / contain;
+  mask: var(--peak) no-repeat center / contain;
+}
+
+.lead {
+  max-width: 36ch;
+  margin-top: 16px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* The one action: square shouldered, like a piece of gear. */
+.go,
+.goDark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 0 20px 0 22px;
+  border-radius: 4px;
+  background: var(--lime);
+  color: var(--ink);
+  font: 600 16px/1 var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.goDark {
+  background: var(--ink);
+  color: var(--lime);
+}
+
+.go svg,
+.goDark svg,
+.send svg,
+.more svg {
+  transition: transform 0.5s var(--ease);
+}
+
+.go:hover svg,
+.goDark:hover svg,
+.send:hover svg {
+  transform: translateX(4px);
+}
+
+.more:hover svg {
+  transform: translateY(3px);
+}
+
+.rail,
+.railBook {
+  display: none;
+}
+
+.railBook svg {
+  transition: transform 0.5s var(--ease);
+}
+
+.railBook:hover svg {
+  transform: translateX(4px);
+}
+
+/* Hero: their photograph full bleed, the headline set into its sky, and the road's profile cutting across the whole width as ground. */
+.hero {
+  position: relative;
+  height: calc(100svh - var(--bar-h));
+  min-height: 620px;
+  max-height: 1000px;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(180deg, #2a5797 0%, #5c88c4 52%, #9cb6d6 70%, var(--fiord) 70.2%);
+  color: #fff;
+}
+
+.heroPhoto {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 100%;
+  max-width: 1600px;
+  height: 90%;
+  overflow: hidden;
+  translate: -50% 0;
+}
+
+.heroPhoto picture,
+.heroPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.heroPhoto img {
+  object-fit: cover;
+  animation: settle 1.8s var(--ease) both;
+}
+
+.heroPhoto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(11, 21, 19, 0.44) 0%, rgba(11, 21, 19, 0.16) 22%, rgba(11, 21, 19, 0) 38%);
+}
+
+.heroType {
+  position: relative;
+  z-index: 3;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 14px 18px;
+}
+
+.mark {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 0 4px;
+  font: 500 13px/1.2 var(--display);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  animation: fade 0.8s var(--ease) 0.1s both;
+}
+
+.mark b {
+  font-weight: 600;
+}
+
+.title {
+  display: grid;
+  margin-top: 26px;
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.02em;
+}
+
+.line > span {
+  display: block;
+  animation: rise 1s var(--ease) both;
+  animation-delay: calc(0.08s + var(--i) * 0.12s);
+}
+
+.line:nth-child(1) {
+  padding-left: 4px;
+  font-family: var(--serif);
+  font-size: 30px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Fiordland runs from edge to edge. */
+.line:nth-child(2) {
+  font-size: min(calc((100vw - 28px) / 4.62), 36vh, 380px);
+  font-weight: 700;
+  line-height: 0.82;
+  letter-spacing: -0.01em;
+}
+
+.line:nth-child(3) {
+  padding-left: 4px;
+  font-family: var(--serif);
+  font-size: min(12.4vw, 104px);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.land {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  height: 33%;
+  animation: lift 1.2s var(--ease) 0.1s both;
+}
+
+.landSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.landFill {
+  fill: var(--land);
+  fill-opacity: 0.9;
+}
+
+.crest {
+  fill: none;
+  stroke: var(--lime);
+  stroke-width: 2.5px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  clip-path: inset(-10% 0 -10% 0);
+  animation: wipe 1.25s cubic-bezier(0.65, 0, 0.35, 1) 0.35s both;
+}
+
+.peak {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  z-index: 1;
+  padding: 5px 8px;
+  border-radius: 3px;
+  background: var(--fiord);
+  color: var(--lime);
+  font: 500 12px/1 var(--display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translate(-50%, calc(-100% - 16px));
+  animation: pop 0.7s var(--ease) both;
+  animation-delay: calc(0.95s + var(--i) * 0.12s);
+}
+
+.peak::after {
+  content: '';
+  position: absolute;
+  left: calc(50% - 1px);
+  top: 100%;
+  width: 2px;
+  height: 16px;
+  background: var(--lime);
+}
+
+.peak[data-end='start'] {
+  transform: translate(-6px, calc(-100% - 16px));
+}
+
+.peak[data-end='start']::after {
+  left: 5px;
+}
+
+.peak[data-end='end'] {
+  transform: translate(calc(-100% + 6px), calc(-100% - 16px));
+}
+
+.peak[data-end='end']::after {
+  left: auto;
+  right: 5px;
+}
+
+.heroFoot {
+  display: grid;
+  gap: 14px;
+  margin-top: auto;
+  padding: 0 4px;
+}
+
+.sub {
+  max-width: 30ch;
+  font: italic 400 18px/1.3 var(--serif);
+  color: #f1f5f2;
+  animation: fade 0.8s var(--ease) 1s both;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  animation: fade 0.8s var(--ease) 1.12s both;
+}
+
+.hero .go {
+  font-family: var(--display);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 54px;
+  height: 54px;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  border-radius: 4px;
+  color: #fff;
+  font: 500 14px/1.2 var(--display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.moreText {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.heroWays {
+  display: none;
+}
+
+@keyframes settle {
+  from {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(108%);
+  }
+}
+
+@keyframes lift {
+  from {
+    transform: translateY(46px);
+  }
+}
+
+@keyframes wipe {
+  from {
+    clip-path: inset(-10% 100% -10% 0);
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+}
+
+/* The road: three chapters held on screen, each a band of its own photograph (or its sky) with the profile riding across it. */
+.roadSec {
+  position: relative;
+  background: var(--fiord);
+  color: #fff;
+}
+
+.roadHead {
+  padding: 64px var(--pad) 30px;
+}
+
+.roadHead .kicker {
+  color: var(--lime);
+}
+
+.roadHead .lead {
+  color: var(--mist);
+}
+
+.road {
+  position: relative;
+  height: calc(var(--n) * 52svh + 100svh);
+}
+
+.frame {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+
+.mini {
+  position: absolute;
+  top: 16px;
+  left: var(--pad);
+  right: var(--pad);
+  z-index: 4;
+  height: 22px;
+}
+
+.miniSvg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.miniSvg path {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.34);
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.miniSvg path[data-step] {
+  stroke: transparent;
+}
+
+.miniSvg path[data-state='on'] {
+  stroke: var(--lime);
+  stroke-width: 2.5px;
+}
+
+.miniSvg path[data-state='done'] {
+  stroke: rgba(197, 239, 90, 0.5);
+}
+
+.miniMark {
+  position: absolute;
+  left: var(--gx);
+  top: var(--my);
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 0 4px rgba(197, 239, 90, 0.24);
+}
+
+.miniEnds {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  font: 600 10px/1 var(--text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d9e3de;
+}
+
+/* A chapter shows on its own and changes with a clean cut. */
+.chapter {
+  position: absolute;
+  inset: 0;
+  display: none;
+  grid-template-rows: auto 300px minmax(0, 1fr);
+  padding: 64px 0 0;
+  background: linear-gradient(180deg, var(--sky-a), var(--sky-b));
+}
+
+.chapter[data-state='on'] {
+  display: grid;
+}
+
+.root .chapterTitle {
+  margin: 14px 0 16px;
+  padding: 0 var(--pad);
+  font: italic 400 clamp(40px, 11.4vw, 58px) / 1 var(--serif);
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: #fff;
+}
+
+.band {
+  position: relative;
+}
+
+.bandPhoto {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100%;
+  max-width: 800px;
+  translate: -50% 0;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 22%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 22%);
+}
+
+.bandPhoto picture,
+.bandPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.bandPhoto img {
+  object-fit: cover;
+}
+
+.bandSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.contour {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.24);
+  stroke-width: 1px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.under {
+  fill: var(--fiord);
+  fill-opacity: 0.86;
+}
+
+.ridge {
+  fill: none;
+  stroke: var(--lime);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.dot {
+  position: absolute;
+  z-index: 2;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--fiord);
+}
+
+.dot[data-lit] {
+  border-color: var(--lime);
+  background: var(--lime);
+}
+
+.dot[data-now] {
+  box-shadow: 0 0 0 7px rgba(197, 239, 90, 0.3);
+}
+
+.dotLabel {
+  display: none;
+}
+
+.marker {
+  position: absolute;
+  z-index: 3;
+  left: var(--mx);
+  top: var(--my);
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 3px solid var(--fiord);
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow:
+    0 0 0 7px rgba(197, 239, 90, 0.26),
+    0 0 0 16px rgba(197, 239, 90, 0.1);
+}
+
+.read2 {
+  margin: 0;
+  padding: 18px var(--pad) 96px;
+  list-style: none;
+  background: var(--fiord);
+}
+
+.read2 li {
+  display: none;
+}
+
+.read2 li[data-now] {
+  display: block;
+}
+
+.readFigure {
+  font: 600 clamp(46px, 14.6vw, 64px) / 0.95 var(--display);
+  text-transform: uppercase;
+  animation: fade 0.45s var(--ease) both;
+}
+
+.readName2 {
+  margin-top: 10px;
+  font: 600 15px/1.3 var(--text);
+  color: var(--lime);
+}
+
+.readLine {
+  max-width: 42ch;
+  margin-top: 4px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--mist);
+}
+
+.roadNote {
+  padding: 30px var(--pad) 72px;
+  background: var(--fiord);
+  color: var(--mist);
+  font-size: 14px;
+}
+
+/* The visitor's day so far, following them down the page with its price. */
+.summary {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 43;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  min-height: calc(80px + env(safe-area-inset-bottom));
+  padding: 12px 214px calc(12px + env(safe-area-inset-bottom)) 16px;
+  border-top: 1px solid var(--rule-dark);
+  background: var(--fiord);
+  color: #fff;
+  opacity: 0;
+  visibility: hidden;
+  translate: 0 100%;
+  transition:
+    opacity 0.4s var(--ease),
+    translate 0.5s var(--ease),
+    visibility 0.4s;
+}
+
+:global(html[data-past-hero]) .summary {
+  opacity: 1;
+  visibility: visible;
+  translate: none;
+}
+
+.sumLabel {
+  font: 600 10px/1.2 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lime);
+}
+
+.sumTrip {
+  font: 600 14px/1.2 var(--text);
+  animation: fade 0.4s var(--ease) both;
+}
+
+.sumWhen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--mist);
+  animation: fade 0.4s var(--ease) both;
+}
+
+.sumPrice b {
+  color: #fff;
+  font-weight: 600;
+}
+
+.sumGo {
+  display: none;
+}
+
+/* Three ways: one walking profile redrawn for each way to the sound. */
+.waysSec {
+  background: var(--paper);
+  color: var(--ink);
+  padding: 76px var(--pad) 84px;
+}
+
+.waysHead .lead {
+  color: var(--stone);
+}
+
+.ways {
+  margin-top: 30px;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tab {
+  display: grid;
+  align-content: end;
+  gap: 4px;
+  min-height: 96px;
+  padding: 10px 10px 11px;
+  border: 1.5px solid var(--rule);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.45s var(--ease),
+    border-color 0.45s var(--ease),
+    color 0.45s var(--ease);
+}
+
+.tab[aria-selected='true'] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
+}
+
+.spark {
+  display: block;
+  width: 100%;
+  height: 34px;
+  margin-bottom: 6px;
+  overflow: visible;
+}
+
+.spark path:first-child {
+  fill: rgba(11, 21, 19, 0.1);
+}
+
+.spark path:last-child {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.tab[aria-selected='true'] .spark path:first-child {
+  fill: rgba(197, 239, 90, 0.3);
+}
+
+.tab[aria-selected='true'] .spark path:last-child {
+  stroke: var(--lime);
+}
+
+.tabName {
+  font: 600 21px/1 var(--display);
+  text-transform: uppercase;
+}
+
+.tabTag {
+  font: 600 11px/1.2 var(--text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--stone);
+}
+
+.tab[aria-selected='true'] .tabTag {
+  color: var(--lime);
+}
+
+.panel {
+  margin-top: 26px;
+}
+
+.chart {
+  position: relative;
+  height: 210px;
+  margin-top: 58px;
+}
+
+.chartSvg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.area {
+  fill: var(--lime);
+  transition: d 0.9s var(--ease);
+}
+
+.chartLine {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.5px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  transition: d 0.9s var(--ease);
+}
+
+.base {
+  stroke: var(--ink);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+.marks {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+
+.marks li {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  padding-bottom: calc(14px + var(--row, 0) * 22px);
+  font: 600 11px/1.2 var(--text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: translate(-50%, -100%);
+  opacity: 0;
+  transition: opacity 0.35s;
+}
+
+.marks li::after {
+  content: '';
+  position: absolute;
+  left: calc(50% - 0.75px);
+  bottom: 2px;
+  width: 1.5px;
+  height: calc(10px + var(--row, 0) * 22px);
+  background: var(--ink);
+}
+
+.marks li[data-edge='start'] {
+  transform: translate(-2px, -100%);
+}
+
+.marks li[data-edge='start']::after {
+  left: 1px;
+}
+
+.marks li[data-edge='end'] {
+  transform: translate(calc(-100% + 2px), -100%);
+}
+
+.marks li[data-edge='end']::after {
+  left: auto;
+  right: 1px;
+}
+
+.marks li[data-on] {
+  opacity: 1;
+  transition-delay: 0.45s;
+}
+
+.figure {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 16px);
+  font: 600 24px/1 var(--display);
+  text-transform: uppercase;
+  animation: fade 0.6s var(--ease) both;
+}
+
+.wayBody {
+  margin-top: 26px;
+}
+
+.wayCopy {
+  animation: fade 0.6s var(--ease) both;
+}
+
+.wayName {
+  margin-top: 8px;
+  font-size: clamp(30px, 8.8vw, 46px);
+  line-height: 0.96;
+}
+
+.wayLine {
+  max-width: 46ch;
+  margin-top: 12px;
+  color: var(--stone);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chips li {
+  padding: 6px 10px;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  font: 500 13px/1.25 var(--text);
+}
+
+.deal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 20px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 2px solid var(--ink);
+}
+
+.prices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 22px;
+  animation: fade 0.6s var(--ease) both;
+}
+
+.prices span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--stone);
+}
+
+.prices b {
+  font: 700 36px/1 var(--display);
+  color: var(--ink);
+}
+
+.rates {
+  max-width: 62ch;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--stone);
+}
+
+.ask {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Whatever the weather: the year as a strip of temperatures, and the months each trip runs. */
+.weatherSec {
+  background: var(--fiord);
+  color: #fff;
+  padding: 76px var(--pad) 76px;
+}
+
+.weatherHead .kicker {
+  color: var(--lime);
+}
+
+.weatherHead .lead {
+  color: var(--mist);
+}
+
+.chartLabel {
+  margin-top: 30px;
+  font: 600 11px/1.2 var(--text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mist);
+}
+
+.year {
+  margin-top: 14px;
+}
+
+.plot {
+  --x: 50%;
+  position: relative;
+  height: 380px;
+}
+
+.months {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.yearLine {
+  position: absolute;
+  inset: 12px 0 32px 0;
+  width: 100%;
+  height: calc(100% - 44px);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.yearLine path:first-child {
+  fill: rgba(197, 239, 90, 0.07);
+}
+
+.yearLine path:last-child {
+  fill: none;
+  stroke: rgba(197, 239, 90, 0.5);
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.month {
+  position: relative;
+  display: block;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.range {
+  position: absolute;
+  left: calc(50% - 5px);
+  width: 10px;
+  top: calc(12px + (1 - var(--hi)) * (100% - 44px) - 5px);
+  bottom: calc(100% - 12px - (1 - var(--lo)) * (100% - 44px) - 5px);
+  min-height: 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.24);
+  transition:
+    background 0.25s,
+    transform 0.4s var(--ease);
+}
+
+.month[aria-pressed='true'] .range {
+  background: var(--lime);
+  transform: scaleX(1.5);
+}
+
+.monthName {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4px;
+  font: 600 10px/1 var(--text);
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--mist);
+}
+
+.month[aria-pressed='true'] .monthName {
+  color: var(--lime);
+}
+
+/* Each trip as a line across the year, present only in the months it runs. */
+.trips {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.trips path {
+  fill: none;
+  stroke: rgba(197, 239, 90, 0.55);
+  stroke-width: 3px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  transition: stroke 0.3s;
+}
+
+.trips g[data-on] path {
+  stroke: var(--lime);
+}
+
+.tripNames {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+
+.tripNames li {
+  position: absolute;
+  left: 0;
+  top: var(--y);
+  padding: 0 6px 0 0;
+  translate: 0 calc(-100% - 6px);
+  background: var(--fiord);
+  font: 600 11px/1.3 var(--text);
+  color: #e4ece8;
+  white-space: nowrap;
+}
+
+/* The visitor's month: a cursor through the chart, ringed where it meets each trip. */
+.cursor {
+  position: absolute;
+  top: 0;
+  bottom: 22px;
+  left: var(--x);
+  width: 2px;
+  margin-left: -1px;
+  background: #fff;
+  pointer-events: none;
+  transition: left 0.3s var(--ease);
+}
+
+.cursor i {
+  position: absolute;
+  left: 50%;
+  top: var(--y);
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--fiord);
+}
+
+.cursor i[data-v='1'],
+.cursor i[data-v='2'] {
+  border-color: var(--fiord);
+  background: var(--lime);
+}
+
+.read {
+  position: absolute;
+  top: 0;
+  left: var(--x);
+  z-index: 2;
+  width: min(220px, 62%);
+  padding: 10px 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
+  background: var(--fiord);
+  pointer-events: none;
+  translate: 14px 0;
+  transition:
+    left 0.3s var(--ease),
+    translate 0.3s var(--ease);
+}
+
+.read[data-side='left'] {
+  translate: calc(-100% - 14px) 0;
+}
+
+.read[data-side='mid'] {
+  translate: -50% 0;
+}
+
+.readName {
+  font: 600 16px/1.25 var(--text);
+  color: #fff;
+}
+
+.runs {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.runs li {
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.runs b {
+  font-weight: 600;
+}
+
+.runLabel {
+  color: var(--lime);
+}
+
+.runs li[data-v='0'] b {
+  font-weight: 400;
+}
+
+.runs li[data-v='0'],
+.runs li[data-v='0'] .runLabel {
+  color: var(--mist);
+}
+
+.readNote {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--mist);
+}
+
+.readSeason {
+  max-width: 44ch;
+  margin-top: 18px;
+  color: #dfe8e3;
+}
+
+/* Locals: a statement read with a highlighter, the owner at work, and a roll call of guides. */
+.localsSec {
+  background: var(--paper);
+  color: var(--ink);
+  padding: 80px var(--pad) 84px;
+}
+
+.localsHead {
+  max-width: 100%;
+}
+
+.statement {
+  font: 600 clamp(40px, 11.6vw, 112px) / 0.98 var(--display);
+  text-transform: uppercase;
+}
+
+.fill > span {
+  background-image: linear-gradient(var(--lime), var(--lime));
+  background-repeat: no-repeat;
+  background-position: 0 86%;
+  background-size: var(--f) 0.34em;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .fill > span {
+      animation: mark linear both;
+      animation-timeline: view();
+      animation-range: cover calc(12% + var(--i) / var(--n) * 26%) cover calc(20% + var(--i) / var(--n) * 26%);
+    }
+  }
+}
+
+@keyframes mark {
+  from {
+    --f: 0%;
+  }
+  to {
+    --f: 100%;
+  }
+}
+
+.owners {
+  margin-top: 40px;
+}
+
+.steve {
+  margin: 0 calc(-1 * var(--pad));
+}
+
+.steve picture,
+.steve img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.steve picture {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.steve img {
+  aspect-ratio: 16 / 11;
+  object-fit: cover;
+}
+
+.steve figcaption {
+  margin-top: 10px;
+  padding: 0 var(--pad);
+  font: italic 400 17px/1.3 var(--serif);
+  color: var(--stone);
+}
+
+.ownersText {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+  color: var(--stone);
+}
+
+.ownersLead {
+  font: 500 22px/1.3 var(--text);
+  color: var(--ink);
+}
+
+.since {
+  padding-left: 14px;
+  border-left: 3px solid var(--lime);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.crew {
+  margin-top: 64px;
+}
+
+/* The guides as one moving line of names, then each in their own words. */
+.ribbon {
+  overflow: hidden;
+  margin: 0 calc(-1 * var(--pad));
+  padding: 14px 0 12px;
+  border-top: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+}
+
+.ribbonTrack {
+  display: flex;
+  width: max-content;
+  white-space: nowrap;
+}
+
+.ribbonTrack span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 0 18px;
+}
+
+.ribbonTrack span::before {
+  content: '';
+  align-self: center;
+  width: 30px;
+  height: 14px;
+  background: var(--ink);
+  -webkit-mask: var(--peak) no-repeat center / contain;
+  mask: var(--peak) no-repeat center / contain;
+}
+
+.ribbonTrack b {
+  font: 700 clamp(52px, 14vw, 136px) / 1 var(--display);
+  text-transform: uppercase;
+}
+
+.ribbonTrack em {
+  font: italic 400 clamp(22px, 6vw, 46px) / 1 var(--serif);
+  color: var(--stone);
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .ribbonTrack {
+      animation: drift linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.guides {
+  display: grid;
+  gap: 18px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guides li {
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+
+.guides b {
+  font: 600 18px/1.3 var(--text);
+}
+
+.guides span {
+  margin-left: 8px;
+  font: italic 400 17px/1.3 var(--serif);
+  color: var(--stone);
+}
+
+.guides p {
+  max-width: 44ch;
+  margin-top: 4px;
+  color: var(--stone);
+  font-size: 15px;
+}
+
+.guidePhoto {
+  margin: 28px 0 0;
+}
+
+.guidePhoto picture,
+.guidePhoto img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.guidePhoto img {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+/* In their words. */
+.reviewsSec {
+  background: var(--fiord);
+  color: #fff;
+  padding: 80px var(--pad) 84px;
+}
+
+.reviewsHead .kicker {
+  color: var(--lime);
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.rating b {
+  font: 700 60px/0.9 var(--display);
+  color: var(--lime);
+}
+
+.rating span {
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.rating small {
+  display: block;
+  font-size: 12px;
+  color: var(--mist);
+}
+
+.bigQuote {
+  margin: 40px 0 0;
+}
+
+.bigQuote p {
+  font: italic 400 clamp(38px, 10.4vw, 100px) / 1.02 var(--serif);
+  letter-spacing: -0.01em;
+}
+
+.bigQuote .fill > span {
+  background-position: 0 96%;
+  background-size: var(--f) 0.09em;
+}
+
+.root blockquote footer {
+  margin-top: 14px;
+  font-size: 14px;
+  color: var(--mist);
+}
+
+.root blockquote footer b {
+  color: #fff;
+  font-weight: 600;
+}
+
+.quotes {
+  display: grid;
+  gap: 22px;
+  margin-top: 44px;
+}
+
+.quotes blockquote {
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule-dark);
+}
+
+.quotes p {
+  font: italic 400 24px/1.25 var(--serif);
+}
+
+.track {
+  display: grid;
+  gap: 18px;
+  margin: 44px 0 0;
+}
+
+.trackPhoto picture,
+.trackPhoto img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.trackPhoto img {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.track blockquote {
+  margin: 0;
+}
+
+.track blockquote p {
+  font: italic 400 34px/1.08 var(--serif);
+}
+
+/* The close: the road arrives at sea level, on a field of lime. */
+.closeSec {
+  position: relative;
+  overflow: hidden;
+  background: var(--lime);
+  color: var(--ink);
+  padding: 104px var(--pad) 44px;
+}
+
+.sea {
+  position: absolute;
+  top: 18px;
+  left: 0;
+  width: 100%;
+  height: 64px;
+  overflow: visible;
+}
+
+.sea path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .sea {
+      animation: wipe linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 45%;
+    }
+  }
+}
+
+.closeGrid {
+  display: grid;
+  gap: 44px;
+  margin-top: 26px;
+}
+
+.fund {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  justify-items: start;
+}
+
+.fund p {
+  max-width: 36ch;
+  font-size: 17px;
+}
+
+.fund .goDark {
+  margin-top: 16px;
+}
+
+.write {
+  padding-top: 22px;
+  border-top: 2px solid var(--ink);
+}
+
+.writeLabel {
+  font: 700 28px/1 var(--display);
+  text-transform: uppercase;
+}
+
+.writeLead {
+  max-width: 40ch;
+  margin-top: 8px;
+}
+
+.letter {
+  margin-top: 20px;
+}
+
+.sentence {
+  font: 500 clamp(25px, 6.8vw, 46px) / 1.3 var(--display);
+}
+
+.sentence label {
+  display: inline;
+}
+
+.pick {
+  max-width: 100%;
+  margin: 0;
+  padding: 0 24px 0 0;
+  border: 0;
+  border-bottom: 2.5px solid var(--ink);
+  border-radius: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 6l5 5 5-5' fill='none' stroke='%230b1513' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 2px center / 15px;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.send {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  margin-top: 22px;
+  padding: 0 20px 0 22px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  color: var(--ink);
+  font: 600 16px/1 var(--text);
+  text-decoration: none;
+  will-change: transform;
+}
+
+.reach {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 48px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reach a {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  min-height: 48px;
+  padding: 12px 18px;
+  border: 1.5px solid rgba(11, 21, 19, 0.45);
+  border-radius: 6px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.reach a b {
+  font: 600 22px/1.1 var(--display);
+  white-space: nowrap;
+}
+
+.reach a span {
+  font-size: 13px;
+}
+
+.foot {
+  display: grid;
+  gap: 8px;
+  padding: 18px var(--pad) 100px;
+  border-top: 1px solid rgba(11, 21, 19, 0.2);
+  background: var(--lime);
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.footMark b {
+  margin-right: 8px;
+  font: 700 18px/1 var(--display);
+  text-transform: uppercase;
+}
+
+/* Desktop. */
+@media (min-width: 900px) {
+  .root {
+    --pad: 56px;
+    font-size: 17px;
+  }
+
+  .lead {
+    font-size: 18px;
+  }
+
+  .rail {
+    position: fixed;
+    top: 50%;
+    right: 16px;
+    z-index: 40;
+    display: block;
+    padding: 10px 12px;
+    border-radius: 6px;
+    background: var(--fiord);
+    translate: 0 -50%;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.4s var(--ease),
+      visibility 0.4s;
+  }
+
+  :global(html[data-past-hero]) .rail,
+  :global(html[data-past-hero]) .railBook {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .railLinks {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .railLinks a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 32px;
+    color: #b4c3bc;
+    font: 600 11px/1 var(--text);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .railLinks a::after {
+    content: '';
+    width: 14px;
+    height: 2px;
+    background: currentColor;
+    transition: width 0.45s var(--ease);
+  }
+
+  .railLinks a[aria-current] {
+    color: var(--lime);
+  }
+
+  .railLinks a[aria-current]::after {
+    width: 30px;
+  }
+
+  .hero {
+    height: calc(100vh - var(--bar-h));
+    min-height: 680px;
+    max-height: 1200px;
+    background: linear-gradient(180deg, #2a5797 0%, #5c88c4 46%, #9cb6d6 62%, var(--fiord) 62.2%);
+  }
+
+  .heroPhoto {
+    height: 100%;
+  }
+
+  .heroType {
+    padding: 22px 28px 30px;
+  }
+
+  .mark {
+    padding: 0 8px;
+    font-size: 14px;
+  }
+
+  .title {
+    margin-top: 6px;
+  }
+
+  .line:nth-child(1) {
+    padding-left: 12px;
+    font-size: min(3.6vw, 52px);
+  }
+
+  .line:nth-child(3) {
+    margin-top: -0.04em;
+    padding-left: 12px;
+    font-size: min(6.6vw, 13vh, 112px);
+  }
+
+  .land {
+    height: 32%;
+  }
+
+  .heroFoot {
+    grid-template-columns: auto auto;
+    justify-content: start;
+    align-items: center;
+    column-gap: 40px;
+    padding: 0 8px;
+  }
+
+  .sub {
+    grid-column: 1 / -1;
+    max-width: none;
+    font-size: 21px;
+    white-space: nowrap;
+  }
+
+  .more {
+    width: auto;
+    height: auto;
+    min-height: 44px;
+    border: 0;
+    text-decoration: underline;
+    text-decoration-color: var(--lime);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+  }
+
+  .moreText {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+  }
+
+  .heroWays {
+    position: absolute;
+    right: 36px;
+    bottom: 34px;
+    z-index: 3;
+    display: flex;
+    gap: 36px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    animation: fade 0.8s var(--ease) 1.25s both;
+  }
+
+  .heroWays a {
+    display: grid;
+    gap: 4px;
+    min-height: 44px;
+    padding-top: 10px;
+    border-top: 2px solid rgba(255, 255, 255, 0.24);
+    color: #fff;
+    text-decoration: none;
+    transition: border-color 0.4s;
+  }
+
+  .heroWays a:hover {
+    border-top-color: var(--lime);
+  }
+
+  .heroWays span {
+    font: 500 12px/1.2 var(--display);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--lime);
+  }
+
+  .heroWays b {
+    font: 500 22px/1.1 var(--display);
+    text-transform: uppercase;
+  }
+
+  .heroWays em {
+    font: italic 400 18px/1.2 var(--serif);
+    color: #dbe5e0;
+    white-space: nowrap;
+  }
+
+  .summary {
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+    width: 380px;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 18px;
+    padding: 16px 16px 16px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+  }
+
+  .sumLabel,
+  .sumTrip,
+  .sumWhen {
+    grid-column: 1;
+  }
+
+  .sumTrip {
+    font-size: 16px;
+  }
+
+  .sumWhen {
+    font-size: 13px;
+  }
+
+  .sumGo {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 0 16px;
+    border-radius: 4px;
+    background: var(--lime);
+    color: var(--ink);
+    font: 600 15px/1 var(--text);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .roadHead {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    column-gap: 64px;
+    align-items: end;
+    padding: 120px var(--pad) 40px;
+  }
+
+  .roadHead .kicker {
+    grid-column: 1 / -1;
+  }
+
+  .road {
+    height: calc(var(--n) * 62vh + 100vh);
+  }
+
+  .mini {
+    top: 40px;
+    left: auto;
+    right: 200px;
+    width: 34%;
+    height: 28px;
+  }
+
+  .chapter {
+    grid-template-rows: auto 44vh minmax(0, 1fr);
+    padding: 26px 0 0;
+  }
+
+  .root .chapterTitle {
+    margin: 30px 0 24px;
+    font-size: clamp(60px, 6.2vw, 104px);
+  }
+
+  .bandPhoto {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 84%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 84%, transparent 100%);
+  }
+
+  .dotLabel {
+    position: absolute;
+    bottom: calc(100% + 14px);
+    left: 50%;
+    display: block;
+    padding: 5px 8px;
+    border-radius: 3px;
+    background: rgba(11, 21, 19, 0.86);
+    color: #fff;
+    font: 600 12px/1 var(--text);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    translate: -50% 0;
+  }
+
+  .dot[data-now] .dotLabel {
+    color: var(--lime);
+  }
+
+  .read2 {
+    padding: 28px 220px 30px var(--pad);
+  }
+
+  .read2 li[data-now] {
+    display: grid;
+    grid-template-columns: auto minmax(0, 46ch);
+    column-gap: 56px;
+    align-items: end;
+  }
+
+  .readFigure {
+    grid-row: 1 / span 2;
+    font-size: clamp(72px, 7.4vw, 128px);
+    line-height: 0.88;
+  }
+
+  .readName2 {
+    font-size: 17px;
+  }
+
+  .readLine {
+    font-size: 17px;
+  }
+
+  .roadNote {
+    padding: 36px var(--pad) 110px;
+    font-size: 15px;
+  }
+
+  .waysSec {
+    padding: 128px var(--pad) 120px;
+  }
+
+  .waysHead {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    column-gap: 64px;
+    align-items: end;
+  }
+
+  .waysHead .kicker {
+    grid-column: 1 / -1;
+  }
+
+  .ways {
+    margin-top: 52px;
+  }
+
+  .tabs {
+    gap: 12px;
+    max-width: calc(100% - 150px);
+  }
+
+  .tab {
+    grid-template-columns: 132px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 18px;
+    align-items: center;
+    min-height: 92px;
+    padding: 14px 18px;
+  }
+
+  .spark {
+    grid-row: 1 / span 2;
+    height: 46px;
+    margin: 0;
+  }
+
+  .tabName {
+    font-size: 28px;
+    align-self: end;
+  }
+
+  .tabTag {
+    align-self: start;
+  }
+
+  .chart {
+    height: 300px;
+    margin-top: 40px;
+    margin-right: 150px;
+  }
+
+  .figure {
+    left: auto;
+    right: 0;
+    top: 0;
+    bottom: auto;
+    max-width: 40%;
+    font-size: clamp(40px, 4.4vw, 68px);
+    line-height: 0.95;
+    text-align: right;
+  }
+
+  .wayBody {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    column-gap: 72px;
+    margin-top: 34px;
+    margin-right: 150px;
+  }
+
+  .wayCopy {
+    grid-row: 1 / span 2;
+  }
+
+  .deal {
+    align-self: start;
+    margin-top: 8px;
+  }
+
+  .marks li {
+    font-size: 12px;
+  }
+
+  .weatherSec {
+    padding: 128px var(--pad) 120px;
+  }
+
+  .weatherHead {
+    max-width: 900px;
+  }
+
+  .year {
+    margin-right: 150px;
+  }
+
+  .plot {
+    height: 440px;
+  }
+
+  .months {
+    gap: 6px;
+  }
+
+  .range {
+    width: 16px;
+    left: calc(50% - 8px);
+    border-radius: 9px;
+  }
+
+  .monthName {
+    font-size: 12px;
+  }
+
+  .tripNames li {
+    font-size: 13px;
+  }
+
+  .read {
+    width: 300px;
+    padding: 14px 16px 16px;
+  }
+
+  .readName {
+    font-size: 18px;
+  }
+
+  .runs li {
+    font-size: 14px;
+  }
+
+  .localsSec {
+    padding: 128px var(--pad) 120px;
+  }
+
+  .statement {
+    max-width: 15em;
+    margin-right: 150px;
+  }
+
+  .owners {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 48px;
+    margin-top: 72px;
+  }
+
+  .steve {
+    grid-column: 1 / -1;
+  }
+
+  .steve img {
+    aspect-ratio: auto;
+    height: min(72vh, 680px);
+  }
+
+  .ownersText {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 48px;
+    align-items: start;
+    margin: 28px 150px 0 0;
+  }
+
+  .ownersLead {
+    font-size: 26px;
+  }
+
+  .crew {
+    margin-top: 110px;
+  }
+
+  .guides {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 40px;
+    row-gap: 28px;
+    margin: 40px 150px 0 0;
+  }
+
+  .guidePhoto {
+    display: none;
+  }
+
+  .reviewsSec {
+    padding: 128px var(--pad) 120px;
+  }
+
+  .reviewsHead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 48px;
+    align-items: end;
+    margin-right: 150px;
+  }
+
+  .reviewsHead .kicker {
+    grid-column: 1 / -1;
+  }
+
+  .rating {
+    margin-top: 0;
+  }
+
+  .rating b {
+    font-size: 84px;
+  }
+
+  .bigQuote {
+    margin: 64px 150px 0 0;
+  }
+
+  .quotes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 48px;
+    margin: 64px 150px 0 0;
+  }
+
+  .track {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr);
+    column-gap: 64px;
+    align-items: center;
+    margin: 64px 150px 0 0;
+  }
+
+  .trackPhoto {
+    max-width: 560px;
+  }
+
+  .track blockquote p {
+    font-size: 44px;
+  }
+
+  .closeSec {
+    padding: 150px var(--pad) 64px;
+  }
+
+  .closeSec h2 {
+    font-size: min(10vw, 150px);
+    margin-right: 150px;
+  }
+
+  .sea {
+    top: 28px;
+    height: 96px;
+  }
+
+  .closeGrid {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    column-gap: 72px;
+    margin: 44px 150px 0 0;
+  }
+
+  .fund p {
+    font-size: 19px;
+  }
+
+  .write {
+    padding-top: 0;
+    padding-left: 48px;
+    border-top: 0;
+    border-left: 2px solid var(--ink);
+  }
+
+  .reach {
+    margin-top: 64px;
+  }
+
+  .foot {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 24px;
+    padding: 22px var(--pad) 28px;
+  }
+}
+
+/* Short laptop screens: the held chapters tighten so nothing is cut. */
+@media (min-width: 900px) and (max-height: 760px) {
+  .chapter {
+    grid-template-rows: auto 38vh minmax(0, 1fr);
+  }
+
+  .root .chapterTitle {
+    margin: 18px 0 14px;
+    font-size: 56px;
+  }
+
+  .readFigure {
+    font-size: 72px;
+  }
+}
+
+/* With reduced motion: every state simply shows, and the held road lies in order down the page. */
+@media (prefers-reduced-motion: reduce) {
+  .root *,
+  .root *::before,
+  .root *::after {
+    animation: none !important;
+  }
+
+  .road {
+    height: auto;
+  }
+
+  .frame {
+    position: relative;
+    height: auto;
+    overflow: visible;
+  }
+
+  .mini,
+  .marker {
+    display: none;
+  }
+
+  .chapter,
+  .chapter[data-state] {
+    position: relative;
+    inset: auto;
+    display: grid;
+    padding: 24px 0 40px;
+  }
+
+  .read2 li,
+  .read2 li[data-now] {
+    display: block;
+    margin-bottom: 22px;
+  }
+
+  .readFigure {
+    font-size: 40px;
+  }
+}

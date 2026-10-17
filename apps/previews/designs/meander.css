@@ -1,0 +1,2143 @@
+/* Meander: one unhurried day on a single road, drawn in fine line work. Ink and paper, the logo's sun for the road's centre line, the minibus and the one action. */
+
+.root {
+  --ink: #0f1519;
+  --ink-2: #2c363c;
+  --paper: #eef0ec;
+  --white: #fbfbf9;
+  --sun: #f5a524;
+  --line: rgba(15, 21, 25, 0.16);
+  --bay: #0f3038;
+  --olive: #272d1b;
+  --wine: #341c25;
+  --night: #121a24;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --serif: 'Gloock', Georgia, 'Times New Roman', serif;
+  --sans: 'Familjen Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --pad: 16px;
+  --rw: 30px;
+  --road-edge: var(--ink);
+  --road-fill: var(--paper);
+  --float-bg: rgba(15, 21, 25, 0.94);
+  --float-ink: #fff;
+  --float-call-bg: rgba(245, 165, 36, 0.97);
+  --float-call-ink: #0f1519;
+  --float-font: 'Familjen Grotesk', system-ui, sans-serif;
+  font-family: var(--sans);
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  overflow-x: clip;
+}
+
+.root :where(h1, h2, h3) {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.root :where(p, figure, ul, ol) {
+  margin: 0;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+}
+
+/* The road everywhere: two fine edge lines and a dashed sun line down the middle. */
+.edge {
+  fill: none;
+  stroke: var(--road-edge);
+  stroke-width: var(--rw);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.fill {
+  fill: none;
+  stroke: var(--road-fill);
+  stroke-width: calc(var(--rw) - 3px);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lane {
+  fill: none;
+  stroke: var(--lane, var(--sun));
+  stroke-width: 2px;
+  stroke-dasharray: 9 11;
+}
+
+.van {
+  color: var(--sun);
+}
+
+/* The one action. */
+.go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 22px 0 24px;
+  border-radius: 2px;
+  background: var(--sun);
+  color: var(--ink);
+  font: 700 17px/1.1 var(--sans);
+  text-decoration: none;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.go svg {
+  flex: 0 0 auto;
+  transition: transform 0.5s var(--ease);
+}
+
+.go:hover svg {
+  transform: translateX(4px);
+}
+
+.price {
+  font: 400 26px/1.1 var(--serif);
+}
+
+.buy {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+}
+
+.meta {
+  font: 700 12.5px/1.3 var(--sans);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.lead {
+  font: 700 12.5px/1.2 var(--sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.dock {
+  display: none;
+}
+
+/* ---------- The first screen: the road, the headline, the guests ---------- */
+
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - var(--bar-h));
+  padding: 12px var(--pad) 22px;
+  background: var(--paper);
+  color: var(--ink);
+  overflow: hidden;
+}
+
+.heroInk {
+  display: contents;
+}
+
+.heroLight,
+.roadWide {
+  display: none;
+}
+
+.heroTop {
+  order: 1;
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+  font: 400 19px/1.1 var(--serif);
+  text-decoration: none;
+  animation: fade 0.8s var(--ease) both;
+}
+
+.heroType {
+  order: 2;
+  margin-top: 8px;
+}
+
+.kicker {
+  font: 700 12.5px/1.2 var(--sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  animation: fade 0.7s var(--ease) 0.1s both;
+}
+
+.h1 {
+  margin: 6px 0 0;
+  font: 400 110px/0.84 var(--serif);
+  letter-spacing: -0.04em;
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+}
+
+.line > span {
+  display: block;
+  animation: rise 1.05s var(--ease) both;
+  animation-delay: calc(0.08s + var(--i) * 0.16s);
+}
+
+/* "rushed" takes its time: the letters are given room. */
+.line:last-child {
+  font-size: 0.56em;
+  letter-spacing: 0.16em;
+}
+
+.heroPhoto {
+  order: 3;
+  position: relative;
+  flex: 1 1 260px;
+  min-height: 230px;
+  max-height: 440px;
+  margin: 26px calc(-1 * var(--pad)) 0;
+  background: #c9d1cc;
+}
+
+.heroPhoto picture,
+.heroPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.heroPhoto img {
+  object-fit: cover;
+  animation: drift 8s var(--ease) both;
+}
+
+.heroShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 21, 25, 0.5) 0%, rgba(15, 21, 25, 0) 42%);
+}
+
+.roadPhone {
+  position: absolute;
+  left: 0;
+  top: -34px;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  --rw: 34px;
+  animation: unroll 1.3s var(--ease) 0.45s both;
+}
+
+.pickup path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2px;
+}
+
+.pickup text {
+  fill: var(--ink);
+  font: 400 19px var(--serif);
+}
+
+.pickupLight path {
+  fill: none;
+  stroke: var(--white);
+  stroke-width: 2px;
+}
+
+.pickupLight text {
+  fill: var(--white);
+  font: 400 19px var(--serif);
+}
+
+.heroFoot {
+  order: 4;
+  margin-top: 16px;
+}
+
+.sub {
+  max-width: 34ch;
+  font-size: 18px;
+  line-height: 1.4;
+  animation: fade 0.9s var(--ease) 0.5s both;
+}
+
+.heroAct {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  animation: arrive 0.8s var(--ease) 0.75s both;
+}
+
+.from {
+  max-width: 13ch;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.tag {
+  order: 5;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--ink-2);
+  animation: fade 0.8s var(--ease) 1.05s both;
+}
+
+.tag i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--sun);
+}
+
+.tag b {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.tag em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--ink);
+  box-shadow: inset 0 -3px 0 var(--sun);
+}
+
+@media (min-width: 380px) {
+  .h1 {
+    font-size: 122px;
+  }
+}
+
+@media (max-height: 700px) and (max-width: 899px) {
+  .h1 {
+    font-size: 96px;
+  }
+  .heroPhoto {
+    height: 200px;
+  }
+}
+
+/* ---------- The tours: four stops on one road ---------- */
+
+.tours {
+  position: relative;
+  background: var(--bay);
+}
+
+.pin {
+  position: relative;
+  height: calc(var(--steps) * 72svh + 100svh);
+  --tone-now: var(--bay);
+}
+
+.pin[data-active='1'] {
+  --tone-now: var(--olive);
+}
+
+.pin[data-active='2'] {
+  --tone-now: var(--wine);
+}
+
+.pin[data-active='3'] {
+  --tone-now: var(--night);
+}
+
+.pin > [data-frame] {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  color: var(--paper);
+}
+
+.toursHead {
+  position: absolute;
+  z-index: 5;
+  top: calc(var(--bar-h) + 12px);
+  left: var(--pad);
+  font: 700 12.5px/1.2 var(--sans);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sun);
+}
+
+.side {
+  position: absolute;
+  z-index: 5;
+  top: calc(var(--bar-h) + 38px);
+  left: 50%;
+  width: 320px;
+  margin-left: -160px;
+  --road-edge: var(--paper);
+  --road-fill: var(--tone-now);
+}
+
+.side .fill {
+  transition: stroke 0.6s var(--ease);
+}
+
+.sideTall {
+  display: none;
+}
+
+.sideWide {
+  display: block;
+  width: 320px;
+  height: 40px;
+  overflow: visible;
+  --rw: 13px;
+}
+
+.sideWide .lane {
+  stroke-width: 1.5px;
+  stroke-dasharray: 4 5;
+}
+
+.sideStops {
+  display: grid;
+  grid-template-columns: repeat(4, 80px);
+  margin-top: 6px;
+  padding: 0;
+  list-style: none;
+  text-align: center;
+}
+
+.sideStops li {
+  display: grid;
+  gap: 2px;
+  opacity: 0.74;
+  transition: opacity 0.4s var(--ease);
+}
+
+.sideStops li[data-state='on'] {
+  opacity: 1;
+}
+
+.sideStops b {
+  font: 400 14px/1.1 var(--serif);
+  white-space: nowrap;
+}
+
+.sideStops li[data-state='on'] b {
+  box-shadow: inset 0 -2px 0 var(--sun);
+  justify-self: center;
+}
+
+.sideMeta {
+  display: none;
+}
+
+.sidePrice {
+  font: 700 12px/1.2 var(--sans);
+}
+
+.beat {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--bar-h) + 124px) var(--pad) 20px;
+  background: var(--tone);
+  color: var(--paper);
+  clip-path: inset(100% 0 0 0);
+  visibility: hidden;
+  transition: clip-path 0s 0.9s, visibility 0s 0.9s;
+  --road-edge: var(--paper);
+  --road-fill: var(--tone);
+  --rw: 16px;
+}
+
+.beat[data-state='on'] {
+  z-index: 2;
+  clip-path: inset(0 0 0 0);
+  visibility: visible;
+  transition: clip-path 0.85s var(--ease), visibility 0s;
+}
+
+.beat[data-tone='bay'] {
+  --tone: var(--bay);
+}
+
+.beat[data-tone='olive'] {
+  --tone: var(--olive);
+}
+
+.beat[data-tone='wine'] {
+  --tone: var(--wine);
+}
+
+.beat[data-tone='night'] {
+  --tone: var(--night);
+}
+
+.headline {
+  order: 1;
+  font: 400 50px/0.9 var(--serif);
+  letter-spacing: -0.03em;
+}
+
+.pl {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+}
+
+.pl > span {
+  display: block;
+  transform: translateY(108%);
+  transition: transform 0s 0.9s;
+}
+
+.beat[data-state='on'] .pl > span {
+  transform: none;
+  transition: transform 0.9s var(--ease);
+  transition-delay: calc(0.2s + var(--j) * 0.1s);
+}
+
+.map {
+  order: 2;
+  position: relative;
+  height: clamp(170px, 25svh, 230px);
+  margin: 14px calc(-1 * var(--pad)) 0;
+  overflow: hidden;
+}
+
+.mapPhoto {
+  position: absolute;
+  inset: 0;
+}
+
+.mapPhoto picture,
+.mapPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.mapPhoto img {
+  object-fit: cover;
+  transform: scale(1.1);
+  transition: transform 0s 0.9s;
+}
+
+.beat[data-state='on'] .mapPhoto img {
+  transform: none;
+  transition: transform 1.6s var(--ease) 0.1s;
+}
+
+.mapPhoto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--tone) 62%, transparent);
+}
+
+.ridges {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.ridges path {
+  fill: none;
+  stroke: var(--paper);
+  stroke-width: 1.5px;
+  opacity: 0.4;
+}
+
+.mapDraw {
+  position: relative;
+  height: 100%;
+  aspect-ratio: 560 / 380;
+  margin: 0 auto;
+}
+
+.mapDraw svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.mapDraw .lane {
+  stroke-width: 1.6px;
+  stroke-dasharray: 6 7;
+}
+
+.spur {
+  fill: none;
+  stroke: var(--paper);
+  stroke-width: 2.5px;
+  stroke-dasharray: 1 8;
+  stroke-linecap: round;
+}
+
+.stopDot {
+  fill: var(--paper);
+  stroke: var(--tone);
+  stroke-width: 3px;
+}
+
+.stopDot[data-kind='start'] {
+  fill: var(--sun);
+}
+
+.stopDot[data-kind='maybe'] {
+  fill: var(--tone);
+  stroke: var(--paper);
+  stroke-width: 2.5px;
+}
+
+.mapLabel {
+  position: absolute;
+  z-index: 1;
+  white-space: nowrap;
+  color: var(--paper);
+  font: 400 15px/1.1 var(--serif);
+  transform: translate(-50%, -50%);
+}
+
+.mapLabel[data-anchor='start'] {
+  transform: translate(0, -50%);
+}
+
+.mapLabel[data-anchor='end'] {
+  transform: translate(-100%, -50%);
+}
+
+.mapLabel[data-kind='note'] {
+  font: 700 10.5px/1.2 var(--sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.season {
+  order: 3;
+  margin-top: 12px;
+}
+
+.months {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  padding: 0;
+  list-style: none;
+}
+
+.months li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+}
+
+.months i {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 14px;
+}
+
+.months i::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(90deg, currentColor 0 2px, transparent 2px 6px) center / 100% 1.5px no-repeat;
+  opacity: 0.5;
+}
+
+.months li[data-run] i::before {
+  opacity: 1;
+  border-block: 1.5px solid currentColor;
+  background: repeating-linear-gradient(90deg, var(--sun) 0 6px, transparent 6px 11px) center / 100% 2px no-repeat;
+}
+
+.months span {
+  padding: 2px 4px;
+  font: 700 11px/1 var(--sans);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.months li[data-now] span {
+  background: var(--sun);
+  color: var(--ink);
+}
+
+.months li[data-now] i::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: var(--sun);
+  box-shadow: 0 0 0 3px var(--tone, var(--ink));
+}
+
+.seasonState {
+  margin-top: 8px;
+  font: 700 13px/1.2 var(--sans);
+  color: var(--sun);
+}
+
+.beatText {
+  order: 4;
+  margin-top: 14px;
+}
+
+.tourName {
+  font-size: 23px;
+  line-height: 1.1;
+}
+
+.beat .meta {
+  margin-top: 6px;
+  color: rgba(238, 240, 236, 0.82);
+}
+
+.text {
+  margin-top: 8px !important;
+  font-size: 16.5px;
+  line-height: 1.42;
+}
+
+.note {
+  display: none;
+}
+
+.beat .buy {
+  margin-top: 14px;
+}
+
+.beat .price {
+  font-size: 23px;
+}
+
+@media (max-height: 760px) and (max-width: 899px) {
+  .map {
+    height: 150px;
+  }
+  .headline {
+    font-size: 42px;
+  }
+}
+
+/* ---------- The day can bend ---------- */
+
+.bend {
+  display: grid;
+  gap: 24px;
+  padding: 80px var(--pad) 72px;
+  background: var(--paper);
+  --rw: 24px;
+}
+
+.bend .lead {
+  color: var(--ink-2);
+}
+
+.bendHead h2 {
+  margin-top: 12px;
+  font-size: 60px;
+  line-height: 0.92;
+}
+
+.bendText {
+  margin-top: 16px !important;
+  max-width: 36ch;
+  font-size: 19px;
+  line-height: 1.45;
+}
+
+.hint {
+  font: 700 12.5px/1.2 var(--sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.toggles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 0 14px;
+  border: 1.5px solid rgba(15, 21, 25, 0.22);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--ink);
+  font: 700 16px/1.15 var(--sans);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.35s var(--ease), color 0.35s var(--ease), border-color 0.35s var(--ease);
+}
+
+.toggle svg {
+  flex: 0 0 auto;
+  transition: color 0.35s var(--ease), transform 0.5s var(--ease);
+}
+
+.toggle[aria-pressed='true'] {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.toggle[aria-pressed='true'] svg {
+  color: var(--sun);
+  transform: rotate(-8deg) scale(1.08);
+}
+
+.canvas {
+  position: relative;
+  margin-top: 16px;
+}
+
+.canvasWide {
+  display: none;
+}
+
+.canvasTall,
+.canvasWide {
+  position: relative;
+  width: 100%;
+}
+
+.canvasTall {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.canvas svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.stop {
+  position: absolute;
+  z-index: 1;
+  padding: 6px 10px 6px 12px;
+  border-left: 3px solid var(--sun);
+  background: var(--ink);
+  color: var(--paper);
+  font: 700 12.5px/1 var(--sans);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: var(--a);
+  scale: calc(0.7 + 0.3 * var(--a));
+  pointer-events: none;
+}
+
+.roadEnd {
+  position: absolute;
+  font: 400 21px/1 var(--serif);
+  white-space: nowrap;
+}
+
+.bendBuy {
+  display: grid;
+  gap: 10px;
+  padding-top: 20px;
+  border-top: 1.5px solid var(--ink);
+}
+
+.bendTour {
+  font: 400 26px/1.1 var(--serif);
+}
+
+.bendBuy .meta {
+  color: var(--ink-2);
+}
+
+.bendAfter {
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+/* ---------- Meet CJ ---------- */
+
+.host {
+  display: grid;
+  background: var(--white);
+}
+
+.portrait {
+  position: relative;
+  min-width: 0;
+}
+
+.portrait picture,
+.portrait img {
+  display: block;
+  width: 100%;
+}
+
+.portrait img {
+  height: clamp(280px, 52vw, 420px);
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.14);
+}
+
+.portrait figcaption {
+  padding: 12px var(--pad) 0;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+
+.hostText {
+  min-width: 0;
+  padding: 56px var(--pad) 80px;
+}
+
+.hostText .lead {
+  color: var(--ink-2);
+}
+
+.struck {
+  position: relative;
+  display: inline-block;
+  margin-top: 18px !important;
+  font: 400 46px/1 var(--serif);
+  letter-spacing: -0.02em;
+  color: #4a555b;
+}
+
+.struck s {
+  text-decoration: none;
+}
+
+.strikeRoad {
+  position: absolute;
+  left: -6px;
+  right: -16px;
+  top: 52%;
+  height: 10px;
+  margin-top: -5px;
+  border-block: 1.5px solid var(--ink);
+  background: repeating-linear-gradient(90deg, var(--sun) 0 7px, transparent 7px 12px) center / 100% 2px no-repeat, var(--white);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 1.9s cubic-bezier(0.45, 0, 0.2, 1) 0.15s;
+}
+
+.strikeVan {
+  position: absolute;
+  inset: 0 -16px 0 -6px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  transform: translateX(-100%);
+  transition: transform 1.9s cubic-bezier(0.45, 0, 0.2, 1) 0.15s;
+  pointer-events: none;
+}
+
+.strikeVan svg {
+  margin-right: -36px;
+  overflow: visible;
+}
+
+.struck[data-seen] .strikeRoad,
+.struck[data-seen] .strikeVan {
+  transform: none;
+}
+
+.host h2 {
+  margin-top: 6px;
+  font-size: 84px;
+  line-height: 0.88;
+  letter-spacing: -0.035em;
+}
+
+.hostLine {
+  margin-top: 22px !important;
+  max-width: 38ch;
+  font-size: 19px;
+  line-height: 1.5;
+}
+
+.faq {
+  margin-top: 18px !important;
+  max-width: 38ch;
+  font: 400 21px/1.3 var(--serif);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 30px;
+  padding-top: 18px;
+  border-top: 1.5px solid var(--ink);
+}
+
+.facts p {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+}
+
+.facts b {
+  font: 400 56px/0.9 var(--serif);
+  letter-spacing: -0.03em;
+}
+
+.facts span {
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--ink-2);
+}
+
+.facts small {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ---------- The plan ---------- */
+
+.plan {
+  display: grid;
+  gap: 32px;
+  padding: 80px var(--pad) 72px;
+  background: var(--ink);
+  color: var(--paper);
+  --road-edge: var(--paper);
+  --road-fill: var(--ink);
+  --rw: 26px;
+}
+
+.planHead {
+  min-width: 0;
+}
+
+.plan h2 {
+  font-size: 54px;
+  line-height: 0.95;
+}
+
+.planLead {
+  margin-top: 16px !important;
+  max-width: 36ch;
+  font-size: 19px;
+  line-height: 1.45;
+}
+
+.park {
+  margin: 18px calc(-1 * var(--pad)) 0;
+}
+
+.park svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.parkSign path {
+  fill: none;
+  stroke: var(--sun);
+  stroke-width: 2px;
+}
+
+.parkSign text {
+  fill: var(--paper);
+  font: 400 24px var(--serif);
+  text-anchor: end;
+}
+
+.parkVan {
+  transform: translateX(-280px);
+  opacity: 0;
+  transition: transform 2.2s cubic-bezier(0.25, 0.6, 0.2, 1) 0.2s, opacity 0.4s 0.2s;
+}
+
+.park[data-seen] .parkVan {
+  transform: none;
+  opacity: 1;
+}
+
+.endNote {
+  margin-top: 8px !important;
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+.talk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 20px;
+  margin-top: 18px !important;
+  font-size: 17px;
+}
+
+.talk span {
+  width: 100%;
+  font: 700 12.5px/1.2 var(--sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sun);
+}
+
+.talk a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--paper);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--sun);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+
+.composer {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+
+.group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  margin-bottom: 12px;
+  padding: 0;
+  font: 700 12.5px/1.2 var(--sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sun);
+}
+
+.choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.choice {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-height: 64px;
+  padding: 12px;
+  border: 1.5px solid rgba(238, 240, 236, 0.26);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--paper);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.35s var(--ease), background-color 0.35s var(--ease);
+}
+
+.choice[aria-checked='true'] {
+  border-color: var(--sun);
+  background: rgba(245, 165, 36, 0.1);
+}
+
+.choiceMap {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 6px;
+  overflow: visible;
+}
+
+.choiceMap path {
+  fill: none;
+  stroke: var(--paper);
+  stroke-width: 14px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+
+.choiceMap path[data-spur] {
+  stroke-width: 8px;
+  stroke-dasharray: 1 22;
+}
+
+.choiceMap circle {
+  fill: var(--ink);
+  stroke: var(--paper);
+  stroke-width: 6px;
+}
+
+.choiceMap circle[data-kind='start'] {
+  fill: var(--sun);
+  stroke: none;
+}
+
+.choice[aria-checked='true'] .choiceMap path {
+  stroke: var(--sun);
+  opacity: 1;
+}
+
+.choiceName {
+  font: 400 21px/1.1 var(--serif);
+}
+
+.choiceMeta {
+  font-size: 13px;
+  line-height: 1.3;
+  color: rgba(238, 240, 236, 0.86);
+}
+
+.choicePrice {
+  font: 700 14.5px/1.25 var(--sans);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  min-height: 46px;
+  padding: 0 16px;
+  border: 1.5px solid rgba(238, 240, 236, 0.3);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--paper);
+  font: 700 15px/1 var(--sans);
+  cursor: pointer;
+  transition: background-color 0.35s var(--ease), color 0.35s var(--ease), border-color 0.35s var(--ease);
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--paper);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.summary {
+  font: 400 30px/1.12 var(--serif);
+  letter-spacing: -0.015em;
+}
+
+.actions {
+  display: grid;
+  gap: 8px;
+}
+
+.actions .go {
+  white-space: normal;
+  text-align: center;
+}
+
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  color: var(--paper);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--sun);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 5px;
+}
+
+.planNote {
+  font-size: 15px;
+  line-height: 1.4;
+  color: rgba(238, 240, 236, 0.86);
+}
+
+/* ---------- The end of the road ---------- */
+
+.foot {
+  position: relative;
+  padding: 0 0 104px;
+  background: var(--paper);
+}
+
+.ridgeBand {
+  position: relative;
+  height: 90px;
+  margin-top: -1px;
+  background: var(--ink);
+}
+
+.ridgeBand svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sunset {
+  fill: var(--sun);
+  transition: transform 3.4s cubic-bezier(0.3, 0, 0.2, 1) 0.3s;
+}
+
+.ridgeBand[data-seen] .sunset {
+  transform: translateY(70px);
+}
+
+.hillBack {
+  fill: var(--ink);
+  stroke: var(--paper);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+.hillFront {
+  fill: var(--paper);
+  stroke: var(--paper);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+
+.seaLine {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.5px;
+  stroke-dasharray: 10 12;
+  vector-effect: non-scaling-stroke;
+}
+
+.footBody {
+  display: grid;
+  gap: 12px;
+  padding: 18px var(--pad) 0;
+}
+
+.footMark {
+  font: 400 44px/0.95 var(--serif);
+  letter-spacing: -0.03em;
+}
+
+.footPlace {
+  font-size: 16px;
+  color: var(--ink-2);
+}
+
+.footLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.footLinks a,
+.footContact a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: rgba(15, 21, 25, 0.3);
+  text-underline-offset: 4px;
+}
+
+.footContact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 20px;
+}
+
+.foot :global(.demo-foot-note) {
+  margin-top: 8px;
+  color: var(--ink-2);
+}
+
+/* ---------- Load and arrival ---------- */
+
+@keyframes rise {
+  from {
+    transform: translateY(108%);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: scale(1.12);
+  }
+}
+
+@keyframes unroll {
+  from {
+    opacity: 0;
+    transform: translateX(-6%);
+  }
+}
+
+/* ---------- Wider phones and tablets ---------- */
+
+@media (max-width: 599px) {
+  .sunset {
+    display: none;
+  }
+}
+
+@media (min-width: 600px) {
+  .root {
+    --pad: 32px;
+  }
+  .h1 {
+    font-size: 150px;
+  }
+  .headline {
+    font-size: 68px;
+  }
+  .map {
+    height: 280px;
+  }
+  .toggles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .choices {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 760px) {
+  .canvasTall {
+    display: none;
+  }
+  .canvasWide {
+    display: block;
+  }
+}
+
+/* ---------- Wide screens ---------- */
+
+@media (min-width: 900px) {
+  .root {
+    --pad: 56px;
+    --h1: 132px;
+    font-size: 19px;
+  }
+
+  .dock {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 5px 5px 5px 22px;
+    border-radius: 4px;
+    background: rgba(15, 21, 25, 0.84);
+    -webkit-backdrop-filter: blur(18px) saturate(1.3);
+    backdrop-filter: blur(18px) saturate(1.3);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    color: var(--paper);
+    transform: translate(-50%, 160%);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.6s var(--ease), opacity 0.4s var(--ease), visibility 0s 0.6s;
+  }
+
+  :global([data-past-hero]) .dock {
+    transform: translate(-50%, 0);
+    opacity: 1;
+    visibility: visible;
+    transition: transform 0.6s var(--ease), opacity 0.4s var(--ease), visibility 0s;
+  }
+
+  .dockLinks {
+    display: flex;
+    gap: 22px;
+  }
+
+  .dockLinks a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: rgba(238, 240, 236, 0.86);
+    font: 700 14.5px/1 var(--sans);
+    text-decoration: none;
+  }
+
+  .dockLinks a[aria-current] {
+    color: var(--sun);
+  }
+
+  .dockBook {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 20px;
+    border-radius: 2px;
+    background: var(--sun);
+    color: var(--ink);
+    font: 700 15px/1 var(--sans);
+    text-decoration: none;
+  }
+
+  /* The first screen: the guests fill the right; the road sweeps from Pickup across both; the headline crosses into the photograph and turns white as it does. */
+  .hero {
+    display: block;
+    padding: 0;
+  }
+
+  .heroPhoto {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 52%;
+    right: 0;
+    z-index: 1;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    margin: 0;
+  }
+
+  .heroShade {
+    background:
+      linear-gradient(90deg, rgba(15, 21, 25, 0.7) 0%, rgba(15, 21, 25, 0.34) 30%, rgba(15, 21, 25, 0) 62%),
+      linear-gradient(0deg, rgba(15, 21, 25, 0.35) 0%, rgba(15, 21, 25, 0) 30%);
+  }
+
+  .roadPhone {
+    display: none;
+  }
+
+  .roadWide {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    --rw: 62px;
+    animation: unroll 1.5s var(--ease) 0.35s both;
+  }
+
+  .roadWide .lane {
+    stroke-width: 2.5px;
+    stroke-dasharray: 16 18;
+  }
+
+  .heroInk,
+  .heroLight {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: block;
+    padding: 18px var(--pad) 0;
+    pointer-events: none;
+  }
+
+  .heroInk {
+    clip-path: inset(0 48% 0 0);
+  }
+
+  .heroInk a {
+    pointer-events: auto;
+  }
+
+  .heroLight {
+    clip-path: inset(0 0 0 52%);
+    color: var(--white);
+  }
+
+  .heroTop {
+    height: 44px;
+  }
+
+  .mark {
+    font-size: 22px;
+  }
+
+  .heroType {
+    position: absolute;
+    top: 96px;
+    left: var(--pad);
+    right: var(--pad);
+    margin: 0;
+  }
+
+  .kicker {
+    font-size: 13.5px;
+  }
+
+  .h1 {
+    margin-top: 14px;
+    font-size: var(--h1);
+  }
+
+  .line:last-child {
+    font-size: 1em;
+    letter-spacing: 0.12em;
+  }
+
+  .heroFoot {
+    position: absolute;
+    left: var(--pad);
+    top: calc(96px + 30px + var(--h1) * 1.8 + 34px);
+    width: min(40%, 520px);
+    margin: 0;
+  }
+
+  .sub {
+    font-size: 20px;
+  }
+
+  .heroAct {
+    margin-top: 22px;
+  }
+
+  .heroAct .go {
+    min-height: 60px;
+    padding: 0 28px 0 30px;
+    font-size: 18px;
+  }
+
+  .tag {
+    position: absolute;
+    z-index: 4;
+    top: 18px;
+    right: var(--pad);
+    min-height: 44px;
+    margin: 0;
+    color: rgba(251, 251, 249, 0.9);
+    font-size: 14.5px;
+  }
+
+  .tag b,
+  .tag em {
+    color: var(--white);
+  }
+
+  .pickup text {
+    font-size: 26px;
+  }
+
+  /* The tours: the side road holds all four, the frame shows one. */
+  .pin {
+    height: calc(var(--steps) * 74svh + 100svh);
+  }
+
+  .toursHead {
+    top: 36px;
+    font-size: 13.5px;
+  }
+
+  .side {
+    top: 50%;
+    left: var(--pad);
+    width: 280px;
+    height: 600px;
+    margin: -280px 0 0;
+  }
+
+  .sideWide {
+    display: none;
+  }
+
+  .sideTall {
+    display: block;
+    overflow: visible;
+    --rw: 20px;
+  }
+
+  .sideStops {
+    position: absolute;
+    inset: 0;
+    display: block;
+    margin: 0;
+    text-align: left;
+  }
+
+  .sideStops li {
+    position: absolute;
+    left: 98px;
+    top: calc(75px + var(--k) * 150px);
+    transform: translateY(-50%);
+    gap: 4px;
+  }
+
+  .sideStops b {
+    font-size: 25px;
+    justify-self: start !important;
+  }
+
+  .sideMeta {
+    display: block;
+    font: 700 11.5px/1.3 var(--sans);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .sidePrice {
+    font-size: 15px;
+  }
+
+  .beat {
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'head head'
+      'text map'
+      'season season';
+    column-gap: 48px;
+    row-gap: 22px;
+    padding: 84px var(--pad) 60px 380px;
+    --rw: 20px;
+  }
+
+  .headline {
+    grid-area: head;
+    font-size: 88px;
+    position: relative;
+    z-index: 2;
+  }
+
+  .beatText {
+    grid-area: text;
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    align-self: center;
+  }
+
+  .tourName {
+    font-size: 32px;
+  }
+
+  .text {
+    font-size: 19px;
+    max-width: 30ch;
+  }
+
+  .note {
+    display: block;
+    margin-top: 10px !important;
+    max-width: 34ch;
+    font-size: 15.5px;
+    line-height: 1.4;
+    color: rgba(238, 240, 236, 0.86);
+  }
+
+  .beat .buy {
+    margin-top: 22px;
+  }
+
+  .beat .price {
+    font-size: 30px;
+  }
+
+  .map {
+    grid-area: map;
+    position: static;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    align-self: center;
+  }
+
+  .mapPhoto {
+    top: 0;
+    bottom: 0;
+    left: auto;
+    right: 0;
+    width: 36%;
+    z-index: 0;
+  }
+
+  .mapPhoto::after {
+    background: linear-gradient(90deg, var(--tone) 0%, color-mix(in srgb, var(--tone) 55%, transparent) 30%, color-mix(in srgb, var(--tone) 18%, transparent) 70%);
+  }
+
+  .ridges {
+    left: auto;
+    right: 0;
+    top: auto;
+    bottom: 0;
+    width: 52%;
+    height: 70%;
+  }
+
+  .mapDraw {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: auto;
+  }
+
+  .mapLabel {
+    font-size: 21px;
+  }
+
+  .mapLabel[data-kind='note'] {
+    font-size: 12px;
+  }
+
+  .season {
+    grid-area: season;
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    max-width: 920px;
+  }
+
+  .months i {
+    height: 16px;
+  }
+
+  .months span {
+    font-size: 12.5px;
+  }
+
+  /* The day can bend */
+  .bend {
+    grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.4fr);
+    grid-template-areas:
+      'head play'
+      'buy play';
+    align-items: start;
+    gap: 40px 72px;
+    padding: 128px var(--pad) 120px;
+    --rw: 30px;
+  }
+
+  .bendHead {
+    grid-area: head;
+  }
+
+  .bendHead h2 {
+    font-size: 96px;
+  }
+
+  .bendPlay {
+    grid-area: play;
+  }
+
+  .bendBuy {
+    grid-area: buy;
+    align-self: end;
+  }
+
+  .stop {
+    font-size: 13px;
+  }
+
+  .roadEnd {
+    font-size: 24px;
+  }
+
+  /* Meet CJ: the words large on the left, the two of them full height on the right. */
+  .host {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  }
+
+  .host {
+    align-items: start;
+  }
+
+  .portrait {
+    grid-column: 2;
+    grid-row: 1;
+    position: sticky;
+    top: 12svh;
+    margin: 128px var(--pad) 120px 0;
+  }
+
+  .portrait img {
+    height: auto;
+    aspect-ratio: 5 / 4;
+  }
+
+  .portrait figcaption {
+    padding: 14px 0 0;
+  }
+
+  .hostText {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 128px 72px 120px var(--pad);
+  }
+
+  .struck {
+    font-size: 70px;
+  }
+
+  .host h2 {
+    font-size: 150px;
+  }
+
+  .hostLine {
+    font-size: 21px;
+  }
+
+  .faq {
+    font-size: 26px;
+  }
+
+  .facts b {
+    font-size: 76px;
+  }
+
+  /* The plan */
+  .plan {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-items: start;
+    gap: 80px;
+    padding: 128px var(--pad) 128px;
+  }
+
+  .plan h2 {
+    font-size: 88px;
+  }
+
+  .park {
+    margin: 30px 0 0 calc(-1 * var(--pad));
+  }
+
+  .summary {
+    font-size: 38px;
+  }
+
+  .actions {
+    grid-template-columns: auto auto;
+    justify-content: start;
+    align-items: center;
+    gap: 10px 24px;
+  }
+
+  .foot {
+    padding-bottom: 110px;
+  }
+
+  .ridgeBand {
+    height: 160px;
+  }
+
+  .ridgeBand[data-seen] .sunset {
+    transform: translateY(80px);
+  }
+
+  .footBody {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 16px 40px;
+    padding-top: 26px;
+  }
+
+  .footMark {
+    font-size: 96px;
+  }
+
+  .footLinks,
+  .footContact {
+    justify-content: flex-end;
+  }
+
+  .foot :global(.demo-foot-note) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1100px) {
+  .root {
+    --h1: 158px;
+  }
+  .headline {
+    font-size: 100px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .root {
+    --h1: 178px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .root {
+    --h1: 196px;
+  }
+  .headline {
+    font-size: 112px;
+  }
+}
+
+@media (min-width: 1700px) {
+  .root {
+    --h1: 224px;
+  }
+}
+
+@media (min-width: 900px) and (max-height: 800px) {
+  .root {
+    --h1: 132px;
+  }
+  .headline {
+    font-size: 72px;
+  }
+  .beat {
+    padding-top: 70px;
+    padding-bottom: 40px;
+    row-gap: 14px;
+  }
+  .note {
+    display: none;
+  }
+}
+
+/* ---------- Reduced motion: every state simply shows, the tours stand one under another ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .root *,
+  .root *::before,
+  .root *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .pin {
+    height: auto;
+  }
+
+  .pin > [data-frame] {
+    position: static;
+    height: auto;
+    overflow: visible;
+    background: var(--bay);
+  }
+
+  .toursHead {
+    position: static;
+    display: block;
+    padding: 56px var(--pad) 0;
+  }
+
+  .side {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 320px;
+    height: auto;
+    margin: 20px auto 8px;
+  }
+
+  .sideStops {
+    grid-template-columns: repeat(4, 80px) !important;
+  }
+
+  .sideStops b {
+    font-size: 14px !important;
+  }
+
+  .sidePrice {
+    font-size: 12px !important;
+  }
+
+  .sideTall {
+    display: none;
+  }
+
+  .sideWide {
+    display: block;
+  }
+
+  .sideStops {
+    position: static;
+    display: grid;
+    text-align: center;
+  }
+
+  .sideStops li {
+    position: static;
+    transform: none;
+    opacity: 1;
+  }
+
+  .sideStops b {
+    justify-self: center !important;
+  }
+
+  .sideMeta {
+    display: none;
+  }
+
+  .beat {
+    position: relative;
+    inset: auto;
+    clip-path: none;
+    visibility: visible;
+    padding-top: 48px;
+    padding-bottom: 48px;
+    padding-left: var(--pad);
+  }
+
+  .pl > span,
+  .mapPhoto img {
+    transform: none;
+  }
+
+  .strikeRoad,
+  .strikeVan,
+  .parkVan {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}

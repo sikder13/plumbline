@@ -1,0 +1,2269 @@
+/* Longline: a jet boat drawn on flat harbour colour, with the mussel farm's floats as the line that runs
+   through the page. Three grounds (harbour blue and pale sky, the hull's aluminium, their navy) and one
+   action colour, buoy orange. */
+
+.root {
+  --sky: #e5f4fb;
+  --sea: #00a3e6;
+  --navy: #023968;
+  --ink: #031d33;
+  --alu: #e9eff3;
+  --alu-2: #d5e0e7;
+  --buoy: #ff6a1a;
+  --rope: rgba(3, 29, 51, 0.42);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --swing: cubic-bezier(0.45, 0, 0.55, 1);
+  --display: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --text: 'IBM Plex Sans', system-ui, sans-serif;
+  --pad: 20px;
+  --float-bg: rgba(255, 106, 26, 0.96);
+  --float-ink: #031d33;
+  --float-call-bg: rgba(3, 29, 51, 0.92);
+  --float-call-ink: #fff;
+  --float-font: 'IBM Plex Sans', system-ui, sans-serif;
+  font-family: var(--text);
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--sky);
+  overflow-x: clip;
+}
+
+.root :where(h1, h2, h3, p, ul, ol, figure) {
+  margin: 0;
+}
+
+.root :where(ul, ol) {
+  padding: 0;
+  list-style: none;
+}
+
+.root h2 {
+  font: 900 clamp(46px, 14vw, 64px) / 0.9 var(--display);
+  letter-spacing: -0.045em;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 3px;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* A small label, led by a float. */
+.kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  font: 600 12.5px/1.2 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.kicker::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--buoy);
+  box-shadow: 0 0 0 2px var(--ink);
+}
+
+/* The one action: a dark pill with the arrow held in a float. */
+.go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 58px;
+  padding: 0 9px 0 24px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font: 600 17px/1 var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.go svg {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  padding: 11px;
+  border-radius: 50%;
+  background: var(--buoy);
+  color: var(--ink);
+  transition: transform 0.5s var(--ease);
+}
+
+.go:hover svg {
+  transform: translateX(3px);
+}
+
+/* ---------- Desktop dock: the sections and the action, docked low once the opening has gone ---------- */
+.dock {
+  display: none;
+}
+
+/* ---------- Hero: a pale sky with the split headline, a harbour below, the boat on the line between ---------- */
+.hero {
+  --bw: 124vw;
+  --rise: calc(var(--bw) * 0.3 - 50px);
+  --ts: 1;
+  --hp: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - var(--bar-h));
+  background: var(--sea);
+  overflow: hidden;
+}
+
+.sky {
+  position: relative;
+  padding: 0 var(--pad) calc(var(--rise) + 12px);
+  background: var(--sky);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+  margin-bottom: 8px;
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--ink);
+  text-decoration: none;
+  font: 800 14px/1.1 var(--display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.mark i {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--buoy);
+  box-shadow: 0 0 0 2.5px var(--ink);
+}
+
+.mark i::after {
+  content: '';
+  position: absolute;
+  left: -7px;
+  right: -7px;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--ink);
+  z-index: -1;
+}
+
+.place {
+  display: none;
+}
+
+.hero .kicker {
+  animation: fade 0.7s var(--ease) 0.05s both;
+}
+
+.title {
+  font-family: var(--display);
+  color: var(--ink);
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.16em;
+  margin-bottom: -0.16em;
+}
+
+.line > span {
+  display: block;
+  animation: rise 0.95s var(--ease) calc(0.14s + var(--i) * 0.16s) both;
+}
+
+.line[data-line='0'] {
+  font-size: 11vw;
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+}
+
+.line[data-line='1'] {
+  font-size: 20vw;
+  font-weight: 900;
+  line-height: 0.86;
+  letter-spacing: -0.055em;
+  max-width: 6.2em;
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(108%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.water {
+  position: relative;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--sea);
+}
+
+/* Rows of mussel farm floats racing past, far rows slow and small, near rows quick and large. */
+.floats {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--t) * var(--ts));
+  height: calc(var(--r) * 2 + 2px);
+  overflow: hidden;
+  opacity: min(1, calc(0.55 + var(--k) * 0.15));
+  animation: rowbob 1.7s var(--swing) calc(var(--k) * -0.4s) infinite alternate;
+}
+
+@keyframes rowbob {
+  from {
+    transform: translateY(-2px);
+  }
+  to {
+    transform: translateY(3px);
+  }
+}
+
+/* The wake the boat runs in on, drawn across the water as she arrives. */
+.trail {
+  display: none;
+}
+
+/* The two nearest rows pass in front of the boat. */
+.row:nth-child(n + 5) {
+  z-index: 3;
+}
+
+.row i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(100% + var(--s));
+  background-image: radial-gradient(var(--r) calc(var(--r) * 0.8) at calc(var(--s) / 2) 50%, var(--buoy) 94%, transparent 100%), linear-gradient(var(--rope), var(--rope));
+  background-size: var(--s) 100%, 100% 1px;
+  background-position: 0 0, 0 50%;
+  background-repeat: repeat-x, no-repeat;
+  animation: drift var(--d) linear infinite;
+}
+
+@keyframes drift {
+  to {
+    transform: translateX(calc(var(--s) * -1));
+  }
+}
+
+.heroBoat {
+  position: relative;
+  z-index: 2;
+  width: var(--bw);
+  margin: calc(var(--rise) * -1) 0 0 -16vw;
+  transform: translateX(calc(var(--hp) * 70vw)) rotate(calc(var(--hp) * -4deg));
+  pointer-events: none;
+}
+
+/* She runs in on her wake as the headline lands, then keeps surging. */
+.ride {
+  animation: arrive 1.15s var(--ease) 0.2s both, surge 2.6s var(--swing) 1.4s infinite alternate;
+}
+
+@keyframes arrive {
+  from {
+    transform: translateX(-82vw);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes surge {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(1.6vw);
+  }
+}
+
+.paint svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  transform-origin: 62% 76%;
+  animation: bob 2.4s var(--swing) 1.4s infinite alternate;
+}
+
+@keyframes bob {
+  from {
+    transform: rotate(-0.7deg) translateY(0);
+  }
+  to {
+    transform: rotate(0.5deg) translateY(1.2%);
+  }
+}
+
+/* The boat painted flat: aluminium, white cabin, dark bottom, white water. */
+.paint [data-part='wake'] path,
+.paint [data-part='jet'],
+.paint [data-part='spray'],
+.paint [data-part='foam'] {
+  fill: #fff;
+}
+
+.paint [data-part='wake'] [data-line] {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+
+.paint [data-part='rods'] path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+}
+
+.paint [data-part='mast'] path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.paint [data-part='mast'] rect {
+  fill: #fff;
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+.paint [data-part='posts'] rect {
+  fill: var(--ink);
+}
+
+.paint [data-rail] {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 3.2;
+  stroke-linecap: round;
+}
+
+.paint [data-body] {
+  fill: #f9fcfd;
+}
+
+.paint [data-glass] {
+  fill: var(--ink);
+}
+
+.paint [data-mull] {
+  fill: none;
+  stroke: #f9fcfd;
+  stroke-width: 6;
+}
+
+.paint [data-slab] {
+  fill: #fff;
+}
+
+.paint [data-fascia] {
+  fill: var(--navy);
+}
+
+.paint [data-fill] {
+  fill: #e2e9ee;
+}
+
+.paint [data-shade] {
+  fill: #c2ced7;
+}
+
+.paint [data-keel] {
+  fill: var(--ink);
+}
+
+.paint [data-rub] {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.root [data-name] {
+  font: 800 31px/1 var(--display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-anchor: middle;
+  fill: var(--ink);
+}
+
+.paint [data-part='spray'] {
+  transform-origin: 620px 300px;
+  animation: froth 0.42s var(--swing) infinite alternate;
+}
+
+.paint [data-part='jet'] {
+  transform-origin: 134px 300px;
+  animation: froth 0.36s var(--swing) 0.1s infinite alternate;
+}
+
+@keyframes froth {
+  from {
+    transform: scale(1, 1);
+  }
+  to {
+    transform: scale(1.05, 0.9);
+  }
+}
+
+.heroFoot {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: auto;
+  padding: 26px var(--pad) 26px;
+  animation: fade 0.8s var(--ease) 0.9s both;
+}
+
+.lead {
+  max-width: 32ch;
+  font-size: 20px;
+  line-height: 1.42;
+  font-weight: 500;
+}
+
+.prices {
+  display: flex;
+  gap: 22px;
+}
+
+.prices li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 6px;
+}
+
+.prices span {
+  flex: 1 0 100%;
+  font: 600 11.5px/1.3 var(--text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.prices b {
+  font: 900 40px/1 var(--display);
+  letter-spacing: -0.035em;
+}
+
+.prices small {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.heroFoot .go {
+  align-self: stretch;
+  min-height: 64px;
+  font-size: 18px;
+}
+
+@media (max-width: 759px) {
+  .row:nth-child(5) {
+    top: 80px;
+  }
+}
+
+/* ---------- Built for the job: the boat at full size, carried across as her parts are called out ---------- */
+.boat {
+  background: var(--sky);
+}
+
+.story {
+  --rw: 220vw;
+  --x0: 0vw;
+  --pan: -120vw;
+  position: relative;
+  height: calc(100svh + var(--steps) * 34svh);
+}
+
+.story [data-frame] {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  padding-top: calc(var(--bar-h) + 22px);
+  overflow: hidden;
+  background: var(--sky);
+}
+
+.boatTitle {
+  position: relative;
+  z-index: 3;
+  padding: 0 var(--pad);
+}
+
+.root .boatTitle {
+  font-size: clamp(54px, 17vw, 80px);
+}
+
+.stage {
+  position: relative;
+  flex: 1 1 auto;
+}
+
+.rig {
+  --rh: calc(var(--rw) * 0.4);
+  --pp: clamp(0, calc((var(--p) - 0.14) / 0.6), 1);
+  position: absolute;
+  left: 0;
+  bottom: 180px;
+  width: var(--rw);
+  height: var(--rh);
+  transform: translateX(calc(var(--x0) + var(--pp) * var(--pan)));
+  transition: opacity 0.8s var(--ease);
+}
+
+/* The sea she runs on, out to both edges of the screen. */
+.rig::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  top: 74%;
+  left: -400vw;
+  right: -400vw;
+  height: 200vh;
+  background: var(--sea);
+}
+
+.rigBoat {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+}
+
+.story[data-active='3'] .rig {
+  opacity: 0.16;
+}
+
+.story[data-active='3'] .callout {
+  opacity: 0;
+}
+
+/* On a phone a note that has been passed lets its words go before the pan carries them off. */
+@media (max-width: 759px) {
+  .callout[data-state='done'] p {
+    opacity: 0;
+    transition: opacity 0.2s var(--ease);
+  }
+}
+
+/* A note leads out from the part it names: a float on the part, a line, then the words. */
+.callout {
+  position: absolute;
+  z-index: 2;
+  left: calc(var(--x) * 100%);
+  top: calc(var(--y) * 100%);
+}
+
+.callout::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  left: -9px;
+  top: -9px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--buoy);
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--ink);
+  transform: scale(0);
+  transition: transform 0.5s var(--ease);
+}
+
+.callout::after {
+  content: '';
+  position: absolute;
+  left: -1px;
+  width: 2px;
+  height: calc(var(--len) * var(--rh));
+  background: var(--ink);
+  transform: scaleY(0);
+  transition: transform 0.7s var(--ease) 0.15s;
+}
+
+.callout[data-dir='down']::after {
+  top: 0;
+  transform-origin: 50% 0;
+}
+
+.callout[data-dir='up']::after {
+  bottom: 0;
+  transform-origin: 50% 100%;
+}
+
+.callout p {
+  position: absolute;
+  display: grid;
+  gap: 4px;
+  width: min(64vw, 320px);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.5s var(--ease) 0.55s, transform 0.6s var(--ease) 0.55s;
+}
+
+.callout[data-dir='down'] p {
+  top: calc(var(--len) * var(--rh) + 8px);
+}
+
+.callout[data-dir='up'] p {
+  bottom: calc(var(--len) * var(--rh) + 8px);
+}
+
+.callout[data-align='start'] p {
+  left: -2px;
+}
+
+.callout[data-align='end'] p {
+  right: -2px;
+  text-align: right;
+}
+
+.callout b {
+  font: 800 22px/1.1 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.callout span {
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.callout:not([data-state='off'])::before {
+  transform: scale(1);
+}
+
+.callout:not([data-state='off'])::after {
+  transform: scaleY(1);
+}
+
+.callout:not([data-state='off']) p {
+  opacity: 1;
+  transform: none;
+}
+
+/* Her own photograph, at its true size, slides in over the drawing. */
+.real {
+  position: absolute;
+  z-index: 4;
+  left: 0;
+  right: 0;
+  top: 50%;
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  transform: translateY(-58%);
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1.1s var(--ease);
+}
+
+.real[data-state='on'],
+.real[data-state='done'] {
+  clip-path: inset(0 0 0 0);
+}
+
+.real picture,
+.real img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.real figcaption {
+  padding: 14px var(--pad) 16px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.real figcaption b {
+  font: 800 18px/1.2 var(--display);
+}
+
+/* ---------- Where we fish: the fish hang from the farm's floats while mussels lose their grip ---------- */
+.lines {
+  --lp: 0;
+  position: relative;
+  padding: 84px 0 64px;
+  background: var(--sea);
+  color: var(--ink);
+  overflow: hidden;
+}
+
+.linesHead {
+  padding: 0 var(--pad);
+}
+
+.root .lines h2 {
+  max-width: 7.5em;
+  font-size: clamp(50px, 15vw, 72px);
+}
+
+.run {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 20px;
+  font: 600 14.5px/1.3 var(--text);
+}
+
+.run b {
+  font: 800 21px/1.15 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.run span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.run svg {
+  width: 14px;
+  height: 14px;
+  color: var(--ink);
+}
+
+.run svg:first-child {
+  display: none;
+}
+
+.farm {
+  position: relative;
+  height: 470px;
+  margin-top: 30px;
+}
+
+/* The longline at the surface, the floats sit on it. */
+.farm::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 29px;
+  height: 2px;
+  background: var(--ink);
+  opacity: 0.55;
+}
+
+.droppers {
+  position: absolute;
+  inset: 0 0 46px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.droppers li {
+  --drop: 30px;
+  --rise: 50px;
+  --sw: 5deg;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: 50% 30px;
+  transform: rotate(calc((var(--lp) - 0.5) * var(--sw)));
+}
+
+.droppers li::before {
+  content: '';
+  position: relative;
+  z-index: 2;
+  flex: none;
+  width: 24px;
+  height: 18px;
+  margin-top: 21px;
+  border-radius: 50%;
+  background: var(--buoy);
+  box-shadow: 0 0 0 2.5px var(--ink);
+}
+
+/* The dropper rope, thick with mussels. */
+.droppers li::after {
+  content: '';
+  position: absolute;
+  top: 38px;
+  bottom: 0;
+  left: 50%;
+  width: 16px;
+  margin-left: -8px;
+  background-image: radial-gradient(5px 8px at 50% 50%, var(--ink) 92%, transparent 100%), linear-gradient(var(--rope), var(--rope));
+  background-size: 16px 22px, 2px 100%;
+  background-position: 0 calc(var(--n) * 7px), 50% 0;
+  background-repeat: repeat-y, no-repeat;
+  opacity: 0.85;
+}
+
+.droppers b {
+  position: relative;
+  z-index: 1;
+  margin-top: var(--drop);
+  padding: 10px 3px;
+  background: var(--sea);
+  writing-mode: vertical-rl;
+  font: 900 42px/1 var(--display);
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  transform: translateY(calc((var(--lp) - 0.5) * var(--rise)));
+}
+
+.droppers li:nth-child(2) {
+  --drop: 96px;
+  --rise: -44px;
+  --sw: -6deg;
+}
+
+.droppers li:nth-child(3) {
+  --drop: 54px;
+  --rise: 70px;
+  --sw: 4deg;
+}
+
+.droppers li:nth-child(4) {
+  --drop: 124px;
+  --rise: -50px;
+  --sw: -5deg;
+}
+
+.droppers li:nth-child(5) {
+  --drop: 40px;
+  --rise: 64px;
+  --sw: 6deg;
+}
+
+.droppers li[data-last] {
+  --drop: 110px;
+  --rise: -56px;
+  --sw: -4deg;
+}
+
+.droppers li[data-last] b {
+  font-weight: 500;
+  font-size: 30px;
+}
+
+/* Mussels that have lost their grip. */
+.shells i {
+  --fall: 330px;
+  position: absolute;
+  z-index: 0;
+  left: calc(var(--x) * 100%);
+  top: 70px;
+  width: 9px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ink);
+  opacity: 0;
+  animation: lose 3.4s cubic-bezier(0.5, 0, 0.75, 0.6) calc(var(--n) * 0.55s) infinite;
+}
+
+@keyframes lose {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  85% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(var(--fall)) rotate(220deg);
+    opacity: 0;
+  }
+}
+
+/* The seabed, with the depth and the coast written along it. */
+.bed {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 46px;
+  padding: 0 var(--pad);
+  background: var(--ink);
+  color: #fff;
+  font: 600 12px/1.3 var(--text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: right;
+}
+
+.linesText {
+  max-width: 30ch;
+  margin-top: 30px;
+  padding: 0 var(--pad);
+  font-size: 19px;
+  line-height: 1.42;
+  font-weight: 500;
+}
+
+/* ---------- Simple to book: the trips on the calendar as lines of floats ---------- */
+.deck {
+  padding: 86px var(--pad) 60px;
+  background: var(--alu);
+}
+
+.root .deck h2 {
+  font-size: clamp(52px, 16vw, 76px);
+}
+
+.steps {
+  margin-top: 18px;
+  font: 700 19px/1.4 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.steps span::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin: 0 8px 2px 0;
+  border-radius: 50%;
+  background: var(--buoy);
+  box-shadow: 0 0 0 2px var(--ink);
+  vertical-align: middle;
+}
+
+.confirm {
+  max-width: 34ch;
+  margin-top: 14px;
+  font-size: 15px;
+  color: #33475a;
+}
+
+.planner {
+  margin-top: 34px;
+}
+
+.tabs {
+  display: flex;
+  gap: 18px;
+  border-bottom: 2px solid rgba(3, 29, 51, 0.16);
+}
+
+.tabs button {
+  flex: 1 1 0;
+  display: grid;
+  gap: 6px;
+  min-height: 44px;
+  margin-bottom: -2px;
+  padding: 4px 0 14px;
+  border: 0;
+  border-bottom: 4px solid transparent;
+  background: none;
+  color: #46596b;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.3s var(--ease), border-color 0.4s var(--ease);
+}
+
+.tabs button span {
+  font: 600 12px/1.2 var(--text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tabs button b {
+  font: 900 36px/1 var(--display);
+  letter-spacing: -0.04em;
+}
+
+.tabs button small {
+  font: 600 13px/1 var(--text);
+  letter-spacing: 0;
+}
+
+.tabs button[aria-pressed='true'] {
+  color: var(--ink);
+  border-bottom-color: var(--buoy);
+}
+
+.slotsLabel {
+  margin-top: 26px;
+  font: 600 12px/1.2 var(--text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.slotRows {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.slotRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'time end' 'rope rope';
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 14px 18px;
+  border: 1.5px solid rgba(3, 29, 51, 0.2);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.4s var(--ease), border-color 0.4s var(--ease);
+}
+
+.slotRow[aria-pressed='true'] {
+  border-color: var(--ink);
+  background: #fff;
+}
+
+.time {
+  grid-area: time;
+  font: 800 20px/1.1 var(--display);
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.rope {
+  grid-area: rope;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 22px;
+  background: linear-gradient(var(--rope), var(--rope)) 0 50% / 100% 2px no-repeat;
+}
+
+.rope i {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--alu);
+  box-shadow: inset 0 0 0 2px var(--ink);
+  transition: background 0.25s var(--ease), box-shadow 0.25s var(--ease), transform 0.45s var(--ease);
+}
+
+.slotRow[aria-pressed='true'] .rope i {
+  background: #fff;
+}
+
+.slotRow .rope i[data-lit] {
+  background: var(--buoy);
+  box-shadow: inset 0 0 0 2px var(--buoy), 0 0 0 2px var(--ink);
+  transform: scale(1.2);
+  transition-delay: calc(var(--k) * 55ms);
+}
+
+.rope i[data-extra] {
+  opacity: 0.35;
+}
+
+.ropeEnd {
+  grid-area: end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
+.ropeEnd em {
+  order: -1;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: var(--buoy);
+  color: var(--ink);
+  font: 700 11px/1 var(--text);
+  font-style: normal;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.4s var(--ease);
+}
+
+
+.slotRow[aria-pressed='true'] .ropeEnd em {
+  opacity: 1;
+  transition-delay: 0.8s;
+}
+
+.say {
+  min-height: 3.7em;
+  margin-top: 26px;
+  font: 500 23px/1.22 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.word {
+  display: inline-block;
+  white-space: pre;
+  animation: write 0.55s var(--ease) calc(var(--w) * 30ms) both;
+}
+
+.word[data-b] {
+  font-weight: 900;
+}
+
+@keyframes write {
+  from {
+    opacity: 0;
+    transform: translateY(0.45em);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.planner [data-line] {
+  max-width: 36ch;
+  min-height: 2.8em;
+  margin-top: 8px;
+  font-size: 15px;
+  color: #33475a;
+}
+
+.acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.acts .go {
+  flex: 1 1 auto;
+}
+
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 58px;
+  padding: 0 24px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  color: var(--ink);
+  font: 600 17px/1 var(--text);
+  text-decoration: none;
+}
+
+.deckNote {
+  max-width: 44ch;
+  margin-top: 16px;
+  font-size: 14px;
+  color: #33475a;
+}
+
+.fine {
+  display: grid;
+  gap: 6px;
+  margin-top: 22px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #33475a;
+}
+
+/* ---------- What do I need: the tackle tray ---------- */
+.bring {
+  position: relative;
+  padding: 84px var(--pad) 80px;
+  background: var(--alu);
+}
+
+.bring::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 14px;
+  background-image: radial-gradient(7px 5.5px at 24px 50%, var(--buoy) 94%, transparent 100%), linear-gradient(var(--rope), var(--rope));
+  background-size: 48px 100%, 100% 1px;
+  background-position: 0 0, 0 50%;
+  background-repeat: repeat-x, no-repeat;
+}
+
+.label {
+  margin-bottom: 14px;
+  font: 600 12.5px/1.2 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #33475a;
+}
+
+.bringHead p:not(.label) {
+  max-width: 34ch;
+  margin-top: 16px;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.tray {
+  margin-top: 28px;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 10px 8px 20px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  font: 600 16px/1.2 var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.toggle b {
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.toggle i {
+  position: relative;
+  flex: 0 0 auto;
+  width: 66px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--alu-2);
+  box-shadow: inset 0 0 0 2px var(--ink);
+  transition: background 0.4s var(--ease);
+}
+
+.toggle i::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ink);
+  transition: transform 0.5s var(--ease), background 0.4s var(--ease);
+}
+
+.toggle[aria-checked='true'] i {
+  background: var(--buoy);
+}
+
+.toggle[aria-checked='true'] i::after {
+  transform: translateX(26px);
+}
+
+.cells {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 14px;
+  padding: 6px;
+  border-radius: 18px;
+  background: var(--ink);
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 112px;
+  padding: 12px 10px 10px;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+  transition: background 0.45s var(--ease) calc(var(--o) * 90ms);
+}
+
+.cell b {
+  font: 800 15.5px/1.1 var(--display);
+  letter-spacing: -0.02em;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+.cell span {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.25;
+  color: #33475a;
+}
+
+.cell em {
+  margin-top: auto;
+  padding-top: 8px;
+  font: 600 11px/1 var(--text);
+  font-style: normal;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #4b5d6e;
+  animation: fade 0.5s var(--ease) both;
+}
+
+.cell[data-board] {
+  background: var(--buoy);
+}
+
+.cell[data-board] span,
+.cell[data-board] em {
+  color: var(--ink);
+}
+
+.trayNote {
+  margin-top: 14px;
+  font-size: 14px;
+  color: #33475a;
+}
+
+/* ---------- A great day out: the day before as a dropper line, then two ways in ---------- */
+.end {
+  padding: 88px var(--pad) 40px;
+  background: var(--navy);
+  color: #fff;
+}
+
+.end .kicker::before {
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.end h2 {
+  font-size: clamp(50px, 15vw, 72px);
+}
+
+/* Their own photograph of a day on the water, at its true size, opening the close. */
+.dusk {
+  margin: -88px calc(var(--pad) * -1) 56px;
+}
+
+.dusk picture,
+.dusk img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.dusk figcaption {
+  margin-top: 14px;
+  padding: 0 var(--pad);
+  font: 800 20px/1.2 var(--display);
+  letter-spacing: -0.015em;
+}
+
+.endHead p:not(.kicker) {
+  margin-top: 14px;
+  font-size: 19px;
+  font-weight: 500;
+}
+
+.seq {
+  position: relative;
+  display: grid;
+  gap: 22px;
+  margin: 38px 0 44px;
+  padding-left: 34px;
+}
+
+.seq::before {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.seq li {
+  position: relative;
+  display: grid;
+  gap: 2px;
+}
+
+.seq i {
+  position: absolute;
+  left: -34px;
+  top: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--buoy);
+  box-shadow: 0 0 0 3px var(--navy);
+}
+
+.seq b {
+  font: 800 21px/1.15 var(--display);
+  letter-spacing: -0.015em;
+}
+
+.seq span {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.doors {
+  display: grid;
+  gap: 10px;
+}
+
+.door {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px 20px 20px;
+  border-radius: 22px;
+  color: var(--ink);
+}
+
+.door[data-door='0'] {
+  background: var(--buoy);
+}
+
+.door[data-door='1'] {
+  background: var(--sea);
+}
+
+.doorKicker {
+  font: 600 12.5px/1.2 var(--text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.doorPrice b {
+  font: 900 64px/0.9 var(--display);
+  letter-spacing: -0.05em;
+}
+
+.doorPrice span {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.doorText {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.doorGo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 58px;
+  margin-top: 6px;
+  padding: 0 20px 0 22px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font: 600 17px/1 var(--text);
+  text-decoration: none;
+}
+
+.doorMail {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.endFoot {
+  display: grid;
+  gap: 18px;
+  margin-top: 36px;
+}
+
+.callNote {
+  max-width: 34ch;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.where {
+  display: grid;
+  gap: 2px;
+  font-style: normal;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.where b {
+  font: 800 19px/1.2 var(--display);
+  color: #fff;
+}
+
+/* ---------- Footer: the boat heads home along the line ---------- */
+.foot {
+  --fp: 1;
+  padding: 0 var(--pad) 112px;
+  background: var(--navy);
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.home {
+  position: relative;
+  height: 64px;
+  margin: 0 calc(var(--pad) * -1) 22px;
+  background-image: radial-gradient(6px 4.5px at 24px 50%, var(--buoy) 94%, transparent 100%), linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4));
+  background-size: 48px 100%, 100% 1px;
+  background-position: 0 0, 0 50%;
+  background-repeat: repeat-x, no-repeat;
+  overflow: hidden;
+}
+
+.homeBoat {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 78px;
+  margin-top: -15px;
+  transform: translateX(calc((1 - var(--fp)) * 30vw - 70vw)) scaleX(-1);
+}
+
+.homeBoat svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.homeBoat svg path {
+  fill: #fff;
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.homeBoat svg [data-cabin] {
+  fill: var(--ink);
+}
+
+.foot :global(.demo-foot-note) {
+  color: rgba(255, 255, 255, 0.86);
+}
+
+/* The shared floating action, in this page's colours. */
+.root :global(.float-main) {
+  font-weight: 700;
+}
+
+/* ---------- Tablet and up ---------- */
+@media (min-width: 760px) {
+  .root {
+    --pad: 40px;
+  }
+
+  .hero {
+    --bw: 92vw;
+  }
+
+  .place {
+    display: flex;
+    gap: 18px;
+    font: 600 13px/1.2 var(--text);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .place a {
+    color: inherit;
+    font-weight: 700;
+    text-decoration: none;
+    border-bottom: 2px solid var(--buoy);
+  }
+
+  .line[data-line='0'] {
+    font-size: 6.6vw;
+  }
+
+  .line[data-line='1'] {
+    font-size: 13.6vw;
+    max-width: none;
+  }
+
+  .heroBoat {
+    margin-left: 4vw;
+  }
+
+  .heroFoot .go {
+    align-self: flex-start;
+  }
+
+  .story {
+    --rw: 170vw;
+    --pan: -70vw;
+  }
+
+  .callout b {
+    font-size: 24px;
+  }
+
+  .run svg:first-child {
+    display: inline;
+  }
+
+  .farm {
+    --dsc: 1.3;
+    height: 600px;
+  }
+
+  .droppers b {
+    font-size: 62px;
+    margin-top: calc(var(--drop) * 1.3);
+  }
+
+  .droppers li[data-last] b {
+    font-size: 40px;
+  }
+
+  .shells i {
+    --fall: 470px;
+  }
+
+  .linesText {
+    font-size: 24px;
+  }
+
+  .slotRow {
+    grid-template-columns: 200px minmax(0, 1fr) 96px;
+    grid-template-areas: 'time rope end';
+    gap: 18px;
+    padding: 16px 18px;
+  }
+
+  .cells {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .toggle {
+    width: auto;
+    gap: 22px;
+  }
+
+  .doors {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .endFoot {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+
+  .seq {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 24px;
+    padding: 34px 0 0;
+  }
+
+  .seq::before {
+    left: 0;
+    right: 0;
+    top: 10px;
+    bottom: auto;
+    width: auto;
+    height: 2px;
+  }
+
+  .seq i {
+    left: 0;
+    top: -34px;
+  }
+}
+
+/* ---------- Desktop ---------- */
+@media (min-width: 1100px) {
+  .root {
+    --pad: 56px;
+  }
+
+  .root h2 {
+    font-size: clamp(72px, 7.6vw, 124px);
+  }
+
+  .dock {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 6px 6px 18px;
+    border-radius: 999px;
+    background: rgba(3, 29, 51, 0.9);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, 24px);
+    transition: opacity 0.5s var(--ease), transform 0.6s var(--ease), visibility 0.5s;
+  }
+
+  :global(html[data-past-hero]) .dock {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+  }
+
+  .dockLinks {
+    display: flex;
+    gap: 4px;
+  }
+
+  .dockLinks a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 12px;
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.82);
+    font: 600 14px/1 var(--text);
+    text-decoration: none;
+    transition: color 0.3s var(--ease);
+  }
+
+  .dockLinks a::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.4;
+    transition: background 0.3s var(--ease), opacity 0.3s var(--ease);
+  }
+
+  .dockLinks a:hover,
+  .dockLinks a[aria-current] {
+    color: #fff;
+  }
+
+  .dockLinks a[aria-current]::before {
+    background: var(--buoy);
+    opacity: 1;
+  }
+
+  .dockBook {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    margin-left: 8px;
+    padding: 0 20px;
+    border-radius: 999px;
+    background: var(--buoy);
+    color: var(--ink);
+    font: 700 15px/1 var(--text);
+    text-decoration: none;
+  }
+
+  .dockBook span {
+    font-weight: 600;
+    opacity: 0.85;
+  }
+
+  .hero {
+    --bw: min(56vw, 104vh);
+    --rise: calc(var(--bw) * 0.3 - 66px);
+    --ts: 1.15;
+    min-height: calc(100vh - var(--bar-h));
+  }
+
+  .sky {
+    padding-bottom: calc(var(--rise) + 2vh);
+  }
+
+  .top {
+    min-height: 88px;
+  }
+
+  .line[data-line='0'] {
+    font-size: min(5.4vw, 9.6vh);
+  }
+
+  .line[data-line='1'] {
+    font-size: min(11.8vw, 21vh);
+  }
+
+  .water {
+    min-height: 34vh;
+  }
+
+  .row:nth-child(n + 5) {
+    left: 44vw;
+  }
+
+  .trail {
+    display: block;
+    position: absolute;
+    z-index: 1;
+    left: 0;
+    top: 58px;
+    width: calc(97vw - var(--bw) * 0.88);
+    height: 12px;
+    border-radius: 6px;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0), #fff 85%);
+    animation: trail 1.15s var(--ease) 0.2s both;
+  }
+
+  @keyframes trail {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  .heroBoat {
+    position: absolute;
+    top: calc(var(--rise) * -1);
+    right: 3vw;
+    margin: 0;
+  }
+
+  .heroFoot {
+    display: grid;
+    grid-template-columns: auto auto;
+    justify-content: start;
+    align-items: end;
+    gap: 22px 40px;
+    width: 46vw;
+    padding: 86px var(--pad) 40px;
+  }
+
+  .heroFoot .lead {
+    grid-column: 1 / -1;
+  }
+
+  .lead {
+    font-size: 19px;
+    max-width: 36ch;
+  }
+
+  .prices b {
+    font-size: 38px;
+  }
+
+  .heroFoot .go {
+    align-self: end;
+    min-height: 62px;
+    font-size: 18px;
+  }
+
+  /* The boat at full width, driving in as her parts are called out. */
+  .story {
+    --rw: min(72vw, calc((100vh - 400px) * 2.5));
+    --x0: -12vw;
+    --pan: 12vw;
+    height: calc(100vh + var(--steps) * 24vh);
+  }
+
+  .story [data-frame] {
+    height: 100vh;
+    padding-top: calc(var(--bar-h) + 40px);
+  }
+
+  .root .boatTitle {
+    font-size: clamp(72px, 7.6vw, 124px);
+  }
+
+  .rig {
+    left: 50%;
+    bottom: 150px;
+    margin-left: calc(var(--rw) / -2);
+  }
+
+  .callout p {
+    width: 310px;
+  }
+
+  .callout span {
+    font-size: 16px;
+  }
+
+  .real figcaption {
+    padding: 16px 24px 18px;
+    font-size: 16px;
+  }
+
+  .lines {
+    padding: 120px 0 100px;
+  }
+
+  .linesHead {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: end;
+    column-gap: 56px;
+  }
+
+  .root .lines h2 {
+    font-size: clamp(72px, 7.6vw, 124px);
+  }
+
+  .run {
+    margin: 0 0 12px;
+    font-size: 16px;
+  }
+
+  .run b {
+    font-size: 28px;
+  }
+
+  .farm {
+    height: 760px;
+    margin-top: 64px;
+  }
+
+  .droppers {
+    inset: 0 4vw 56px;
+  }
+
+  .droppers b {
+    font-size: 96px;
+    margin-top: calc(var(--drop) * 1.6);
+  }
+
+  .droppers li[data-last] b {
+    font-size: 56px;
+  }
+
+  .droppers li::before {
+    width: 30px;
+    height: 22px;
+    margin-top: 19px;
+  }
+
+  .shells i {
+    --fall: 600px;
+    width: 12px;
+    height: 18px;
+  }
+
+  .bed {
+    min-height: 56px;
+    font-size: 13px;
+  }
+
+  .linesText {
+    max-width: 40ch;
+    margin-left: auto;
+    margin-right: var(--pad);
+    padding: 0;
+    font-size: 28px;
+    line-height: 1.32;
+  }
+
+  .deck {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    column-gap: 72px;
+    padding: 130px var(--pad) 110px;
+  }
+
+  .deckHead {
+    align-self: start;
+    position: sticky;
+    top: 80px;
+  }
+
+  .root .deck h2 {
+    font-size: clamp(80px, 7.6vw, 124px);
+  }
+
+  .steps {
+    font-size: 24px;
+    margin-top: 26px;
+  }
+
+  .planner {
+    margin-top: 0;
+  }
+
+  .fine {
+    grid-column: 2;
+  }
+
+  .tabs button b {
+    font-size: 48px;
+  }
+
+  .slotRow {
+    grid-template-columns: 236px minmax(0, 1fr) 104px;
+    padding: 20px 22px;
+  }
+
+  .time {
+    font-size: 24px;
+  }
+
+  .rope i {
+    width: 16px;
+    height: 16px;
+  }
+
+  .say {
+    font-size: 34px;
+    min-height: 2.6em;
+  }
+
+  .bring {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    column-gap: 72px;
+    padding: 120px var(--pad) 120px;
+  }
+
+  .tray {
+    margin-top: 0;
+  }
+
+  .cells {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .cell {
+    min-height: 136px;
+    padding: 16px 14px 14px;
+  }
+
+  .cell b {
+    font-size: 20px;
+  }
+
+  .end {
+    padding: 130px var(--pad) 56px;
+  }
+
+  .dusk {
+    width: min(1200px, 100%);
+    margin: -40px auto 80px;
+  }
+
+  .dusk figcaption {
+    padding: 0;
+    font-size: 24px;
+  }
+
+  .end h2 {
+    font-size: clamp(80px, 9vw, 150px);
+  }
+
+  .endHead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    column-gap: 40px;
+  }
+
+  .endHead .kicker {
+    flex: 1 0 100%;
+  }
+
+  .endHead p:not(.kicker) {
+    font-size: 24px;
+    padding-bottom: 14px;
+  }
+
+  .seq {
+    margin: 72px 0 64px;
+  }
+
+  .seq b {
+    font-size: 24px;
+  }
+
+  .door {
+    padding: 34px 32px 28px;
+  }
+
+  .doorPrice b {
+    font-size: 104px;
+  }
+
+  .doorGo {
+    align-self: flex-start;
+    min-width: 280px;
+  }
+
+  .foot {
+    padding-bottom: 96px;
+  }
+
+  .home {
+    height: 84px;
+    background-size: 64px 100%, 100% 1px;
+  }
+
+  .homeBoat {
+    width: 108px;
+    margin-top: -20px;
+  }
+}
+
+/* ---------- With reduced motion asked for, every state shows at rest and the story reads straight down ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .root *,
+  .root *::before,
+  .root *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .heroBoat {
+    transform: none;
+  }
+
+  .trail {
+    clip-path: none;
+  }
+
+  .story {
+    height: auto;
+  }
+
+  .story [data-frame] {
+    position: static;
+    height: auto;
+    padding-bottom: 64px;
+  }
+
+  .stage {
+    flex: none;
+  }
+
+  .rig {
+    position: relative;
+    left: auto;
+    bottom: auto;
+    width: min(100%, var(--rw));
+    height: auto;
+    margin: 24px auto 0;
+    transform: none;
+    opacity: 1 !important;
+  }
+
+  .rig::before {
+    display: none;
+  }
+
+  .rigBoat {
+    position: relative;
+  }
+
+  .callout {
+    position: static;
+    margin-top: 14px;
+    padding: 0 var(--pad);
+  }
+
+  .callout::before,
+  .callout::after {
+    display: none;
+  }
+
+  .callout p,
+  .callout[data-align='end'] p {
+    position: static;
+    width: auto;
+    opacity: 1;
+    transform: none;
+    text-align: left;
+  }
+
+  .real {
+    position: relative;
+    top: auto;
+    margin-top: 28px;
+    transform: none;
+    clip-path: none;
+  }
+
+  .droppers li,
+  .droppers b {
+    transform: none;
+  }
+
+  .shells {
+    display: none;
+  }
+
+  .homeBoat {
+    transform: translateX(-70vw) scaleX(-1);
+  }
+}

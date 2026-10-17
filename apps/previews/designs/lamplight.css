@@ -1,0 +1,2152 @@
+.root {
+  --cave: #0f1012;
+  --deep: #060708;
+  --water: #0e1e2b;
+  --day: #f7f9fa;
+  --ink: #16181c;
+  --bone: #f4efe7;
+  --mute: #c7c0b6;
+  --dim: #8a847b;
+  --off: #6e6962;
+  --day-mute: #444950;
+  --amber: #fd9d2c;
+  --flame: #ea3a13;
+  --flame-ink: #b4350e;
+  --ice: #c3f3ff;
+  --lamp: linear-gradient(90deg, #ea3a13 0%, #f86b2e 30%, #fd9d2c 72%, #ffe3b3 100%);
+  --glow: 0 0 10px rgba(253, 157, 44, 0.85), 0 0 30px rgba(234, 58, 19, 0.45);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --display: 'Darker Grotesque', 'Arial Narrow', 'Helvetica Neue', Arial, sans-serif;
+  --text: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --pad: 20px;
+  --float-bg: #fd9d2c;
+  --float-ink: #16181c;
+  --float-call-bg: #f4efe7;
+  --float-call-ink: #16181c;
+  --float-font: 'Hanken Grotesk', system-ui, sans-serif;
+  font-family: var(--text);
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--bone);
+  background: var(--cave);
+  overflow-x: clip;
+}
+
+.root :where(h1, h2, h3) {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 900;
+  letter-spacing: -0.012em;
+}
+
+.root :where(h2) {
+  font-size: clamp(54px, 15.4vw, 68px);
+  line-height: 0.84;
+}
+
+.root :where(p, figure, blockquote) {
+  margin: 0;
+}
+
+.root :where(ul) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.root :where(a) {
+  color: inherit;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 4px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* A section's small opening label, hung from a short piece of lamp light. */
+.label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px !important;
+  font: 700 13px/1.2 var(--text);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+.label::before {
+  content: '';
+  flex: 0 0 26px;
+  height: 2px;
+  background: var(--lamp);
+}
+
+/* The action: flat lamp amber, squared, the words in ink. */
+.go,
+.cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 26px;
+  border-radius: 4px;
+  background: var(--amber);
+  color: var(--ink);
+  font: 800 17px/1.1 var(--text);
+  text-align: center;
+  text-decoration: none;
+  will-change: transform;
+  transition: background-color 0.3s var(--ease);
+}
+
+.go:hover,
+.cta:hover {
+  background: #ffb04f;
+}
+
+.root :global(.float-main) {
+  border-radius: 6px;
+  font-weight: 800;
+  box-shadow: none;
+}
+
+.root :global(.float-call) {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+.body {
+  max-width: 36ch;
+}
+
+.dock {
+  display: none;
+}
+
+/* ---------- The opening: one held frame that goes down into the dark ---------- */
+
+.descent {
+  position: relative;
+  background: var(--deep);
+}
+
+.story {
+  height: calc(100svh + var(--steps) * 34svh);
+}
+
+.story > [data-frame] {
+  position: sticky;
+  top: 0;
+  height: calc(100svh - var(--bar-h));
+  overflow: hidden;
+  container-type: size;
+  background: var(--deep);
+}
+
+.scene {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: min(66%, 540px);
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.9s var(--ease);
+}
+
+.scene picture,
+.scene img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.scene img {
+  object-fit: cover;
+}
+
+.scene[data-scene='day'] {
+  opacity: 1;
+}
+
+.scene[data-scene='day'][data-state='done'] {
+  opacity: 0;
+  transition-duration: 1.2s;
+}
+
+.scene[data-scene='day'] img {
+  animation: drift 6s var(--ease) both;
+}
+
+.scene[data-scene='lamp'][data-state='on'],
+.scene[data-scene='glow'][data-state='on'],
+.scene[data-scene='glow'][data-state='done'] {
+  opacity: 1;
+}
+
+/* The dark around the headlamp's pool: a big field with a soft hole in its middle, moved, not repainted. */
+.night {
+  position: absolute;
+  left: -100%;
+  top: -100%;
+  width: 300%;
+  height: 300%;
+  background: radial-gradient(ellipse 12% 13% at 50% 50%, rgba(5, 5, 6, 0) 0%, rgba(5, 5, 6, 0.06) 42%, rgba(5, 5, 6, 0.95) 100%);
+  transform: translate(calc((clamp(0, var(--p) * var(--steps) - 1, 1) - 0.5) * 70cqw), 4cqh);
+  will-change: transform;
+}
+
+.night[data-aim] {
+  transform: translate(var(--ax), var(--ay));
+}
+
+.glowLayer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.9s var(--ease);
+}
+
+.glowLayer picture {
+  -webkit-mask-image: var(--mn);
+  mask-image: var(--mn);
+  -webkit-mask-size: cover;
+  mask-size: cover;
+  -webkit-mask-position: 50% 50%;
+  mask-position: 50% 50%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.glowAll picture {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.glowAll {
+  transition-duration: 1.4s;
+}
+
+.glowLayer[data-state='on'],
+.glowLayer[data-state='done'] {
+  opacity: 1;
+}
+
+/* Shade where the words sit, so they read on daylight and on rock. */
+.veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, var(--deep) 0%, var(--deep) 33%, rgba(6, 7, 8, 0) 46%),
+    linear-gradient(0deg, rgba(6, 7, 8, 0.88) 0%, rgba(6, 7, 8, 0.4) 22%, rgba(6, 7, 8, 0) 40%);
+}
+
+.over {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px var(--pad) 22px;
+  text-align: center;
+}
+
+.mark {
+  display: grid;
+  gap: 4px;
+  font: 800 12.5px/1.15 var(--text);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  animation: fade 0.9s var(--ease) both;
+}
+
+.mark span {
+  font-weight: 600;
+  color: var(--mute);
+}
+
+.title {
+  margin-top: 18px !important;
+  font-size: clamp(66px, 21.5vw, 100px);
+  line-height: 0.8;
+  letter-spacing: -0.02em !important;
+}
+
+.wide {
+  display: none;
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+  padding: 0.06em 0.04em 0.13em;
+  margin-bottom: -0.17em;
+}
+
+.line > span {
+  display: block;
+  animation: rise 1s var(--ease) both;
+  animation-delay: calc(0.05s + var(--i) * 0.1s);
+}
+
+.lit {
+  font-style: normal;
+  color: var(--amber);
+}
+
+.dark {
+  transition: color 1s var(--ease);
+}
+
+.story:not([data-active='0']) .dark {
+  color: var(--off);
+}
+
+.say {
+  display: grid;
+  margin-top: auto;
+  width: min(100%, 34ch);
+}
+
+.say > * {
+  grid-area: 1 / 1;
+  align-self: end;
+}
+
+.sayLine {
+  font-size: 17px;
+  line-height: 1.4;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.6s var(--ease), transform 0.8s var(--ease);
+}
+
+.sayLine[data-state='on'] {
+  opacity: 1;
+  transform: none;
+}
+
+.sayLine[data-step='0'] {
+  animation: lift 0.8s var(--ease) 0.9s both;
+}
+
+.count {
+  font: 900 clamp(34px, 10.4vw, 46px)/0.95 var(--display);
+  opacity: 0;
+  transition: opacity 0.6s var(--ease);
+}
+
+.count[data-state='on'],
+.count[data-state='done'] {
+  opacity: 1;
+}
+
+.count span {
+  display: block;
+  color: var(--off);
+  transition: color 0.6s var(--ease);
+}
+
+.count span[data-state='on'] {
+  color: var(--ice);
+}
+
+.count span[data-state='done'] {
+  color: var(--bone);
+}
+
+.cta {
+  margin-top: 16px;
+  min-height: 58px;
+  font-size: 17.5px;
+  animation: lift 0.8s var(--ease) 1s both;
+}
+
+/* ---------- Not a handrail to be seen: the show cave drawn, then switched off ---------- */
+
+.idea {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 34px;
+  padding: 92px var(--pad) 88px;
+  background: var(--cave);
+}
+
+.idea h2 {
+  max-width: 9ch;
+}
+
+.ideaLead {
+  max-width: 34ch;
+  margin-top: 20px !important;
+  color: var(--mute);
+}
+
+.showcave {
+  margin: 0 calc(-1 * var(--pad)) !important;
+  view-timeline-name: --show;
+}
+
+.showPic {
+  position: relative;
+  aspect-ratio: 800 / 598;
+  overflow: hidden;
+}
+
+.showPic picture,
+.showPic img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.showPic::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(6, 7, 8, 0.4);
+  opacity: 0;
+}
+
+.rails {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  overflow: visible;
+  opacity: 0.5;
+}
+
+.rails path {
+  fill: none;
+  stroke: #ffe9c4;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 0.03 0.02;
+}
+
+.parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+  padding: 16px var(--pad) 0;
+  font: 800 24px/1.1 var(--display);
+  color: var(--dim);
+}
+
+.parts span {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.parts span::before {
+  content: '';
+  width: 16px;
+  height: 2px;
+  background: currentColor;
+}
+
+.ideaEnd {
+  display: grid;
+  gap: 18px;
+}
+
+.ideaReal {
+  max-width: 30ch;
+  font: 800 28px/1.12 var(--display);
+}
+
+.ideaNote {
+  max-width: 34ch;
+  color: var(--mute);
+}
+
+/* ---------- Wet or dry: the question stays in view and is the switch ---------- */
+
+.trips {
+  position: relative;
+  background: var(--cave);
+}
+
+.switchRoot {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding: 72px var(--pad) 84px;
+}
+
+.water {
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 74%;
+  background: linear-gradient(180deg, #17405f 0%, #102c43 30%, var(--water) 100%);
+  transform: translateY(101%);
+  transition: transform 1.25s var(--ease);
+}
+
+.switchRoot[data-mode='wet'] .water {
+  transform: none;
+}
+
+.surface {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--lamp);
+  box-shadow: var(--glow);
+  animation: lap 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+}
+
+.tripsHead .label {
+  margin-bottom: 6px !important;
+}
+
+.ask {
+  position: sticky;
+  z-index: 3;
+  top: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 0.18em;
+  margin: 0 calc(-1 * var(--pad)) 22px !important;
+  padding: 10px var(--pad) 12px;
+  background: rgba(15, 16, 18, 0.94);
+  font: 900 clamp(58px, 17.5vw, 76px)/0.86 var(--display);
+  letter-spacing: -0.015em;
+}
+
+.joiner {
+  color: var(--dim);
+  font-size: 0.6em;
+}
+
+.option {
+  position: relative;
+  appearance: none;
+  margin: 0;
+  padding: 0 0 0.1em;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--dim);
+  cursor: pointer;
+  transition: color 0.5s var(--ease);
+}
+
+.option::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0.1em;
+  bottom: 0;
+  height: 4px;
+  background: var(--lamp);
+  box-shadow: var(--glow);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 0.6s var(--ease);
+}
+
+.option[aria-pressed='true'] {
+  color: var(--amber);
+}
+
+.option[aria-pressed='true']::after {
+  transform: none;
+}
+
+.panels {
+  display: grid;
+}
+
+.panel {
+  grid-area: 1 / 1;
+  display: grid;
+  gap: 22px;
+  align-content: start;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s var(--ease), visibility 0s linear 0.4s;
+}
+
+.panel[data-on] {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.6s var(--ease) 0.1s, visibility 0s;
+}
+
+.tripPic {
+  position: relative;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  margin: 0 calc(-1 * var(--pad));
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 0.4s var(--ease);
+}
+
+.panel[data-on] .tripPic {
+  clip-path: inset(0);
+  transition: clip-path 1s var(--ease) 0.1s;
+}
+
+.tripPic picture,
+.tripPic img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tripBody {
+  display: grid;
+  gap: 16px;
+}
+
+.tripName {
+  font-size: clamp(44px, 12.6vw, 56px) !important;
+  line-height: 0.86;
+}
+
+.tripText {
+  max-width: 36ch;
+}
+
+.tripFacts {
+  display: grid;
+  gap: 9px;
+  font-size: 16.5px;
+  line-height: 1.35;
+}
+
+.tripFacts li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+}
+
+.tripFacts li::before {
+  content: '';
+  height: 2px;
+  transform: translateY(-5px);
+  background: var(--lamp);
+}
+
+.deal {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.tripFrom {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font: 700 15px/1 var(--text);
+  color: var(--bone);
+}
+
+.amount {
+  font: 900 clamp(56px, 16vw, 72px)/0.8 var(--display);
+  color: var(--amber);
+  letter-spacing: -0.01em;
+}
+
+.departs {
+  display: grid;
+  gap: 12px;
+  margin-top: 46px;
+}
+
+.departLabel {
+  font: 700 13px/1.2 var(--text);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+.departs ul {
+  display: grid;
+  gap: 10px;
+}
+
+.departs li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+}
+
+.departs li b {
+  font: 900 34px/0.9 var(--display);
+}
+
+.departs li span {
+  font-size: 16px;
+  color: var(--mute);
+}
+
+.soon {
+  font-size: 16.5px;
+}
+
+.soon a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 800;
+  color: var(--amber);
+  text-decoration: none;
+}
+
+/* ---------- Leaving the cave: the mouth opens until the screen is daylight ---------- */
+
+.seam {
+  position: relative;
+  background: var(--cave);
+}
+
+.seamFrame {
+  position: relative;
+  display: grid;
+}
+
+.seamDark {
+  display: grid;
+  justify-items: start;
+  padding: 24px var(--pad) 26px;
+}
+
+.seamDark .label {
+  margin-bottom: 14px !important;
+}
+
+.through {
+  max-width: 11ch;
+  font: 900 clamp(48px, 14.6vw, 62px)/0.86 var(--display);
+}
+
+.mouth {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.mouth picture,
+.mouth img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.white {
+  display: none;
+}
+
+.seamLight {
+  display: grid;
+  gap: 18px;
+  padding: 72px var(--pad) 40px;
+  background: var(--day);
+  color: var(--ink);
+}
+
+.seamLight h2 {
+  font-size: clamp(64px, 19vw, 92px) !important;
+  line-height: 0.82;
+}
+
+.seamLight p {
+  max-width: 32ch;
+  color: var(--day-mute);
+}
+
+/* ---------- One chapter in daylight: the train, the van, the visitors ---------- */
+
+.chapter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 64px;
+  padding: 24px var(--pad) 72px;
+  background: var(--day);
+  color: var(--ink);
+}
+
+.chapter .label,
+.choose .label {
+  color: var(--flame-ink);
+}
+
+.trainPart,
+.storyPart {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+}
+
+.trainPic {
+  position: relative;
+  aspect-ratio: 1080 / 592;
+  overflow: hidden;
+  margin: 0 calc(-1 * var(--pad)) !important;
+}
+
+.trainPic::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--lamp);
+}
+
+.trainPic picture,
+.trainPic img,
+.van picture,
+.van img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.trainText {
+  display: grid;
+  justify-items: start;
+  gap: 16px;
+}
+
+.trainText .label {
+  margin-bottom: 0 !important;
+}
+
+.trainText .body,
+.storyText .body {
+  color: var(--day-mute);
+}
+
+.fares {
+  display: grid;
+  gap: 10px;
+  margin-top: 4px !important;
+}
+
+.fares li {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+}
+
+.fares b {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font: 900 46px/0.85 var(--display);
+}
+
+.fares small {
+  font: 700 13px/1 var(--text);
+  letter-spacing: 0.08em;
+  color: var(--day-mute);
+}
+
+.fares span {
+  font-size: 16px;
+  color: var(--day-mute);
+}
+
+.season {
+  max-width: 36ch;
+  font-size: 16px;
+  color: var(--day-mute);
+}
+
+.van {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  margin: 0 calc(-1 * var(--pad)) !important;
+}
+
+.storyText {
+  display: grid;
+  gap: 14px;
+}
+
+.storyText .label {
+  margin-bottom: 0 !important;
+}
+
+.storyText h3 {
+  font-size: clamp(44px, 12.6vw, 56px);
+  line-height: 0.86;
+}
+
+.grew {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 28px;
+  margin-top: 8px !important;
+  font-size: 15px;
+  line-height: 1.3;
+  color: var(--day-mute);
+}
+
+.grew span {
+  display: grid;
+  align-content: start;
+}
+
+.grew small {
+  min-height: 1.3em;
+  font-size: 14px;
+}
+
+.grew b {
+  font: 900 clamp(48px, 14vw, 64px)/0.85 var(--display);
+  color: var(--flame);
+}
+
+.voice {
+  display: grid;
+  gap: 18px;
+  padding-top: 26px;
+  border-top: 3px solid var(--ink);
+}
+
+.quote p {
+  font: 900 clamp(48px, 14vw, 64px)/0.86 var(--display);
+}
+
+.quote footer {
+  margin-top: 10px;
+  font-size: 15px;
+  color: var(--day-mute);
+}
+
+.rating {
+  font-size: 16px;
+}
+
+.rating b {
+  font: 900 30px/1 var(--display);
+  margin-right: 4px;
+}
+
+.rating small {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 14px;
+  color: var(--day-mute);
+}
+
+.proofList {
+  display: grid;
+  gap: 9px;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.proofList li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 10px;
+  align-items: baseline;
+}
+
+.proofList li::before {
+  content: '';
+  height: 2px;
+  transform: translateY(-5px);
+  background: var(--lamp);
+}
+
+/* ---------- Your way in: a sentence that lights the trips that fit ---------- */
+
+.choose {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 30px;
+  padding: 72px var(--pad) 0;
+  background: var(--day);
+  color: var(--ink);
+  border-top: 1px solid rgba(22, 24, 28, 0.1);
+}
+
+.chooser {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 30px;
+}
+
+.sentence {
+  font: 800 28px/1.5 var(--display);
+}
+
+.pick {
+  appearance: none;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  margin: 0 1px;
+  padding: 0 8px 0 10px;
+  border: 0;
+  border-radius: 4px;
+  background: rgba(253, 157, 44, 0.2);
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.1;
+  cursor: pointer;
+  vertical-align: baseline;
+  box-shadow: inset 0 -3px 0 var(--amber);
+  transition: background-color 0.3s var(--ease);
+}
+
+.pick:hover {
+  background: rgba(253, 157, 44, 0.34);
+}
+
+.pick span {
+  animation: swap 0.5s var(--ease) both;
+}
+
+.pick svg {
+  flex: 0 0 auto;
+  color: var(--flame-ink);
+}
+
+.hint {
+  margin-top: -14px !important;
+  font-size: 15px;
+  color: var(--day-mute);
+}
+
+.trail {
+  display: grid;
+  gap: 4px;
+}
+
+.way {
+  appearance: none;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'name price' 'meta meta';
+  align-items: baseline;
+  gap: 4px 14px;
+  width: 100%;
+  padding: 14px 0 16px 22px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.way::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 18px;
+  bottom: 18px;
+  width: 4px;
+  background: #c9ccd0;
+  transition: background-color 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+
+.way[data-fit]::before {
+  background: var(--amber);
+  box-shadow: var(--glow);
+}
+
+.wayName {
+  grid-area: name;
+  font: 900 clamp(34px, 9.6vw, 46px)/0.9 var(--display);
+  color: #7c8087;
+  transition: color 0.4s var(--ease);
+}
+
+.way[data-fit] .wayName {
+  color: var(--ink);
+}
+
+.wayMeta {
+  grid-area: meta;
+  font-size: 15px;
+  color: var(--day-mute);
+}
+
+.wayPrice {
+  grid-area: price;
+  font: 800 16px/1.2 var(--text);
+  white-space: nowrap;
+}
+
+.way[aria-pressed='true'] .wayName {
+  color: var(--flame-ink);
+}
+
+/* The one way in, lit in the dark. */
+.lit2 {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  margin: 10px calc(-1 * var(--pad)) 0;
+  padding: 56px var(--pad) 64px;
+  background: var(--cave);
+  color: var(--bone);
+}
+
+.litLabel {
+  font: 700 13px/1.2 var(--text);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+.litName {
+  font: 900 clamp(54px, 16vw, 76px)/0.84 var(--display);
+  color: var(--amber);
+  animation: fade 0.7s var(--ease) both;
+}
+
+.litPrice {
+  font: 800 26px/1.1 var(--display);
+}
+
+.lit2 .go {
+  margin-top: 8px;
+  min-height: 60px;
+  font-size: 18px;
+}
+
+.litNone {
+  max-width: 30ch;
+  font: 800 30px/1.1 var(--display);
+}
+
+.litSoon {
+  max-width: 36ch;
+  margin-top: 14px !important;
+  font-size: 16px;
+  color: var(--mute);
+}
+
+.litSoon a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 800;
+  color: var(--amber);
+  text-decoration: none;
+}
+
+/* ---------- Foot: how to reach them ---------- */
+
+.foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 36px;
+  padding: 56px var(--pad) 104px;
+  background: var(--day);
+  color: var(--ink);
+}
+
+.calls {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+
+.bigCall,
+.smallCall {
+  display: grid;
+  gap: 2px;
+  min-height: 44px;
+  text-decoration: none;
+}
+
+.bigCall {
+  font: 900 clamp(44px, 13vw, 60px)/0.9 var(--display);
+}
+
+.smallCall {
+  font: 800 23px/1.1 var(--display);
+}
+
+.bigCall small,
+.smallCall small {
+  font: 700 12px/1.2 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--flame-ink);
+}
+
+.road {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+
+.roadLabel {
+  font: 700 12px/1.2 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--day-mute);
+}
+
+.roadLine {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  grid-template-rows: auto 3px auto;
+  row-gap: 8px;
+  font-size: 15px;
+}
+
+.roadLeg {
+  grid-row: 1;
+  justify-self: center;
+  font-size: 13px;
+  color: var(--day-mute);
+  white-space: nowrap;
+}
+
+.roadLeg + .roadLeg {
+  grid-column: 2;
+}
+
+.roadTrack {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  position: relative;
+  background: var(--lamp);
+}
+
+.roadTrack i {
+  position: absolute;
+  top: -5px;
+  width: 3px;
+  height: 13px;
+  background: var(--ink);
+}
+
+.roadTrack i:nth-child(1) {
+  left: 0;
+}
+
+.roadTrack i:nth-child(2) {
+  left: 40%;
+  height: 17px;
+  top: -7px;
+  background: var(--flame);
+}
+
+.roadTrack i:nth-child(3) {
+  right: 0;
+}
+
+.roadEnd {
+  grid-row: 3;
+  color: var(--day-mute);
+}
+
+.roadEnd + .roadHere + .roadEnd {
+  grid-column: 2;
+  justify-self: end;
+}
+
+.roadHere {
+  grid-row: 3;
+  grid-column: 2;
+  font: 900 24px/1 var(--display);
+  margin-left: -2px;
+}
+
+.address {
+  font-size: 15.5px;
+  color: var(--day-mute);
+}
+
+.cafe {
+  display: grid;
+  gap: 4px;
+  font-size: 16px;
+}
+
+.cafe b {
+  font: 900 26px/1 var(--display);
+  margin-bottom: 4px;
+}
+
+.cafe span {
+  color: var(--day-mute);
+}
+
+.cafe strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.small {
+  display: grid;
+  gap: 8px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(22, 24, 28, 0.12);
+  color: var(--day-mute);
+}
+
+.footMark {
+  font: 800 13px/1.4 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.footMark span {
+  margin-left: 10px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--day-mute);
+}
+
+.foot :global(.demo-foot-note) {
+  color: var(--day-mute);
+  opacity: 1;
+}
+
+/* ---------- Motion tied to the scroll, where the browser can ---------- */
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .rails {
+      opacity: 1;
+      animation: switch-off linear both;
+      animation-timeline: --show;
+      animation-range: cover 48% cover 64%;
+    }
+
+    .rails path {
+      stroke-dasharray: 1;
+      animation: draw-path linear both;
+      animation-timeline: --show;
+      animation-range: entry 30% cover 44%;
+    }
+
+    .showPic::after {
+      animation: dim-photo linear both;
+      animation-timeline: --show;
+      animation-range: entry 30% cover 64%;
+    }
+
+    .parts span {
+      animation: part-off linear both;
+      animation-timeline: --show;
+      animation-range: entry 30% cover 64%;
+    }
+
+    .seam {
+      height: 165svh;
+      view-timeline-name: --mouth;
+    }
+
+    .seamFrame {
+      position: sticky;
+      top: 0;
+      height: 100svh;
+      overflow: hidden;
+      align-content: center;
+      justify-items: center;
+    }
+
+    .seamDark {
+      position: absolute;
+      z-index: 2;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding-top: 56px;
+      animation: fade-out linear both;
+      animation-timeline: --mouth;
+      animation-range: contain 0% contain 26%;
+    }
+
+    .mouth {
+      width: min(100%, 560px);
+      transform-origin: 44% 34%;
+      animation: open-mouth linear both;
+      animation-timeline: --mouth;
+      animation-range: contain 2% contain 80%;
+    }
+
+    .white {
+      display: block;
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      background: var(--day);
+      animation: whiteout linear both;
+      animation-timeline: --mouth;
+      animation-range: contain 30% contain 72%;
+    }
+
+    .seamLight {
+      position: absolute;
+      z-index: 4;
+      inset: 0;
+      align-content: center;
+      background: none;
+      animation: lift-late linear both;
+      animation-timeline: --mouth;
+      animation-range: contain 62% contain 84%;
+    }
+  }
+}
+
+/* ---------- Wider screens ---------- */
+
+@media (min-width: 760px) {
+  .root {
+    --pad: 40px;
+  }
+
+  .scene {
+    inset: 0;
+    height: auto;
+  }
+
+  .scene picture {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: max-content;
+    height: min(100%, 825px);
+    transform: translateX(-50%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 90px);
+    mask-image: linear-gradient(180deg, transparent 0, #000 90px);
+  }
+
+  .scene img {
+    width: auto;
+    height: 100%;
+    max-width: none;
+    object-fit: initial;
+  }
+
+  .glowLayer picture {
+    -webkit-mask-image: var(--mw);
+    mask-image: var(--mw);
+    -webkit-mask-size: 100% 100%;
+    mask-size: 100% 100%;
+  }
+
+  .glowAll picture {
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 90px);
+    mask-image: linear-gradient(180deg, transparent 0, #000 90px);
+  }
+
+  .veil {
+    background:
+      radial-gradient(ellipse 52% 46% at 50% 36%, rgba(6, 7, 8, 0.62) 0%, rgba(6, 7, 8, 0.28) 60%, rgba(6, 7, 8, 0) 100%),
+      linear-gradient(0deg, rgba(6, 7, 8, 0.78) 0%, rgba(6, 7, 8, 0) 30%),
+      linear-gradient(180deg, rgba(6, 7, 8, 0.6) 0%, rgba(6, 7, 8, 0) 18%);
+  }
+
+  .narrow {
+    display: none;
+  }
+
+  .wide {
+    display: block;
+  }
+
+  .title {
+    margin-top: clamp(26px, 6svh, 70px) !important;
+    font-size: clamp(110px, min(12vw, 21svh), 196px);
+  }
+
+  .say {
+    width: min(100%, 64ch);
+  }
+
+  .sayLine {
+    font-size: 20px;
+  }
+
+  .count {
+    font-size: clamp(44px, min(4.4vw, 7svh), 72px);
+  }
+
+  .count span {
+    display: inline;
+  }
+
+  .cta {
+    margin-top: 22px;
+    min-height: 62px;
+    padding: 0 32px;
+    font-size: 19px;
+  }
+
+  .ask {
+    margin-bottom: 30px !important;
+  }
+}
+
+@media (min-width: 900px) {
+  .root {
+    --pad: clamp(40px, 4.4vw, 72px);
+    font-size: 19px;
+  }
+
+  .root :where(h2) {
+    font-size: clamp(88px, 8.4vw, 136px);
+  }
+
+  .dock {
+    position: fixed;
+    z-index: 40;
+    left: 50%;
+    bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 5px 5px 18px;
+    border-radius: 10px;
+    background: rgba(15, 16, 18, 0.86);
+    -webkit-backdrop-filter: blur(16px) saturate(1.2);
+    backdrop-filter: blur(16px) saturate(1.2);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, 18px);
+    transition: opacity 0.5s var(--ease), transform 0.6s var(--ease), visibility 0s linear 0.5s;
+  }
+
+  :global([data-past-hero]) .dock {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+    transition: opacity 0.5s var(--ease), transform 0.6s var(--ease), visibility 0s;
+  }
+
+  .dockLinks {
+    display: flex;
+    gap: 4px;
+  }
+
+  .dockLinks a {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 12px;
+    font: 600 14px/1 var(--text);
+    color: var(--bone);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .dockLinks a::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 9px;
+    height: 2px;
+    background: var(--lamp);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform 0.5s var(--ease);
+  }
+
+  .dockLinks a[aria-current]::after,
+  .dockLinks a:hover::after {
+    transform: none;
+  }
+
+  .dockBook {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-left: 6px;
+    padding: 0 18px;
+    border-radius: 6px;
+    background: var(--amber);
+    color: var(--ink) !important;
+    font: 800 14.5px/1 var(--text);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  /* The idea: the drawing centred, the words around it. */
+  .idea {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 760px) minmax(0, 1fr);
+    grid-template-areas: 'head head head' '. pic .' 'end end end';
+    column-gap: 40px;
+    row-gap: 48px;
+    padding: 130px var(--pad) 110px;
+  }
+
+  .ideaHead {
+    grid-area: head;
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    column-gap: 64px;
+    align-items: end;
+  }
+
+  .ideaHead .label {
+    grid-column: 1 / -1;
+  }
+
+  .idea h2 {
+    max-width: 11ch;
+  }
+
+  .ideaLead {
+    font-size: 21px;
+    margin: 0 0 8px !important;
+  }
+
+  .showcave {
+    grid-area: pic;
+    margin: 0 !important;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .parts {
+    justify-content: center;
+    padding-top: 22px;
+    font-size: 30px;
+    gap: 6px 40px;
+  }
+
+  .ideaEnd {
+    grid-area: end;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    column-gap: 64px;
+    align-items: start;
+  }
+
+  .ideaReal {
+    font-size: clamp(36px, 3.2vw, 48px);
+    max-width: 24ch;
+  }
+
+  .ideaNote {
+    font-size: 20px;
+    padding-top: 6px;
+  }
+
+  /* Wet or dry. */
+  .switchRoot {
+    padding: 100px var(--pad) 110px;
+  }
+
+  .ask {
+    font-size: clamp(130px, 13vw, 220px);
+    padding-top: 14px;
+    padding-bottom: 18px;
+  }
+
+  .panel {
+    grid-template-columns: minmax(0, 520px) minmax(0, 1fr);
+    column-gap: clamp(40px, 5vw, 90px);
+    align-items: end;
+  }
+
+  .tripPic {
+    margin: 0;
+    aspect-ratio: 520 / 354;
+  }
+
+  .tripName {
+    font-size: clamp(64px, 5.4vw, 88px) !important;
+  }
+
+  .tripText {
+    font-size: 20px;
+  }
+
+  .tripFacts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 28px;
+  }
+
+  .deal {
+    grid-template-columns: auto;
+  }
+
+  .amount {
+    font-size: clamp(80px, 6.6vw, 108px);
+  }
+
+  .departs {
+    grid-template-columns: auto auto minmax(0, 1fr);
+    align-items: end;
+    column-gap: 56px;
+    margin-top: 72px;
+  }
+
+  .departLabel {
+    grid-column: 1 / -1;
+  }
+
+  .departs ul {
+    grid-template-columns: auto auto;
+    column-gap: 56px;
+    grid-column: 1 / 3;
+  }
+
+  .departs li {
+    display: grid;
+  }
+
+  .departs li b {
+    font-size: 44px;
+  }
+
+  .soon {
+    justify-self: end;
+    text-align: right;
+  }
+
+  /* Leaving the cave. */
+  .seamDark {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .through {
+    max-width: none;
+    font-size: clamp(80px, 7vw, 120px);
+  }
+
+  .seamLight {
+    justify-items: center;
+    text-align: center;
+  }
+
+  .seamLight h2 {
+    font-size: clamp(120px, 12vw, 210px) !important;
+  }
+
+  .seamLight p {
+    font-size: 22px;
+  }
+
+  /* The daylight chapter: the train beside its fares, then the van, the visitors and the voices in one row. */
+  .chapter {
+    gap: 96px;
+    padding: 30px var(--pad) 120px;
+  }
+
+  .trainPart {
+    grid-template-columns: minmax(0, 640px) minmax(0, 1fr);
+    column-gap: clamp(40px, 5vw, 96px);
+    align-items: center;
+  }
+
+  .trainPic {
+    margin: 0 !important;
+  }
+
+  .trainText h2 {
+    font-size: clamp(96px, 8vw, 136px);
+  }
+
+  .fares {
+    grid-template-columns: repeat(3, auto);
+    column-gap: 36px;
+    justify-content: start;
+  }
+
+  .fares li {
+    display: grid;
+    gap: 6px;
+  }
+
+  .fares b {
+    font-size: 64px;
+  }
+
+  .fares span {
+    max-width: 16ch;
+    font-size: 15px;
+  }
+
+  .storyPart {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: clamp(32px, 4vw, 64px);
+    align-items: start;
+  }
+
+  .van {
+    margin: 0 !important;
+    aspect-ratio: 4 / 3;
+  }
+
+  .storyText h3 {
+    font-size: clamp(56px, 4.6vw, 76px);
+  }
+
+  .voice {
+    padding-top: 0;
+    border-top: 0;
+    padding-left: clamp(24px, 3vw, 48px);
+    border-left: 3px solid var(--ink);
+    align-self: stretch;
+    align-content: start;
+  }
+
+  .quote p {
+    font-size: clamp(64px, 5.4vw, 92px);
+  }
+
+  /* Your way in. */
+  .choose {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    column-gap: clamp(40px, 5vw, 96px);
+    padding-top: 120px;
+  }
+
+  .chooseHead {
+    grid-area: 1 / 1;
+    z-index: 1;
+    position: sticky;
+    top: 14vh;
+    align-self: start;
+  }
+
+  .chooser {
+    grid-area: 1 / 1 / 2 / 3;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+    column-gap: clamp(40px, 5vw, 96px);
+  }
+
+  .sentence,
+  .hint,
+  .trail {
+    grid-column: 2;
+  }
+
+  .sentence {
+    font-size: clamp(34px, 2.8vw, 44px);
+    line-height: 1.45;
+  }
+
+  .way {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 18px 0 20px 30px;
+  }
+
+  .wayName {
+    font-size: clamp(52px, 4.6vw, 76px);
+  }
+
+  .wayPrice {
+    font-size: 18px;
+  }
+
+  .lit2 {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 22rem);
+    grid-template-areas: 'label label' 'name soon' 'price soon' 'go soon';
+    align-items: end;
+    column-gap: 64px;
+    margin: 40px calc(-1 * var(--pad)) 0;
+    padding: 90px var(--pad) 90px;
+  }
+
+  .litLabel {
+    grid-area: label;
+  }
+
+  .litName {
+    grid-area: name;
+    font-size: clamp(96px, 9vw, 160px);
+  }
+
+  .litPrice {
+    grid-area: price;
+    font-size: 34px;
+  }
+
+  .lit2 .go {
+    grid-area: go;
+    min-height: 68px;
+    margin-top: 18px;
+    padding: 0 36px;
+    font-size: 20px;
+  }
+
+  .litNone {
+    grid-area: name;
+  }
+
+  .litSoon {
+    grid-area: soon;
+    align-self: end;
+    margin: 0 !important;
+    font-size: 17px;
+  }
+
+  .foot {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.8fr);
+    column-gap: 56px;
+    align-items: start;
+    padding: 80px var(--pad) 30px;
+  }
+
+  .small {
+    grid-column: 1 / -1;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    column-gap: 32px;
+  }
+
+  .foot :global(.demo-foot-note) {
+    justify-self: end;
+    text-align: right;
+  }
+}
+
+/* ---------- Reduced motion: every state simply shows, nothing is held ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .line > span,
+  .mark,
+  .sayLine,
+  .cta,
+  .surface,
+  .scene img {
+    animation: none !important;
+  }
+
+  .story {
+    height: auto !important;
+  }
+
+  .story > [data-frame] {
+    position: static;
+    height: auto;
+    display: grid;
+    container-type: normal;
+  }
+
+  .over {
+    position: static;
+    order: -1;
+    padding-bottom: 32px;
+  }
+
+  .say {
+    display: grid;
+    gap: 18px;
+    margin-top: 28px;
+  }
+
+  .say > * {
+    grid-area: auto;
+  }
+
+  .sayLine,
+  .count {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .count span {
+    color: var(--bone) !important;
+  }
+
+  .story:not([data-active='0']) .dark {
+    color: inherit;
+  }
+
+  .scene {
+    position: relative;
+    inset: auto;
+    height: min(62vh, 540px);
+    opacity: 1 !important;
+  }
+
+  .night,
+  .veil {
+    display: none;
+  }
+
+  .glowLayer {
+    opacity: 0 !important;
+  }
+
+  .glowAll {
+    opacity: 1 !important;
+  }
+}
+
+/* ---------- Keyframes ---------- */
+
+@keyframes rise {
+  from {
+    transform: translateY(108%);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes lift {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes lap {
+  from {
+    transform: translateY(-2px) scaleY(1);
+  }
+  to {
+    transform: translateY(2px) scaleY(1.5);
+  }
+}
+
+@keyframes draw-path {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes switch-off {
+  0% {
+    opacity: 1;
+  }
+  18% {
+    opacity: 0.2;
+  }
+  26% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+  64%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes dim-photo {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  80%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes part-off {
+  0%,
+  60% {
+    color: var(--bone);
+  }
+  82%,
+  100% {
+    color: var(--dim);
+  }
+}
+
+@keyframes fade-out {
+  to {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+}
+
+@keyframes open-mouth {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(5);
+  }
+}
+
+@keyframes whiteout {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes swap {
+  from {
+    opacity: 0;
+    transform: translateY(0.4em);
+  }
+}
+
+@keyframes lift-late {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
