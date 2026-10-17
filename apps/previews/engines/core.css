@@ -1,0 +1,178 @@
+/* Shared by the four engines, scoped with each. The page's colours and faces arrive as custom properties on .root. */
+
+.root {
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --enter: cubic-bezier(0.22, 1, 0.36, 1);
+  --draw: cubic-bezier(0.45, 0, 0.75, 1);
+  --pad: 24px;
+  --gap: 96px;
+  position: relative;
+  overflow-x: clip;
+  font-family: var(--text);
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+:where(.root) :where(h1, h2, h3, p, ol, ul, dl, dd, figure) {
+  margin: 0;
+}
+
+:where(.root) :where(ol, ul) {
+  padding: 0;
+  list-style: none;
+}
+
+:where(.root) :where(h1, h2, h3) {
+  font-family: var(--display);
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+:where(.root) :where(p) {
+  text-wrap: pretty;
+}
+
+:where(.root a) {
+  color: inherit;
+}
+
+.root a:focus-visible,
+.root button:focus-visible,
+.root [tabindex]:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+:where(.root) :where(button) {
+  font: inherit;
+  color: inherit;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* A headline line held inside its own edge, its words rising into it. */
+.line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+
+.line > span {
+  display: block;
+  animation: rise 1s var(--ease) both;
+  animation-delay: calc(0.12s + var(--i) * 0.16s);
+}
+
+/* The main button. Each engine shapes it. */
+.go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 24px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: 650 17px/1.1 var(--text);
+  text-decoration: none;
+  will-change: transform;
+}
+
+.go svg {
+  flex: 0 0 auto;
+  transition: transform 0.5s var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .go:hover svg {
+    transform: translateX(4px);
+  }
+}
+
+/* The small print and the footer every engine page ends with. */
+.foot {
+  padding: 40px var(--pad) 120px;
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(108%);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: scale(1.07);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes drawX {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes drawY {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+@keyframes stroke {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+@media (min-width: 760px) {
+  .root {
+    --pad: 40px;
+    --gap: 128px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .root {
+    --pad: 56px;
+    --gap: 160px;
+    font-size: 18px;
+    line-height: 1.55;
+  }
+}
+
+/* With reduced motion asked for, nothing moves and every state simply shows. */
+@media (prefers-reduced-motion: reduce) {
+  .root *,
+  .root *::before,
+  .root *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

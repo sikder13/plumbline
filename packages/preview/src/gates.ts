@@ -37,7 +37,7 @@ export function serveSite(dir: string = previewPaths.site, port = 4321): Promise
   return new Promise((resolve) => server.listen(port, '127.0.0.1', () => resolve({ server, base: `http://127.0.0.1:${port}` })));
 }
 
-interface LighthouseRun {
+export interface LighthouseRun {
   error?: string;
   version?: string;
   performance?: number | null;
@@ -48,7 +48,7 @@ interface LighthouseRun {
   failedAccessibility?: string[];
 }
 
-function lighthouseOnce(url: string): Promise<LighthouseRun> {
+export function lighthouseOnce(url: string): Promise<LighthouseRun> {
   return new Promise((resolve) => {
     execFile(process.execPath, [WORKER, url, chromium.executablePath()], { timeout: 150_000, maxBuffer: 16 * 1024 * 1024, killSignal: 'SIGKILL' }, (err, stdout) => {
       const line = stdout.split('\n').find((l) => l.startsWith('PLUMBLINE_LH '));
@@ -109,7 +109,7 @@ export function validMailto(href: string): boolean {
   return !!m && /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(decodeURIComponent(m[1]!));
 }
 
-async function checkLinks(browser: Browser, url: string, bookingHosts: RegExp, ownSiteHtml: string): Promise<LinkCheck[]> {
+export async function checkLinks(browser: Browser, url: string, bookingHosts: RegExp, ownSiteHtml: string): Promise<LinkCheck[]> {
   const ctx = await quietContext(browser, { viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();
   await page.goto(url, { waitUntil: 'load' });

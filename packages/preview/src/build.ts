@@ -11,6 +11,7 @@ import { businessView, type EvidenceRow, type FindingView } from '@plumbline/rep
 import { loadCrawlmouse as loadWaveCrawlmouse, ownerOrder, speedRuns, speedSeen, statedSentence } from '@plumbline/wave';
 import { correctedQuestions, correctedSummary } from './ai.ts';
 import { loadCrawlmouse, loadVerified } from './crawlmouse.ts';
+import { engineContent } from './engine/build.ts';
 import { contentDir, previewPaths } from './paths.ts';
 import { loadRecipe, recipeContent, recipeFile } from './recipe.ts';
 import type { ContentFile, FindingCard, PageData, Picture, SecondCheck, Strength } from './types.ts';
@@ -45,6 +46,9 @@ export function hasRecipe(slug: string): boolean {
 
 export function loadContent(slug: string): ContentFile {
   if (hasRecipe(slug)) return recipeContent(loadRecipe(slug));
+  // A page rendered by a page engine: its settings, with its photos graded beside the wave's own.
+  const engine = join(contentDir(slug), 'engine.json');
+  if (existsSync(engine)) return engineContent(JSON.parse(readFileSync(engine, 'utf8')), join(paths.data, 'wave', slug));
   const file = join(contentDir(slug), 'content.json');
   if (!existsSync(file)) throw new Error(`${file} does not exist`);
   return JSON.parse(readFileSync(file, 'utf8')) as ContentFile;

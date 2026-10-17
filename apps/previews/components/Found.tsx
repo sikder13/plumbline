@@ -1,5 +1,5 @@
 import type { PageData } from '@/lib/data';
-import { CARE, PACKAGES, PAYMENT, REMOVAL, REPLY_BUTTONS, TOOLS, TOOLS_LINK, WHO } from '@/lib/offer';
+import { CARE, ENGINE_DESIGNS, PACKAGES, PAYMENT, REMOVAL, REPLY_BUTTONS, REPLY_LINE, TOOLS, TOOLS_LINK, WHO } from '@/lib/offer';
 
 /** The second tab: what was measured on the current site, what we offer, and how to reply. */
 export function Found({ data }: { data: PageData }) {
@@ -137,18 +137,37 @@ export function Found({ data }: { data: PageData }) {
         </p>
       </section>
 
-      <section aria-labelledby="reply-h" className="reply">
-        <h2 id="reply-h" className="found-h2">Reply</h2>
-        <div className="reply-buttons">
-          <a className="button" href={mail} data-visit="cta_click">
-            {REPLY_BUTTONS.email}
-          </a>
-          <a className="button quiet" href={data.reply.call} rel="noopener" data-visit="cta_click">
-            {REPLY_BUTTONS.call}
-          </a>
-        </div>
-        <p className="small">{REMOVAL}</p>
-      </section>
+      {ENGINE_DESIGNS.has(data.design) ? (
+        // An engine page asks for one thing first: a reply to the email the link came in. The call is the second way.
+        <section aria-labelledby="reply-h" className="reply reply-first">
+          <h2 id="reply-h" className="found-h2">Reply</h2>
+          <p className="reply-line">
+            <a href={mail} data-visit="cta_click">
+              {REPLY_LINE.label}
+            </a>
+          </p>
+          <p className="reply-sub">{REPLY_LINE.sub}</p>
+          <p className="reply-second">
+            <a href={data.reply.call} rel="noopener" data-visit="cta_click">
+              {REPLY_BUTTONS.call}
+            </a>
+          </p>
+          <p className="small">{REMOVAL}</p>
+        </section>
+      ) : (
+        <section aria-labelledby="reply-h" className="reply">
+          <h2 id="reply-h" className="found-h2">Reply</h2>
+          <div className="reply-buttons">
+            <a className="button" href={mail} data-visit="cta_click">
+              {REPLY_BUTTONS.email}
+            </a>
+            <a className="button quiet" href={data.reply.call} rel="noopener" data-visit="cta_click">
+              {REPLY_BUTTONS.call}
+            </a>
+          </div>
+          <p className="small">{REMOVAL}</p>
+        </section>
+      )}
     </main>
   );
 }
