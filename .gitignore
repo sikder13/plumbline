@@ -19,6 +19,7 @@ coverage/
 .turbo/
 
 # Editor and OS
+.playwright-mcp/
 .DS_Store
 .idea/
 .vscode/
