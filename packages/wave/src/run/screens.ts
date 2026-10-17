@@ -106,3 +106,18 @@ export function faithFlags(pages: MenuPage[]): FaithFlag[] {
   }
   return flags;
 }
+
+// ---- Whoever built the site, named in a credit anywhere in its words ----
+
+const CREDIT_WORDS = /\b(?:[Ww]eb ?[Ss]ite|[Ww]eb ?[Dd]esign|[Ss]ite|[Dd]esign(?:ed)?|[Dd]evelop(?:ed|ment)|[Bb]uilt|[Cc]reated|[Hh]osted|[Pp]owered|[Mm]aintained)(?: (?:and|&) \w+| [Dd]esign| [Dd]evelopment)? by:?\s+([A-Z][^\n|\u00a9.,]{2,40}?)(?=\s+(?:Copyright|Privacy|Terms|All rights|\u00a9)|[|\u00a9.,\n]|$)/g;
+const BUILDERS = /^(?:weebly|wix(?:\.com)?|squarespace|wordpress(?:\.com)?|shopify|rocketspark|godaddy|webflow|jimdo|google sites|square|duda|zyro|webnode|strikingly)$/i;
+
+/** The names given in a "website by" or "designed by" credit, other than a site builder. */
+export function creditsIn(text: string): string[] {
+  const names = new Set<string>();
+  for (const m of text.replace(/\s+/g, ' ').matchAll(CREDIT_WORDS)) {
+    const name = m[1]!.trim();
+    if (name.split(' ').length <= 5 && !BUILDERS.test(name)) names.add(name);
+  }
+  return [...names];
+}

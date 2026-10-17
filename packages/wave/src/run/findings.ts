@@ -95,6 +95,14 @@ export interface RunMeasured {
   aiCrawlers: { allowed: boolean; blocked: string[] };
 }
 
+/** Checks whose findings are ranked above, or replaced by the run's own measurements, or kept apart for a person to look at. */
+const HANDLED = new Set(['C01_placeholder_text', 'C02_stale_copyright', 'C03_stale_dated_notice', 'C04_seasonal_mismatch', 'C06_broken_images', 'C10_broken_contact_links', 'C11_dead_navigation', 'C12_broken_internal_links', 'C41_outdated_platform', 'T02_booking_system_not_linked', 'C13_no_action_above_fold', 'C20_slow_mobile', 'C23_not_mobile_friendly', 'C31_no_structured_data', 'C05_possible_compromise', 'C05b_hidden_injected_content']);
+
+/** What the checks measured that the tiers do not rank, kept so a person can see it. */
+export function otherObservations(m: RunMeasured): string[] {
+  return m.checks.filter((c) => !HANDLED.has(c.checkId)).map((c) => `${c.checkId.split('_')[0]}: ${c.title}`.slice(0, 120));
+}
+
 const NOUN: Record<string, string> = { fishing: 'charters', kayak: 'tours', accommodation: 'stays', physio: 'appointments' };
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -105,6 +113,9 @@ export function monthYear(iso: string): string {
 
 const norm = (u: string) => u.replace(/^https?:\/\/(?:www\.)?/i, '').replace(/[#?].*$/, '').replace(/\/$/, '').toLowerCase();
 
+/** The part of a page title before the site's name: "demo page - Welcome to X" is "demo page". */
+const headTitle = (t: string) => t.split(/\s+[-|\u2013\u2014]\s+/)[0]!.trim();
+
 function leftoverType(e: ExampleOut): { type: FindingType; title: string } | null {
   const hay = `${e.url} ${e.title} ${e.snippet}`.toLowerCase();
   const path = (() => {
@@ -114,12 +125,12 @@ function leftoverType(e: ExampleOut): { type: FindingType; title: string } | nul
       return '';
     }
   })();
-  if (/hello[-_ ]world/.test(hay)) return { type: 'hello_world', title: e.title };
-  if (/my post content|lorem ipsum|a-blog-post-copy/.test(hay)) return { type: 'template_post', title: e.title };
-  if (/\bcoming soon\b/.test(hay)) return { type: 'coming_soon_page', title: e.title };
-  if (/new[-_ ]page/.test(path) || /^new page$/i.test(e.title.trim())) return { type: 'blank_page', title: e.title || 'new page' };
-  if (/\bdemo\b/.test(`${path} ${e.title.toLowerCase()}`)) return { type: 'demo_page', title: e.title };
-  if (/maintenance|under construction/.test(`${path} ${e.title.toLowerCase()}`)) return { type: 'maintenance_page', title: e.title };
+  if (/hello[-_ ]world/.test(hay)) return { type: 'hello_world', title: headTitle(e.title) };
+  if (/my post content|lorem ipsum|a-blog-post-copy/.test(hay)) return { type: 'template_post', title: headTitle(e.title) };
+  if (/\bcoming soon\b/.test(hay)) return { type: 'coming_soon_page', title: headTitle(e.title) };
+  if (/new[-_ ]page/.test(path) || /^new page$/i.test(e.title.trim())) return { type: 'blank_page', title: headTitle(e.title) || 'new page' };
+  if (/\bdemo\b/.test(`${path} ${e.title.toLowerCase()}`)) return { type: 'demo_page', title: headTitle(e.title) };
+  if (/maintenance|under construction/.test(`${path} ${e.title.toLowerCase()}`)) return { type: 'maintenance_page', title: headTitle(e.title) };
   return null;
 }
 
@@ -175,7 +186,7 @@ export function buildFindings(m: RunMeasured): RawFinding[] {
         break;
       }
       case 'C02_stale_copyright':
-        push({ type: 'stale_copyright', key: 'copyright', facts: { year: String(d.year ?? ''), page }, evidenceUrl: url, measured: c.excerpt || c.title, checkId: c.checkId });
+        push({ type: 'stale_copyright', key: 'copyright', facts: { year: String(d.year ?? ''), page }, evidenceUrl: url, measured: `The footer says ${String(d.year ?? '')} and the year is now ${String(d.currentYear ?? '')}`, checkId: c.checkId });
         break;
       case 'C03_stale_dated_notice':
         push({ type: 'passed_notice', key: `notice:${String(d.date ?? c.title)}`, facts: { page }, evidenceUrl: url, measured: `${c.title}: ${String(d.text ?? c.excerpt).slice(0, 200)}`, checkId: c.checkId });

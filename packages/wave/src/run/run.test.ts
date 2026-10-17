@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { bookingSystemsIn, bookingish, pageSaysMissing } from './booking.ts';
 import { buildFindings, type RunMeasured } from './findings.ts';
 import { greetingNames, nameForms, waveRows } from './list.ts';
-import { faithFlags, testimonialsOn } from './screens.ts';
+import { creditsIn, faithFlags, testimonialsOn } from './screens.ts';
 import { isSlowOnPhone, speedVerdict } from './speed.ts';
 import { KINDS, rankRunFindings, recommendation, sentenceFor, type FindingType, type RawFinding } from './tiers.ts';
 import { decodeCfEmail, emailsInSource, nameOnText, textOf, verifyFacts, type PageRead, type Reader } from './verify.ts';
@@ -118,6 +118,11 @@ describe('screens', () => {
     // Text hidden from visitors is not visible text, so it is not found.
     expect(testimonialsOn(capture('Home About'), html).some((s) => s.kind === 'section')).toBe(false);
   });
+  it('names a credit for whoever built the site, but not a site builder', () => {
+    expect(creditsIn('Website Design by Rapideye Media Copyright \u00a9 The Gambler 2021')).toEqual(['Rapideye Media']);
+    expect(creditsIn('Site by Clever Studio | Privacy')).toEqual(['Clever Studio']);
+    expect(creditsIn('Website by Wix.com')).toEqual([]);
+  });
   it('flags a menu page that sells wine and leaves the others', () => {
     const flags = faithFlags([
       { label: 'Wine shop', url: 'https://x.co.nz/shop', title: 'Wine', h1: 'Our wines', text: 'Buy a case of pinot noir. $240 per case. Add to cart.' },
@@ -223,10 +228,12 @@ describe('findings from what was measured', () => {
       crawlmouse: [
         { text: 'a', claims: ['leftover_page'], caution: null, confirmed: true, undecided: false, measured: 'm', reason: null, examples: [e('https://x.co.nz/hello-world', 'Hello world!', 'Welcome to WordPress'), e('https://x.co.nz/a-blog-post-copy-zR18sT', 'Monkeys: adorable mischief', 'My post content')] },
         { text: 'b', claims: ['leftover_page'], caution: null, confirmed: true, undecided: false, measured: 'm', reason: null, examples: [e('https://x.co.nz/copy-of-queen-studio', 'Twin Studios', 'x'), e('https://x.co.nz/copy-of-studios-8-9-1', 'Studios', 'x')] },
+        { text: 'c', claims: ['leftover_page'], caution: null, confirmed: true, undecided: false, measured: 'm', reason: null, examples: [e('https://x.co.nz/demo-page', 'demo page - Welcome to Onerahi Physiotherapy, Whangarei', 'x')] },
       ],
     });
-    const sentences = rankRunFindings(buildFindings(m), { agencies: [] }).top.map((t) => t.sentence);
-    expect(sentences).toEqual(['The default "Hello world!" post is still live on your website.', 'A template blog post titled "Monkeys: adorable mischief" is still live on your website.', '2 of your pages have web addresses that start with copy of, so the address names a different page from its content.']);
+    const ranked = rankRunFindings(buildFindings(m), { agencies: [] });
+    const sentences = [...ranked.top, ...ranked.rest].map((t) => t.sentence);
+    expect(sentences).toEqual(['The default "Hello world!" post is still live on your website.', 'A template blog post titled "Monkeys: adorable mischief" is still live on your website.', 'A page titled "demo page" is still live on your website.', '2 of your pages have web addresses that start with copy of, so the address names a different page from its content.']);
   });
 
   it('puts the physio testimonial finding at tier 2 and only for a physio', () => {

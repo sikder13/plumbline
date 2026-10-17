@@ -1,7 +1,7 @@
 import type { OwnWord } from './words.ts';
 import type { FaithFlag } from './screens.ts';
 import type { RunMeasured, PhoneScreen } from './findings.ts';
-import { buildFindings } from './findings.ts';
+import { buildFindings, otherObservations } from './findings.ts';
 import type { WaveRow } from './list.ts';
 import { greetingNames } from './list.ts';
 import { TIER_NAMES, rankRunFindings, recommendation, type Dropped, type RankedFinding } from './tiers.ts';
@@ -34,6 +34,8 @@ export interface FactPack {
   owner_source_url: string;
   findings: PackFinding[];
   also_found: { tier: number; type: string; sentence: string }[];
+  /** Measured by the checks and not ranked by the tiers. */
+  other_observations: string[];
   strengths: { ai_crawler_access: string; rating: string | null; own_words: { text: string; url: string }[] };
   notes: { csv: string; trading_signs: string[] };
   flags: { facts_changed: string[]; faith: FaithFlag[]; security_review: string[]; refuses_unsolicited: string | null; speed: string };
@@ -96,6 +98,7 @@ export function buildFactPack(row: WaveRow, m: RunMeasured | null, extras: { wor
     owner_source_url: row.ownerSource1,
     findings: top.map(wanted),
     also_found: rest.map((r) => ({ tier: r.tier, type: r.type, sentence: r.sentence })),
+    other_observations: m ? otherObservations(m) : [],
     strengths: { ai_crawler_access: aiAccess, rating, own_words: notableWords(extras.words) },
     notes: { csv: row.notes, trading_signs: m?.trading ?? [] },
     flags: {
@@ -130,6 +133,7 @@ export function factPackLines(p: FactPack): string[] {
     L.push(`   evidence: ${f.evidence_url}${f.linked_from ? ` | linked from: ${f.linked_from}` : ''} | measured ${f.measured_at.slice(0, 10)}`);
   }
   if (p.also_found.length) L.push(`Also found: ${clip(p.also_found.slice(0, 6).map((a) => `${a.type} (tier ${a.tier})`).join(', '), 180)}`);
+  if (p.other_observations.length) L.push(`Not ranked: ${clip(p.other_observations.slice(0, 4).join('; '), 220)}`);
   L.push(`Strengths: ${clip(p.strengths.ai_crawler_access || 'not read', 200)}${p.strengths.rating ? ` | rating: ${p.strengths.rating}` : ''}`);
   for (const w of p.strengths.own_words) L.push(`   their words: "${clip(w.text, 180)}" (${w.url})`);
   L.push(`Notes: ${clip(p.notes.csv || 'none', 200)}${p.notes.trading_signs.length ? ` | signs: ${clip(p.notes.trading_signs.join('; '), 200)}` : ''}`);

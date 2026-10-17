@@ -16,7 +16,7 @@ import { type BookingScan, type CheckOut, type CrawlmouseOut, type RunMeasured, 
 import { harvestAssets } from './harvest.ts';
 import type { WaveRow } from './list.ts';
 import { checkForms, formRefs, unlinkedBookingPages } from './probe.ts';
-import { faithFlags, menuTargets, testimonialsOn, type MenuPage } from './screens.ts';
+import { creditsIn, faithFlags, menuTargets, testimonialsOn, type MenuPage } from './screens.ts';
 import { asLighthouse, measureSpeed, type PsiRunner, type SpeedResult } from './speed.ts';
 import { textOf, verifyFacts, type PageRead, type Reader } from './verify.ts';
 
@@ -215,13 +215,14 @@ export async function measureBusiness(row: WaveRow, opts: MeasureOptions): Promi
     }
 
     // 9. Who built it, whether the site refuses unsolicited messages, signs of a sale
-    const agencies = unique(
-      [homeDesktop, homeMobile]
+    const agencies = unique([
+      ...[homeDesktop, homeMobile]
         .filter((x): x is PageCapture => !!x)
         .flatMap((p) => agencySigns(p, htmlOf(p)))
         .filter((s) => s.kind !== 'platform')
-        .flatMap((s) => [s.agency]),
-    );
+        .map((s) => s.agency),
+      ...[homeDesktop, homeMobile].filter((x): x is PageCapture => !!x).flatMap((p) => creditsIn(p.text)),
+    ]);
     const refusal = pages.map((p) => refusalStatement(p.text)).find((x) => !!x) ?? null;
     const trading = unique([homeDesktop, homeMobile].filter((x): x is PageCapture => !!x).flatMap((p) => tradingFlags(p)).map((t) => `${t.kind}: "${t.quote}" (${t.url})`));
 
