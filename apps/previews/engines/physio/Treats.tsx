@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useShowOnce } from '../useShowOnce';
 
 type Area = 'head' | 'neck' | 'shoulder' | 'back' | 'hip' | 'knee' | 'ankle' | 'hand' | 'whole';
@@ -23,7 +23,7 @@ const AREA: Record<Area, string> = {
  * they treat there, in their own words; only parts they name are offered. On first view the parts
  * are tried in turn.
  */
-export function Treats({ areas, cls }: { areas: { area: Area; name: string }[]; cls: Record<string, string> }) {
+export function Treats({ areas, cls, children }: { areas: { area: Area; name: string }[]; cls: Record<string, string>; children?: ReactNode }) {
   const parts = [...new Set(areas.map((a) => a.area))];
   const [at, setAt] = useState(0);
   const { ref, shown, stop } = useShowOnce<HTMLDivElement>(parts.length, { every: 460, rest: 0 });
@@ -68,6 +68,7 @@ export function Treats({ areas, cls }: { areas: { area: Area; name: string }[]; 
               </li>
             ))}
         </ul>
+        {children}
       </div>
     </div>
   );

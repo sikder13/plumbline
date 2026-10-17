@@ -69,7 +69,7 @@ export function Around({ here, places, cls }: { here: string; places: Place[]; c
             </li>
           ))}
         </ol>
-        <p className={cls.ringKey}>Distances as they give them. The rings show the order, not the scale.</p>
+        <p className={cls.ringKey}>Distances as they give them, nearest first, not to scale.</p>
       </div>
     </div>
   );

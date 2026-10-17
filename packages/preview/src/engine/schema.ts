@@ -22,16 +22,16 @@ export interface TypePair {
   preload: string[];
 }
 
-/** Three pairs of faces for each engine, every one with a serif headline. No pair is shared with another engine or with any earlier page. */
+/** Three pairs of faces for each engine, each engine with a voice of its own. No pair is shared with another engine or with any earlier page. */
 export const ENGINE_TYPE_PAIRS: Record<EngineName, Record<string, TypePair>> = {
   fishing: {
-    'bitter-hanken': { display: 'Bitter', text: 'Hanken Grotesk', preload: ['bitter-latin-wght-normal', 'hanken-grotesk-latin-wght-normal'] },
-    'robotoslab-intertight': { display: 'Roboto Slab', text: 'Inter Tight', preload: ['roboto-slab-latin-wght-normal', 'inter-tight-latin-wght-normal'] },
-    'alegreya-librefranklin': { display: 'Alegreya', text: 'Libre Franklin', preload: ['alegreya-latin-wght-normal', 'libre-franklin-latin-wght-normal'] },
+    'bigshoulders-hanken': { display: 'Big Shoulders Display', text: 'Hanken Grotesk', preload: ['big-shoulders-display-latin-wght-normal', 'hanken-grotesk-latin-wght-normal'] },
+    'unbounded-intertight': { display: 'Unbounded', text: 'Inter Tight', preload: ['unbounded-latin-wght-normal', 'inter-tight-latin-wght-normal'] },
+    'bricolage-librefranklin': { display: 'Bricolage Grotesque', text: 'Libre Franklin', preload: ['bricolage-grotesque-latin-wght-normal', 'libre-franklin-latin-wght-normal'] },
   },
   paddle: {
     'fraunces-instrumentsans': { display: 'Fraunces', text: 'Instrument Sans', preload: ['fraunces-latin-wght-normal', 'instrument-sans-latin-wght-normal'] },
-    'literata-sora': { display: 'Literata', text: 'Sora', preload: ['literata-latin-wght-normal', 'sora-latin-wght-normal'] },
+    'sora-literata': { display: 'Sora', text: 'Literata', preload: ['sora-latin-wght-normal', 'literata-latin-wght-normal'] },
     'instrumentserif-dmsans': { display: 'Instrument Serif', text: 'DM Sans', preload: ['instrument-serif-latin-400-normal', 'dm-sans-latin-wght-normal'] },
   },
   stay: {
@@ -40,9 +40,9 @@ export const ENGINE_TYPE_PAIRS: Record<EngineName, Record<string, TypePair>> = {
     'gloock-outfit': { display: 'Gloock', text: 'Outfit', preload: ['gloock-latin-400-normal', 'outfit-latin-wght-normal'] },
   },
   physio: {
-    'lora-plusjakarta': { display: 'Lora', text: 'Plus Jakarta Sans', preload: ['lora-latin-wght-normal', 'plus-jakarta-sans-latin-wght-normal'] },
-    'sourceserif-onest': { display: 'Source Serif 4', text: 'Onest', preload: ['source-serif-4-latin-wght-normal', 'onest-latin-wght-normal'] },
-    'crimsonpro-geologica': { display: 'Crimson Pro', text: 'Geologica', preload: ['crimson-pro-latin-wght-normal', 'geologica-latin-wght-normal'] },
+    'plusjakarta-lora': { display: 'Plus Jakarta Sans', text: 'Lora', preload: ['plus-jakarta-sans-latin-wght-normal', 'lora-latin-wght-normal'] },
+    'onest-sourceserif': { display: 'Onest', text: 'Source Serif 4', preload: ['onest-latin-wght-normal', 'source-serif-4-latin-wght-normal'] },
+    'geologica-crimsonpro': { display: 'Geologica', text: 'Crimson Pro', preload: ['geologica-latin-wght-normal', 'crimson-pro-latin-wght-normal'] },
   },
 };
 
@@ -194,6 +194,12 @@ const Item = z.object({ name: z.string().min(1), text: z.string().optional(), me
 export const EngineConfig = z
   .object({
     engine: z.enum(ENGINES),
+    /**
+     * The one idea the page is built around, in a short line made only of their own words and facts,
+     * such as "a whole day on the water: out at first light, home by mid-afternoon". The hero line, the
+     * signature and the close all serve it.
+     */
+    concept: z.string().min(1).max(140),
     slug: z.string().regex(/^[a-z0-9-]+$/),
     /** The name as the page reads. */
     name: z.string().min(1),

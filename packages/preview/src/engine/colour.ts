@@ -104,12 +104,12 @@ export function familyOf(accent: string, deep: string): PaletteFamily {
 
 /** How each engine sets its grounds: how light and how tinted the paper is, how dark the deep ground. */
 const TEMPER: Record<EngineName, { paper: Oklch; soft: { l: number; c: number }; deep: { l: number; c: number; h?: number; fixed?: boolean }; ink: { l: number; c: number } }> = {
-  // Every engine sets its words on a warm ground; the deep ground and the accent carry the engine's own colour.
-  fishing: { paper: { l: 0.967, c: 0.013, h: 82 }, soft: { l: 0.925, c: 0.022 }, deep: { l: 0.2, c: 0.05, h: 250 }, ink: { l: 0.2, c: 0.03 } },
-  paddle: { paper: { l: 0.968, c: 0.014, h: 88 }, soft: { l: 0.928, c: 0.026 }, deep: { l: 0.27, c: 0.05 }, ink: { l: 0.23, c: 0.035 } },
+  // Each engine keeps a ground of its own: sea grey, river light, warm paper, clinic white.
+  fishing: { paper: { l: 0.968, c: 0.006, h: 240 }, soft: { l: 0.925, c: 0.018 }, deep: { l: 0.2, c: 0.05, h: 250 }, ink: { l: 0.2, c: 0.03 } },
+  paddle: { paper: { l: 0.978, c: 0.01, h: 200 }, soft: { l: 0.935, c: 0.03 }, deep: { l: 0.27, c: 0.05 }, ink: { l: 0.23, c: 0.035 } },
   stay: { paper: { l: 0.965, c: 0.014, h: 80 }, soft: { l: 0.92, c: 0.022 }, deep: { l: 0.25, c: 0.035 }, ink: { l: 0.22, c: 0.02 } },
   // A clinic's dark ground is a calm ink blue whatever the logo: a brown or olive one reads as muddy.
-  physio: { paper: { l: 0.972, c: 0.012, h: 84 }, soft: { l: 0.93, c: 0.02 }, deep: { l: 0.26, c: 0.04, h: 252, fixed: true }, ink: { l: 0.22, c: 0.025 } },
+  physio: { paper: { l: 0.985, c: 0.004, h: 220 }, soft: { l: 0.95, c: 0.022 }, deep: { l: 0.26, c: 0.04, h: 252, fixed: true }, ink: { l: 0.22, c: 0.025 } },
 };
 
 export interface Swatch {
@@ -147,9 +147,8 @@ export function paletteFrom(engine: EngineName, swatches: Swatch[], family?: Pal
   const darkOwn = swatches.filter((s) => s.from !== 'photo' && toOklch(s.hex).l < 0.4 && toOklch(s.hex).c > 0.03).sort((x, y) => y.share - x.share)[0];
   const deepHue = t.deep.fixed ? t.deep.h! : darkOwn ? toOklch(darkOwn.hex).h : (t.deep.h ?? a.h);
   const deep = fromOklch({ l: t.deep.l, c: t.deep.fixed ? t.deep.c : Math.min(t.deep.c, darkOwn ? toOklch(darkOwn.hex).c : t.deep.c), h: deepHue });
-  const paper = fromOklch({ l: t.paper.l, c: t.paper.c, h: t.paper.h });
-  // The second ground is warm too, leaning a little toward the accent.
-  const soft = fromOklch({ l: t.soft.l, c: t.soft.c, h: t.paper.h + ((((a.h - t.paper.h + 540) % 360) - 180) * 0.25) });
+  const paper = fromOklch({ l: t.paper.l, c: t.paper.c, h: engine === 'stay' ? t.paper.h : a.h });
+  const soft = fromOklch({ l: t.soft.l, c: t.soft.c, h: a.h });
   const ink = toContrast(fromOklch({ l: t.ink.l, c: t.ink.c, h: deepHue }), soft, 7);
   const onDeep = toContrast(fromOklch({ l: 0.96, c: 0.012, h: a.h }), deep, 7);
   // The accent fills buttons. Its words are white or ink, whichever passes; failing both, the accent is deepened until white does.

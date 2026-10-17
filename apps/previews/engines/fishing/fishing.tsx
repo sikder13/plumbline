@@ -1,20 +1,121 @@
+import type { CSSProperties } from 'react';
 import type { EngineDemo } from '@plumbline/preview/engine';
+import { Pinned } from '@/components/Pinned';
 import { SectionLinks } from '@/components/SectionLinks';
 import { StickyBar } from '@/components/StickyBar';
+import { QuietBar } from '../QuietBar';
 import type { PageData } from '@/lib/data';
 import { engineStyles } from '@/lib/styles';
-import { Go, mailto, rootVars, ways, type Cls } from '../kit';
-import { Band, Foot, Gallery, Hero, Intro, Offers, People, Practical, Story } from '../sections';
+import { SPLIT_SIZES } from '../sizes';
+import { Go, Lines, Photo, mailto, rootVars, ways, type Cls } from '../kit';
+import { Band, Foot, Gallery, Intro, Offers, People, Practical } from '../sections';
 import { DayLine } from './DayLine';
 import { Seasons } from './Seasons';
 import { TripBoard } from './TripBoard';
 
-
 /**
- * The fishing engine. Their own photo first, a serif headline on the warm ground, and the facts as
- * chips; their day told in steps; a trip board drawn only from their prices and lengths; the deep sea
- * ground for the story and the close.
+ * The fishing engine. Its device is the horizon: a line where sea meets sky that the headline
+ * stands on, that the day's legs run out along, and that the page closes on. The type is set large and upright, the grounds are the sea's.
  */
+
+function Horizon({ cls }: { cls: Cls }) {
+  return (
+    <div className={cls.horizon} aria-hidden="true">
+      <span className={cls.horizonLine} />
+      <span className={cls.glint} />
+    </div>
+  );
+}
+
+function Hero({ c, data, cls }: { c: EngineDemo; data: PageData; cls: Cls }) {
+  const w = ways(c);
+  const kind = c.heroKind;
+  return (
+    <section className={cls.hero} data-kind={kind} id="top" data-hero>
+      {kind !== 'type' && data.images.hero && (
+        <div className={cls.heroMedia} style={{ '--px': `${data.images.hero.width}px` } as CSSProperties}>
+          <Photo data={data} id="hero" sizes={kind === 'photo' ? '100vw' : SPLIT_SIZES} first />
+        </div>
+      )}
+      <header className={cls.heroTop}>
+        <a className={cls.mark} href="#top">
+          {c.wordmark ?? c.name}
+        </a>
+        <span className={cls.place}>
+          {c.place.town}
+          {c.place.region ? `, ${c.place.region}` : ''}
+        </span>
+      </header>
+      <div className={cls.heroWords}>
+        <Lines lines={c.hero.lines} cls={cls} className={cls.heroTitle} />
+        <Horizon cls={cls} />
+      </div>
+      <div className={cls.heroFoot}>
+        {c.hero.sub && <p className={cls.heroSub}>{c.hero.sub.text}</p>}
+        {c.hero.facts.length > 0 && (
+          <dl className={cls.heroFacts} data-facts>
+            {c.hero.facts.map((f) => (
+              <div key={f.label}>
+                <dt>{f.label}</dt>
+                <dd>{f.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+        <div className={cls.heroActions}>
+          <Go action={w.main} cls={cls} />
+          {w.email && w.main.kind !== 'email' && (
+            <a className={cls.quietLink} href={w.email.href}>
+              {w.email.label}
+            </a>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Story({ c, data, cls }: { c: EngineDemo; data: PageData; cls: Cls }) {
+  if (!c.story) return null;
+  const steps = c.story.steps;
+  return (
+    <section className={cls.story} id="trip" aria-labelledby="story-h">
+      <Pinned steps={steps.length} className={cls.storyPin}>
+        <h2 id="story-h" className={cls.storyTitle}>
+          {c.story.heading}
+        </h2>
+        <div className={cls.sky} aria-hidden="true">
+          {steps.map((st, i) =>
+            st.photo && data.images[st.photo] ? (
+              <div key={st.photo} className={cls.skyPhoto} data-step={i} data-state={i === 0 ? 'on' : 'off'}>
+                <Photo data={data} id={st.photo} sizes="(min-width: 1100px) 50vw, 100vw" />
+              </div>
+            ) : null,
+          )}
+        </div>
+        <div className={cls.voyage} aria-hidden="true">
+          <span className={cls.voyageLine} />
+          <span className={cls.voyageDone} />
+          <ol className={cls.ticks}>
+            {steps.map((st, i) => (
+              <li key={st.title} data-step={i} data-state={i === 0 ? 'on' : 'off'} />
+            ))}
+          </ol>
+        </div>
+        <ol className={cls.legs}>
+          {steps.map((st, i) => (
+            <li key={st.title} data-step={i} data-state={i === 0 ? 'on' : 'off'}>
+              {st.mark && <p className={cls.legMark}>{st.mark}</p>}
+              <h3 className={cls.legTitle}>{st.title}</h3>
+              <p className={cls.legText}>{st.text}</p>
+            </li>
+          ))}
+        </ol>
+      </Pinned>
+    </section>
+  );
+}
+
 function Signature({ c, cls }: { c: EngineDemo; cls: Cls }) {
   const sig = c.signature;
   if (!sig) return null;
@@ -26,7 +127,7 @@ function Signature({ c, cls }: { c: EngineDemo; cls: Cls }) {
       return { ...t, href, ask, external: !!w.booking };
     });
     return (
-      <section className={cls.board} id="board" aria-labelledby="board-h">
+      <section className={cls.board} id="board" data-quiet aria-labelledby="board-h">
         <header className={cls.boardHead}>
           <h2 id="board-h" className={cls.sectionTitle} data-reveal>
             {sig.heading}
@@ -43,7 +144,7 @@ function Signature({ c, cls }: { c: EngineDemo; cls: Cls }) {
   }
   if (sig.kind === 'seasons') {
     return (
-      <section className={cls.seasons} id="board" aria-labelledby="seasons-h">
+      <section className={cls.seasons} id="board" data-quiet aria-labelledby="seasons-h">
         <h2 id="seasons-h" className={cls.sectionTitle} data-reveal>
           {sig.heading}
         </h2>
@@ -53,7 +154,7 @@ function Signature({ c, cls }: { c: EngineDemo; cls: Cls }) {
   }
   if (sig.kind === 'day') {
     return (
-      <section className={cls.day} id="board" aria-labelledby="day-h">
+      <section className={cls.day} id="board" data-quiet aria-labelledby="day-h">
         <h2 id="day-h" className={cls.sectionTitle} data-reveal>
           {sig.heading}
         </h2>
@@ -72,7 +173,8 @@ function pick(cls: Cls, names: string[]): Cls {
 function Close({ c, cls }: { c: EngineDemo; cls: Cls }) {
   const w = ways(c);
   return (
-    <section className={cls.close} id="contact" aria-labelledby="close-h">
+    <section className={cls.close} id="contact" aria-labelledby="close-h" data-quiet>
+      <Horizon cls={cls} />
       <h2 id="close-h" className={cls.closeTitle} data-reveal>
         {c.close.heading}
       </h2>
@@ -131,7 +233,7 @@ function Demo({ data }: { data: PageData }) {
       <main>
         <Intro c={c} cls={s} />
         <Band c={c} cls={s} />
-        <Story c={c} data={data} cls={s} id="trip" />
+        <Story c={c} data={data} cls={s} />
         <Signature c={c} cls={s} />
         <Offers c={c} data={data} cls={s} />
         <Gallery c={c} data={data} cls={s} />
@@ -139,7 +241,12 @@ function Demo({ data }: { data: PageData }) {
         <Practical c={c} cls={s} />
         <Close c={c} cls={s} />
       </main>
-      <Foot c={c} cls={s} />
+      <Foot c={c} cls={s}>
+        <p className={s.footMark} style={{ '--len': (c.wordmark ?? c.name).length } as CSSProperties} aria-hidden="true">
+          {c.wordmark ?? c.name}
+        </p>
+      </Foot>
+      <QuietBar />
       <StickyBar main={{ label: w.main.kind === 'phone' ? 'Call to book' : w.main.label, href: w.main.href, external: w.main.external }} call={{ label: w.phone ? `Call ${w.phone.label}` : 'Email', tel: w.phone?.href ?? w.email?.href ?? w.main.href }} />
     </div>
   );

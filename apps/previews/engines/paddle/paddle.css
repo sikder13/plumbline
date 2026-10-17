@@ -1,7 +1,7 @@
-/* The paddle engine: its colours, faces and sections. The opening screen and the story are styled in core.css. */
+/* The paddle engine. The device is the river line. Light grounds, soft corners, the display face large. */
 
 .root {
-  --em: 0.6;
+  --em: 0.56;
   --ds: 1;
   --dw: 600;
   --track: -0.025em;
@@ -11,14 +11,15 @@
   --quiet: color-mix(in oklch, var(--ink) 74%, transparent);
 }
 
-.root[data-type='literata-sora'] {
-  --em: 0.62;
+.root[data-type='sora-literata'] {
+  --em: 0.64;
+  --ds: 0.86;
   --dw: 600;
-  --track: -0.025em;
+  --track: -0.045em;
 }
 
 .root[data-type='instrumentserif-dmsans'] {
-  --em: 0.48;
+  --em: 0.46;
   --ds: 1.12;
   --dw: 400;
   --track: -0.02em;
@@ -46,6 +47,196 @@
   display: none;
 }
 
+.hero {
+  position: relative;
+  isolation: isolate;
+  min-height: calc(100svh - var(--bar-h));
+  display: flex;
+  flex-direction: column;
+  padding: 18px var(--pad) 24px;
+  overflow: hidden;
+}
+
+.heroMedia {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.heroMedia picture,
+.heroMedia img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.heroMedia img {
+  object-fit: cover;
+  animation: drift 9s var(--ease) both;
+}
+
+.hero[data-kind='photo'] {
+  color: #fff;
+}
+
+.hero[data-kind='photo']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(to bottom, color-mix(in oklch, var(--deep) 55%, transparent) 0%, transparent 16%, transparent 24%, color-mix(in oklch, var(--deep) 58%, transparent) 44%, color-mix(in oklch, var(--deep) 84%, transparent) 66%, color-mix(in oklch, var(--deep) 94%, transparent) 100%);
+}
+
+.hero[data-kind='type'] {
+  background: var(--paper);
+}
+
+.hero[data-kind='type']::before {
+  content: '';
+  position: absolute;
+  inset: auto -20% -30% -20%;
+  height: 70%;
+  z-index: -1;
+  background: radial-gradient(60% 60% at 50% 40%, var(--soft), transparent 70%);
+}
+
+.heroTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.mark {
+  font: var(--dw) calc(20px * var(--ds)) / 1 var(--display);
+  letter-spacing: var(--track);
+  text-decoration: none;
+}
+
+.place {
+  max-width: 22ch;
+  font: 500 12.5px/1.35 var(--text);
+  text-align: right;
+  opacity: 0.86;
+}
+
+.heroWords {
+  container-type: inline-size;
+  margin-top: auto;
+  padding-top: 32px;
+}
+
+.heroTitle {
+  font-size: min(calc(clamp(60px, 19vw, 92px) * var(--ds)), calc(100cqi / (var(--chars) * var(--em))));
+  line-height: 0.94;
+}
+
+.heroSub {
+  margin-top: 24px;
+  max-width: 32ch;
+  font-size: 17.5px;
+  line-height: 1.45;
+  animation: fade 0.8s var(--ease) 0.8s both;
+}
+
+.heroFoot {
+  display: grid;
+  gap: 18px;
+  margin-top: 6px;
+}
+
+.heroFacts {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  border-radius: 16px;
+  background: var(--soft);
+  overflow: hidden;
+  animation: fade 0.8s var(--ease) 1s both;
+}
+
+.heroFacts li {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 13px 14px 14px;
+}
+
+.heroFacts li + li {
+  border-left: 1px solid color-mix(in oklch, var(--ink) 14%, transparent);
+}
+
+.hero[data-kind='photo'] .heroFacts {
+  background: color-mix(in oklch, var(--deep) 86%, transparent);
+  backdrop-filter: blur(16px);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, #fff 14%, transparent);
+}
+
+.hero[data-kind='photo'] .heroFacts li + li {
+  border-left-color: color-mix(in oklch, #fff 18%, transparent);
+}
+
+.heroFacts span {
+  font: 600 10.5px/1.2 var(--text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.78;
+}
+
+.heroFacts b {
+  font-size: 14.5px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  animation: fade 0.8s var(--ease) 1.15s both;
+}
+
+.heroActions .go {
+  flex: 1 1 100%;
+}
+
+.quietLink {
+  font-size: 15px;
+  text-underline-offset: 4px;
+}
+
+.hero[data-kind='split'] .heroMedia {
+  position: relative;
+  inset: auto;
+  z-index: 0;
+  order: 3;
+  margin-top: 18px;
+  aspect-ratio: 3 / 2;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.hero[data-kind='split'] .heroWords {
+  order: 2;
+  margin-top: 28px;
+  padding-top: 0;
+}
+
+.hero[data-kind='split'] .heroFoot {
+  order: 5;
+}
+
+.intro {
+  padding: var(--gap) var(--pad) calc(var(--gap) * 0.7);
+}
+
+.introText {
+  margin-top: 20px;
+  max-width: 28ch;
+  font: var(--dw) 22px / 1.38 var(--display);
+  letter-spacing: var(--track);
+}
+
 .band {
   overflow: hidden;
   padding: 18px 0;
@@ -71,7 +262,7 @@
 .bandRun li {
   display: flex;
   align-items: center;
-  font: var(--dw) calc(24px * var(--ds)) / 1.1 var(--display);
+  font: var(--dw) calc(30px * var(--ds)) / 1.1 var(--display);
   letter-spacing: var(--track);
   white-space: nowrap;
 }
@@ -88,6 +279,101 @@
   to {
     transform: translateX(-50%);
   }
+}
+
+.story {
+  background: var(--soft);
+}
+
+.storyPin {
+  position: relative;
+  height: calc(100svh + min(var(--steps) * 50svh, 200svh));
+}
+
+.storyPin [data-frame] {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: flex;
+  flex-direction: column;
+  padding: calc(var(--bar-h) + 22px) var(--pad) 100px;
+  overflow: hidden;
+}
+
+.storyTitle {
+  font-size: calc(clamp(32px, 9vw, 40px) * var(--ds));
+  line-height: 1;
+  max-width: 14ch;
+}
+
+.pool {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 160px;
+  max-height: 300px;
+  margin-top: 18px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: color-mix(in oklch, var(--accent) 18%, var(--soft));
+}
+
+.poolPhoto {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity 0.6s var(--ease), transform 1.2s var(--ease);
+}
+
+.poolPhoto[data-state='on'] {
+  opacity: 1;
+  transform: none;
+}
+
+.poolPhoto picture,
+.poolPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reaches {
+  position: relative;
+  min-height: 9.5em;
+  margin-top: 8px;
+}
+
+.reaches li {
+  position: absolute;
+  inset: 0 0 auto 0;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.45s var(--ease), transform 0.6s var(--ease);
+}
+
+.reaches li[data-state='on'] {
+  opacity: 1;
+  transform: none;
+}
+
+.reachMark {
+  font: 600 12px/1.2 var(--text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+  margin-bottom: 6px;
+}
+
+.reachTitle {
+  font-size: min(calc(26px * var(--ds)), 28px);
+  line-height: 1.08;
+}
+
+.reachText {
+  margin-top: 8px;
+  max-width: 36ch;
+  color: var(--quiet);
 }
 
 .pick,
@@ -139,15 +425,15 @@
 
 .noteLead,
 .condLabel {
-  font: 600 14px/1.3 var(--text);
-  letter-spacing: 0;
-  text-transform: none;
+  font: 600 14px/1.2 var(--text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--quiet);
 }
 
 .noteTrip {
   margin-top: 8px;
-  font: var(--dw) calc(25px * var(--ds)) / 1.1 var(--display);
+  font: var(--dw) min(calc(clamp(34px, 10vw, 46px) * var(--ds)), 28px) / 1.02 var(--display);
   letter-spacing: var(--track);
   color: var(--accent-ink);
   animation: fade 0.5s var(--ease) both;
@@ -161,9 +447,9 @@
 }
 
 .noteFacts dt {
-  font: 600 14px/1.3 var(--text);
-  letter-spacing: 0;
-  text-transform: none;
+  font: 600 11px/1.2 var(--text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--quiet);
 }
 
@@ -202,8 +488,8 @@
 
 .condText {
   margin-top: 10px;
-  max-width: 52ch;
-  font: var(--dw) 21px/1.4 var(--display);
+  max-width: 30ch;
+  font: var(--dw) calc(26px * var(--ds)) / 1.22 var(--display);
   letter-spacing: var(--track);
   animation: fade 0.5s var(--ease) both;
 }
@@ -317,7 +603,7 @@
 }
 
 .personName {
-  font-size: calc(25px * var(--ds));
+  font-size: calc(28px * var(--ds));
 }
 
 .personRole {
@@ -406,6 +692,13 @@
   color: var(--on-deep);
 }
 
+.footMark {
+  margin-bottom: 22px;
+  font: var(--dw) min(calc(clamp(40px, 12vw, 120px) * var(--ds)), 28px) / 0.95 var(--display);
+  letter-spacing: var(--track);
+  color: color-mix(in oklch, var(--on-deep) 58%, transparent);
+}
+
 .routeStops {
   position: relative;
   display: grid;
@@ -464,34 +757,33 @@
   color: var(--quiet);
 }
 
-.story {
-  background: var(--soft);
-}
-
-
 @media (min-width: 760px) {
-.offerList {
+  .heroActions .go {
+    flex: 0 0 auto;
+  }
+
+  .offerList {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-.gallery {
+  .gallery {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-.shot[data-shot='0'] {
+  .shot[data-shot='0'] {
     grid-column: span 2;
     grid-row: span 2;
     aspect-ratio: auto;
   }
 
-.practicalList {
+  .practicalList {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 40px;
   }
 }
 
 @media (min-width: 1100px) {
-.nav {
+  .nav {
     position: fixed;
     top: var(--bar-h);
     left: 0;
@@ -508,40 +800,40 @@
     transition: top 0.4s var(--enter);
   }
 
-:global(html[data-strip-away]) .nav {
+  :global(html[data-strip-away]) .nav {
     top: 0;
   }
 
-:global(html[data-past-hero]) .nav {
+  :global(html[data-past-hero]) .nav {
     color: var(--ink);
     background: color-mix(in oklch, var(--paper) 90%, transparent);
     backdrop-filter: blur(14px);
   }
 
-.navMark {
+  .navMark {
     font: var(--dw) calc(22px * var(--ds)) / 1 var(--display);
     letter-spacing: var(--track);
     text-decoration: none;
   }
 
-.navLinks {
+  .navLinks {
     display: flex;
     gap: 24px;
     margin-left: auto;
     font-size: 15px;
   }
 
-.navLinks a {
+  .navLinks a {
     text-decoration: none;
   }
 
-.navLinks a[aria-current],
-.navLinks a:hover {
+  .navLinks a[aria-current],
+  .navLinks a:hover {
     text-decoration: underline;
     text-underline-offset: 6px;
   }
 
-.navGo {
+  .navGo {
     display: inline-flex;
     align-items: center;
     min-height: 42px;
@@ -553,65 +845,259 @@
     text-decoration: none;
   }
 
-.sectionTitle {
+  .hero {
+    padding: 110px var(--pad) 40px;
+  }
+
+  .heroTop {
+    display: none;
+  }
+
+  .heroTitle {
+    font-size: min(calc(clamp(100px, 9.6vw, 176px) * var(--ds)), calc(100cqi / (var(--chars) * var(--em))));
+    max-width: 12ch;
+  }
+
+  .heroSub {
+    font-size: 20px;
+  }
+
+  .heroFoot {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+  }
+
+  .hero[data-kind='split'] {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-rows: 1fr auto auto;
+    column-gap: 56px;
+  }
+
+  .hero[data-kind='split'] .heroMedia {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    margin: 0;
+    aspect-ratio: auto;
+    max-width: min(100%, var(--px, 2400px));
+  }
+
+  .hero[data-kind='split'] .heroWords {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: end;
+  }
+
+  .hero[data-kind='split'] .heroFoot {
+    grid-column: 1;
+  }
+
+  .hero[data-kind='split'] .heroFoot {
+    grid-template-columns: 1fr;
+  }
+
+  .intro {
+    display: grid;
+    grid-template-columns: 1fr 2.2fr;
+    gap: 56px;
+  }
+
+  .introText {
+    margin-top: 0;
+    max-width: 24ch;
+    font-size: 24px;
+    line-height: 1.12;
+  }
+
+  .sectionTitle {
     font-size: calc(clamp(60px, 5.6vw, 100px) * var(--ds));
   }
 
-.pick,
-.cond,
-.routeSection {
+  .storyPin [data-frame] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    grid-template-rows: auto 1fr auto;
+    column-gap: 64px;
+    padding: calc(var(--bar-h) + 110px) var(--pad) 64px;
+  }
+
+  .storyTitle {
+    font-size: calc(60px * var(--ds));
+  }
+
+  .pool {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    max-height: none;
+    margin: 0;
+    max-width: var(--px, 100%);
+  }
+
+  .reaches {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: end;
+    margin-bottom: 24px;
+  }
+
+  .reachTitle {
+    font-size: min(calc(40px * var(--ds)), 36px);
+  }
+
+  .pick,
+  .cond,
+  .routeSection {
     display: grid;
     grid-template-columns: 1fr 1.4fr;
     gap: 56px;
     align-items: start;
   }
 
-.chooser,
-.conditions,
-.route {
+  .chooser,
+  .conditions,
+  .route {
     margin-top: 0;
   }
 
-.offers {
+  .offers {
     display: grid;
     grid-template-columns: 1fr 2fr;
     gap: 56px;
   }
 
-.offerList {
+  .offerList {
     margin-top: 0;
   }
 
-.gallery {
+  .gallery {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-.shot {
+  .shot {
     max-width: var(--px, 2400px);
   }
 
-.close {
+  .close {
     display: grid;
     grid-template-columns: 1.2fr 1fr;
     column-gap: 64px;
     border-radius: 48px 48px 0 0;
   }
 
-.closeTitle {
+  .closeTitle {
     font-size: calc(clamp(72px, 6.6vw, 120px) * var(--ds));
   }
 
-.closeGo {
+  .closeGo {
     grid-column: 1;
   }
 
-.closeGo .go {
+  .closeGo .go {
     width: auto;
   }
 
-.closeWays {
+  .closeWays {
     grid-column: 2;
     grid-row: 1 / span 4;
     align-self: end;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), (max-width: 599.98px) {
+  .storyPin {
+    height: auto;
+  }
+
+  .storyPin [data-frame] {
+    position: static;
+    height: auto;
+    display: block;
+    padding-bottom: var(--gap);
+  }
+
+  .pool {
+    display: grid;
+    gap: 10px;
+    max-height: none;
+    background: none;
+    border-radius: 0;
+  }
+
+  .poolPhoto {
+    position: relative;
+    opacity: 1;
+    transform: none;
+    aspect-ratio: 3 / 2;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .reaches {
+    min-height: 0;
+    display: grid;
+    gap: 32px;
+    margin-top: 28px;
+  }
+
+  .reaches li {
+    position: static;
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Nothing is held on a phone: each step's photo, then its words, one after another. */
+  .storyPin [data-frame] {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .pool,
+  .reaches {
+    display: contents;
+  }
+
+  .poolPhoto {
+    margin-top: 16px;
+  }
+
+  .poolPhoto[data-step='0'] {
+    order: 1;
+  }
+
+  .reaches li[data-step='0'] {
+    order: 2;
+  }
+
+  .poolPhoto[data-step='1'] {
+    order: 3;
+  }
+
+  .reaches li[data-step='1'] {
+    order: 4;
+  }
+
+  .poolPhoto[data-step='2'] {
+    order: 5;
+  }
+
+  .reaches li[data-step='2'] {
+    order: 6;
+  }
+
+  .poolPhoto[data-step='3'] {
+    order: 7;
+  }
+
+  .reaches li[data-step='3'] {
+    order: 8;
+  }
+
+  .poolPhoto[data-step='4'] {
+    order: 9;
+  }
+
+  .reaches li[data-step='4'] {
+    order: 10;
   }
 }

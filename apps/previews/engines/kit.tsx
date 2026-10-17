@@ -71,11 +71,36 @@ export function Photo({ data, id, sizes, first, className, parallax }: { data: P
   return <Pic pic={p} phone={data.images[`${id}Phone`]} sizes={sizes} first={first} low={!first} className={className} parallax={parallax} />;
 }
 
-/** The main button: the business's own booking path, phone or email, in words alone. */
+export function Arrow() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true" focusable="false">
+      <path d="M3 10h13M11 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function PhoneIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+      <path d="M6.6 3.5h3l1.5 4.2-2 1.5a12 12 0 0 0 5.7 5.7l1.5-2 4.2 1.5v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function MailIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+      <path d="M3.5 6.5h17v11h-17zM3.5 7l8.5 6.5L20.5 7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** The main button: the business's own booking path, phone or email. */
 export function Go({ action, cls, className, children }: { action: Action; cls: Cls; className?: string; children?: ReactNode }) {
   return (
     <a className={`${cls.go} ${className ?? ''}`} href={action.href} rel={action.external ? 'noopener' : undefined} data-press data-magnetic>
-      {children ?? action.label}
+      <span>{children ?? action.label}</span>
+      {action.kind === 'phone' ? <PhoneIcon /> : action.kind === 'email' ? <MailIcon /> : <Arrow />}
     </a>
   );
 }

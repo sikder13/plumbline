@@ -259,12 +259,39 @@ const TYPE_SCALE_CHECK = (): string[] => {
       const m = /matrix\(([^)]+)\)/.exec(cs.transform);
       if (m && Math.abs(Number(m[1]!.split(',')[1])) > 0.01) out.push(`signature label "${own(el).slice(0, 30)}" is turned`);
     }
+  for (const grid of demo.querySelectorAll('[data-facts]')) {
+    const cells = [...grid.children].filter(shown);
+    const rows = new Map<number, Element[]>();
+    for (const cell of cells) {
+      const top = Math.round(cell.getBoundingClientRect().top);
+      rows.set(top, [...(rows.get(top) ?? []), cell]);
+    }
+    const last = [...rows.entries()].sort((a, b) => a[0] - b[0]).pop()?.[1] ?? [];
+    if (rows.size > 1 && last.length === 1 && last[0]!.getBoundingClientRect().width < grid.getBoundingClientRect().width * 0.75) out.push(`a fact grid leaves "${(last[0]!.textContent ?? '').trim().slice(0, 30)}" alone in its last row`);
+  }
   const held = [...demo.querySelectorAll('[data-frame]')].filter((f) => getComputedStyle(f).position === 'sticky');
   if (phone && held.length) out.push('a section is held in place on a phone');
   if (held.length > 1) out.push(`${held.length} sections are held in place`);
   for (const f of held) {
     const extra = (f.parentElement?.getBoundingClientRect().height ?? 0) - window.innerHeight;
     if (extra > 2.05 * window.innerHeight) out.push(`a held section takes ${(extra / window.innerHeight).toFixed(1)} screens of scroll`);
+  }
+  return out;
+};
+
+/** Links and buttons in the demo whose middle a fixed element (the floating bar, the tab switch, the strip) covers right now. */
+const OVERLAP_CHECK = (): string[] => {
+  const out: string[] = [];
+  const fixedOf = (el: Element | null): Element | null => {
+    for (let e = el; e; e = e.parentElement) if (getComputedStyle(e).position === 'fixed') return e;
+    return null;
+  };
+  for (const a of document.querySelectorAll('#demo a, #demo button')) {
+    if (fixedOf(a)) continue;
+    const r = a.getBoundingClientRect();
+    if (!r.width || !r.height || r.top < 0 || r.bottom > window.innerHeight || getComputedStyle(a).visibility === 'hidden') continue;
+    const over = fixedOf(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2));
+    if (over && !over.contains(a)) out.push(`"${(a.textContent || a.getAttribute('aria-label') || '').trim().slice(0, 30)}" is covered by ${String(over.className || over.tagName).slice(0, 30)}`);
   }
   return out;
 };
@@ -345,6 +372,17 @@ export async function gateSample(slug: string, base: string, opts: { runs?: numb
         // The runner that compiles this file names inner functions with a helper the page does not have.
         await page.evaluate('globalThis.__name = (f) => f');
         for (const issue of await page.evaluate(TYPE_SCALE_CHECK)) failures.push(`type at ${width}: ${issue}`);
+        if (width === 390) {
+          // Scrolled a little at a time, as a thumb would: at every stop no fixed bar may sit on a link or button.
+          const covered = new Set<string>();
+          const height = await page.evaluate(() => document.documentElement.scrollHeight);
+          for (let y = 0; y <= height; y += 380) {
+            await page.evaluate((to) => window.scrollTo(0, to), y);
+            await page.waitForTimeout(500);
+            for (const c of await page.evaluate(OVERLAP_CHECK)) covered.add(c);
+          }
+          for (const c of covered) failures.push(`overlap at 390: ${c}`);
+        }
         await ctx.close();
       }
     for (const t of texts) {

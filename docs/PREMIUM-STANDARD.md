@@ -1,26 +1,32 @@
 # The Premium Standard
 
-Every wave 4 page is rendered by one of four engines (fishing, paddle, stay, physio) from a settings file. This page is the bar each engine is built and gated to. It is drawn from the Wine Hopper page (`apps/previews/designs/loop.tsx`), the three wave 3 designs that beat it blind (`clearing`, `haul` and `skyline`), and two blind comparisons of the engines against Wine Hopper. Each rule can be checked by a script or by looking at one screenshot. The reference look is the stay engine's: their own photo first, a serif headline on a warm ground, then the facts as chips.
+Every wave 4 page is rendered by one of four engines (fishing, paddle, stay, physio) from a settings file. This page is the bar each engine is built and gated to. It is drawn from the Wine Hopper page (`apps/previews/designs/loop.tsx`), the three wave 3 designs that beat it blind (`clearing`, `haul` and `skyline`), and two blind comparisons of the engines against Wine Hopper. Each rule can be checked by a script or by looking at one screenshot. Every page is built around one idea (section 0), and each engine keeps a composition and a voice of its own: four engines must never read as one template in four colours.
+
+## 0. One idea per page
+
+- Every settings file names a **concept**: one short line made only of their own words and facts (for example "a whole day on the water: out at first light, home by mid-afternoon").
+- The concept is carried by the hero line, the signature and the closing call to action, all in their words.
+- Nothing is said twice: a section heading never repeats the hero line. A recurring strip of the same marks shown at the top, before sections and at the close was tried and dropped, because a blind review found the repeats padded the page.
 
 ## 1. Type
 
 | Role | Phone (390) | Desktop (1280+) | Notes |
 |---|---|---|---|
-| H1, the hero line | clamp(46px, 13.5vw, 64px) / 0.98, fitted to its longest line | clamp(64px, 5.8vw, 112px) | display face, a serif in every engine |
+| H1, the hero line | about 46 to 88 px, fitted to its longest line | about 64 to 176 px | the engine's display face |
 | H2 | clamp(34px, 9.4vw, 54px) / 1.0 | clamp(44px, 5vw, 96px) | display face |
 | H3, labels, figures | 28 px at most | 36 px at most | never a display size |
 | Intro (lede) and body | 17 to 22 px / 1.5 | 18 to 24 px / 1.5 | text face, 60 to 72 characters a line on desktop |
 | Label | 12 px at least, 14 px in a signature section | 12 to 14 px | |
 
 - Only H1, H2 and the hero line use display sizes. A paragraph is never set as a headline: the intro is a short heading and a lede at reading size.
-- Two families per page from the engine's three pairs, every pair with a serif display face; self hosted woff2, at most two files preloaded.
+- Two families per page from the engine's three pairs; each engine has a voice of its own (fishing: upright condensed or wide grotesk; paddle: soft serif or round sans; stay: classic serif; physio: clean sans). Self hosted woff2, at most two files preloaded.
 - Figures in times, prices, lengths and distances use tabular numerals.
 - **Gate** (`plumb engine gates`, "type"): at 390 and 1280, running text (a paragraph, item or definition of 60 characters or more) is at most 22 px on a phone and 24 px on desktop, and at most about 72 characters a line; any other text outside H1 and H2 is at most 28 px and 36 px.
 
 ## 2. Spacing and grounds
 
 - 8 px base. Side gutter 24 px on a phone, 40 px at 768, 56 px at 1100 and up. Sections 96 px apart on a phone, 128 to 160 px on desktop.
-- The ground is warm in every engine (paper about OKLCH 0.97 L, hue 80 to 88), with a soft second ground and one deep ground for the story and the close. One accent colour, from their logo, for the action.
+- Each engine has its own ground (fishing: sea grey and a deep sea; paddle: river light; stay: warm paper; physio: clinic white with a calm ink blue). One accent colour, from their logo, for the action.
 
 ## 3. The hero
 
@@ -28,7 +34,7 @@ Every wave 4 page is rendered by one of four engines (fishing, paddle, stay, phy
 - **1800 px or wider** (and 1080 px high, for the phone crop at 2x): full bleed is allowed. On a phone the photo fills the top of the screen and the words sit below it on the warm ground; on desktop the photo fills one half.
 - **1200 to 1800 px**: the split editorial hero. On desktop the photo sits in a panel beside the words, never stretched; on a phone it runs the full width, as a 4:3 band.
 - **Below 1200 px, or no sharp photo**: the typographic hero only.
-- The composition is the same in every engine: their own photo first; then the serif headline, one sentence of theirs, the action; then the facts as chips (a ruled grid of label and value). The action is always in the first phone screen.
+- **Each engine keeps its own composition**, using a sharp photo inside it where one exists. Fishing: big upright type on the deep sea ground, standing on the horizon line, the photo as a band (phone) or panel (desktop). Paddle: their words over their river, the facts as one strip. Stay: their photo through a window, then the serif headline on warm paper and the facts as chips. Physio: their photo with a white sheet rising over it, holding the path back to moving. The action is always in the first phone screen.
 - **Typographic hero**: display type set big and tight (clamp(56px, 17vw, 84px) on a phone, up to 150 px on desktop) on a surface made from their palette (the warm paper, a soft light from the accent, a fine grain); their best real photo as a strong inset (beside the words on desktop, the first scroll reveal on a phone); a quiet line of their facts (town, season, hours), each with its source in the settings.
 - **No clip art.** No illustrations, icon sets or decorative drawings in any hero or signature section: no suns, waves, gauges, needles, figures or icons on buttons. The only graphics allowed there are their photos and plain rules, and diagrams whose every mark is a fact they state.
 - The photo opens from a window (clip 1.4 s) and drifts from 1.07 to 1 over 9 s; the headline rises line by line (below).
@@ -56,6 +62,7 @@ Every wave 4 page is rendered by one of four engines (fishing, paddle, stay, phy
 - **Every mark encodes their data.** A bar is their price or length; a ring is one of their stated distances; a list item is one of their trips, rooms or conditions. Nothing measures what they do not measure.
 - **Readable labels**: horizontal, never turned, and at least 14 px on a phone. Below 600 px the "what's around you" ring is a clean stacked list grouped by the distances they state; from 600 px a ring per distance stands beside the list, labelled level.
 - Missing data hides the section; fewer than two items hides it.
+- **Facts never leave a stray cell**: with an odd number in a two column grid, the first fact takes the whole row (or the weakest is dropped). The gate fails a fact grid whose last row holds one lone cell.
 - It shows itself in a passive scroll (plays once, at most 2.4 s, then waits), works by keyboard with 44 px targets, and ends at their real action.
 
 ## 6. Photos
@@ -70,6 +77,7 @@ Every wave 4 page is rendered by one of four engines (fishing, paddle, stay, phy
 
 - The primary action is the business's own: their booking link exactly as their site uses it, else their phone as `tel:+64…`, else a prepared `mailto:` to their published address. Nothing pretends to take a booking.
 - It is in the first phone screen, in the floating bar after the hero, and at the close, in words alone. A price they state sits beside it where it applies.
+- **The floating bar and the tab switch hide** whenever the signature, the close or the footer is on screen, so a floating copy never sits on the button it repeats. The gate scrolls each page at 390 px and fails if any fixed element covers a link or button.
 - The Findings tab keeps our plumbing; its main action is the line "Reply to Udaay's email", with the 15 minute call second.
 
 ## 8. Performance budget (mobile Lighthouse, median of 3)
@@ -94,6 +102,7 @@ Wine Hopper won every pair of both blind rounds. Each reason it won maps to a ru
 - Monospace and tabular figures for times: section 1 (tabular numerals).
 - Dense pinned sections that change visibly each step: section 4 (half a screen per step, two screens at most, none on a phone).
 - No paragraph shouting at headline size, no small labels on curved paths: sections 1 and 5.
+- One idea carried through the page, from the hero line to the close: section 0.
 
 ## 11. Beyond Wine Hopper
 

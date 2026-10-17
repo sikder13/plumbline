@@ -35,6 +35,7 @@ A content folder with `engine.json` is picked up by `plumb preview build` like a
 | Field | Required | What it holds |
 |---|---|---|
 | `engine` | yes | `fishing`, `paddle`, `stay` or `physio` |
+| `concept` | yes | the one idea of the page, a short line of their own words and facts |
 | `slug`, `name`, `domain` | yes | as in the wave list; `name` as the page reads |
 | `wordmark` | no | a shorter name for the mark and footer |
 | `place` | yes | `town`, optional `region`, `source` |
@@ -77,12 +78,12 @@ The photos decide the hero; `look.hero` only chooses between full bleed and spli
 
 ### Type pairs
 
-| Engine | Pairs (display with text), every one a serif headline |
+| Engine | Pairs (display with text) |
 |---|---|
-| fishing | `bitter-hanken`, `robotoslab-intertight`, `alegreya-librefranklin` |
-| paddle | `fraunces-instrumentsans`, `literata-sora`, `instrumentserif-dmsans` |
+| fishing | `bigshoulders-hanken`, `unbounded-intertight`, `bricolage-librefranklin` |
+| paddle | `fraunces-instrumentsans`, `sora-literata`, `instrumentserif-dmsans` |
 | stay | `cormorant-manrope`, `youngserif-worksans`, `gloock-outfit` |
-| physio | `lora-plusjakarta`, `sourceserif-onest`, `crimsonpro-geologica` |
+| physio | `plusjakarta-lora`, `onest-sourceserif`, `geologica-crimsonpro` |
 
 No pair is used by any earlier page or by another engine (`plumb engine variety` checks this against every design in the repository and the wave 2 library).
 
