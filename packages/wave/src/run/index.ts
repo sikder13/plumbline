@@ -11,3 +11,4 @@ export * from './tiers.ts';
 export * from './findings.ts';
 export * from './measure.ts';
 export * from './report.ts';
+export * from './home.ts';

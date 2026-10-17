@@ -14,6 +14,7 @@ import { readPage, sameAddress, savedHtml, savedPage } from '../pages.ts';
 import { bookingPath, bookingSystemsIn, ctaLinks, followCta, type Cta, type Landing } from './booking.ts';
 import { type BookingScan, type CheckOut, type CrawlmouseOut, type RunMeasured, type PageSummary, type PelorusHeaders, type PhoneScreen } from './findings.ts';
 import { harvestAssets } from './harvest.ts';
+import { homeFacts } from './home.ts';
 import type { WaveRow } from './list.ts';
 import { checkForms, formRefs, unlinkedBookingPages } from './probe.ts';
 import { creditsIn, faithFlags, menuTargets, testimonialsOn, type MenuPage } from './screens.ts';
@@ -298,6 +299,7 @@ export async function measureBusiness(row: WaveRow, opts: MeasureOptions): Promi
       refusal,
       pelorus,
       trading,
+      home: homeFacts(pages, homepage),
       aiCrawlers: { allowed: blockedBotNames.length === 0, blocked: blockedBotNames },
     };
     writeFileSync(join(dir, 'result.json'), JSON.stringify({ ...measured, seconds: Math.round((Date.now() - started) / 1000) }, null, 1));

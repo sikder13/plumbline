@@ -10,9 +10,9 @@ export const TIER_NAMES: Record<Tier, string> = {
   2: 'compliance',
   3: 'speed',
   4: 'phone fit',
-  5: 'visible leftovers',
-  6: 'outdated software',
-  7: 'minor search items',
+  5: 'visible leftovers a visitor finds embarrassing',
+  6: 'hygiene, never leads',
+  7: 'minor, never leads and never in a subject',
 };
 
 export interface Facts {
@@ -92,6 +92,7 @@ export type FindingType =
   | 'passed_notice'
   | 'covid_wording'
   | 'stale_copyright'
+  | 'last_updated'
   | 'broken_images'
   | 'broken_link'
   | 'social_link_broken'
@@ -129,20 +130,21 @@ export const KINDS: Record<FindingType, Kind> = {
   demo_page: { tier: 5, order: 3, sentence: (f) => `A page titled ${q(f.title)} is still live on your website.` },
   coming_soon_page: { tier: 5, order: 4, sentence: () => 'A "coming soon" page is still live on your website.' },
   maintenance_page: { tier: 5, order: 5, sentence: (f) => `A page titled ${q(f.title)} is still live on your website.` },
-  blank_page: { tier: 5, order: 6, sentence: (f) => `${n(f.count, 'A blank page', `${f.count} blank pages`)} called ${q(f.title)} ${n(f.count, 'is', 'are')} still live on your website.` },
+  blank_page: { tier: 6, order: 6, sentence: (f) => `${n(f.count, 'A blank page', `${f.count} blank pages`)} called ${q(f.title)} ${n(f.count, 'is', 'are')} still live on your website.` },
   placeholder_text: { tier: 5, order: 7, sentence: (f) => `Placeholder text, ${q(f.text)}, is showing on your ${here(f)}.` },
   copy_of_address: { tier: 5, order: 8, sentence: (f) => `${f.count ?? 1} of your pages ${n(f.count, 'has a web address', 'have web addresses')} that ${n(f.count, 'starts', 'start')} with copy of, so the address names a different page from its content.` },
   passed_notice: { tier: 5, order: 9, sentence: (f) => `A notice about a date that has passed is still showing on your ${here(f)}.` },
   broken_images: { tier: 5, order: 10, sentence: (f) => `${n(f.count, '1 image', `${f.count} images`)} on your ${here(f)} ${n(f.count, 'does', 'do')} not load.` },
-  covid_wording: { tier: 5, order: 11, sentence: (f) => `COVID wording is still showing on your ${here(f)}.` },
-  stale_copyright: { tier: 5, order: 12, sentence: (f) => `The footer on your ${here(f)} still says ${f.year ?? 'an old year'}.` },
+  covid_wording: { tier: 6, order: 11, sentence: (f) => `COVID wording is still showing on your ${here(f)}.` },
+  stale_copyright: { tier: 7, order: 0, sentence: (f) => `The footer on your ${here(f)} still says ${f.year ?? 'an old year'}.` },
   broken_link: { tier: 5, order: 13, sentence: (f) => `${linkRef(f)} on your ${here(f)} opens a page that is not found.` },
   dead_menu_item: { tier: 5, order: 14, sentence: (f) => `The menu item ${q(f.label)} on your ${here(f)} leads nowhere.` },
-  social_link_broken: { tier: 5, order: 15, sentence: (f) => `The ${f.kind ?? 'social'} link on your ${here(f)} does not work.` },
+  social_link_broken: { tier: 6, order: 15, sentence: (f) => `The ${f.kind ?? 'social'} link on your ${here(f)} does not work.` },
+  last_updated: { tier: 7, order: 0, sentence: (f) => `Your ${here(f)} shows a last updated date from ${f.year ?? 'long ago'}.` },
   outdated_software: { tier: 6, order: 1, sentence: (f) => `Your website runs ${noDash(f.product ?? 'software')} ${f.version ?? ''}, which has had no support since ${f.since ?? 'an earlier date'}.`.replace(/\s+,/, ',') },
-  no_description: { tier: 7, order: 1, sentence: (f) => lacking(f, 'a description for search results') },
-  no_heading: { tier: 7, order: 2, sentence: (f) => lacking(f, 'a main heading') },
-  no_structured_data: { tier: 7, order: 3, sentence: (f) => lacking(f, 'structured data describing the business') },
+  no_description: { tier: 7, order: 2, sentence: (f) => lacking(f, 'a description for search results') },
+  no_heading: { tier: 7, order: 3, sentence: (f) => lacking(f, 'a main heading') },
+  no_structured_data: { tier: 7, order: 4, sentence: (f) => lacking(f, 'structured data describing the business') },
 };
 
 export const sentenceFor = (type: FindingType, facts: Facts): string => {
@@ -169,12 +171,22 @@ export interface RawFinding {
   /** Speed items: false when the two runs disagree or could not be made. */
   steady?: boolean;
   measuredAt: string;
+  /** A tier other than the kind's own: hygiene on a page nobody is sent to, or on a jobs or terms page. */
+  tier?: Tier;
+  /** The page on which a visitor meets it. */
+  page?: string;
+  /** That page is the homepage or a page in the main menu. */
+  onMain?: boolean;
+  /** How big the measured problem is, for ordering findings of one tier: seconds lost, pixels too wide, pages affected. */
+  size?: number;
 }
 
 export interface RankedFinding extends RawFinding {
   sentence: string;
   tier: Tier;
   place: number;
+  /** Tier 7 items are never put in a subject line. */
+  subjectOk: boolean;
 }
 
 export interface Dropped {
@@ -200,8 +212,9 @@ export function dropReason(f: RawFinding, ctx: RankContext): string | null {
 }
 
 /**
- * Filters, removes duplicates, ranks by tier and keeps three. A minor search item (tier 7) is only
- * ever third; where fewer than two better findings exist it is not put forward at all.
+ * Filters, removes duplicates and ranks by tier, then keeps three. Nothing from tier 6 or 7 leads,
+ * and a tier 7 item is only ever third. Within a tier an item that sits on the homepage or in the
+ * main menu comes first, then the kinds in their order, then the bigger measurement.
  */
 export function rankRunFindings(raw: RawFinding[], ctx: RankContext): { top: RankedFinding[]; rest: RankedFinding[]; dropped: Dropped[] } {
   const dropped: Dropped[] = [];
@@ -212,21 +225,35 @@ export function rankRunFindings(raw: RawFinding[], ctx: RankContext): { top: Ran
       dropped.push({ type: f.type, key: f.key, reason });
       continue;
     }
-    kept.push({ ...f, sentence: sentenceFor(f.type, f.facts), tier: KINDS[f.type].tier, place: 0 });
+    const tier = f.tier ?? KINDS[f.type].tier;
+    kept.push({ ...f, sentence: sentenceFor(f.type, f.facts), tier, place: 0, subjectOk: tier <= 6 });
   }
-  kept.sort((a, b) => a.tier - b.tier || KINDS[a.type].order - KINDS[b.type].order || (a.source === b.source ? 0 : a.source === 'plumbline' ? -1 : 1));
+  const main = (f: RankedFinding) => (f.onMain === false ? 1 : 0);
+  kept.sort((a, b) => a.tier - b.tier || main(a) - main(b) || KINDS[a.type].order - KINDS[b.type].order || (b.size ?? 1) - (a.size ?? 1) || (a.source === b.source ? 0 : a.source === 'plumbline' ? -1 : 1));
   const unique: RankedFinding[] = [];
   for (const f of kept) {
     const twin = unique.find((u) => u.key === f.key || u.sentence === f.sentence);
     if (twin) dropped.push({ type: f.type, key: f.key, reason: `duplicate of a ${TIER_NAMES[twin.tier]} item` });
     else unique.push(f);
   }
-  const major = unique.filter((f) => f.tier < 7);
-  const minor = unique.filter((f) => f.tier === 7);
-  const top = major.slice(0, 3);
-  if (top.length === 2 && minor.length) top.push(minor[0]!);
+  const top: RankedFinding[] = [];
+  if (unique.some((f) => f.tier <= 5)) {
+    for (const f of unique) {
+      if (top.length === 3) break;
+      if (f.tier === 7 && top.length < 2) continue;
+      top.push(f);
+    }
+  }
   top.forEach((f, i) => (f.place = i + 1));
   return { top, rest: unique.filter((f) => !top.includes(f)), dropped };
 }
 
-export const recommendation = (top: RankedFinding[]): 'BUILD' | 'RESERVE' => (top.some((f) => f.tier <= 5) ? 'BUILD' : 'RESERVE');
+/**
+ * BUILD only when the lead finding is tier 1 to 4, or a tier 5 item on the homepage or in the main
+ * menu. Everything else is RESERVE.
+ */
+export function recommendation(top: RankedFinding[]): 'BUILD' | 'RESERVE' {
+  const lead = top[0];
+  if (!lead) return 'RESERVE';
+  return lead.tier <= 4 || (lead.tier === 5 && lead.onMain === true) ? 'BUILD' : 'RESERVE';
+}

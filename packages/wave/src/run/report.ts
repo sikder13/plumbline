@@ -19,6 +19,11 @@ export interface PackFinding {
   linked_from: string | null;
   measured_at: string;
   source: string;
+  /** Tier 7 items are never put in a subject line. */
+  subject_ok: boolean;
+  /** The page on which a visitor meets it is the homepage or in the main menu. */
+  on_main_page: boolean;
+  size: number;
 }
 
 export interface FactPack {
@@ -44,6 +49,8 @@ export interface FactPack {
   pelorus: RunMeasured['pelorus'];
   recheck: { measured_at: string; not_before: string; fresh_until: string; command: string };
   recommendation: Recommendation;
+  /** Why it is RESERVE when it has findings or when it was cut by the limit. */
+  reserve_reason: string | null;
   blocked: string | null;
   dropped: Dropped[];
 }
@@ -80,13 +87,15 @@ export function buildFactPack(row: WaveRow, m: RunMeasured | null, extras: { wor
   const blocked = extras.blocked ?? (m ? (m.collection.blocked ? `the site could not be read (${m.collection.blocked.replace(/_/g, ' ')})` : m.refusal ? 'the site refuses unsolicited messages' : null) : 'not measured');
   const raw = m && !m.collection.blocked ? buildFindings(m) : [];
   const { top, rest, dropped } = rankRunFindings(raw, { agencies: m?.agencies ?? [] });
-  const wanted = (r: RankedFinding): PackFinding => ({ place: r.place, tier: r.tier, tier_name: TIER_NAMES[r.tier], type: r.type, sentence: r.sentence, measured: r.measured, evidence_url: r.evidenceUrl, linked_from: r.linkedFrom ?? null, measured_at: r.measuredAt, source: r.source });
+  const wanted = (r: RankedFinding): PackFinding => ({ place: r.place, tier: r.tier, tier_name: TIER_NAMES[r.tier], type: r.type, sentence: r.sentence, measured: r.measured, evidence_url: r.evidenceUrl, linked_from: r.linkedFrom ?? null, measured_at: r.measuredAt, source: r.source, subject_ok: r.subjectOk, on_main_page: r.onMain !== false, size: r.size ?? 1 });
   const botsBlocked = m?.aiCrawlers.blocked ?? [];
   const aiAccess = m
     ? `${botsBlocked.length ? `robots.txt turns away ${botsBlocked.join(', ')}` : `robots.txt does not turn away ${SEARCH_BOTS.join(', ')}`}${extras.crawlmouseAiAccess ? `; Crawlmouse: ${extras.crawlmouseAiAccess}` : ''}`
     : '';
   const rating = row.reviews && !/^not found$/i.test(row.reviews) ? row.reviews : null;
   const reco: Recommendation = blocked ? 'BLOCKED' : recommendation(top);
+  const lead = top[0];
+  const reserveReason = blocked || reco === 'BUILD' ? null : !lead ? 'no finding in tiers 1 to 5' : `the lead is a tier ${lead.tier} item that is not on the homepage or in the main menu`;
   return {
     slug: row.slug,
     name: row.name,
@@ -115,6 +124,7 @@ export function buildFactPack(row: WaveRow, m: RunMeasured | null, extras: { wor
     pelorus: m?.pelorus ?? null,
     recheck: { measured_at: measuredAt, not_before: addMinutes(measuredAt, 60), fresh_until: addMinutes(measuredAt, 24 * 60), command: `pnpm plumb wave run --wave wave-4 --only ${row.slug}` },
     recommendation: reco,
+    reserve_reason: reserveReason,
     blocked,
     dropped,
   };
@@ -134,12 +144,12 @@ const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…`
 /** The fact pack as a short page: 30 lines or fewer. */
 export function factPackLines(p: FactPack): string[] {
   const L: string[] = [];
-  L.push(`# ${p.name} (${p.slug}): ${p.recommendation}${p.blocked ? `, ${p.blocked}` : ''}`);
+  L.push(`# ${p.name} (${p.slug}): ${p.recommendation}${p.blocked ? `, ${p.blocked}` : p.reserve_reason ? `, ${p.reserve_reason}` : ''}`);
   L.push(`${p.website} | ${p.category}, ${p.town} | list: ${p.list.status} ${p.list.order}`);
   L.push(`To: ${p.to.address} (from ${p.to.source_url}${p.to.on_source_page ? '' : ', NOT FOUND there today'}) | Greeting: ${p.greeting} (owners: ${p.owner_source_url})`);
   if (!p.findings.length) L.push('Findings: none put forward.');
   for (const f of p.findings) {
-    L.push(`${f.place}. [tier ${f.tier}] ${f.sentence}`);
+    L.push(`${f.place}. [tier ${f.tier}${f.subject_ok ? '' : ', never in a subject'}${f.on_main_page ? '' : ', not on the homepage or main menu'}] ${f.sentence}`);
     L.push(`   measured: ${clip(f.measured, 200)}`);
     L.push(`   evidence: ${f.evidence_url}${f.linked_from ? ` | linked from: ${f.linked_from}` : ''} | measured ${f.measured_at.slice(0, 10)}`);
   }
@@ -176,7 +186,21 @@ export function summaryLines(packs: FactPack[]): string[] {
     if (p.notes.trading_signs.length) flags.push('trading signs');
     if (/for sale|trading not confirmed|sensitive|not confirmed/i.test(p.notes.csv)) flags.push('csv note');
     if (p.blocked) flags.push(`blocked: ${p.blocked}`);
-    L.push(`| ${p.slug} | ${p.category} | ${p.list.status} | ${top ? cell(top.sentence) : 'none'} | ${top ? top.tier : ''} | ${p.recommendation} | ${cell(flags.join(', '))} |`);
+    const best = p.also_found[0];
+    const shown = top ? cell(top.sentence) : best ? `none leads. Best: ${cell(best.sentence)}` : 'none';
+    L.push(`| ${p.slug} | ${p.category} | ${p.list.status} | ${shown} | ${top ? top.tier : best ? `(${best.tier})` : ''} | ${p.recommendation} | ${cell(flags.join(', '))} |`);
   }
   return L;
+}
+
+export const BUILD_LIMIT = 25;
+
+/** More than the limit qualify: the strongest keep BUILD, by lead tier and then by the size of what was measured. Fewer qualify: nobody is added. */
+export function capBuilds(packs: FactPack[], limit: number = BUILD_LIMIT): void {
+  const builds = packs.filter((p) => p.recommendation === 'BUILD');
+  builds.sort((a, b) => a.findings[0]!.tier - b.findings[0]!.tier || b.findings[0]!.size - a.findings[0]!.size || a.list.order - b.list.order);
+  for (const p of builds.slice(limit)) {
+    p.recommendation = 'RESERVE';
+    p.reserve_reason = `more than ${limit} qualify and this is not among the ${limit} strongest`;
+  }
 }

@@ -6,7 +6,11 @@ import type { Command } from 'commander';
 import pLimit from 'p-limit';
 import { paths } from '@plumbline/core';
 import {
+  BUILD_LIMIT,
   buildFactPack,
+  capBuilds,
+  homeFacts,
+  loadCaptures,
   factPackLines,
   isSuppressed,
   loadCrawlmouse,
@@ -69,7 +73,11 @@ function runWorker(o: WaveRunOptions, slug: string): Promise<{ line: string; ok:
 
 function storedResult(data: string, slug: string): RunMeasured | null {
   const file = join(data, slug, 'result.json');
-  return existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as RunMeasured) : null;
+  if (!existsSync(file)) return null;
+  const m = JSON.parse(readFileSync(file, 'utf8')) as RunMeasured;
+  // A result made before the menu and the contact check were kept gets them from the pages it saved.
+  m.home ??= homeFacts(loadCaptures(join(data, slug, 'capture')), m.homepage);
+  return m;
 }
 
 function storedWords(data: string, slug: string): OwnWord[] {
@@ -118,8 +126,11 @@ export async function waveRun(o: WaveRunOptions): Promise<void> {
     const cm = loadCrawlmouse(r.slug, r.website, files.crawlmouse);
     const pack = buildFactPack(r, m, { words: storedWords(files.data, r.slug), blocked: blocked.get(r.slug) ?? null, crawlmouseAiAccess: cm?.ai_crawler_access ?? null });
     packs.push(pack);
-    writeFileSync(join(reportDir, `${r.slug}.json`), JSON.stringify(pack, null, 2));
-    writeFileSync(join(reportDir, `${r.slug}.md`), `${factPackLines(pack).join('\n')}\n`);
+  }
+  capBuilds(packs, BUILD_LIMIT);
+  for (const p of packs) {
+    writeFileSync(join(reportDir, `${p.slug}.json`), JSON.stringify(p, null, 2));
+    writeFileSync(join(reportDir, `${p.slug}.md`), `${factPackLines(p).join('\n')}\n`);
   }
   const summaryFile = join(reportDir, `${o.wave.toUpperCase()}-SUMMARY.md`);
   writeFileSync(summaryFile, `${summaryLines(packs).join('\n')}\n`);

@@ -5,7 +5,8 @@ import type { Landing, SystemHit } from './booking.ts';
 import { bookingish } from './booking.ts';
 import type { FormState, UnlinkedPage } from './probe.ts';
 import type { FaithFlag, TestimonialSign } from './screens.ts';
-import { pageName, type FindingType, type RawFinding } from './tiers.ts';
+import type { HomeFacts } from './home.ts';
+import { KINDS, pageName, type FindingType, type RawFinding, type Tier } from './tiers.ts';
 
 /** One check finding, cut down to what the run keeps. */
 export interface CheckOut {
@@ -96,6 +97,8 @@ export interface RunMeasured {
   refusal: string | null;
   pelorus: PelorusHeaders | null;
   trading: string[];
+  /** The main menu, whether the homepage shows a way to get in touch, and out of date "last updated" lines. Read from the saved pages when a run did not store it. */
+  home?: HomeFacts;
   aiCrawlers: { allowed: boolean; blocked: string[] };
 }
 
@@ -113,6 +116,17 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 export function monthYear(iso: string): string {
   const m = /^(\d{4})-(\d{2})/.exec(iso);
   return m ? `${MONTHS[Number(m[2]) - 1]} ${m[1]}` : iso;
+}
+
+/** Pages on which a finding is hygiene at most: jobs, careers, privacy and terms. */
+const HYGIENE_WORDS = new Set(['job', 'jobs', 'career', 'careers', 'vacancy', 'vacancies', 'employment', 'privacy', 'terms', 'conditions', 'policy', 'policies', 'cookie', 'cookies', 'disclaimer']);
+export function hygienePage(url: string | undefined): boolean {
+  if (!url) return false;
+  try {
+    return new URL(url).pathname.toLowerCase().split(/[/\-_.]+/).some((t) => HYGIENE_WORDS.has(t));
+  } catch {
+    return false;
+  }
 }
 
 const norm = (u: string) => u.replace(/^https?:\/\/(?:www\.)?/i, '').replace(/[#?].*$/, '').replace(/\/$/, '').toLowerCase();
@@ -143,21 +157,33 @@ export function buildFindings(m: RunMeasured): RawFinding[] {
   const out: RawFinding[] = [];
   const at = m.measuredAt;
   const push = (f: Omit<RawFinding, 'measuredAt' | 'source'> & { source?: RawFinding['source'] }) => out.push({ source: 'plumbline', measuredAt: at, ...f });
+  const menu = (m.home?.menu ?? []).map(norm);
+  /** The homepage, or a page in its main menu. */
+  const isMain = (url: string | undefined) => !url || norm(url) === norm(m.homepage) || menu.includes(norm(url));
+  const pathOf = (u: string) => {
+    try {
+      return new URL(u).pathname;
+    } catch {
+      return '';
+    }
+  };
+  /** An unlinked contact page matters only when the homepage gives no other way to get in touch. */
+  const unlinkedTier = (url: string): Tier | undefined => (/contact/i.test(pathOf(url)) && m.home?.contact ? 6 : undefined);
 
   // Speed
   if (m.speed.status === 'ok' || m.speed.status === 'unstable') {
     const slow = m.speed.status === 'ok' ? isSlowOnPhone(m.speed) : (m.speed.performance ?? 100) < 50;
     if (slow) {
       const seconds = Math.round(((m.speed.lcpMs ?? 0) / 1000) * 10) / 10;
-      push({ type: 'slow_phone', key: 'speed', facts: { score: m.speed.performance ?? 0, seconds }, steady: m.speed.status === 'ok', evidenceUrl: m.homepage, measured: `PageSpeed Insights, phone, two runs: scores ${m.speed.runs.map((r) => r.performance).join(' and ')}, main content (LCP) ${m.speed.runs.map((r) => (r.lcpMs === null ? 'n/a' : `${(r.lcpMs / 1000).toFixed(1)} s`)).join(' and ')}${m.speed.reason ? `; ${m.speed.reason}` : ''}` });
+      push({ type: 'slow_phone', key: 'speed', size: 100 - (m.speed.performance ?? 0), facts: { score: m.speed.performance ?? 0, seconds }, steady: m.speed.status === 'ok', evidenceUrl: m.homepage, measured: `PageSpeed Insights, phone, two runs: scores ${m.speed.runs.map((r) => r.performance).join(' and ')}, main content (LCP) ${m.speed.runs.map((r) => (r.lcpMs === null ? 'n/a' : `${(r.lcpMs / 1000).toFixed(1)} s`)).join(' and ')}${m.speed.reason ? `; ${m.speed.reason}` : ''}` });
     }
   }
 
   // The first phone screen
   if (m.phone) {
     const where = '390 by 844 phone screen';
-    if (m.phone.sideways) push({ type: 'phone_sideways', key: 'phone:sideways', facts: {}, evidenceUrl: m.phone.url, measured: `At ${where} the page is ${m.phone.scrollWidth} px wide and moves sideways by ${m.phone.scrollX} px when scrolled` });
-    else if (m.phone.wider) push({ type: 'phone_wider', key: 'phone:wider', facts: {}, evidenceUrl: m.phone.url, measured: `At ${where} the page is laid out ${m.phone.scrollWidth} px wide` });
+    if (m.phone.sideways) push({ type: 'phone_sideways', key: 'phone:sideways', size: m.phone.scrollWidth - m.phone.width, facts: {}, evidenceUrl: m.phone.url, measured: `At ${where} the page is ${m.phone.scrollWidth} px wide and moves sideways by ${m.phone.scrollX} px when scrolled` });
+    else if (m.phone.wider) push({ type: 'phone_wider', key: 'phone:wider', size: m.phone.scrollWidth - m.phone.width, facts: {}, evidenceUrl: m.phone.url, measured: `At ${where} the page is laid out ${m.phone.scrollWidth} px wide` });
     if (!m.phone.actionVisible) push({ type: 'phone_no_action', key: 'phone:action', facts: {}, evidenceUrl: m.phone.url, measured: `At ${where} no book, call or email action is visible without scrolling` });
   }
 
@@ -174,7 +200,7 @@ export function buildFindings(m: RunMeasured): RawFinding[] {
     for (const f of b.forms.filter((x) => x.broken)) {
       push({ type: 'form_not_loading', key: `form:${norm(f.url)}`, facts: { what: /book/i.test(f.pageUrl) ? 'booking form' : 'enquiry form', page: pageName(f.pageUrl) }, evidenceUrl: f.pageUrl, measured: `The form on this page loads from ${f.url}, which ${f.status === null ? `did not answer (${f.error ?? 'no answer'})` : `answered ${f.status}`}` });
     }
-    for (const u of b.unlinked) push({ type: 'booking_page_unlinked', key: `unlinked:${norm(u.url)}`, facts: { page: u.url }, evidenceUrl: u.url, measured: `${u.url} answers ${u.status} with the title "${u.title}". None of the ${u.pagesRead} pages we read links to it` });
+    for (const u of b.unlinked) push({ type: 'booking_page_unlinked', key: `unlinked:${norm(u.url)}`, tier: unlinkedTier(u.url), facts: { page: u.url }, evidenceUrl: u.url, measured: `${u.url} answers ${u.status} with the title "${u.title}". None of the ${u.pagesRead} pages we read links to it` });
     if (b.noWay) push({ type: 'no_way_to_book', key: 'noway', facts: { noun: NOUN[m.category] ?? 'tours' }, evidenceUrl: m.homepage, measured: 'Prices are shown. No Book or Enquire link, booking system, form, phone link or email link was found on the homepage' });
   }
 
@@ -191,18 +217,18 @@ export function buildFindings(m: RunMeasured): RawFinding[] {
         break;
       }
       case 'C02_stale_copyright':
-        push({ type: 'stale_copyright', key: 'copyright', facts: { year: String(d.year ?? ''), page }, evidenceUrl: url, measured: `The footer says ${String(d.year ?? '')} and the year is now ${String(d.currentYear ?? '')}`, checkId: c.checkId });
+        push({ type: 'stale_copyright', key: 'copyright', size: Number(d.currentYear ?? 0) - Number(d.year ?? 0), facts: { year: String(d.year ?? ''), page }, evidenceUrl: url, measured: `The footer says ${String(d.year ?? '')} and the year is now ${String(d.currentYear ?? '')}`, checkId: c.checkId });
         break;
       case 'C03_stale_dated_notice': {
         // The excerpt can begin in the middle of a word.
         const text = String(d.text ?? c.excerpt).replace(/^[a-z]\S*\s+/, '').slice(0, 200);
         if (d.kind === 'covid') push({ type: 'covid_wording', key: `covid:${page}`, facts: { page }, evidenceUrl: url, measured: `${c.title}: ${text}`, checkId: c.checkId });
-        else push({ type: 'passed_notice', key: `notice:${String(d.date ?? c.title)}:${page}`, facts: { page }, evidenceUrl: url, measured: `${c.title}: ${text}`, checkId: c.checkId });
+        else push({ type: 'passed_notice', key: `notice:${String(d.date ?? c.title)}:${page}`, tier: isMain(c.pageUrl ?? m.homepage) ? 5 : 6, facts: { page }, evidenceUrl: url, measured: `${c.title}: ${text}`, checkId: c.checkId });
         break;
       }
       case 'C06_broken_images': {
         const count = Array.isArray(d.images) ? d.images.length : 1;
-        push({ type: 'broken_images', key: 'images', facts: { count, page: 'homepage' }, evidenceUrl: url, measured: c.title, checkId: c.checkId });
+        push({ type: 'broken_images', key: 'images', tier: count === 1 ? 6 : undefined, size: count, facts: { count, page: 'homepage' }, evidenceUrl: url, measured: c.title, checkId: c.checkId });
         break;
       }
       case 'C10_broken_contact_links': {
@@ -257,17 +283,19 @@ export function buildFindings(m: RunMeasured): RawFinding[] {
       }
     }
     if (claims.has('orphan_page')) {
-      for (const e of s.examples.filter((x) => bookingish(x.url))) cm({ type: 'booking_page_unlinked', key: `unlinked:${norm(e.url)}`, facts: { page: e.url }, evidenceUrl: e.url, measured: s.measured ?? '' });
+      for (const e of s.examples.filter((x) => bookingish(x.url))) cm({ type: 'booking_page_unlinked', key: `unlinked:${norm(e.url)}`, tier: unlinkedTier(e.url), facts: { page: e.url }, evidenceUrl: e.url, measured: s.measured ?? '' });
     }
     if (claims.has('leftover_page')) {
       const typed = s.examples.map((e) => ({ e, t: leftoverType(e) })).filter((x): x is { e: ExampleOut; t: NonNullable<ReturnType<typeof leftoverType>> } => !!x.t);
       const blanks = typed.filter((x) => x.t.type === 'blank_page');
       for (const { e, t } of typed.filter((x) => x.t.type !== 'blank_page')) cm({ type: t.type, key: `leftover:${t.type}:${norm(e.url)}`, facts: { title: t.title }, evidenceUrl: e.url, measured: s.measured ?? '' });
-      if (blanks.length) cm({ type: 'blank_page', key: 'leftover:blank', facts: { count: blanks.length, title: blanks[0]!.t.title }, evidenceUrl: blanks[0]!.e.url, measured: s.measured ?? '' });
+      if (blanks.length) cm({ type: 'blank_page', key: 'leftover:blank', size: blanks.length, facts: { count: blanks.length, title: blanks[0]!.t.title }, evidenceUrl: blanks[0]!.e.url, measured: s.measured ?? '' });
     }
     // Pages whose address begins with copy-of, found among the examples of any sentence.
     const copies = s.examples.filter((e) => /\/copy-of-/i.test(e.url) && e.status !== null && e.status >= 200 && e.status < 300 && !e.missing);
-    if (copies.length) cm({ type: 'copy_of_address', key: 'copy-of', facts: { count: copies.length }, evidenceUrl: copies[0]!.url, measured: `${copies.length} example pages load at addresses that start with copy-of, such as ${copies[0]!.url}, titled "${copies[0]!.title}"` });
+    // Pages with a copy of address count as embarrassing only when the menu leads a visitor to one.
+    const linkedFromMenu = copies.some((e) => menu.includes(norm(e.url)));
+    if (copies.length) cm({ type: 'copy_of_address', key: 'copy-of', tier: linkedFromMenu ? 5 : 6, onMain: linkedFromMenu, size: copies.length, facts: { count: copies.length }, evidenceUrl: copies[0]!.url, measured: `${copies.length} example pages load at addresses that start with copy-of, such as ${copies[0]!.url}, titled "${copies[0]!.title}"` });
   }
 
   // Minor search items, counted over the pages we read
@@ -284,6 +312,8 @@ export function buildFindings(m: RunMeasured): RawFinding[] {
     if (count > 0 && homeLacks) push({ type, key: `minor:${type}`, facts: { count, of: read }, evidenceUrl: m.homepage, measured: `${count} of the ${read} pages we read have no ${what}, the homepage among them` });
   }
 
+  for (const l of (m.home?.lastUpdated ?? []).slice(0, 1)) push({ type: 'last_updated', key: 'last-updated', facts: { page: pageName(l.url), year: /\b(?:19|20)\d{2}\b/.exec(l.text)?.[0] ?? '' }, evidenceUrl: l.url, measured: `"${l.text}" on ${l.url}` });
+
   // Physio
   if (m.category === 'physio' && m.physio?.length) {
     const widget = m.physio.find((s) => s.kind === 'widget');
@@ -295,6 +325,14 @@ export function buildFindings(m: RunMeasured): RawFinding[] {
       evidenceUrl: m.homepage,
       measured: m.physio.map((s) => (s.kind === 'widget' ? `${s.text} (${s.source ?? 'on the page'})` : `${s.kind}: "${s.text.slice(0, 160)}"`)).join('; '),
     });
+  }
+  // Where each finding is met, and the hygiene pages: nothing there is more than tier 6.
+  for (const f of out) {
+    const page = f.page ?? f.linkedFrom ?? f.evidenceUrl;
+    f.page = page;
+    f.onMain ??= isMain(page);
+    const tier = f.tier ?? KINDS[f.type].tier;
+    if (tier < 6 && (hygienePage(page) || hygienePage(f.evidenceUrl))) f.tier = 6;
   }
   return out;
 }

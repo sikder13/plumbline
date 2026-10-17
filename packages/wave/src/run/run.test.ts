@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { bookingSystemsIn, bookingish, pageSaysMissing } from './booking.ts';
-import { buildFindings, type RunMeasured } from './findings.ts';
+import { buildFindings, hygienePage, type RunMeasured } from './findings.ts';
+import { homeFacts } from './home.ts';
+import { capBuilds, type FactPack } from './report.ts';
 import { greetingNames, nameForms, waveRows } from './list.ts';
 import { creditsIn, faithFlags, testimonialsOn } from './screens.ts';
 import { isSlowOnPhone, speedVerdict } from './speed.ts';
@@ -179,10 +181,27 @@ describe('sentences, filters and ranking', () => {
     expect(dropped.map((d) => d.reason)).toEqual(['does not reproduce today', 'a missing page that nothing links to', 'speed unstable or unavailable', 'names a web agency (cleverstudio.co.nz)', 'duplicate of a booking or contact broken item']);
   });
 
-  it('recommends BUILD from tier 1 to 5 and RESERVE otherwise', () => {
-    expect(recommendation(rankRunFindings([f('hello_world')], { agencies: [] }).top)).toBe('BUILD');
-    expect(recommendation(rankRunFindings([f('outdated_software')], { agencies: [] }).top)).toBe('RESERVE');
+  it('recommends BUILD only when the lead is tier 1 to 4, or a tier 5 item on the homepage or in the main menu', () => {
+    const lead = (type: FindingType, over: Partial<RawFinding> = {}) => rankRunFindings([f(type, over)], { agencies: [] }).top;
+    expect(recommendation(lead('book_button_missing'))).toBe('BUILD');
+    expect(recommendation(lead('phone_no_action'))).toBe('BUILD');
+    expect(recommendation(lead('hello_world', { onMain: true }))).toBe('BUILD');
+    expect(recommendation(lead('hello_world', { onMain: false }))).toBe('RESERVE');
+    expect(recommendation(lead('outdated_software'))).toBe('RESERVE');
     expect(recommendation([])).toBe('RESERVE');
+  });
+
+  it('never lets tier 6 or tier 7 lead, and keeps tier 7 out of a subject', () => {
+    expect(rankRunFindings([f('stale_copyright'), f('covid_wording')], { agencies: [] }).top).toEqual([]);
+    const { top } = rankRunFindings([f('stale_copyright'), f('covid_wording'), f('phone_no_action')], { agencies: [] });
+    expect(top.map((t) => [t.type, t.tier, t.subjectOk])).toEqual([['phone_no_action', 4, true], ['covid_wording', 6, true], ['stale_copyright', 7, false]]);
+    // A tier 7 item is third at most.
+    expect(rankRunFindings([f('phone_no_action'), f('stale_copyright')], { agencies: [] }).top.map((t) => t.type)).toEqual(['phone_no_action']);
+  });
+
+  it('puts a tier 5 item on the homepage or in the menu before one that is not', () => {
+    const { top } = rankRunFindings([f('hello_world', { onMain: false }), f('demo_page', { onMain: true })], { agencies: [] });
+    expect(top.map((t) => t.type)).toEqual(['demo_page', 'hello_world']);
   });
 });
 
@@ -280,5 +299,111 @@ describe('findings from what was measured', () => {
     const phone = { url: 'https://x.co.nz/', width: 390, height: 844, actions: ['phone link'], actionVisible: true, scrollWidth: 812, scrollX: 0 };
     expect(buildFindings(mBase({ phone: { ...phone, sideways: false, wider: true } })).map((f) => f.type)).toEqual(['phone_wider']);
     expect(buildFindings(mBase({ phone: { ...phone, sideways: true, wider: false, scrollX: 11 } })).map((f) => f.type)).toEqual(['phone_sideways']);
+  });
+});
+
+describe('the hygiene rules', () => {
+  const mk = (over: Partial<RunMeasured>): RunMeasured =>
+    ({
+      slug: 'x',
+      measuredAt: '2026-10-17T00:00:00.000Z',
+      category: 'kayak',
+      homepage: 'https://x.co.nz/',
+      collection: { blocked: null, errors: [], pagesRead: 3, checkErrors: [] },
+      checks: [],
+      eol: [],
+      speed: { source: 'PageSpeed Insights API', status: 'unavailable', runs: [], spread: null, performance: null, lcpMs: null, reason: 'x', measuredAt: '' },
+      phone: null,
+      booking: null,
+      crawlmouse: [],
+      pages: [],
+      physio: null,
+      faith: [],
+      agencies: [],
+      refusal: null,
+      pelorus: null,
+      trading: [],
+      home: { menu: ['https://x.co.nz/about/', 'https://x.co.nz/copy-of-room'], contact: false, lastUpdated: [] },
+      aiCrawlers: { allowed: true, blocked: [] },
+      ...over,
+    }) as RunMeasured;
+  const check = (checkId: string, title: string, detail: Record<string, unknown>, pageUrl = 'https://x.co.nz/') => ({ checkId, title, pageUrl, detail, excerpt: title, evidenceUrl: pageUrl });
+  const tiers = (m: RunMeasured) => Object.fromEntries(rankRunFindings(buildFindings(m), { agencies: [] }).top.concat(rankRunFindings(buildFindings(m), { agencies: [] }).rest).map((t) => [t.type, t.tier]));
+
+  it('makes the footer year and a last updated line tier 7, and COVID wording tier 6', () => {
+    const m = mk({
+      checks: [check('C02_stale_copyright', 'The footer says 2021', { year: 2021, currentYear: 2026 }), check('C03_stale_dated_notice', 'COVID wording is still showing', { kind: 'covid', text: 'Covid 19 rules' })],
+      home: { menu: [], contact: false, lastUpdated: [{ url: 'https://x.co.nz/', text: 'Last updated 3 March 2020' }] },
+    });
+    expect(tiers(m)).toEqual({ stale_copyright: 7, last_updated: 7, covid_wording: 6 });
+  });
+
+  it('makes a past date notice tier 5 on the homepage or a menu page, and tier 6 elsewhere', () => {
+    const notice = (url: string) => mk({ checks: [check('C03_stale_dated_notice', 'An expired date is still showing', { kind: 'expired', date: '2020-01-01', text: 'Open until 2020' }, url)] });
+    expect(tiers(notice('https://x.co.nz/about/')).passed_notice).toBe(5);
+    expect(tiers(notice('https://x.co.nz/')).passed_notice).toBe(5);
+    expect(tiers(notice('https://x.co.nz/winter-news/')).passed_notice).toBe(6);
+  });
+
+  it('makes anything on a jobs, careers, privacy or terms page tier 6 at most', () => {
+    expect(['/kayak-guide-job-new-zealand/', '/careers', '/privacy-policy', '/terms-and-conditions'].map((p) => hygienePage(`https://x.co.nz${p}`))).toEqual([true, true, true, true]);
+    expect(hygienePage('https://x.co.nz/tours/')).toBe(false);
+    const m = mk({ checks: [check('C03_stale_dated_notice', 'An expired date is still showing', { kind: 'expired', date: '2018-03-01', text: 'Paid until March 2018' }, 'https://x.co.nz/kayak-guide-job-new-zealand/')], home: { menu: ['https://x.co.nz/kayak-guide-job-new-zealand/'], contact: true, lastUpdated: [] } });
+    expect(tiers(m).passed_notice).toBe(6);
+  });
+
+  it('makes one image that does not load tier 6 and several tier 5', () => {
+    const images = (n: number) => mk({ checks: [check('C06_broken_images', `${n} images fail`, { images: Array.from({ length: n }, (_, i) => `i${i}`) })] });
+    expect(tiers(images(1)).broken_images).toBe(6);
+    expect(tiers(images(3)).broken_images).toBe(5);
+  });
+
+  it('makes an unlinked contact page tier 1 only when the homepage shows no phone, email or contact link', () => {
+    const booking = (contact: boolean) =>
+      mk({
+        home: { menu: [], contact, lastUpdated: [] },
+        booking: { systems: [], path: 'x', landings: [], forms: [], noWay: false, unlinked: [{ url: 'https://x.co.nz/contact/', title: 'Contact', status: 200, pagesRead: 5 }] },
+      });
+    expect(tiers(booking(false)).booking_page_unlinked).toBe(1);
+    expect(tiers(booking(true)).booking_page_unlinked).toBe(6);
+  });
+
+  it('makes copy of addresses tier 5 only when the menu leads to one, and a blank page tier 6', () => {
+    const e = (url: string) => ({ url, status: 200, missing: false, title: 'Room', words: 5, snippet: 'x', linkedFrom: [] });
+    const sentence = (url: string) => ({ text: 'c', claims: ['leftover_page'], caution: null, confirmed: true, undecided: false, measured: 'm', reason: null, examples: [e(url)] });
+    expect(tiers(mk({ crawlmouse: [sentence('https://x.co.nz/copy-of-room')] })).copy_of_address).toBe(5);
+    expect(tiers(mk({ crawlmouse: [sentence('https://x.co.nz/copy-of-other')] })).copy_of_address).toBe(6);
+    expect(tiers(mk({ crawlmouse: [sentence('https://x.co.nz/new-page')] })).blank_page).toBe(6);
+  });
+
+  it('reads the menu, the contact check and out of date last updated lines from saved pages', () => {
+    const page = (path: string, text: string, links: object[] = []) => ({ ok: true, finalUrl: `https://x.co.nz${path}`, viewport: 'desktop', text, links }) as never;
+    const link = (href: string, over: object = {}) => ({ href, raw: href, text: 'x', inNav: false, ...over });
+    const facts = homeFacts(
+      [
+        page('/', 'Welcome', [link('https://x.co.nz/about/', { inNav: true }), link('https://other.com/', { inNav: true }), link('tel:+6421555000', { raw: 'tel:+6421555000' })]),
+        page('/news', 'Last updated: 3 March 2020. News.'),
+        page('/fresh', 'Last updated: 2 October 2026.'),
+      ],
+      'https://x.co.nz/',
+      new Date('2026-10-17'),
+    );
+    expect(facts.menu).toEqual(['https://x.co.nz/about/']);
+    expect(facts.contact).toBe(true);
+    expect(facts.lastUpdated.map((l) => l.url)).toEqual(['https://x.co.nz/news']);
+  });
+
+  const pack = (slug: string, order: number, tier: number, size: number): FactPack => ({ slug, list: { order }, recommendation: 'BUILD', reserve_reason: null, findings: [{ tier, size }] }) as unknown as FactPack;
+
+  it('keeps the 25 strongest builds by tier and then by size, and does not pad when fewer qualify', () => {
+    const packs = Array.from({ length: 27 }, (_, i) => pack(`b${i}`, i + 1, i < 25 ? 4 : 1, i));
+    packs.push({ ...pack('r', 28, 1, 99), recommendation: 'RESERVE' });
+    capBuilds(packs, 25);
+    const cut = packs.filter((p) => p.recommendation === 'RESERVE' && p.slug !== 'r').map((p) => p.slug);
+    // Two tier 1 builds stay. Of the 25 tier 4 builds the two smallest are cut.
+    expect(cut).toEqual(['b0', 'b1']);
+    const few = [pack('a', 1, 4, 1), pack('b', 2, 5, 1)];
+    capBuilds(few, 25);
+    expect(few.map((p) => p.recommendation)).toEqual(['BUILD', 'BUILD']);
   });
 });
