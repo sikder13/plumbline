@@ -184,7 +184,13 @@ export async function measureBusiness(row: WaveRow, opts: MeasureOptions): Promi
           if (p.ok) known.push(p);
         }
       }
-      const results = await verifyCrawlmouse(renderer, row.slug, summary, known);
+      let results = await verifyCrawlmouse(renderer, row.slug, summary, known);
+      // A page that could not be read once is tried again before the sentence is left undecided.
+      const unread = results.filter((r) => r.undecided);
+      if (unread.length) {
+        const again = await verifyCrawlmouse(renderer, row.slug, { ...summary, findings_plain: summary.findings_plain.filter((f) => unread.some((r) => r.text === f.text)) }, known);
+        results = results.map((r) => again.find((a) => a.text === r.text && !a.undecided) ?? r);
+      }
       for (const r of results) {
         crawlmouse.push({
           text: r.text,

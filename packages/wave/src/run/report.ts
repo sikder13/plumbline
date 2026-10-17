@@ -68,6 +68,8 @@ const addMinutes = (iso: string, m: number) => new Date(new Date(iso).getTime() 
 function speedLine(m: RunMeasured): string {
   const s = m.speed;
   if (s.status === 'ok') return `steady: ${s.runs.map((r) => r.performance).join(' and ')}`;
+  // The API's own message is long; what matters is that it refused and why a person can fix it.
+  if (/answered (?:403|429)/.test(s.reason ?? '')) return `${s.status}: the PageSpeed API refused the request (${/answered (\d+)/.exec(s.reason!)![1]}); a PAGESPEED_API_KEY is needed`;
   return `${s.status}: ${s.reason ?? ''}`.trim();
 }
 
@@ -108,7 +110,7 @@ export function buildFactPack(row: WaveRow, m: RunMeasured | null, extras: { wor
       refuses_unsolicited: m?.refusal ?? null,
       speed: m ? speedLine(m) : 'not measured',
     },
-    booking: { path: /^(?:Tripadvisor|Tripadvisor \+ Booking\.com)$/.test(m?.booking?.path ?? '') ? 'none found (review and listing links only)' : (m?.booking?.path ?? 'not read'), csv_says: row.bookingSystem, links_followed: (m?.booking?.landings ?? []).map((l) => ({ text: l.text, lands_on: l.landsOn, status: l.status, final_url: l.finalUrl })) },
+    booking: { path: bookingPathLine(m), csv_says: row.bookingSystem, links_followed: (m?.booking?.landings ?? []).map((l) => ({ text: l.text, lands_on: l.landsOn, status: l.status, final_url: l.finalUrl })) },
     phone: m?.phone ?? null,
     pelorus: m?.pelorus ?? null,
     recheck: { measured_at: measuredAt, not_before: addMinutes(measuredAt, 60), fresh_until: addMinutes(measuredAt, 24 * 60), command: `pnpm plumb wave run --wave wave-4 --only ${row.slug}` },
@@ -116,6 +118,15 @@ export function buildFactPack(row: WaveRow, m: RunMeasured | null, extras: { wor
     blocked,
     dropped,
   };
+}
+
+/** How the site takes bookings: the path found, with the other sites its Book links go to. */
+function bookingPathLine(m: RunMeasured | null): string {
+  if (!m?.booking) return 'not read';
+  let path = /^(?:Tripadvisor|Tripadvisor \+ Booking\.com)$/.test(m.booking.path) ? 'none found (review and listing links only)' : m.booking.path;
+  const elsewhere = [...new Set(m.booking.landings.filter((l) => l.landsOn.startsWith('a page on ')).map((l) => l.landsOn.slice('a page on '.length)))];
+  if (elsewhere.length) path = `${path}; Book links go to ${elsewhere.join(', ')}`;
+  return path;
 }
 
 const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
