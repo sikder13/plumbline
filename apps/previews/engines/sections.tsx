@@ -105,7 +105,7 @@ export function People({ c, data, cls }: { c: EngineDemo; data: PageData; cls: C
               </div>
             )}
             <h3 className={cls.personName}>{p.name}</h3>
-            <p className={cls.personRole}>{p.role}</p>
+            {p.role && <p className={cls.personRole}>{p.role}</p>}
             {p.text && <p className={cls.personText}>{p.text}</p>}
           </li>
         ))}

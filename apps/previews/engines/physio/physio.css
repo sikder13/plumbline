@@ -196,8 +196,34 @@
   backdrop-filter: none;
 }
 
+/* A typographic hero sits on a tint of their palette, with their best photo framed beside the words. */
 .hero[data-kind='type'] {
   min-height: 0;
+  background: var(--soft);
+}
+
+.heroInset {
+  display: none;
+}
+
+.hero[data-kind='type'] .heroInset {
+  display: block;
+  margin: 18px var(--pad) 0;
+  aspect-ratio: 2 / 1;
+  border-radius: var(--radius);
+  overflow: hidden;
+  animation: fade 0.8s var(--ease) 0.3s both;
+}
+
+.heroInset picture,
+.heroInset img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.heroInset img {
+  object-fit: cover;
 }
 
 .hero[data-kind='type'] .sheet {
@@ -205,6 +231,11 @@
   box-shadow: none;
   background: transparent;
   padding-top: 0;
+}
+
+.hero[data-kind='type'] .heroInset + .sheet {
+  margin-top: 22px;
+  padding-bottom: 36px;
 }
 
 .hero[data-kind='type'] .heroTitle {
@@ -848,10 +879,24 @@
     max-width: none;
   }
 
+  .hero[data-kind='type'] .heroInset {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    margin: 0;
+    aspect-ratio: 3 / 2;
+  }
+
+  .hero[data-kind='type'] .heroInset + .sheet {
+    margin-top: 0;
+    padding-bottom: 0;
+  }
+
   .hero[data-kind='type'] .heroTitle {
     font-size: min(calc(clamp(72px, 7vw, 124px) * var(--ds)), calc(100cqi / (var(--chars) * var(--em))));
   }
 
+  /* The framed photo is held to the screen, so the main button stays on the first screen beside it. */
   .hero[data-kind='split'] .heroMedia {
     position: relative;
     grid-column: 2;
@@ -859,6 +904,7 @@
     margin: 0;
     aspect-ratio: 4 / 5;
     max-width: var(--px, 2400px);
+    max-height: calc(100svh - var(--bar-h) - 200px);
   }
 
   .hero[data-kind='split'] .heroMedia::after {

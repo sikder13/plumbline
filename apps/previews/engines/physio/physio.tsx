@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { EngineDemo } from '@plumbline/preview/engine';
+import { Pic } from '@/components/Pic';
 import { Pinned } from '@/components/Pinned';
 import { SectionLinks } from '@/components/SectionLinks';
 import { StickyBar } from '@/components/StickyBar';
@@ -40,6 +41,12 @@ function Hero({ c, data, cls }: { c: EngineDemo; data: PageData; cls: Cls }) {
         </a>
         <span className={cls.place}>{c.place.town}</span>
       </header>
+      {/* A page with no photo wide enough for the hero shows their best one framed, at its own landscape shape on every screen. */}
+      {kind === 'type' && c.hero.inset && data.images[c.hero.inset] && (
+        <figure className={cls.heroInset}>
+          <Pic pic={data.images[c.hero.inset]!} sizes="(min-width: 1100px) 40vw, calc(100vw - 40px)" first />
+        </figure>
+      )}
       <div className={cls.sheet}>
         <Lines lines={c.hero.lines} cls={cls} className={cls.heroTitle} />
         {c.hero.sub && <p className={cls.heroSub}>{c.hero.sub.text}</p>}

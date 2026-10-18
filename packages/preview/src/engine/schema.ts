@@ -244,7 +244,7 @@ export const EngineConfig = z
     signature: Signature.optional(),
     offers: z.object({ heading: z.string().min(1), items: z.array(Item).min(2) }).optional(),
     practical: z.object({ heading: z.string().min(1), items: z.array(z.object({ label: z.string().min(1), text: z.string().min(1), source: Source })).min(2) }).optional(),
-    people: z.object({ heading: z.string().min(1), items: z.array(z.object({ name: z.string().min(1), role: z.string().min(1), text: z.string().optional(), photo: z.string().optional(), source: Source })).min(1) }).optional(),
+    people: z.object({ heading: z.string().min(1), items: z.array(z.object({ name: z.string().min(1), role: z.string().min(1).optional(), text: z.string().optional(), photo: z.string().optional(), source: Source })).min(1) }).optional(),
     /** Photos laid out after the signature, in order. Each photo is used once on a page. */
     gallery: z.array(z.string()).default([]),
     close: z.object({ heading: z.string().min(1), line: Quote.optional() }),

@@ -71,7 +71,7 @@ For real pages (`plumb engine pages ...`):
 | `story` | no | the pinned scroll story: `heading` and three or four `steps` of `title`, `text`, optional `mark` (a time or distance they state) and `photo` |
 | `signature` | no | one signature interaction (below) |
 | `offers` | no | `heading` and two or more `items` (`name`, `text`, `meta`, `price`, `photo`) |
-| `people` | no | `heading` and `items` (`name`, `role`, `text`, `photo`) |
+| `people` | no | `heading` and `items` (`name`, optional `role` as they state it, `text`, `photo`) |
 | `practical` | no | `heading` and two or more `{ label, text }` |
 | `gallery` | no | photo ids in order; each photo is used once on a page |
 | `close` | yes | `heading` and an optional `line` of theirs |
