@@ -51,13 +51,13 @@ export function loadCrawlmouse(slug: string, website: string | null, inputsRoot?
 export type Claim = 'missing_page' | 'orphan_page' | 'no_meta_description' | 'no_main_heading' | 'no_structured_data' | 'thin_page' | 'leftover_page';
 
 const CLAIMS: [Claim, RegExp][] = [
-  ['missing_page', /\b404\b|missing pages?|broken links?|links? (?:are|is) broken/i],
-  ['orphan_page', /not linked from anywhere|\bunlinked\b/i],
-  ['no_meta_description', /meta description|description for search results/i],
-  ['no_main_heading', /main heading|\bh1\b/i],
+  ['missing_page', /\b404\b|missing pages?|broken links?|links? (?:are|is) broken|\bpage not found\b|opens? a page not found/i],
+  ['orphan_page', /not linked from anywhere|not linked from any (?:other )?page|no page (?:on the site )?links? to|not in the menu|\bunlinked\b/i],
+  ['no_meta_description', /meta description|description for search results|search description/i],
+  ['no_main_heading', /main heading|\bh1\b|heading structure/i],
   ['no_structured_data', /structured data/i],
   ['thin_page', /very little text|nearly empty/i],
-  ['leftover_page', /\bleftover\b|still live\b/i],
+  ['leftover_page', /\bleftover\b|still live\b|\b(?:is|are) live\b|still use\b/i],
 ];
 
 /** What a sentence claims, in the order it claims it. A sentence that claims none of these cannot be tested by opening its examples. */

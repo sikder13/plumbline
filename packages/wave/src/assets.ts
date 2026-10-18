@@ -96,7 +96,7 @@ export function heroCandidates(photos: Photo[], count = 3): Photo[] {
  * against robots.txt and waits its turn for the host. A part is accepted only when the server
  * really sent a part: one that ignores the range would otherwise send the whole file each time.
  */
-async function download(polite: Polite, url: string, maxBytes: number, range?: string): Promise<Buffer | null> {
+export async function download(polite: Polite, url: string, maxBytes: number, range?: string): Promise<Buffer | null> {
   let at = url;
   try {
     for (let hop = 0; hop < 5; hop++) {
