@@ -109,8 +109,13 @@
   animation: drift 9s var(--ease) both;
 }
 
+/* A light veil runs through the middle too, so a headline over a bright sky or snow still reads. */
 .hero[data-kind='photo']::before {
-  background: linear-gradient(to bottom, color-mix(in oklch, var(--deep) 62%, transparent) 0%, transparent 22%, transparent 38%, color-mix(in oklch, var(--deep) 70%, transparent) 62%, var(--deep) 96%);
+  background: linear-gradient(to bottom, color-mix(in oklch, var(--deep) 62%, transparent) 0%, color-mix(in oklch, var(--deep) 24%, transparent) 22%, color-mix(in oklch, var(--deep) 34%, transparent) 40%, color-mix(in oklch, var(--deep) 72%, transparent) 62%, var(--deep) 96%);
+}
+
+.hero[data-kind='photo'] .heroTitle {
+  text-shadow: 0 2px 30px color-mix(in oklch, var(--deep) 70%, transparent);
 }
 
 .hero[data-kind='photo']::after {
@@ -543,7 +548,8 @@
 .tripHead {
   appearance: none;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  /* A long price wraps in its own column rather than squeezing the trip's name to a word a line. */
+  grid-template-columns: minmax(0, 1fr) fit-content(45%);
   grid-template-areas:
     'name price'
     'target target'
@@ -566,6 +572,7 @@
 
 .tripPrice {
   grid-area: price;
+  text-align: right;
   font: var(--weight) calc(25px * var(--ds)) / 1 var(--display);
   letter-spacing: var(--track);
   font-variant-numeric: tabular-nums;
@@ -832,7 +839,7 @@
 }
 
 .offerName {
-  font-size: calc(26px * var(--ds));
+  font-size: min(calc(26px * var(--ds)), 28px);
   line-height: 1;
 }
 
@@ -1054,6 +1061,13 @@
 }
 
 @media (min-width: 1100px) {
+  /* The headline sits at the left on a wide screen: the left side is shaded under it. */
+  .hero[data-kind='photo']::before {
+    background:
+      linear-gradient(to right, color-mix(in oklch, var(--deep) 58%, transparent) 0%, color-mix(in oklch, var(--deep) 22%, transparent) 46%, transparent 64%),
+      linear-gradient(to bottom, color-mix(in oklch, var(--deep) 62%, transparent) 0%, color-mix(in oklch, var(--deep) 16%, transparent) 24%, color-mix(in oklch, var(--deep) 24%, transparent) 44%, color-mix(in oklch, var(--deep) 70%, transparent) 72%, var(--deep) 98%);
+  }
+
   .nav {
     position: fixed;
     top: var(--bar-h);
@@ -1268,7 +1282,7 @@
   }
 
   .tripHead {
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.2fr) auto;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.2fr) fit-content(28%);
     grid-template-areas: 'name target bar price';
     align-items: center;
     padding: 26px 0;

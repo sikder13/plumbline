@@ -48,7 +48,7 @@ function Hero({ c, data, cls }: { c: EngineDemo; data: PageData; cls: Cls }) {
       </div>
       <div className={cls.heroFoot}>
         {c.hero.facts.length > 0 && (
-          <ul className={cls.heroFacts} style={{ '--n': c.hero.facts.length } as CSSProperties} data-facts>
+          <ul className={cls.heroFacts} style={{ '--n': c.hero.facts.length } as CSSProperties} data-facts={c.hero.facts.length}>
             {c.hero.facts.map((f) => (
               <li key={f.label}>
                 <span>{f.label}</span>

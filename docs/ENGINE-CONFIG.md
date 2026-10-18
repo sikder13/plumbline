@@ -14,10 +14,11 @@ Rules that hold for every field:
 | | Real pages (next relay) | Sample pages (this branch) |
 |---|---|---|
 | Settings | `previews/content/<slug>/engine.json` | `data/wave-4/design-samples/<slug>/config.json` |
+| Pulled homepage | `data/wave/<slug>/` (`pull.json`, `text.txt`) | `data/wave-4/design-samples/<slug>/` |
 | Photos | `data/wave/<slug>/photos/` | `data/wave-4/design-samples/<slug>/photos/` |
 | Graded crops | `data/wave/<slug>/graded/` | `data/wave-4/design-samples/<slug>/graded/` |
 
-A content folder with `engine.json` is picked up by `plumb preview build` like any other page (`loadContent` in `packages/preview/src/build.ts`): the settings become the page's content, the graded crops its images, and its look (hero, type pair, palette family) is recorded for the variety rules. Run `plumb engine grade <slug>` before building.
+A real page is built by `plumb engine pages build` (`apps/cli/src/engine-pages.ts`), not by `plumb preview build`: a wave's businesses are not in the database, so the findings come from the wave's fact pack (`reports/<batch>/<wave>/<slug>.json`, the top three in the pack's order and plain sentences), each with the impact library's fix line where a check fits. The demo address is made once with the same token every page gets (`ensureToken`) and never changes. The page data and images land in `previews/out/` beside every other page, so a deploy stages them with the rest.
 
 ## Commands
 
@@ -29,6 +30,18 @@ A content folder with `engine.json` is picked up by `plumb preview build` like a
 - `plumb engine variety`: the variety rules across waves 1 to 4 and Wine Hopper.
 - `plumb engine gates [--only <slugs>]`: the gates of the standard on the sample site, including the type scale, signature labels and pacing.
 - `plumb engine shots --out <dir> [--only <slugs> | --url <address>]`: phone screenshots, 390 wide JPEG, first three screens and one mid page. The visit report is answered inside the browser and never sent.
+
+For real pages (`plumb engine pages ...`):
+
+- `plumb engine pull --pages --list <csv> --only <slugs>` and `plumb engine palette <slug> --pages --engine <name>`: as above, into `data/wave/<slug>/`.
+- `pages prep <slugs>`: their photos (the pulled homepage's, topped up from the wave run's assets, one of each) ranked by sharpness on a numbered sheet, and their words from every page the wave run read in one file, under `previews/review/<wave>/pages/prep/<slug>/`, for writing the settings.
+- `pages lint [--only]`: the settings before a build: schema, every figure against the pages of their site the wave run read, dashes, banned words, physio testimonial words, photo files, photos used twice, sources off their domain.
+- `pages build [--only]`: grades the photos, makes the token, writes the page data and builds the local site of the wave's pages in `previews/<wave>/site/`.
+- `pages gates [--only]`: every gate of the standard on that site, the figures held to their own pages, physio pages held to no testimonial, review or rating, and the own visit flag.
+- `pages sheets`: contact sheets of the first phone and desktop screens in `previews/review/<wave>/pages/`.
+- `pages serve`: the local site for clicking through; the pages' visit reports come back to this server and are dropped.
+- `pages emails`: `reports/<batch>/<wave>/EMAIL-INPUTS.md`, one block per page.
+- `pages site --live <previews/out of the last deploy>`: stages the pages live now and this wave into `previews/out/site` for a deploy. A suppressed business is left out. Nothing is deployed.
 
 ## Fields
 
@@ -54,7 +67,7 @@ A content folder with `engine.json` is picked up by `plumb preview build` like a
 | `hero.inset` | no | for a typographic hero, the photo shown as an inset |
 | `intro` | no | `heading` and a `quote` of theirs, set large |
 | `band` | no | three or more of their words for a moving band (fish, places, rooms) |
-| `photos` | no | the picked photos: `id`, `file` (under the photo folder), `alt`, `focus` [x, y] from 0 to 1, `source` |
+| `photos` | no | the picked photos: `id`, `file` (under the photo folder), `alt`, `focus` [x, y] from 0 to 1, optional `keep` [left, top, right, bottom] (the part every crop stays inside, so a door frame, post, edge or watermark never comes in; its size counts as the photo's size), `source` |
 | `story` | no | the pinned scroll story: `heading` and three or four `steps` of `title`, `text`, optional `mark` (a time or distance they state) and `photo` |
 | `signature` | no | one signature interaction (below) |
 | `offers` | no | `heading` and two or more `items` (`name`, `text`, `meta`, `price`, `photo`) |

@@ -188,7 +188,7 @@ const REPLY_EMAIL = 'udaay@nahltech.com';
 const SITE_ADDRESS = 'https://nahltech.com';
 const VERCEL_PROJECT = 'nahl-previews';
 
-const VERCEL_JSON = {
+export const VERCEL_JSON = {
   framework: null,
   buildCommand: '',
   installCommand: '',

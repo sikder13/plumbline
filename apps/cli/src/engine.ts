@@ -9,7 +9,7 @@ import { fingerprintUrl } from '@plumbline/collect';
 import { HostLimiter, Polite, RobotsCache } from '@plumbline/fetch';
 import { Renderer, type PageCapture } from '@plumbline/render';
 import { AxeBuilder } from '@axe-core/playwright';
-import { BASE_PATH, ENGINES, EngineConfig, buildEngineSample, checkBeacon, checkLinks, contentDir, engineLook, engineVarietyIssues, gradeEnginePhotos, heroFor, lighthouseOnce, paletteChecks, paletteFrom, previewPaths, quietContext, rankPhotos, scanPage, serveSite, splitPage, swatchesOf, type EngineName, type GradedIndex, type LighthouseRun, type Look, type PageData, type Swatch } from '@plumbline/preview';
+import { BASE_PATH, ENGINES, EngineConfig, buildEngineSample, checkBeacon, checkLinks, checkOwnFlag, contentDir, engineLook, engineVarietyIssues, gradeEnginePhotos, heroFor, lighthouseOnce, paletteChecks, paletteFrom, previewPaths, quietContext, rankPhotos, scanPage, serveSite, splitPage, swatchesOf, type EngineName, type GradedIndex, type LighthouseRun, type Look, type PageData, type Swatch } from '@plumbline/preview';
 import { chromium } from 'playwright';
 import { collectPhotos, fullSize, imageUrlsIn, type FoundImage } from '@plumbline/wave';
 import sharp from 'sharp';
@@ -77,8 +77,7 @@ function linksOf(cap: PageCapture): Pulled['links'] {
 }
 
 /** Reads one homepage at phone and desktop size, with its logo, colours, fonts and photos. */
-export async function pullSample(renderer: Renderer, polite: Polite, slug: string, url: string): Promise<Pulled> {
-  const dir = join(SAMPLES_DIR, slug);
+export async function pullSample(renderer: Renderer, polite: Polite, slug: string, url: string, dir: string = join(SAMPLES_DIR, slug)): Promise<Pulled> {
   mkdirSync(dir, { recursive: true });
   let brand: BrandCapture | null = null;
   const caps: PageCapture[] = [];
@@ -266,6 +265,8 @@ const TYPE_SCALE_CHECK = (): string[] => {
       const top = Math.round(cell.getBoundingClientRect().top);
       rows.set(top, [...(rows.get(top) ?? []), cell]);
     }
+    // On a phone a fact needs room for a short phrase: a narrow column breaks words onto many lines.
+    if (phone) for (const cell of cells) if (cell.getBoundingClientRect().width < 96) out.push(`a fact cell "${(cell.textContent ?? '').trim().slice(0, 30)}" is ${Math.round(cell.getBoundingClientRect().width)} px wide`);
     const last = [...rows.entries()].sort((a, b) => a[0] - b[0]).pop()?.[1] ?? [];
     if (rows.size > 1 && last.length === 1 && last[0]!.getBoundingClientRect().width < grid.getBoundingClientRect().width * 0.75) out.push(`a fact grid leaves "${(last[0]!.textContent ?? '').trim().slice(0, 30)}" alone in its last row`);
   }
@@ -312,8 +313,32 @@ const med = (v: (number | null | undefined)[]) => {
 };
 
 /** Every gate of the standard on one sample page, served from this machine. The visit report never leaves the browser. */
-export async function gateSample(slug: string, base: string, opts: { runs?: number; skip?: Set<string> } = {}): Promise<SampleGate> {
-  const url = `${base}${BASE_PATH}/${slug}-${SAMPLE_TOKEN}/`;
+export function gateSample(slug: string, base: string, opts: { runs?: number; skip?: Set<string> } = {}): Promise<SampleGate> {
+  return gateEnginePage({ slug, url: `${base}${BASE_PATH}/${slug}-${SAMPLE_TOKEN}/`, path: `${slug}-${SAMPLE_TOKEN}`, dir: join(SAMPLES_DIR, slug) }, opts);
+}
+
+/** One engine page to hold to the gates, and where its own site's words are kept. */
+export interface GateTarget {
+  slug: string;
+  url: string;
+  /** The page's address under /demo: what its visit report carries. */
+  path: string;
+  /** The pulled homepage: text.txt, pull.json and the saved page HTML. */
+  dir: string;
+  /** More of their own words: the other pages of their site we read. */
+  ownSite?: string;
+  /** What the findings tab may state: the measured values and their dates. */
+  measured?: string;
+  /** A physio page carries no testimonial, review or rating. */
+  physio?: boolean;
+}
+
+/** Words that mean a testimonial, review or rating is on a page. */
+const TESTIMONIAL = /\b(testimonials?|reviews?|reviewed by|rated|ratings?|stars? out of|out of 5)\b|★/i;
+
+/** Every gate of the standard on one engine page, served from this machine. The visit report never leaves the browser. */
+export async function gateEnginePage(target: GateTarget, opts: { runs?: number; skip?: Set<string> } = {}): Promise<SampleGate> {
+  const { slug, url } = target;
   const skip = opts.skip ?? new Set<string>();
   const failures: string[] = [];
   const runs: LighthouseRun[] = [];
@@ -389,18 +414,25 @@ export async function gateSample(slug: string, base: string, opts: { runs?: numb
       const m = PLACEHOLDER.exec(t);
       if (m) failures.push(`placeholder text "${m[0]}"`);
     }
-    const dir = join(SAMPLES_DIR, slug);
-    const pulled = samplePulled(slug);
+    const dir = target.dir;
+    const pulled = JSON.parse(readFileSync(join(dir, 'pull.json'), 'utf8')) as Pulled;
     // Their own words, and the phone and email links their own site carries.
-    const ownSite = [readFileSync(join(dir, 'text.txt'), 'utf8'), ...pulled.links.tel.map((t) => decodeURIComponent(t)), ...pulled.links.mailto].join('\n');
-    if (!skip.has('copy')) for (const c of scanPage(splitPage(html), { ownSite, measured: '', offer: readFileSync(join(previewPaths.app, 'lib', 'offer.ts'), 'utf8') })) failures.push(`copy ${c.kind} in ${c.where}: "${c.text}" in "${c.context}"`);
+    const ownSite = [readFileSync(join(dir, 'text.txt'), 'utf8'), target.ownSite ?? '', ...pulled.links.tel.map((t) => decodeURIComponent(t)), ...pulled.links.mailto].join('\n');
+    const copy = splitPage(html);
+    if (!skip.has('copy')) for (const c of scanPage(copy, { ownSite, measured: target.measured ?? '', offer: readFileSync(join(previewPaths.app, 'lib', 'offer.ts'), 'utf8') })) failures.push(`copy ${c.kind} in ${c.where}: "${c.text}" in "${c.context}"`);
+    if (target.physio) {
+      const m = TESTIMONIAL.exec(copy.demo);
+      if (m) failures.push(`physio page shows "${m[0]}" in "${copy.demo.slice(Math.max(0, m.index - 60), m.index + 60)}"`);
+    }
     if (!skip.has('links')) {
       const ownHtml = ['page-desktop', 'page-mobile'].map((d) => join(dir, d, 'page.html')).filter((f) => existsSync(f)).map((f) => readFileSync(f, 'utf8')).join('\n');
       for (const l of await checkLinks(browser, url, /rezdy|fareharbor|littlehotelier|gensolve|raftingbookings|bookeo|checkfront/i, ownHtml)) if (!l.ok) failures.push(`link "${l.label}" ${l.href}: ${l.note}`);
     }
     if (!skip.has('beacon')) {
-      const b = await checkBeacon(browser, url, `${slug}-${SAMPLE_TOKEN}`);
-      if (!b.ok) failures.push(`visit report: ${b.early} early, ${b.views} view(s)`);
+      const b = await checkBeacon(browser, url, target.path);
+      if (!b.ok) failures.push(`visit report: ${b.early} early, ${b.views} view(s), tokens ${b.tokens.join(' ')}`);
+      const own = await checkOwnFlag(browser, url);
+      if (!own.ok) failures.push(`own visit flag: ${own.posts} report(s)${own.flagLeft ? ', flag left in the address' : ''}`);
     }
   } finally {
     await browser.close();
@@ -408,8 +440,8 @@ export async function gateSample(slug: string, base: string, opts: { runs?: numb
   return { slug, lighthouse, failures };
 }
 
-/** The look of every engine page with settings: the samples, and any real page in previews/content. */
-export function engineLooks(): { slug: string; look: Look }[] {
+/** The look of every engine page with settings: the real pages in previews/content, and with `samples` the sample pages too. */
+export function engineLooks(opts: { samples?: boolean } = { samples: true }): { slug: string; look: Look }[] {
   const out: { slug: string; look: Look }[] = [];
   const add = (slug: string, raw: unknown, media: string) => {
     const c = EngineConfig.parse(raw);
@@ -419,7 +451,7 @@ export function engineLooks(): { slug: string; look: Look }[] {
     const hero = heroFor(c.look.hero, p ? { width: p.width, height: p.height, score: p.score } : null).kind;
     out.push({ slug, look: engineLook(c, hero) });
   };
-  for (const slug of sampleSlugs()) add(`${slug} (sample)`, JSON.parse(readFileSync(join(SAMPLES_DIR, slug, 'config.json'), 'utf8')), join(SAMPLES_DIR, slug));
+  if (opts.samples) for (const slug of sampleSlugs()) add(`${slug} (sample)`, JSON.parse(readFileSync(join(SAMPLES_DIR, slug, 'config.json'), 'utf8')), join(SAMPLES_DIR, slug));
   if (existsSync(previewPaths.content))
     for (const slug of readdirSync(previewPaths.content)) {
       const f = join(contentDir(slug), 'engine.json');
@@ -441,15 +473,15 @@ function otherLooks(): { slug: string; look: Look }[] {
   return out;
 }
 
-export function samplePulled(slug: string): Pulled {
-  const file = join(SAMPLES_DIR, slug, 'pull.json');
+export function samplePulled(slug: string, dir: string = join(SAMPLES_DIR, slug)): Pulled {
+  const file = join(dir, 'pull.json');
   if (!existsSync(file)) throw new Error(`${file} does not exist. Run plumb engine pull first.`);
   return JSON.parse(readFileSync(file, 'utf8')) as Pulled;
 }
 
 /** The colours a palette is made from: the logo's, the site's own and the photos'. */
-export async function sampleSwatches(slug: string): Promise<Swatch[]> {
-  const p = samplePulled(slug);
+export async function sampleSwatches(slug: string, dir?: string): Promise<Swatch[]> {
+  const p = samplePulled(slug, dir);
   const out: Swatch[] = [];
   if (p.brand.logo && existsSync(p.brand.logo)) {
     try {
@@ -475,7 +507,7 @@ async function photoSheet(files: string[], out: string): Promise<void> {
     .toFile(out);
 }
 
-export function registerEngine(program: Command): void {
+export function registerEngine(program: Command): Command {
   const engine = program.command('engine').description('The four page engines: sample content, palettes, photos, variety and sample builds');
 
   engine
@@ -483,7 +515,8 @@ export function registerEngine(program: Command): void {
     .description('Read the homepage of each named business (text, links, logo, colours and photos) into data/wave-4/design-samples/<slug>/')
     .requiredOption('--list <file>', 'the wave list, as a CSV file with slug and website columns')
     .requiredOption('--only <slugs>', 'comma separated slugs')
-    .action(async (o: { list: string; only: string }) => {
+    .option('--pages', 'for real pages: read each homepage into data/wave/<slug>/ beside its other pages, not into the samples')
+    .action(async (o: { list: string; only: string; pages?: boolean }) => {
       const rows = parseCsv(readFileSync(o.list, 'utf8'));
       const wanted = o.only.split(',').map((s) => s.trim()).filter(Boolean);
       const limiter = new HostLimiter();
@@ -499,7 +532,7 @@ export function registerEngine(program: Command): void {
               const row = rows.find((r) => r.slug === slug);
               if (!row?.website) return void console.log(`${slug}: not in the list, or no website`);
               try {
-                const p = await pullSample(renderer, polite, slug, row.website);
+                const p = await pullSample(renderer, polite, slug, row.website, o.pages ? join(paths.data, 'wave', slug) : undefined);
                 const big = p.photos.filter((x) => x.kind === 'photo' && x.width >= 1800).length;
                 const kept = p.photos.filter((x) => x.file).length;
                 console.log(`${slug}: ${p.blocks.length} text blocks, ${p.photos.length} pictures (${kept} kept, ${big} at least 1800 px wide), logo ${p.brand.logo ? 'kept' : 'not found'}, ${p.links.booking.length} booking link(s), ${p.links.tel.length} phone link(s)`);
@@ -518,10 +551,12 @@ export function registerEngine(program: Command): void {
     .command('palette <slug>')
     .description("Make a sample's palette from its logo, site colours and photos, and show the contrast of every pair")
     .requiredOption('--engine <name>', ENGINES.join(', '))
-    .action(async (slug: string, o: { engine: string }) => {
+    .option('--pages', 'for a real page: read its pulled homepage under data/wave/<slug>/ and write the palette there')
+    .action(async (slug: string, o: { engine: string; pages?: boolean }) => {
       if (!ENGINES.includes(o.engine as EngineName)) throw new Error(`no engine called ${o.engine}`);
-      const palette = paletteFrom(o.engine as EngineName, await sampleSwatches(slug));
-      writeFileSync(join(SAMPLES_DIR, slug, 'palette.json'), JSON.stringify(palette, null, 2));
+      const dir = o.pages ? join(paths.data, 'wave', slug) : join(SAMPLES_DIR, slug);
+      const palette = paletteFrom(o.engine as EngineName, await sampleSwatches(slug, dir));
+      writeFileSync(join(dir, 'palette.json'), JSON.stringify(palette, null, 2));
       console.log(`${slug}: ${palette.family} | accent ${palette.accent} deep ${palette.deep} paper ${palette.paper} | from ${palette.from.slice(0, 3).join('; ')}`);
       for (const c of paletteChecks(palette)) if (!c.ok) console.log(`  FAILS ${c.pair} ${c.ratio}`);
     });
@@ -589,8 +624,10 @@ export function registerEngine(program: Command): void {
   engine
     .command('variety')
     .description('The variety rules for engine pages: no pair of faces used before or by another engine, and no two pages of any wave alike in hero, faces and palette family')
-    .action(() => {
-      const mine = engineLooks();
+    .option('--samples', 'hold the sample pages to the rule as well (by default only the real pages in previews/content, or the samples when there are none)')
+    .action((o: { samples?: boolean }) => {
+      const real = engineLooks({ samples: false });
+      const mine = o.samples || !real.length ? engineLooks({ samples: true }) : real;
       for (const p of mine) console.log(`${p.slug}: ${p.look.hero}, ${p.look.type}, ${p.look.family}`);
       const issues = engineVarietyIssues(mine, otherLooks());
       for (const i of issues) console.log(`PROBLEM ${i}`);
@@ -666,4 +703,6 @@ export function registerEngine(program: Command): void {
       writeFileSync(o.key, JSON.stringify(key, null, 2));
       console.log(`${Object.keys(key).length} pairs in ${o.out}; key in ${o.key}`);
     });
+
+  return engine;
 }

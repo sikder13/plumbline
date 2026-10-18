@@ -459,7 +459,7 @@
 .stepper output {
   min-width: 6ch;
   text-align: center;
-  font: var(--dw) calc(26px * var(--ds)) / 1 var(--display);
+  font: var(--dw) min(calc(26px * var(--ds)), 28px) / 1 var(--display);
   font-style: var(--ital);
 }
 
@@ -489,7 +489,7 @@
 
 .staySentence {
   margin-top: 10px;
-  font: var(--dw) calc(30px * var(--ds)) / 1.15 var(--display);
+  font: var(--dw) min(calc(30px * var(--ds)), 28px) / 1.15 var(--display);
   font-style: var(--ital);
   letter-spacing: var(--track);
 }
@@ -619,7 +619,7 @@
 }
 
 .offerName {
-  font-size: calc(30px * var(--ds));
+  font-size: min(calc(30px * var(--ds)), 28px);
   font-style: var(--ital);
   line-height: 1.05;
 }
@@ -742,7 +742,7 @@
 }
 
 .personName {
-  font-size: calc(28px * var(--ds));
+  font-size: min(calc(28px * var(--ds)), 28px);
   font-style: var(--ital);
 }
 

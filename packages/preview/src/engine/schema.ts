@@ -83,6 +83,14 @@ const PhotoPick = z.object({
   alt: z.string().min(1),
   /** Where the subject is, as fractions of the width and height. Crops centre on it. */
   focus: z.tuple([z.number().min(0).max(1), z.number().min(0).max(1)]).default([0.5, 0.5]),
+  /**
+   * The part of the photo every crop stays inside, as [left, top, right, bottom] fractions, so a door
+   * frame, a post, an edge or a watermark never comes into a crop. Its size counts as the photo's size.
+   */
+  keep: z
+    .tuple([z.number().min(0).max(1), z.number().min(0).max(1), z.number().min(0).max(1), z.number().min(0).max(1)])
+    .refine(([l, t, r, b]) => r - l >= 0.2 && b - t >= 0.2, 'the kept part must be at least a fifth of the width and height')
+    .optional(),
   /** The address it was found on. */
   source: Source,
 });

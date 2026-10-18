@@ -3,7 +3,9 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { ROOT } from '@plumbline/core';
 import { contrastRatio, fromOklch, paletteChecks, paletteFrom } from './colour.ts';
-import { cropAround, heroFor } from './photos.ts';
+import { cropAround, cropInside, heroFor, keptBox } from './photos.ts';
+import { measuredOn, packCards, seenOf, type FactPack, type PackFinding } from './page.ts';
+import { OWN_VISIT } from '../gates.ts';
 import { ENGINES, EngineConfig } from './schema.ts';
 import { EARLIER_TYPE_PAIRS, pairIssues } from './variety.ts';
 
@@ -116,5 +118,69 @@ describe('settings', () => {
     expect(EngineConfig.safeParse({ ...base, contact: {} }).success).toBe(false);
     const photos = [{ id: 'a', file: 'photos/a.jpg', alt: 'A', source: U }];
     expect(EngineConfig.safeParse({ ...base, photos, hero: { ...base.hero, photo: 'a' }, gallery: ['a'] }).success).toBe(false);
+  });
+});
+
+describe('kept part of a photo', () => {
+  it('keeps every crop inside the box, so a door frame at the edge never comes in', () => {
+    const box = keptBox(4000, 2667, [0.35, 0, 0.8, 1]);
+    expect(box).toEqual({ left: 1400, top: 0, width: 1800, height: 2667 });
+    for (const ratio of [16 / 9, 4 / 5, 4 / 3])
+      for (const focus of [[0, 0], [0.5, 0.42], [1, 1]] as [number, number][]) {
+        const c = cropInside(box, ratio, focus, 4000, 2667);
+        expect(c.left).toBeGreaterThanOrEqual(box.left);
+        expect(c.left + c.width).toBeLessThanOrEqual(box.left + box.width);
+        expect(c.top + c.height).toBeLessThanOrEqual(box.height);
+      }
+  });
+
+  it('is the whole photo when nothing is kept', () => {
+    expect(keptBox(1200, 800)).toEqual({ left: 0, top: 0, width: 1200, height: 800 });
+    expect(cropInside(keptBox(1200, 800), 3 / 2, [0.5, 0.5], 1200, 800)).toEqual(cropAround(1200, 800, 3 / 2, [0.5, 0.5]));
+  });
+});
+
+describe('findings from a fact pack', () => {
+  const f = (over: Partial<PackFinding>): PackFinding => ({ place: 1, tier: 1, type: 'broken_link', sentence: 'A link on your homepage opens a page that is not found.', measured: '"Trips" on https://x.co.nz/ goes to https://x.co.nz/old, which answers 404', evidence_url: 'https://x.co.nz/old', linked_from: 'https://x.co.nz/', measured_at: '2026-10-17T03:55:03.921Z', source: 'plumbline', on_main_page: true, ...over });
+  const pack = (findings: PackFinding[]): FactPack => ({ slug: 'x', name: 'X', website: 'https://www.x.co.nz', category: 'fishing', to: { address: 'a@x.co.nz', source_url: 'https://x.co.nz/contact' }, greeting: 'A', greeting_names: ['A'], findings, flags: { facts_changed: [], faith: [], security_review: [], refuses_unsolicited: null, speed: null }, recommendation: 'BUILD' });
+  const library = new Map([
+    ['C12_broken_internal_links', { check: 'C12_broken_internal_links', severity: 3, impact: 'Links that end in an error page stop visitors.', basis: 'OUR_VIEW' as const, sources: [], fix: 'All links are checked.' }],
+    ['C16_booking_hard_to_reach', { check: 'C16_booking_hard_to_reach', severity: 3, impact: 'It takes several steps to book.', basis: 'OUR_VIEW' as const, sources: [], fix: 'Booking opens in one tap.' }],
+  ]);
+
+  it('says what was seen without the second tool’s note, without dashes, and never quotes a testimonial', () => {
+    expect(seenOf(f({ measured: 'The page answers 404 (not found). Caution from Crawlmouse: Linked from https://x.co.nz/a.' }))).toBe('The page answers 404 (not found).');
+    expect(seenOf(f({ measured: 'The page loads, with the title "demo page - Welcome"' }))).toBe('The page loads, with the title "demo page, Welcome"');
+    expect(seenOf(f({ type: 'physio_testimonials', measured: 'quote: "Lovely people"' }))).toBeNull();
+    expect(seenOf(f({ measured: 'PHP 7.4.33; support ended 2022-11-28' }))).toBe('PHP 7.4.33; support ended 28 November 2022.');
+    expect(seenOf(f({ measured: 'At 390 by 844 phone screen no book, call or email action is visible without scrolling' }))).toBe('On a phone screen 390 by 844 pixels, no book, call or email action is visible without scrolling.');
+  });
+
+  it('names the page a finding was measured on, never an outside source', () => {
+    expect(measuredOn(f({}), 'https://www.x.co.nz')).toBe('https://x.co.nz/');
+    expect(measuredOn(f({ linked_from: null, evidence_url: 'https://endoflife.date/php' }), 'https://www.x.co.nz')).toBe('https://www.x.co.nz');
+    expect(measuredOn(f({ linked_from: null, type: 'book_button_contact', sentence: 'The "Book" button on your homepage opens your contact page, not a booking page.', evidence_url: 'https://x.co.nz/contact/' }), 'https://www.x.co.nz')).toBe('https://www.x.co.nz');
+    expect(measuredOn(f({ linked_from: null, sentence: 'A page titled "demo page" is still live on your website.', evidence_url: 'https://x.co.nz/demo-page' }), 'https://www.x.co.nz')).toBe('https://x.co.nz/demo-page');
+  });
+
+  it('keeps the pack’s order and words, at most three, with the fix and only an impact that holds', async () => {
+    const cards = await packCards(pack([f({ place: 2, type: 'booking_page_unlinked', sentence: 'Your book page is live, but nothing on your site links to it.' }), f({}), f({ place: 3, type: 'no_heading' }), f({ place: 4 })]), library, async () => null);
+    expect(cards.map((c) => c.check)).toEqual(['broken_link-1', 'booking_page_unlinked-2', 'no_heading-3']);
+    expect(cards[0]).toMatchObject({ sentence: 'Links that end in an error page stop visitors.', fix: 'All links are checked.', measuredNz: '17 October 2026, 4:55 pm' });
+    expect(cards[1]).toMatchObject({ sentence: '', fix: '' });
+    expect(cards[2]).toMatchObject({ sentence: '', fix: '' });
+  });
+
+  it('speaks of their booking system only where they have one', async () => {
+    const one = [f({ type: 'booking_page_unlinked' })];
+    expect((await packCards(pack(one), library, async () => null, { bookingSystem: true }))[0]!.fix).toBe('Booking opens in one tap.');
+    expect((await packCards(pack(one), library, async () => null, { bookingSystem: false }))[0]!.fix).toBe('');
+  });
+});
+
+describe('own visits', () => {
+  it('the checks mark a browser with the same flag the pages read', () => {
+    const offer = readFileSync(join(ROOT, 'apps', 'previews', 'lib', 'offer.ts'), 'utf8');
+    expect(offer).toContain(`OWN_VISITS = { param: '${OWN_VISIT.param}', key: '${OWN_VISIT.key}' }`);
   });
 });

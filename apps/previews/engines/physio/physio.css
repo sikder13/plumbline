@@ -486,7 +486,7 @@
 }
 
 .offerName {
-  font-size: calc(23px * var(--ds));
+  font-size: min(calc(23px * var(--ds)), 28px);
   line-height: 1.15;
 }
 
@@ -538,7 +538,7 @@
 }
 
 .personName {
-  font-size: calc(21px * var(--ds));
+  font-size: min(calc(21px * var(--ds)), 28px);
   line-height: 1.15;
 }
 

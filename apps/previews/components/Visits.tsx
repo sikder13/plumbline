@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { VISIT_ENDPOINT } from '@/lib/offer';
+import { OWN_VISITS, VISIT_ENDPOINT } from '@/lib/offer';
 
 export type VisitKind = 'view' | 'tab_findings' | 'cta_click';
 
@@ -10,15 +10,17 @@ const VISIBLE_MS = 3000;
 
 interface State {
   token: string | null;
+  /** This browser is one of ours, so nothing is ever reported. */
+  own: boolean;
   ready: boolean;
   sent: Set<VisitKind>;
   waiting: Set<VisitKind>;
 }
 
-const state: State = { token: null, ready: false, sent: new Set(), waiting: new Set() };
+const state: State = { token: null, own: false, ready: false, sent: new Set(), waiting: new Set() };
 
 function send(kind: VisitKind): void {
-  if (!state.token || state.sent.has(kind)) return;
+  if (state.own || !state.token || state.sent.has(kind)) return;
   state.sent.add(kind);
   // Nothing is read back. A failed report is simply lost.
   void fetch(VISIT_ENDPOINT, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token: state.token, kind }), keepalive: true, credentials: 'omit' }).catch(() => undefined);
@@ -33,10 +35,33 @@ export function report(kind: VisitKind): void {
   else state.waiting.add(kind);
 }
 
+/**
+ * Whether this browser is marked as ours. The query flag sets or clears the mark and is then taken
+ * out of the address, so a copied link never carries it. Storage that cannot be read counts as not ours.
+ */
+function ownVisit(): boolean {
+  try {
+    const url = new URL(window.location.href);
+    const flag = url.searchParams.get(OWN_VISITS.param);
+    if (flag !== null) {
+      if (flag === '0') window.localStorage.removeItem(OWN_VISITS.key);
+      else window.localStorage.setItem(OWN_VISITS.key, '1');
+      url.searchParams.delete(OWN_VISITS.param);
+      window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+    }
+    return window.localStorage.getItem(OWN_VISITS.key) === '1';
+  } catch {
+    return false;
+  }
+}
+
 /** Counts the time the page is actually visible, then reports the view and anything that waited for it. */
 export function Visits({ token }: { token: string }) {
   useEffect(() => {
     state.token = token;
+    // Our own visits are never counted.
+    state.own = ownVisit();
+    if (state.own) return;
     const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
     // A visitor who has asked not to be tracked is not counted.
     if (nav.globalPrivacyControl || nav.doNotTrack === '1') return;

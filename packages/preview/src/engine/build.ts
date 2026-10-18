@@ -1,15 +1,15 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { nzTime } from '@plumbline/core';
 import { buildPicture } from '../build.ts';
 import type { ContentFile, PageData, Picture } from '../types.ts';
 import sharp from 'sharp';
-import { gradePhoto, heroFor, MIN_SCORE, MIN_WIDTH, sharpnessScore } from './photos.ts';
+import { gradePhoto, heroFor, keptBox, MIN_SCORE, MIN_WIDTH, sharpnessScore } from './photos.ts';
 import { ENGINE_TYPE_PAIRS, EngineConfig, engineLook, type EngineDemo, type HeroKind } from './schema.ts';
 
 /** What the pipeline learnt of each picked photo, and which it chose for the hero and its inset. */
 export interface GradedIndex {
-  photos: Record<string, { width: number; height: number; score: number; wideAt: string; tallAt: string; bandAt: string | null; phoneQuality?: number }>;
+  photos: Record<string, { width: number; height: number; score: number; wideAt: string; tallAt: string; bandAt: string | null; phoneQuality?: number; phoneSharpen?: boolean }>;
   /** The photo of a photo or split hero, when one qualifies. */
   hero: string | null;
   /** For a typographic hero: their best remaining photo, shown as an inset. */
@@ -51,11 +51,15 @@ export function chooseHero(config: EngineConfig, measured: GradedIndex['photos']
  */
 export async function gradeEnginePhotos(config: EngineConfig, media: string, log: (line: string) => void = () => undefined): Promise<GradedIndex> {
   const out = join(media, 'graded');
+  // A page may have no photo at all: it still gets an index, and a typographic hero.
+  mkdirSync(out, { recursive: true });
   const measured: GradedIndex['photos'] = {};
   for (const pick of config.photos) {
     const file = join(media, pick.file);
     const meta = await sharp(file).rotate().metadata();
-    measured[pick.id] = { width: meta.autoOrient?.width ?? meta.width ?? 0, height: meta.autoOrient?.height ?? meta.height ?? 0, score: await sharpnessScore(file), wideAt: '50% 50%', tallAt: '50% 50%', bandAt: null };
+    // A photo with a kept part is as large as that part.
+    const box = keptBox(meta.autoOrient?.width ?? meta.width ?? 0, meta.autoOrient?.height ?? meta.height ?? 0, pick.keep);
+    measured[pick.id] = { width: box.width, height: box.height, score: await sharpnessScore(file), wideAt: '50% 50%', tallAt: '50% 50%', bandAt: null };
   }
   const { hero, inset } = chooseHero(config, measured);
   for (const pick of config.photos) {
@@ -65,7 +69,11 @@ export async function gradeEnginePhotos(config: EngineConfig, media: string, log
     log(`  ${pick.id} ${pick.file} ${g.width}x${g.height} sharpness ${g.score} (${use})`);
   }
   // The phone hero is the page's largest paint: it gets the highest quality that keeps it within its byte budget.
-  if (hero && measured[hero]) measured[hero]!.phoneQuality = await phoneQuality(join(out, `${hero}-tall.jpg`), join(out, `${hero}-band.jpg`), measured[hero]!.width >= MIN_WIDTH.fullBleed && measured[hero]!.height >= 1080);
+  if (hero && measured[hero]) {
+    const q = await phoneQuality(join(out, `${hero}-tall.jpg`), join(out, `${hero}-band.jpg`), measured[hero]!.width >= MIN_WIDTH.fullBleed && measured[hero]!.height >= 1080);
+    measured[hero]!.phoneQuality = q.quality;
+    measured[hero]!.phoneSharpen = q.sharpen;
+  }
   const index: GradedIndex = { photos: measured, hero, inset };
   writeFileSync(join(out, 'index.json'), JSON.stringify(index, null, 2));
   return index;
@@ -74,14 +82,24 @@ export async function gradeEnginePhotos(config: EngineConfig, media: string, log
 /** At most this many bytes for the hero at the width a phone fetches (750 px), so it paints in time on a slow connection. */
 const PHONE_HERO_BYTES = 54 * 1024;
 
-async function phoneQuality(tall: string, band: string, fullBleed: boolean): Promise<number> {
+/**
+ * The quality the phone hero is encoded at, and whether it is sharpened after the resize. A photo so
+ * full of fine detail that no sharpened quality fits the budget is not sharpened (it needs none), and
+ * may go down to quality 30.
+ */
+async function phoneQuality(tall: string, band: string, fullBleed: boolean): Promise<{ quality: number; sharpen: boolean }> {
   const file = fullBleed ? tall : band;
   const sized = await sharp(file).resize({ width: 750, withoutEnlargement: true }).toBuffer();
   for (const q of [42, 40, 38, 36]) {
     const bytes = (await sharp(sized).sharpen({ sigma: 0.55, m1: 0.6, m2: 1.2 }).avif({ quality: q, effort: 5 }).toBuffer()).length;
-    if (bytes <= PHONE_HERO_BYTES) return q;
+    if (bytes <= PHONE_HERO_BYTES) return { quality: q, sharpen: true };
   }
-  return 34;
+  if ((await sharp(sized).sharpen({ sigma: 0.55, m1: 0.6, m2: 1.2 }).avif({ quality: 34, effort: 5 }).toBuffer()).length <= PHONE_HERO_BYTES) return { quality: 34, sharpen: true };
+  for (const q of [36, 34, 32, 30]) {
+    const bytes = (await sharp(sized).avif({ quality: q, effort: 5 }).toBuffer()).length;
+    if (bytes <= PHONE_HERO_BYTES) return { quality: q, sharpen: false };
+  }
+  return { quality: 30, sharpen: false };
 }
 
 function readIndex(media: string): GradedIndex {
@@ -137,8 +155,8 @@ export function engineImageSpecs(config: EngineConfig, demo: EngineDemo, index: 
     if (demo.heroKind !== 'type' && pick.id === demo.hero.photo) {
       if (demo.heroKind === 'photo') {
         images.hero = { file: `graded/${pick.id}-wide.jpg`, alt: pick.alt, widths: WIDTHS.heroWide, quality: 52, position: at?.wideAt, sharpen: true };
-        images.heroPhone = { file: `graded/${pick.id}-tall.jpg`, alt: pick.alt, widths: WIDTHS.heroTall, quality: at?.phoneQuality ?? 42, position: at?.tallAt, sharpen: true };
-      } else images.hero = { file: `graded/${pick.id}-band.jpg`, alt: pick.alt, widths: WIDTHS.heroBand, quality: at?.phoneQuality ?? 42, position: at?.bandAt ?? undefined, sharpen: true };
+        images.heroPhone = { file: `graded/${pick.id}-tall.jpg`, alt: pick.alt, widths: WIDTHS.heroTall, quality: at?.phoneQuality ?? 42, position: at?.tallAt, sharpen: at?.phoneSharpen !== false };
+      } else images.hero = { file: `graded/${pick.id}-band.jpg`, alt: pick.alt, widths: WIDTHS.heroBand, quality: at?.phoneQuality ?? 42, position: at?.bandAt ?? undefined, sharpen: at?.phoneSharpen !== false };
       continue;
     }
     if (!shown.has(pick.id)) continue;

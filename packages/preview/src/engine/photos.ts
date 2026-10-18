@@ -115,6 +115,22 @@ export function cropAround(width: number, height: number, ratio: number, focus: 
   return { left, top, width: w, height: h };
 }
 
+/** The part of a photo its crops may use: all of it, or the part its settings keep. */
+export function keptBox(width: number, height: number, keep?: [number, number, number, number]): Cut {
+  if (!keep) return { left: 0, top: 0, width, height };
+  const left = Math.round(keep[0] * width);
+  const top = Math.round(keep[1] * height);
+  return { left, top, width: Math.round(keep[2] * width) - left, height: Math.round(keep[3] * height) - top };
+}
+
+/** The largest crop of the given shape inside a box of the photo, held to the focus point as near its middle as the box allows. */
+export function cropInside(box: Cut, ratio: number, focus: [number, number], width: number, height: number): Cut {
+  const fx = Math.max(0, Math.min(1, (focus[0] * width - box.left) / box.width));
+  const fy = Math.max(0, Math.min(1, (focus[1] * height - box.top) / box.height));
+  const c = cropAround(box.width, box.height, ratio, [fx, fy]);
+  return { left: c.left + box.left, top: c.top + box.top, width: c.width, height: c.height };
+}
+
 /** The shapes a photo is cut to. The hero's phone crop is close to the box it fills, about square, so no pixel is sent that is not shown. */
 export const SHAPES = { heroWide: 16 / 9, heroTall: 4 / 5, heroBand: 4 / 3, wide: 3 / 2, tall: 4 / 5 } as const;
 
@@ -153,7 +169,7 @@ export async function gradePhoto(engine: EngineName, pick: PhotoPick, source: st
   const height = meta.autoOrient?.height ?? meta.height ?? 0;
   const wide = join(outDir, `${pick.id}-wide.jpg`);
   const tall = join(outDir, `${pick.id}-tall.jpg`);
-  const made = `${source}|${statSync(source).mtimeMs}|${JSON.stringify(pick.focus)}|${deep}|${role}|${JSON.stringify(g)}|${JSON.stringify(SHAPES)}`;
+  const made = `${source}|${statSync(source).mtimeMs}|${JSON.stringify(pick.focus)}|${deep}|${role}|${JSON.stringify(g)}|${JSON.stringify(SHAPES)}${pick.keep ? `|keep ${JSON.stringify(pick.keep)}` : ''}`;
   const madeFile = join(outDir, `${pick.id}.made`);
 
   const [r, gg, b] = parseHex(deep);
@@ -172,13 +188,15 @@ export async function gradePhoto(engine: EngineName, pick: PhotoPick, source: st
     return sharp(buf).composite([{ input: { create: { width, height, channels: 4, background: { r, g: gg, b, alpha: g.tint } } }, blend: 'soft-light' }]);
   };
   const shapes = role === 'hero' ? [SHAPES.heroWide, SHAPES.heroTall] : [SHAPES.wide, SHAPES.tall];
-  const [wideCut, tallCut] = shapes.map((ratio) => cropAround(width, height, ratio, pick.focus)) as [Cut, Cut];
+  // Every crop stays inside the part of the photo the settings keep.
+  const box = keptBox(width, height, pick.keep);
+  const [wideCut, tallCut] = shapes.map((ratio) => cropInside(box, ratio, pick.focus, width, height)) as [Cut, Cut];
   // A photo already close to the wide shape keeps all of itself.
-  const wideKeep = Math.abs(width / height - shapes[0]!) < 0.18 ? { left: 0, top: 0, width, height } : wideCut;
-  const bandCut = role === 'hero' ? cropAround(width, height, SHAPES.heroBand, pick.focus) : null;
+  const wideKeep = Math.abs(box.width / box.height - shapes[0]!) < 0.18 ? box : wideCut;
+  const bandCut = role === 'hero' ? cropInside(box, SHAPES.heroBand, pick.focus, width, height) : null;
   const bandFile = role === 'hero' ? join(outDir, `${pick.id}-band.jpg`) : null;
   const score = await sharpnessScore(source);
-  const result: Graded = { id: pick.id, wide, tall, band: bandFile, width, height, wideAt: at(wideKeep, width, height, pick.focus), tallAt: at(tallCut, width, height, pick.focus), bandAt: bandCut ? at(bandCut, width, height, pick.focus) : null, score };
+  const result: Graded = { id: pick.id, wide, tall, band: bandFile, width: box.width, height: box.height, wideAt: at(wideKeep, width, height, pick.focus), tallAt: at(tallCut, width, height, pick.focus), bandAt: bandCut ? at(bandCut, width, height, pick.focus) : null, score };
   if (existsSync(madeFile) && readFileSync(madeFile, 'utf8') === made && existsSync(wide) && existsSync(tall) && (!bandFile || existsSync(bandFile))) return result;
   const full = await (await graded()).toBuffer();
   await sharp(full).extract(wideKeep).jpeg({ quality: 92, mozjpeg: true }).toFile(wide);

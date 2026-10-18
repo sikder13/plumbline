@@ -175,6 +175,25 @@
   border-left-color: color-mix(in oklch, #fff 18%, transparent);
 }
 
+/* Four facts make two rows of two on a phone, so no word breaks across a narrow column. */
+@media (max-width: 599.98px) {
+  .heroFacts[data-facts='4'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .heroFacts[data-facts='4'] li:nth-child(3) {
+    border-left: 0;
+  }
+
+  .heroFacts[data-facts='4'] li:nth-child(n + 3) {
+    border-top: 1px solid color-mix(in oklch, var(--ink) 14%, transparent);
+  }
+
+  .hero[data-kind='photo'] .heroFacts[data-facts='4'] li:nth-child(n + 3) {
+    border-top-color: color-mix(in oklch, #fff 18%, transparent);
+  }
+}
+
 .heroFacts span {
   font: 600 10.5px/1.2 var(--text);
   letter-spacing: 0.1em;
@@ -262,7 +281,7 @@
 .bandRun li {
   display: flex;
   align-items: center;
-  font: var(--dw) calc(30px * var(--ds)) / 1.1 var(--display);
+  font: var(--dw) min(calc(30px * var(--ds)), 28px) / 1.1 var(--display);
   letter-spacing: var(--track);
   white-space: nowrap;
 }
@@ -447,7 +466,7 @@
 }
 
 .noteFacts dt {
-  font: 600 11px/1.2 var(--text);
+  font: 600 14px/1.2 var(--text);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--quiet);
@@ -527,7 +546,7 @@
 }
 
 .offerName {
-  font-size: calc(24px * var(--ds));
+  font-size: min(calc(24px * var(--ds)), 28px);
   line-height: 1.1;
 }
 
@@ -603,7 +622,7 @@
 }
 
 .personName {
-  font-size: calc(28px * var(--ds));
+  font-size: min(calc(28px * var(--ds)), 28px);
 }
 
 .personRole {

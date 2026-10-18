@@ -59,3 +59,9 @@ export const BASE = '/demo';
 
 /** Where a page reports that a person opened it. */
 export const VISIT_ENDPOINT = 'https://nahltech.com/api/demo-visit';
+
+/**
+ * Our own visits. Opening any page once with ?nahl-own=1 marks this browser as ours, and from then
+ * on no page reports anything from it; ?nahl-own=0 clears the mark. Every check we run sets it.
+ */
+export const OWN_VISITS = { param: 'nahl-own', key: 'nahl-own' };
