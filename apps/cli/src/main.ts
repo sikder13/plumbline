@@ -10,6 +10,8 @@ import { auditBatch, type RunKind } from './audit.ts';
 import { calibrate, writeCalibration } from './calibrate.ts';
 import { aiCommand, aiSummary, brandCommand, contactsCommand, evaluateStoredCommand, costCommand, discoverCommand, purgeCommand, qualifyCommand } from './commands.ts';
 import { writeReport } from '@plumbline/report';
+import { registerEngine } from './engine.ts';
+import { registerEnginePages } from './engine-pages.ts';
 import { registerPreview } from './preview.ts';
 import { seed } from './seed.ts';
 import { selectBatch } from './select.ts';
@@ -190,5 +192,6 @@ program
 
 registerPreview(program);
 registerWave(program);
+registerEnginePages(registerEngine(program));
 
 await program.parseAsync();

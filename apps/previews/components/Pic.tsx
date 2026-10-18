@@ -17,9 +17,11 @@ interface Props {
   style?: CSSProperties;
   /** Moves a little slower than the page on large screens. */
   parallax?: boolean;
+  /** Fetched after everything else, so it never competes with the photo at the top. */
+  low?: boolean;
 }
 
-export function Pic({ pic, phone, sizes, first, className, alt, style, parallax }: Props) {
+export function Pic({ pic, phone, sizes, first, className, alt, style, parallax, low }: Props) {
   return (
     <picture>
       {phone?.sources.map((s) => (
@@ -35,7 +37,7 @@ export function Pic({ pic, phone, sizes, first, className, alt, style, parallax 
         alt={alt ?? pic.alt}
         loading={first ? 'eager' : 'lazy'}
         decoding={first ? 'sync' : 'async'}
-        fetchPriority={first ? 'high' : undefined}
+        fetchPriority={first ? 'high' : low ? 'low' : undefined}
         className={className}
         data-parallax={parallax ? '' : undefined}
         style={{ backgroundColor: pic.colour, objectPosition: pic.position ?? undefined, ...style }}

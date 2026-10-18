@@ -55,6 +55,7 @@ import {
 import { approveWave } from './approve.ts';
 import { storedHomepage } from './commands.ts';
 import { parseCsv } from './csv.ts';
+import { registerWaveRun } from './wave-run.ts';
 
 /** Reads a wave list: one row per business with its order, its status ("wave 2" or "reserve") and its slug. */
 export function readWaveList(text: string): WaveEntry[] {
@@ -408,6 +409,8 @@ export function wavePack(d: Db, o: { name: string; batch?: string; file?: string
 
 export function registerWave(program: Command): void {
   const wave = program.command('wave').description('Prepare a hand-picked list of businesses: facts with their sources, findings and the pack');
+
+  registerWaveRun(wave);
 
   wave
     .command('import')

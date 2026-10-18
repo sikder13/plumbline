@@ -16,10 +16,25 @@ const WORKER = join(dirname(fileURLToPath(import.meta.url)), 'lighthouse-page.mj
 
 const TYPES: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.txt': 'text/plain', '.svg': 'image/svg+xml', '.avif': 'image/avif', '.webp': 'image/webp', '.png': 'image/png', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.ico': 'image/x-icon' };
 
-/** Serves the built site from this machine, compressed the way the host compresses it, for checks before a deploy. */
-export function serveSite(dir: string = previewPaths.site, port = 4321): Promise<{ server: Server; base: string }> {
+/** The address the pages report visits to, as it is written into their scripts. */
+const LIVE_VISIT_ENDPOINT = 'https://nahltech.com/api/demo-visit';
+
+/**
+ * Serves the built site from this machine, compressed the way the host compresses it, for checks before a deploy.
+ * With `quiet`, the pages' scripts report to this server instead of the live address, and every report is answered
+ * here with nothing stored, so a person clicking through the pages on this machine is never counted.
+ */
+export function serveSite(dir: string = previewPaths.site, port = 4321, opts: { quiet?: boolean; host?: string } = {}): Promise<{ server: Server; base: string }> {
   const server = createServer((req, res) => {
     const path = decodeURIComponent((req.url ?? '/').split('?')[0]!);
+    if (opts.quiet && path === '/api/demo-visit') return void res.writeHead(204).end();
+    if (opts.quiet && extname(path) === '.js') {
+      const js = normalize(join(dir, path));
+      if (js.startsWith(dir) && existsSync(js)) {
+        res.writeHead(200, { 'content-type': TYPES['.js']!, 'cache-control': 'no-cache' });
+        return void res.end(readFileSync(js, 'utf8').replaceAll(LIVE_VISIT_ENDPOINT, '/api/demo-visit'));
+      }
+    }
     let file = normalize(join(dir, path));
     if (!file.startsWith(dir)) return void res.writeHead(403).end();
     if (existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html');
@@ -34,10 +49,11 @@ export function serveSite(dir: string = previewPaths.site, port = 4321): Promise
     if (compress) createReadStream(file).pipe(createGzip()).pipe(res);
     else createReadStream(file).pipe(res);
   });
-  return new Promise((resolve) => server.listen(port, '127.0.0.1', () => resolve({ server, base: `http://127.0.0.1:${port}` })));
+  const host = opts.host ?? '127.0.0.1';
+  return new Promise((resolve) => server.listen(port, host, () => resolve({ server, base: `http://${host === '0.0.0.0' ? '127.0.0.1' : host}:${port}` })));
 }
 
-interface LighthouseRun {
+export interface LighthouseRun {
   error?: string;
   version?: string;
   performance?: number | null;
@@ -48,7 +64,7 @@ interface LighthouseRun {
   failedAccessibility?: string[];
 }
 
-function lighthouseOnce(url: string): Promise<LighthouseRun> {
+export function lighthouseOnce(url: string): Promise<LighthouseRun> {
   return new Promise((resolve) => {
     execFile(process.execPath, [WORKER, url, chromium.executablePath()], { timeout: 150_000, maxBuffer: 16 * 1024 * 1024, killSignal: 'SIGKILL' }, (err, stdout) => {
       const line = stdout.split('\n').find((l) => l.startsWith('PLUMBLINE_LH '));
@@ -109,7 +125,7 @@ export function validMailto(href: string): boolean {
   return !!m && /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(decodeURIComponent(m[1]!));
 }
 
-async function checkLinks(browser: Browser, url: string, bookingHosts: RegExp, ownSiteHtml: string): Promise<LinkCheck[]> {
+export async function checkLinks(browser: Browser, url: string, bookingHosts: RegExp, ownSiteHtml: string): Promise<LinkCheck[]> {
   const ctx = await quietContext(browser, { viewport: { width: 390, height: 844 } });
   const page = await ctx.newPage();
   await page.goto(url, { waitUntil: 'load' });
@@ -170,10 +186,45 @@ async function checkLinks(browser: Browser, url: string, bookingHosts: RegExp, o
  * three seconds, and a gate stays longer than that, so the report is answered here and never
  * reaches the real address: a check is not counted as a visit.
  */
+/** The browser mark the pages read to know a visit is ours (OWN_VISITS in apps/previews/lib/offer.ts). */
+export const OWN_VISIT = { param: 'nahl-own', key: 'nahl-own' };
+
 export async function quietContext(browser: Browser, options: BrowserContextOptions = {}): Promise<BrowserContext> {
   const ctx = await browser.newContext(options);
+  // Marked as ours, so the page itself sends nothing, and anything that still tried is answered here.
+  await ctx.addInitScript((key: string) => {
+    try {
+      window.localStorage.setItem(key, '1');
+    } catch {
+      // A page with no storage still has its report blocked below.
+    }
+  }, OWN_VISIT.key);
   await ctx.route('**/api/demo-visit', (route) => route.fulfill({ status: 204, body: '' }));
   return ctx;
+}
+
+/**
+ * The own visit mark: a page opened once with the query flag, then opened again without it, sends
+ * nothing either time, and the flag is gone from the address. Reports are answered here, never sent.
+ */
+export async function checkOwnFlag(browser: Browser, url: string): Promise<{ ok: boolean; posts: number; flagLeft: boolean }> {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  let posts = 0;
+  await ctx.route('**/api/demo-visit', async (route) => {
+    posts++;
+    await route.fulfill({ status: 204, body: '' });
+  });
+  const page = await ctx.newPage();
+  let flagLeft = false;
+  for (const address of [`${url}${url.includes('?') ? '&' : '?'}${OWN_VISIT.param}=1`, url]) {
+    await page.goto(address, { waitUntil: 'load' });
+    await page.waitForTimeout(1500);
+    await page.touchscreen.tap(30, 250).catch(() => undefined);
+    await page.waitForTimeout(4500);
+    if (page.url().includes(`${OWN_VISIT.param}=`)) flagLeft = true;
+  }
+  await ctx.close();
+  return { ok: posts === 0 && !flagLeft, posts, flagLeft };
 }
 
 /**

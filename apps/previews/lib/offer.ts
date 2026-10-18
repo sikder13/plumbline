@@ -48,8 +48,20 @@ export function demoNote(domain: string): string {
 
 export const REPLY_BUTTONS = { email: 'Reply by email', call: 'Book a 15 minute call' };
 
+/** On an engine page the first way to answer is a reply to the email the link came in, set as a line of its own. */
+export const REPLY_LINE = { label: 'Reply to Udaay’s email', sub: 'The link to this page came in an email from Udaay. A reply there reaches him directly, and is the quickest way to ask anything.' };
+
+/** The designs that are page engines, rendered from a settings file. */
+export const ENGINE_DESIGNS = new Set(['fishing', 'paddle', 'stay', 'physio']);
+
 /** Every page lives under this path on the main site. */
 export const BASE = '/demo';
 
 /** Where a page reports that a person opened it. */
 export const VISIT_ENDPOINT = 'https://nahltech.com/api/demo-visit';
+
+/**
+ * Our own visits. Opening any page once with ?nahl-own=1 marks this browser as ours, and from then
+ * on no page reports anything from it; ?nahl-own=0 clears the mark. Every check we run sets it.
+ */
+export const OWN_VISITS = { param: 'nahl-own', key: 'nahl-own' };

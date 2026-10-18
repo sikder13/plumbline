@@ -409,6 +409,37 @@ img {
   gap: 10px;
 }
 
+/* On an engine page: the reply to Udaay's email as one large line, the call below it. */
+.reply-line {
+  margin: 8px 0 10px;
+  font-size: clamp(26px, 7vw, 40px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+.reply-line a {
+  color: #16181d !important;
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 6px;
+}
+
+.reply-line a::after {
+  content: ' \2192';
+}
+
+.reply-sub {
+  max-width: 46ch;
+  margin: 0 0 18px;
+  color: var(--muted);
+}
+
+.reply-second {
+  margin: 0 0 24px;
+  font-weight: 600;
+}
+
 .reply-buttons {
   display: flex;
   flex-wrap: wrap;

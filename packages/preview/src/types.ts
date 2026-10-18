@@ -73,8 +73,8 @@ export interface ContentFile {
   secondCheckNotes?: string[];
   /** The business name as it should read on the page, when the stored name carries extra words. */
   name?: string;
-  /** `quality` (20 to 60, 48 unless given) sets how hard a photograph is compressed: a busy one at the top of a page may need less to load in time. */
-  images: Record<string, { file: string; alt: string; widths?: number[]; position?: string; quality?: number; crop?: { left: number; top: number; width: number; height: number } }>;
+  /** `quality` (20 to 60, 48 unless given) sets how hard a photograph is compressed: a busy one at the top of a page may need less to load in time. `sharpen` applies a light, even sharpen to each size after it is resized. */
+  images: Record<string, { file: string; alt: string; widths?: number[]; position?: string; quality?: number; crop?: { left: number; top: number; width: number; height: number }; sharpen?: boolean }>;
   /** A short loop cut from the business's own film, under previews/content/<slug>/. */
   video?: { file: string };
   /** Awards and certifications shown on the business's own site, each with the page it is shown on. */

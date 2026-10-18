@@ -27,3 +27,24 @@ export function designStyles(design: string, families: string[]): { css: string;
   });
   return { css: `${faces}\n${css}`, s };
 }
+
+/**
+ * The stylesheet of an engine page: the engines' shared sheet and the engine's own, scoped to the
+ * engine, with the @font-face rules of the page's two faces only. Read when the page is rendered.
+ */
+export function engineStyles(engine: string, families: string[]): { css: string; s: Record<string, string> } {
+  const app = process.cwd();
+  const source = `${readFileSync(join(app, 'engines', 'core.css'), 'utf8')}\n${readFileSync(join(app, 'engines', engine, `${engine}.css`), 'utf8')}`;
+  const { css, classes } = scopeCss(engine, source);
+  const faces = fontFaces(readFileSync(join(app, 'app', 'faces.css'), 'utf8'), families);
+  const missing = families.filter((f) => !faces.includes(`'${f}'`));
+  if (missing.length) throw new Error(`${engine}: no @font-face rules for ${missing.join(', ')}. Use a family from scripts/fonts.mjs below "MADE TO ORDER".`);
+  const s = new Proxy(classes, {
+    get(target, key) {
+      if (typeof key !== 'string' || key in target) return target[key as string];
+      if (!/^[a-zA-Z][\w-]*$/.test(key) || key === 'then' || key === 'toJSON') return undefined;
+      throw new Error(`${engine}: the class "${key}" is used but not in its stylesheets`);
+    },
+  });
+  return { css: `${faces}\n${css}`, s };
+}

@@ -1,5 +1,5 @@
 import type { PageData } from '@/lib/data';
-import { CARE, PACKAGES, PAYMENT, REMOVAL, REPLY_BUTTONS, TOOLS, TOOLS_LINK, WHO } from '@/lib/offer';
+import { CARE, ENGINE_DESIGNS, PACKAGES, PAYMENT, REMOVAL, REPLY_BUTTONS, REPLY_LINE, TOOLS, TOOLS_LINK, WHO } from '@/lib/offer';
 
 /** The second tab: what was measured on the current site, what we offer, and how to reply. */
 export function Found({ data }: { data: PageData }) {
@@ -12,12 +12,12 @@ export function Found({ data }: { data: PageData }) {
         {/* A page whose findings all came from the second check has no cards, and goes straight on to it. */}
         {data.findings.length > 0 && (
           <>
-            <p className="found-lead">Each item below was measured on your current site, seen twice at least an hour apart, and checked again on the date shown.</p>
+            <p className="found-lead">{ENGINE_DESIGNS.has(data.design) ? 'Each item below was measured on your current site, on the date shown.' : 'Each item below was measured on your current site, seen twice at least an hour apart, and checked again on the date shown.'}</p>
             <ol className="cards">
               {data.findings.map((f) => (
                 <li key={f.check} className="card">
                   <h2>{f.title}</h2>
-                  <p>{f.sentence}</p>
+                  {f.sentence && <p>{f.sentence}</p>}
                   {f.shots.map((s, i) => (
                     <figure key={i}>
                       {s.image && <img src={s.image.src} width={s.image.width} height={s.image.height} alt={`Screenshot of your current site: ${f.title}`} loading="lazy" decoding="async" />}
@@ -27,9 +27,11 @@ export function Found({ data }: { data: PageData }) {
                   <p className="card-when">
                     Measured {f.measuredNz}, New Zealand time{f.pageUrl ? <>, on <span className="url">{f.pageUrl.replace(/^https?:\/\//, '')}</span></> : null}
                   </p>
-                  <p className="card-fix">
-                    <strong>In the new site:</strong> {f.fix}
-                  </p>
+                  {f.fix && (
+                    <p className="card-fix">
+                      <strong>In the new site:</strong> {f.fix}
+                    </p>
+                  )}
                 </li>
               ))}
             </ol>
@@ -137,18 +139,37 @@ export function Found({ data }: { data: PageData }) {
         </p>
       </section>
 
-      <section aria-labelledby="reply-h" className="reply">
-        <h2 id="reply-h" className="found-h2">Reply</h2>
-        <div className="reply-buttons">
-          <a className="button" href={mail} data-visit="cta_click">
-            {REPLY_BUTTONS.email}
-          </a>
-          <a className="button quiet" href={data.reply.call} rel="noopener" data-visit="cta_click">
-            {REPLY_BUTTONS.call}
-          </a>
-        </div>
-        <p className="small">{REMOVAL}</p>
-      </section>
+      {ENGINE_DESIGNS.has(data.design) ? (
+        // An engine page asks for one thing first: a reply to the email the link came in. The call is the second way.
+        <section aria-labelledby="reply-h" className="reply reply-first">
+          <h2 id="reply-h" className="found-h2">Reply</h2>
+          <p className="reply-line">
+            <a href={mail} data-visit="cta_click">
+              {REPLY_LINE.label}
+            </a>
+          </p>
+          <p className="reply-sub">{REPLY_LINE.sub}</p>
+          <p className="reply-second">
+            <a href={data.reply.call} rel="noopener" data-visit="cta_click">
+              {REPLY_BUTTONS.call}
+            </a>
+          </p>
+          <p className="small">{REMOVAL}</p>
+        </section>
+      ) : (
+        <section aria-labelledby="reply-h" className="reply">
+          <h2 id="reply-h" className="found-h2">Reply</h2>
+          <div className="reply-buttons">
+            <a className="button" href={mail} data-visit="cta_click">
+              {REPLY_BUTTONS.email}
+            </a>
+            <a className="button quiet" href={data.reply.call} rel="noopener" data-visit="cta_click">
+              {REPLY_BUTTONS.call}
+            </a>
+          </div>
+          <p className="small">{REMOVAL}</p>
+        </section>
+      )}
     </main>
   );
 }
