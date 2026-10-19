@@ -1,0 +1,854 @@
+/* Haute Ink Tattoo Studio: the cover of a first issue. Paper, ink, and the gold of the cicada's flowers. */
+
+.root {
+  --paper: #f6ede6;
+  --ink: #1d1517;
+  --deep: #2b2024;
+  --gold: #d9a45a;
+  --rule: #e2d3c8;
+  --muted: #5d4d51;
+  --on-deep-muted: #cdbcb3;
+  --display: 'Bodoni Moda', 'Didot', 'Bodoni 72', serif;
+  --text: 'Schibsted Grotesk', system-ui, sans-serif;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --gutter: 24px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 17px/1.5 var(--text);
+  overflow-x: clip;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* The cover. */
+
+.cover {
+  position: relative;
+  display: grid;
+}
+
+.photo {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--deep);
+}
+
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: drift 9s var(--ease) both;
+}
+
+/* A shade at the top and the foot of the photograph, so the words laid on it always read. */
+.photo::before,
+.photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.photo::before {
+  background: linear-gradient(to bottom, rgb(29 21 23 / 0.72), rgb(29 21 23 / 0) 38%);
+}
+
+.photo::after {
+  background: linear-gradient(to top, rgb(29 21 23 / 0.7), rgb(29 21 23 / 0) 34%);
+}
+
+.mast {
+  position: absolute;
+  z-index: 2;
+  top: 10px;
+  left: 0;
+  right: 0;
+  margin: 0;
+  font: 500 clamp(56px, 19vw, 300px) / 0.86 var(--display);
+  letter-spacing: -0.045em;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.mastInk,
+.mastPaper {
+  display: block;
+  animation: rise 1s var(--ease) 0.1s both;
+}
+
+.mastInk {
+  color: var(--paper);
+}
+
+.mastPaper {
+  display: none;
+}
+
+.coverLeft {
+  position: absolute;
+  z-index: 2;
+  left: var(--gutter);
+  right: var(--gutter);
+  /* The foot of the photograph: four fifths of the width down. */
+  top: calc(125vw - 92px);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  color: var(--paper);
+}
+
+.lineKind,
+.lineTown {
+  margin: 0;
+  font: italic 500 20px/1.15 var(--display);
+}
+
+.lineTown {
+  font: 600 13px/1.3 var(--text);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: right;
+}
+
+.lineCap {
+  position: absolute;
+  z-index: 2;
+  left: var(--gutter);
+  top: calc(125vw - 46px);
+  margin: 0;
+  font: 400 13px/1.3 var(--text);
+  color: rgb(246 237 230 / 0.86);
+}
+
+.lineCap b {
+  font-weight: 600;
+  margin-right: 6px;
+  color: var(--gold);
+}
+
+.coverSide {
+  padding: 22px var(--gutter) 40px;
+}
+
+.coverNow {
+  margin: 0;
+  font: 600 19px/1.3 var(--text);
+}
+
+.coverNow span::before,
+.weekNow span::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background: var(--muted);
+  vertical-align: 0.08em;
+}
+
+.coverNow span[data-open='yes']::before,
+.weekNow span[data-open='yes']::before {
+  background: #2f7d4f;
+}
+
+.coverRun {
+  margin: 4px 0 20px;
+  color: var(--muted);
+}
+
+.acts,
+.visitActs {
+  display: grid;
+  gap: 10px;
+}
+
+.call,
+.go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 0 24px;
+  border-radius: 999px;
+  font: 600 17px/1 var(--text);
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.35s var(--ease), color 0.35s var(--ease);
+}
+
+.call {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.call:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.go {
+  border: 1.5px solid var(--ink);
+  color: var(--ink);
+}
+
+.go:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Inside: the book. */
+
+.inside {
+  background: var(--deep);
+  color: var(--paper);
+  padding: 96px 0 104px;
+}
+
+.insideHead {
+  padding: 0 var(--gutter);
+  margin-bottom: 40px;
+}
+
+.insideHead h2,
+.weekHead h2 {
+  margin: 0;
+  font: 500 clamp(44px, 12vw, 60px) / 0.95 var(--display);
+  letter-spacing: -0.03em;
+}
+
+.insideHead p {
+  max-width: 40ch;
+  margin: 16px 0 0;
+  color: var(--on-deep-muted);
+  font-size: 18px;
+}
+
+.stage,
+.index {
+  display: none;
+}
+
+.swipe {
+  display: flex;
+  gap: 12px;
+  margin: 0;
+  padding: 0 var(--gutter);
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 var(--gutter);
+  scrollbar-width: none;
+}
+
+.swipe::-webkit-scrollbar {
+  display: none;
+}
+
+.swipe li {
+  flex: 0 0 78vw;
+  scroll-snap-align: start;
+}
+
+.swipe figure {
+  margin: 0;
+}
+
+.swipe img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.swipe figcaption {
+  margin-top: 12px;
+  font-size: 15px;
+  color: var(--on-deep-muted);
+}
+
+.swipe figcaption b,
+.stageCap b {
+  font: 500 22px/1 var(--display);
+  color: var(--gold);
+  margin-right: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.swipeCount {
+  margin: 18px var(--gutter) 0;
+  text-align: right;
+  font: 500 14px/1 var(--text);
+  letter-spacing: 0.08em;
+  color: var(--on-deep-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The week. */
+
+.week {
+  padding: 96px var(--gutter);
+}
+
+.weekHead {
+  margin-bottom: 32px;
+}
+
+.weekNow {
+  margin: 14px 0 0;
+  font: 600 19px/1.3 var(--text);
+}
+
+.days {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--ink);
+}
+
+.days li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 4px 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.dayName {
+  font: 500 24px/1.1 var(--display);
+}
+
+.dayTime {
+  font-variant-numeric: tabular-nums;
+  font-size: 17px;
+}
+
+.days li[data-closed] .dayTime {
+  color: var(--muted);
+}
+
+.dayMark {
+  display: none;
+  grid-column: 1 / -1;
+  justify-self: start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--ink);
+  font: 600 13px/1.2 var(--text);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.days li[data-today] {
+  border-bottom-color: var(--ink);
+}
+
+.days li[data-today] .dayName {
+  font-style: italic;
+}
+
+.days li[data-today] .dayMark {
+  display: inline-block;
+}
+
+/* Find the studio. */
+
+.visit {
+  background: var(--gold);
+  color: var(--ink);
+  padding: 88px var(--gutter) 96px;
+}
+
+.visitLabel {
+  margin: 0 0 18px;
+  font: 600 14px/1.2 var(--text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.visitAddr {
+  display: grid;
+  margin: 0 0 36px;
+  font: 500 clamp(40px, 11vw, 54px) / 1 var(--display);
+  font-style: normal;
+  letter-spacing: -0.03em;
+}
+
+.visitAddr span + span {
+  font-style: italic;
+}
+
+.visit .call {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.visit .call:hover {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.visit .go:hover {
+  background: var(--ink);
+  color: var(--gold);
+}
+
+/* The close: the name again, too big for the page. */
+
+.end {
+  background: var(--deep);
+  color: var(--paper);
+  overflow: hidden;
+  padding: 72px 0 120px;
+}
+
+.endMark {
+  margin: 0 0 40px;
+  padding: 0 0 0 2vw;
+  font: italic 500 31vw/0.8 var(--display);
+  letter-spacing: -0.05em;
+  white-space: nowrap;
+  color: var(--gold);
+}
+
+.endSmall {
+  padding: 0 var(--gutter);
+  display: grid;
+  gap: 8px;
+  max-width: 64ch;
+  font-size: 14px;
+  color: var(--on-deep-muted);
+}
+
+.endSmall p {
+  margin: 0;
+}
+
+.endSmall a {
+  color: var(--paper);
+}
+
+/* The floating bar on a phone, once the cover has gone by, and never over the buttons it repeats. */
+
+.bar {
+  position: fixed;
+  z-index: 40;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 999px;
+  background: rgb(29 21 23 / 0.92);
+  backdrop-filter: blur(10px);
+  transform: translateY(160%);
+  transition: transform 0.45s var(--ease);
+}
+
+:global([data-past-hero]:not([data-covered])) .bar {
+  transform: none;
+}
+
+.bar a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: 999px;
+  font: 600 16px/1 var(--text);
+  text-decoration: none;
+}
+
+.barCall {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.barGo {
+  color: var(--paper);
+  border: 1px solid rgb(246 237 230 / 0.4);
+}
+
+/* Desktop: the cover stands in the middle and the masthead runs across its edges. */
+
+@media (min-width: 900px) {
+  .root {
+    --gutter: 56px;
+    --cw: min(40vw, calc((100svh - 36px - 72px) * 0.75));
+  }
+
+  .cover {
+    min-height: calc(100svh - 36px);
+    grid-template-columns: [l] 1fr [c] var(--cw) [r] 1fr;
+    grid-template-rows: 1fr auto;
+    padding: 24px 0 48px;
+  }
+
+  .photo {
+    grid-column: c;
+    grid-row: 1 / span 2;
+    aspect-ratio: 3 / 4;
+    width: var(--cw);
+  }
+
+  .photo::after {
+    background: linear-gradient(to top, rgb(29 21 23 / 0.55), rgb(29 21 23 / 0) 24%);
+  }
+
+  .mast {
+    top: 8vh;
+    font-size: min(19vw, 300px);
+  }
+
+  .mastInk {
+    color: var(--ink);
+  }
+
+  /* The same word over the photograph in paper, cut to the cover's edges, so the masthead changes colour where it crosses them. */
+  .mastPaper {
+    display: block;
+    position: absolute;
+    inset: 0;
+    color: var(--paper);
+    clip-path: inset(0 calc((100% - var(--cw)) / 2));
+  }
+
+  .coverLeft {
+    position: static;
+    grid-column: l;
+    grid-row: 2;
+    align-self: end;
+    display: grid;
+    gap: 10px;
+    padding: 0 40px 8px var(--gutter);
+    color: var(--ink);
+  }
+
+  .lineKind {
+    font-size: clamp(28px, 2.6vw, 40px);
+  }
+
+  .lineTown {
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .lineCap {
+    grid-column: c;
+    grid-row: 2;
+    position: relative;
+    left: auto;
+    top: auto;
+    align-self: end;
+    padding: 0;
+    transform: translateY(calc(100% + 10px));
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .lineCap b {
+    color: var(--ink);
+  }
+
+  .coverSide {
+    grid-column: r;
+    grid-row: 2;
+    align-self: end;
+    padding: 0 var(--gutter) 8px 40px;
+  }
+
+  .acts {
+    max-width: 320px;
+  }
+
+  .inside {
+    padding: 144px 0 152px;
+  }
+
+  .insideHead {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+    gap: 40px;
+    margin-bottom: 64px;
+  }
+
+  .insideHead h2,
+  .weekHead h2 {
+    font-size: clamp(56px, 6vw, 104px);
+  }
+
+  .insideHead p {
+    margin: 0;
+    justify-self: end;
+    max-width: 34ch;
+  }
+
+  .book {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 64px;
+    padding: 0 var(--gutter);
+    align-items: start;
+  }
+
+  .swipe,
+  .swipeCount {
+    display: none;
+  }
+
+  .stage {
+    display: block;
+    position: relative;
+    aspect-ratio: 3 / 4;
+    max-height: 82vh;
+  }
+
+  .page {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    clip-path: inset(0 0 0 100%);
+    transition: opacity 0.45s var(--ease), clip-path 0.5s var(--ease);
+  }
+
+  .page[data-on] {
+    opacity: 1;
+    clip-path: inset(0);
+    z-index: 1;
+  }
+
+  .page img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .stageCap {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 18px);
+    margin: 0;
+    font-size: 16px;
+    color: var(--on-deep-muted);
+  }
+
+  .turns {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .turn {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid rgb(246 237 230 / 0.35);
+    border-radius: 50%;
+    background: none;
+    color: var(--paper);
+    cursor: pointer;
+  }
+
+  .turn svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .turn:hover {
+    background: var(--paper);
+    color: var(--deep);
+  }
+
+  .count {
+    font: 500 14px/1 var(--text);
+    letter-spacing: 0.08em;
+    font-variant-numeric: tabular-nums;
+    color: var(--on-deep-muted);
+  }
+
+  .index {
+    display: block;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid rgb(246 237 230 / 0.22);
+  }
+
+  .index button {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    align-items: baseline;
+    gap: 16px;
+    width: 100%;
+    min-height: 64px;
+    padding: 14px 0;
+    border: 0;
+    border-bottom: 1px solid rgb(246 237 230 / 0.22);
+    background: none;
+    color: rgb(246 237 230 / 0.62);
+    font: 400 20px/1.2 var(--text);
+    text-align: left;
+    cursor: pointer;
+    transition: color 0.35s var(--ease), padding 0.35s var(--ease);
+  }
+
+  .index b {
+    font: 500 28px/1 var(--display);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .index i {
+    font-style: normal;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .index button:hover,
+  .index button[aria-pressed='true'] {
+    color: var(--paper);
+  }
+
+  .index button[aria-pressed='true'] {
+    padding-left: 12px;
+  }
+
+  .index button[aria-pressed='true'] b {
+    color: var(--gold);
+  }
+
+  .week {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 64px;
+    padding: 152px var(--gutter);
+  }
+
+  .weekHead {
+    position: sticky;
+    top: 64px;
+    align-self: start;
+  }
+
+  .days li {
+    grid-template-columns: 1.2fr 1fr auto;
+    padding: 20px 0;
+  }
+
+  .dayName {
+    font-size: 32px;
+  }
+
+  .dayTime {
+    font-size: 19px;
+  }
+
+  .dayMark {
+    grid-column: auto;
+    justify-self: end;
+    display: inline-block;
+    visibility: hidden;
+  }
+
+  .days li[data-today] .dayMark {
+    visibility: visible;
+  }
+
+  .visit {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 40px;
+    padding: 144px var(--gutter);
+  }
+
+  .visitLabel {
+    grid-column: 1 / -1;
+  }
+
+  .visitAddr {
+    margin: 0;
+    font-size: clamp(56px, 6.4vw, 112px);
+  }
+
+  .visitActs {
+    grid-template-columns: auto auto;
+  }
+
+  .endMark {
+    font-size: 24vw;
+    margin-bottom: 56px;
+  }
+
+  .bar {
+    display: none;
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(0.24em);
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    transform: none;
+    clip-path: inset(0 0 -0.2em 0);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: scale(1.07);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@media (min-width: 900px) {
+  @keyframes rise {
+    from {
+      transform: translateY(0.24em);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo img,
+  .mastInk,
+  .mastPaper {
+    animation: none;
+  }
+  .page {
+    transition: none;
+  }
+}
