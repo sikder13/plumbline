@@ -23,6 +23,7 @@ import {
   type WaveRow,
 } from '@plumbline/wave';
 import { parseCsv } from './csv.ts';
+import { bookDirectAudit } from './book-direct.ts';
 
 export interface WaveRunOptions {
   wave: string;
@@ -155,5 +156,13 @@ export function registerWaveRun(wave: Command): void {
     .option('--rank-only', 'open no site: rank and write the packs from the stored results')
     .option('--speed-only', 'measure phone speed again and nothing else')
     .option('--no-reserves', 'leave the reserve rows out')
-    .action((o: { wave: string; batch: string; file?: string; only?: string; parallel: number; rankOnly?: boolean; speedOnly?: boolean; reserves?: boolean }) => waveRun(o));
+    .option('--audit-only', 'Book Direct: audit the leads that passed the contact gate (data/book-direct/leads/_verified.csv); no packs')
+    .option('--no-speed', 'with --audit-only: leave out the Lighthouse measurement')
+    .action((o: { wave: string; batch: string; file?: string; only?: string; parallel: number; rankOnly?: boolean; speedOnly?: boolean; reserves?: boolean; auditOnly?: boolean; speed?: boolean }) => {
+      if (o.auditOnly) {
+        if (!o.wave.startsWith('book-direct')) throw new Error('--audit-only is for a book-direct wave');
+        return bookDirectAudit({ only: o.only, parallel: o.parallel, speed: o.speed });
+      }
+      return waveRun(o);
+    });
 }

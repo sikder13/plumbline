@@ -5,3 +5,7 @@ export * from './engines.ts';
 export * from './site.ts';
 export * from './verify.ts';
 export * from './contacts.ts';
+export * from './classes.ts';
+export * from './audit.ts';
+export * from './qualify.ts';
+export * from './qualify-run.ts';
