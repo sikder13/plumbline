@@ -1,0 +1,48 @@
+# The sweep: Google Places Text Search for businesses that already have a profile and may have no website.
+# One query per term per area, up to three pages of 20. Each area is a location bias, not a hard edge.
+
+terms:
+  beauty: [barber shop, hair salon, nail salon, lash studio, braiding salon, tattoo studio]
+  food: [taqueria, food truck, bakery, coffee shop, pizza, soul food restaurant]
+  auto_home: [auto detailing, tire shop, mechanic, lawn care, pressure washing, house cleaning]
+
+# Cities, each split into areas so queries reach different parts of town. Radius in kilometres.
+cities:
+  indianapolis:
+    name: Indianapolis
+    areas:
+      - { id: downtown, label: Downtown, lat: 39.7684, lng: -86.1581, radiusKm: 8 }
+      - { id: north, label: North and Broad Ripple, lat: 39.8687, lng: -86.1430, radiusKm: 8 }
+      - { id: east, label: East, lat: 39.7800, lng: -86.0350, radiusKm: 8 }
+      - { id: south, label: South and Greenwood edge, lat: 39.6630, lng: -86.1270, radiusKm: 8 }
+      - { id: west, label: West and Speedway, lat: 39.7800, lng: -86.2650, radiusKm: 8 }
+      - { id: northeast, label: Northeast and Castleton, lat: 39.9070, lng: -86.0570, radiusKm: 8 }
+  fort-wayne:
+    name: Fort Wayne
+    areas:
+      - { id: central, label: Central, lat: 41.0793, lng: -85.1394, radiusKm: 8 }
+      - { id: north, label: North, lat: 41.1500, lng: -85.1300, radiusKm: 8 }
+      - { id: southwest, label: Southwest, lat: 41.0300, lng: -85.2000, radiusKm: 8 }
+      - { id: east, label: East and New Haven edge, lat: 41.0800, lng: -85.0600, radiusKm: 8 }
+  evansville:
+    name: Evansville
+    areas:
+      - { id: central, label: Central, lat: 37.9716, lng: -87.5711, radiusKm: 8 }
+      - { id: east, label: East, lat: 37.9800, lng: -87.4900, radiusKm: 8 }
+      - { id: north, label: North, lat: 38.0400, lng: -87.5500, radiusKm: 8 }
+  south-bend:
+    name: South Bend
+    areas:
+      - { id: central, label: Central, lat: 41.6764, lng: -86.2520, radiusKm: 8 }
+      - { id: mishawaka, label: Mishawaka, lat: 41.6620, lng: -86.1586, radiusKm: 8 }
+      - { id: north, label: North, lat: 41.7300, lng: -86.2500, radiusKm: 8 }
+  lafayette:
+    name: Lafayette
+    areas:
+      - { id: central, label: Lafayette and West Lafayette, lat: 40.4200, lng: -86.8900, radiusKm: 8 }
+      - { id: south, label: South Lafayette, lat: 40.3700, lng: -86.8600, radiusKm: 8 }
+  bloomington:
+    name: Bloomington
+    areas:
+      - { id: central, label: Central, lat: 39.1653, lng: -86.5264, radiusKm: 8 }
+      - { id: east, label: East, lat: 39.1650, lng: -86.4700, radiusKm: 8 }

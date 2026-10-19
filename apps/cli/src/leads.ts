@@ -5,7 +5,7 @@ import { cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rm
 import { db } from '@plumbline/core';
 import { BASE_PATH, buildOpenSignPage, checkOpenSignPage, numbersIn, previewPaths, serveSite, type PageData } from '@plumbline/preview';
 import { scriptsAfterPaint, VERCEL_JSON } from './preview.ts';
-import { campaignPaths, enrich, pickBatch, pullLeads, writeEnriched, type PoolRow } from '@plumbline/leads';
+import { campaignPaths, enrich, pickBatch, pickSweepBatch, pullLeads, sweep, writeEnriched, type PoolRow } from '@plumbline/leads';
 
 function readCandidates(campaign: string): PoolRow[] {
   const [head, ...lines] = readFileSync(join(campaignPaths(campaign).leads, '_candidates.csv'), 'utf8').trim().split('\n');
@@ -67,6 +67,35 @@ export function registerLeads(program: Command): Command {
     .option('--ceiling <n>', 'Places calls allowed today, all kinds together', '300')
     .action(async (opts: { campaign: string; batch: string; ceiling: string }) => {
       const r = await pickBatch(opts.campaign, opts.batch, { ceiling: Number(opts.ceiling), log: console.log });
+      console.log(`picked ${r.picked.length}, alternates ${r.alternates.map((a) => a.slug).join(', ')}, Places calls this run ${r.calls}`);
+      if (r.stopped) {
+        console.log(`STOPPED: ${r.stopped}`);
+        process.exitCode = 2;
+      }
+    });
+  leads
+    .command('sweep')
+    .description('Find businesses already on Google with no website: every trade term in every area of a city, filtered, scored, all cached')
+    .requiredOption('--campaign <name>', 'campaign folder under config/ and data/')
+    .requiredOption('--city <id>', 'a city in config/<campaign>/sweep.yml, such as indianapolis')
+    .option('--ceiling <n>', 'Places calls allowed today, every ledger of the campaign together', '1950')
+    .option('--details-cap <n>', 'Place Details calls at most', '1200')
+    .action(async (opts: { campaign: string; city: string; ceiling: string; detailsCap: string }) => {
+      const { summary: s } = await sweep(opts.campaign, { city: opts.city, ceiling: Number(opts.ceiling), detailsCap: Number(opts.detailsCap), log: console.log });
+      console.log(JSON.stringify(s, null, 2));
+      if (s.stopped) {
+        console.log(`STOPPED: ${s.stopped}`);
+        process.exitCode = 2;
+      }
+    });
+  leads
+    .command('sweep-pick')
+    .description('Pick ten and ten alternates from _sweep_scored.csv, download their Google photos and write the batch folder')
+    .requiredOption('--campaign <name>', 'campaign folder under config/ and data/')
+    .requiredOption('--batch <name>', 'batch folder, such as batch-02')
+    .option('--ceiling <n>', 'Places calls allowed today, every ledger of the campaign together', '1950')
+    .action(async (opts: { campaign: string; batch: string; ceiling: string }) => {
+      const r = await pickSweepBatch(opts.campaign, opts.batch, { ceiling: Number(opts.ceiling), log: console.log });
       console.log(`picked ${r.picked.length}, alternates ${r.alternates.map((a) => a.slug).join(', ')}, Places calls this run ${r.calls}`);
       if (r.stopped) {
         console.log(`STOPPED: ${r.stopped}`);

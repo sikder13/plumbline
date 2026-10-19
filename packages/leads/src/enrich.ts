@@ -1,5 +1,5 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { requireEnv } from '@plumbline/core';
 import { normaliseName, plainWords, ratio, tokenSetRatio, type Dictionary } from './names.ts';
 import { RECENT_DAYS, campaignPaths, loadDictionary, toCsv, type PoolRow } from './pull.ts';
@@ -148,22 +148,29 @@ function pacificDay(d = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(d);
 }
 
-/** Every call made, one line each, so a ceiling holds across runs. */
+/** Every call made, one line each, so a ceiling holds across runs. Other ledgers of the same key can be counted in. */
 export class CallLedger {
   constructor(
     private file: string,
     readonly ceiling: number,
+    private also: string[] = [],
   ) {}
-  today(): number {
-    if (!existsSync(this.file)) return 0;
-    const day = pacificDay();
-    return readFileSync(this.file, 'utf8').split('\n').filter((l) => l && (JSON.parse(l) as { day: string }).day === day).length;
+  private count(file: string, day?: string): number {
+    if (!existsSync(file)) return 0;
+    return readFileSync(file, 'utf8').split('\n').filter((l) => l && (!day || (JSON.parse(l) as { day: string }).day === day)).length;
   }
+  /** Calls made today, Pacific time, in this ledger and the others named. */
+  today(): number {
+    const day = pacificDay();
+    return [this.file, ...this.also].reduce((n, f) => n + this.count(f, day), 0);
+  }
+  /** Calls in this ledger, all time. */
   total(): number {
-    return existsSync(this.file) ? readFileSync(this.file, 'utf8').split('\n').filter(Boolean).length : 0;
+    return this.count(this.file);
   }
   take(kind: string, slug: string): void {
     if (this.today() >= this.ceiling) throw new QuotaStop(`the ceiling of ${this.ceiling} Places calls today is reached`);
+    mkdirSync(dirname(this.file), { recursive: true });
     appendFileSync(this.file, `${JSON.stringify({ day: pacificDay(), at: new Date().toISOString(), kind, slug })}\n`);
   }
 }
