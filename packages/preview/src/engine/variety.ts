@@ -55,6 +55,22 @@ export const EARLIER_TYPE_PAIRS: { by: string; display: string; text: string }[]
   { by: 'longline', display: 'Schibsted Grotesk', text: 'IBM Plex Sans' },
   { by: 'wake', display: 'Geologica', text: 'Source Serif 4' },
   { by: 'spin', display: 'DM Sans', text: 'Instrument Sans' },
+  // Open Sign batch 01.
+  { by: 'haute', display: 'Cinzel', text: 'Manrope' },
+  { by: 'plank', display: 'League Spartan', text: 'Source Serif 4' },
+  { by: 'mow', display: 'Big Shoulders Display', text: 'Work Sans' },
+  { by: 'column', display: 'Unbounded', text: 'Onest' },
+  // Open Sign batch 02.
+  { by: 'cottage', display: 'Marcellus', text: 'Alegreya' },
+  { by: 'letterboard', display: 'Oswald', text: 'Bitter' },
+  { by: 'ticket', display: 'Roboto Slab', text: 'Martian Mono' },
+  { by: 'panorama', display: 'Zilla Slab', text: 'Hanken Grotesk' },
+  { by: 'plate', display: 'Young Serif', text: 'Instrument Sans' },
+  { by: 'shelf', display: 'Abril Fatface', text: 'Work Sans' },
+  { by: 'tier', display: 'Yeseva One', text: 'Sora' },
+  { by: 'mesa', display: 'Bricolage Grotesque', text: 'Fraunces' },
+  { by: 'bay', display: 'Syne', text: 'Familjen Grotesk' },
+  { by: 'deck', display: 'Rozha One', text: 'Outfit' },
 ];
 
 const key = (display: string, text: string) => `${display.toLowerCase()}|${text.toLowerCase()}`;

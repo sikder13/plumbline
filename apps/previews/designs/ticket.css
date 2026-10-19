@@ -1,0 +1,560 @@
+/* South Indy Auto Repair: ticket paper, their logo's red, black and gold, the field's green. */
+
+.root {
+  --paper: #f4efe2;
+  --ink: #242324;
+  --red: #9e2a26;
+  --gold: #e6c787;
+  --field: #4a6328;
+  --rule: #d6ccb6;
+  --muted: #5d574b;
+  --display: 'Roboto Slab', 'Rockwell', serif;
+  --mono: 'Martian Mono', ui-monospace, monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: 24px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 15px/1.6 var(--mono);
+  overflow-x: clip;
+}
+
+.root a:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+
+.hero {
+  display: grid;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.photo {
+  position: relative;
+  aspect-ratio: 4 / 4.4;
+  overflow: hidden;
+}
+
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: drift 9s var(--ease) both;
+}
+
+.side {
+  padding: 22px var(--gutter) 40px;
+}
+
+.street {
+  margin: 0 0 12px;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.title {
+  margin: 0;
+  font: 800 clamp(40px, 11.4vw, 56px) / 0.98 var(--display);
+  letter-spacing: -0.02em;
+  animation: rise 1s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+.source {
+  margin: 10px 0 22px;
+  font-size: 12px;
+  color: #c9c3b6;
+}
+
+.acts {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 8px;
+}
+
+.call,
+.go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 10px;
+  font: 700 13px/1.2 var(--mono);
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  text-align: center;
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.call {
+  background: var(--red);
+  color: var(--paper);
+}
+
+.call:hover {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.go {
+  box-shadow: inset 0 0 0 2px var(--gold);
+  color: var(--gold);
+}
+
+.go:hover {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+/* The work order. */
+
+.orderSec {
+  padding: 80px var(--gutter) 72px;
+}
+
+.order {
+  position: relative;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 30px 22px 26px;
+  background: #fffdf6;
+  border: 1px solid var(--rule);
+  box-shadow: 0 16px 40px rgb(36 35 36 / 0.1);
+}
+
+/* The torn perforation along the top of a pad ticket. */
+.order::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: 8px;
+  background: radial-gradient(circle at 6px -1px, var(--paper) 5px, transparent 5.5px) 0 0 / 14px 8px repeat-x;
+}
+
+.orderHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.orderHead h2 {
+  margin: 0;
+  font: 800 30px/1 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.stampWrap {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  min-height: 52px;
+}
+
+.stamp {
+  display: inline-block;
+  padding: 6px 12px;
+  border: 3px solid currentColor;
+  border-radius: 4px;
+  font: 800 18px/1 var(--display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--red);
+  transform: rotate(-6deg) scale(1.8);
+  opacity: 0;
+}
+
+.stamp[data-open='yes'] {
+  color: var(--field);
+}
+
+.stamp[data-down] {
+  animation: stamp 0.42s cubic-bezier(0.5, 0, 0.75, 0) both;
+}
+
+.stampLine {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.fields {
+  margin: 0;
+}
+
+.fields div {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.fields dt {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-top: 3px;
+}
+
+.fields dd {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  font: 600 18px/1.35 var(--display);
+}
+
+.fields a {
+  color: var(--red);
+  font-variant-numeric: tabular-nums;
+}
+
+.run {
+  font: 400 14px/1.5 var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.run b {
+  font-weight: 700;
+}
+
+/* Every kind of car. */
+
+.kindsSec {
+  padding: 32px var(--gutter) 96px;
+  text-align: center;
+}
+
+.kindsQuote {
+  max-width: 22ch;
+  margin: 0 auto;
+  font: 700 clamp(28px, 7.6vw, 40px) / 1.15 var(--display);
+}
+
+.kindsSource {
+  margin: 14px 0 32px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.kinds {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: 800 clamp(52px, 16vw, 80px) / 0.95 var(--display);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+.kinds li:nth-child(1) {
+  color: var(--red);
+}
+
+.kinds li:nth-child(3) {
+  -webkit-text-stroke: 2px var(--ink);
+  color: transparent;
+}
+
+/* The shop. */
+
+.shop {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 0 0 96px;
+}
+
+.shopBig {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.shopSmall {
+  margin: 0;
+}
+
+.shop img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
+.shopBig img {
+  aspect-ratio: 4 / 3;
+}
+
+/* The close: the shop across its field, a card on it. */
+
+.end {
+  position: relative;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.endPhoto {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+}
+
+.endPhoto picture {
+  display: block;
+  height: 100%;
+}
+
+.endPhoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.endCard {
+  position: relative;
+  margin: -96px var(--gutter) 0;
+  padding: 24px 22px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 18px 40px rgb(0 0 0 / 0.3);
+}
+
+.endLabel {
+  margin: 0 0 8px;
+  font: 800 26px/1.05 var(--display);
+}
+
+.endAddr {
+  display: grid;
+  margin: 0 0 18px;
+  font-style: normal;
+}
+
+.endActs {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 8px;
+}
+
+.endGo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  box-shadow: inset 0 0 0 2px var(--ink);
+  color: var(--ink);
+  font: 700 14px/1.2 var(--mono);
+  text-decoration: none;
+}
+
+.endGo:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.small {
+  display: grid;
+  gap: 8px;
+  max-width: 62ch;
+  padding: 48px var(--gutter) 120px;
+  font-size: 12px;
+  color: #d9d3c6;
+}
+
+.small p {
+  margin: 0;
+}
+
+.small a {
+  color: var(--paper);
+}
+
+/* On a phone: a shop tag hanging at the right, the number on it. */
+
+.bar {
+  position: fixed;
+  z-index: 40;
+  right: 14px;
+  bottom: 16px;
+  display: grid;
+  gap: 2px;
+  padding: 12px 18px 12px 30px;
+  background: var(--gold);
+  color: var(--ink);
+  text-decoration: none;
+  clip-path: polygon(16px 0, 100% 0, 100% 100%, 16px 100%, 0 50%);
+  font: 700 14px/1.2 var(--mono);
+  font-variant-numeric: tabular-nums;
+  transform: translateX(130%);
+  transition: transform 0.4s var(--ease);
+}
+
+.bar b {
+  font: 800 18px/1 var(--display);
+}
+
+:global([data-past-hero]:not([data-covered])) .bar {
+  transform: none;
+}
+
+@media (min-width: 900px) {
+  .root {
+    --gutter: 56px;
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 0.54fr) minmax(0, 0.46fr);
+    min-height: calc(100svh - 36px);
+  }
+
+  .photo {
+    grid-column: 2;
+    grid-row: 1;
+    aspect-ratio: auto;
+  }
+
+  .side {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: end;
+    padding: 48px var(--gutter) 56px;
+  }
+
+  .title {
+    font-size: clamp(64px, 6.6vw, 128px);
+    max-width: 11ch;
+  }
+
+  .acts {
+    grid-template-columns: auto auto;
+    justify-content: start;
+  }
+
+  .call,
+  .go {
+    padding: 0 26px;
+  }
+
+  .orderSec {
+    padding: 144px var(--gutter) 120px;
+  }
+
+  .order {
+    padding: 48px 48px 40px;
+    transform: rotate(-1deg);
+  }
+
+  .fields div {
+    grid-template-columns: 120px 1fr;
+  }
+
+  .fields dd {
+    font-size: 22px;
+  }
+
+  .kindsSec {
+    padding: 48px var(--gutter) 152px;
+  }
+
+  .kinds {
+    display: flex;
+    justify-content: center;
+    gap: 0.4em;
+    font-size: min(6.8vw, 132px);
+  }
+
+  .shop {
+    grid-template-columns: 2fr 1fr 1fr;
+    padding-bottom: 152px;
+  }
+
+  .shopBig {
+    grid-column: 1;
+  }
+
+  .shopBig img {
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .endPhoto {
+    aspect-ratio: 21 / 9;
+  }
+
+  .endCard {
+    position: absolute;
+    left: var(--gutter);
+    top: 50%;
+    width: 420px;
+    margin: 0;
+    padding: 36px 32px;
+    transform: translateY(-50%);
+  }
+
+  .endLabel {
+    font-size: 34px;
+  }
+
+  .endPhoto + .endCard {
+    top: calc(min(100vw, 1440px) * 9 / 21 / 2);
+  }
+
+  .small {
+    padding: 56px var(--gutter) 112px;
+  }
+
+  .bar {
+    display: none;
+  }
+}
+
+@keyframes stamp {
+  0% {
+    opacity: 0;
+    transform: rotate(-6deg) scale(1.8);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-6deg) scale(1);
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(0.3em);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: scale(1.07);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photo img,
+  .title {
+    animation: none;
+  }
+  .stamp {
+    transform: rotate(-6deg);
+    opacity: 1;
+  }
+  .stamp[data-down] {
+    animation: none;
+  }
+}

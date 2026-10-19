@@ -1,0 +1,532 @@
+/* L & R Flooring: their floor laid strip by strip, their logo's indigo for the action, oak and floor dark from the photos. */
+
+.root {
+  --paper: #f3eee6;
+  --soft: #e9e0d2;
+  --ink: #18140f;
+  --indigo: #2e129b;
+  --oak: #7c5430;
+  --deep: #221c13;
+  --muted: #5a4f43;
+  --on-deep: #efe7da;
+  --on-deep-muted: #c9b9a2;
+  --display: 'League Spartan', 'Futura', system-ui, sans-serif;
+  --serif: 'Source Serif 4', 'Georgia', serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: 24px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 18px/1.5 var(--serif);
+  overflow-x: clip;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 3px solid var(--oak);
+  outline-offset: 3px;
+}
+
+/* The top: their words, then their floor laid in strips, then the two ways to reach them. */
+
+.hero {
+  display: grid;
+}
+
+.say {
+  padding: 20px var(--gutter) 22px;
+}
+
+.mark {
+  margin: 0 0 14px;
+  color: var(--indigo);
+  font: 400 17px/1 var(--serif);
+}
+
+.mark b {
+  font: 800 17px/1 var(--display);
+  letter-spacing: 0.02em;
+}
+
+.mark i {
+  font-style: italic;
+}
+
+.title {
+  margin: 0;
+  font: 700 clamp(44px, 12.6vw, 64px) / 0.9 var(--display);
+  letter-spacing: -0.035em;
+  color: var(--indigo);
+}
+
+.title span {
+  display: block;
+  animation: rise 1s cubic-bezier(0.16, 1, 0.3, 1) calc(0.25s + var(--i) * 0.16s) both;
+}
+
+.amp {
+  display: inline-block !important;
+  margin: -0.06em 0 -0.1em;
+  font-size: 1.5em;
+  line-height: 0.9;
+  color: var(--oak);
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  font: italic 400 16px/1.45 var(--serif);
+  color: var(--muted);
+}
+
+.photo {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--deep);
+}
+
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.strips {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: repeat(7, 1fr);
+  pointer-events: none;
+}
+
+.strips i {
+  background: var(--paper);
+  border-bottom: 1px solid var(--soft);
+  animation: lay 0.75s var(--ease) calc(0.12s + var(--i) * 0.085s) both;
+}
+
+/* Calls: ruled lines, like rows of a spec sheet, each with its arrow. */
+.acts {
+  display: grid;
+  padding: 14px var(--gutter) 44px;
+}
+
+.call,
+.go {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 60px;
+  padding: 0 4px;
+  border-bottom: 1.5px solid var(--ink);
+  color: var(--ink);
+  font: 600 18px/1.1 var(--display);
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.35s var(--ease), color 0.35s var(--ease), padding 0.35s var(--ease);
+}
+
+.acts > :first-child,
+.sheetActs > :first-child {
+  border-top: 1.5px solid var(--ink);
+}
+
+.call {
+  color: var(--indigo);
+}
+
+.call::after {
+  content: '\2192';
+}
+
+.call:hover,
+.go:hover {
+  padding: 0 14px;
+  background: var(--soft);
+}
+
+/* Look closer. */
+
+.closerSec {
+  background: var(--soft);
+  padding: 96px var(--gutter) 104px;
+}
+
+.closerHead h2 {
+  margin: 0;
+  font: 700 clamp(44px, 12vw, 60px) / 0.95 var(--display);
+  letter-spacing: -0.035em;
+}
+
+.closerHead p {
+  max-width: 40ch;
+  margin: 14px 0 40px;
+  font: italic 400 18px/1.5 var(--serif);
+  color: var(--muted);
+}
+
+.floors {
+  display: grid;
+  gap: 48px;
+}
+
+.floor {
+  margin: 0;
+}
+
+.frame {
+  position: relative;
+  overflow: hidden;
+  cursor: zoom-in;
+  touch-action: pan-y;
+  background: var(--deep);
+}
+
+.frame img {
+  width: 100%;
+  height: auto;
+}
+
+.lens {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  border: 3px solid var(--paper);
+  border-radius: 50%;
+  box-shadow: 0 12px 32px rgb(24 20 15 / 0.35);
+  background-repeat: no-repeat;
+  background-color: var(--deep);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s var(--ease);
+}
+
+.lens[data-on] {
+  opacity: 1;
+}
+
+.floor figcaption {
+  display: grid;
+  gap: 2px;
+  margin-top: 14px;
+}
+
+.floor figcaption b {
+  font: 700 22px/1.2 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.floor figcaption span {
+  font: italic 400 16px/1.45 var(--serif);
+  color: var(--muted);
+}
+
+.closer {
+  justify-self: start;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--indigo);
+  font: 600 15px/1 var(--display);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+/* The close: the facts as a spec sheet, with the call on it. */
+
+.sheet {
+  background: var(--deep);
+  color: var(--on-deep);
+  padding: 96px var(--gutter) 112px;
+}
+
+.sheetLabel {
+  margin: 0 0 28px;
+  font: 800 clamp(40px, 11vw, 56px) / 0.95 var(--display);
+  letter-spacing: -0.03em;
+}
+
+.specs {
+  margin: 0 0 36px;
+  border-top: 1px solid rgb(239 231 218 / 0.24);
+}
+
+.specs div {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid rgb(239 231 218 / 0.24);
+}
+
+.specs dt {
+  padding-top: 4px;
+  font: italic 400 16px/1.3 var(--serif);
+  color: var(--on-deep-muted);
+}
+
+.specs dd {
+  display: grid;
+  margin: 0;
+  font: 600 24px/1.2 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.specs small {
+  display: block;
+  margin-top: 4px;
+  font: italic 400 15px/1.3 var(--serif);
+  letter-spacing: 0;
+  color: var(--on-deep-muted);
+}
+
+.specs a {
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.sheetActs {
+  display: grid;
+}
+
+.sheet .call,
+.sheet .go,
+.sheet .sheetActs > :first-child {
+  border-color: var(--on-deep-muted);
+  color: var(--on-deep);
+}
+
+.sheet .call:hover,
+.sheet .go:hover {
+  background: var(--on-deep);
+  color: var(--deep);
+}
+
+.small {
+  display: grid;
+  gap: 8px;
+  max-width: 62ch;
+  margin-top: 64px;
+  font: 400 15px/1.55 var(--serif);
+  color: var(--on-deep-muted);
+}
+
+.small p {
+  margin: 0;
+}
+
+.small a {
+  color: var(--on-deep);
+}
+
+/* The floating bar on a phone: one band in their indigo, the number on the left, directions on the right. */
+
+.bar {
+  position: fixed;
+  z-index: 40;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: stretch;
+  background: var(--indigo);
+  box-shadow: 0 -1px 0 rgb(243 238 230 / 0.3);
+  transform: translateY(110%);
+  transition: transform 0.45s var(--ease);
+}
+
+:global([data-past-hero]:not([data-covered])) .bar {
+  transform: none;
+}
+
+.bar a {
+  display: flex;
+  align-items: center;
+  min-height: 58px;
+  color: var(--paper);
+  text-decoration: none;
+}
+
+.barCall {
+  flex: 1;
+  padding: 0 var(--gutter);
+  font: 700 17px/1 var(--display);
+  font-variant-numeric: tabular-nums;
+}
+
+.barGo {
+  padding: 0 var(--gutter);
+  font: italic 400 16px/1 var(--serif);
+  text-decoration: underline !important;
+  text-underline-offset: 4px;
+}
+
+@media (min-width: 900px) {
+  .root {
+    --gutter: 56px;
+  }
+
+  /* The headline in one line across the top, the floor laid under it to the edges, the ruled calls at its foot. */
+  .hero {
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    height: calc(100svh - 36px);
+    min-height: 640px;
+  }
+
+  .say {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0 40px;
+    padding: 36px var(--gutter) 26px;
+  }
+
+  .mark {
+    grid-column: 1 / -1;
+  }
+
+  .title {
+    font-size: min(4.6vw, 112px);
+    white-space: nowrap;
+  }
+
+  .title span {
+    display: inline;
+  }
+
+  .amp {
+    margin: -0.06em 0 -0.1em -0.04em;
+    font-size: 2.4em;
+  }
+
+  .facts {
+    flex-direction: column;
+    align-items: flex-end;
+    margin: 0 0 6px;
+  }
+
+  .photo {
+    aspect-ratio: auto;
+    min-height: 0;
+  }
+
+  .acts {
+    grid-template-columns: 1fr 1fr;
+    gap: 0 48px;
+    padding: 22px var(--gutter) 40px;
+  }
+
+  .acts > :nth-child(2),
+  .sheetActs > :nth-child(2) {
+    border-top: 1.5px solid var(--ink);
+  }
+
+  .sheet .sheetActs > :nth-child(2) {
+    border-color: var(--on-deep-muted);
+  }
+
+  .closerSec {
+    padding: 144px var(--gutter) 152px;
+  }
+
+  .closerHead {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+    gap: 40px;
+    margin-bottom: 56px;
+  }
+
+  .closerHead h2 {
+    font-size: clamp(64px, 7vw, 128px);
+  }
+
+  .closerHead p {
+    justify-self: end;
+    margin: 0;
+  }
+
+  .floors {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
+    align-items: end;
+    gap: 32px;
+  }
+
+  .sheet {
+    display: grid;
+    grid-template-columns: minmax(0, 0.38fr) minmax(0, 0.62fr);
+    gap: 0 48px;
+    padding: 144px var(--gutter) 112px;
+  }
+
+  .sheetLabel {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    font-size: clamp(56px, 5.4vw, 96px);
+  }
+
+  .specs {
+    grid-column: 2;
+  }
+
+  .specs div {
+    grid-template-columns: 160px 1fr;
+    padding: 24px 0;
+  }
+
+  .specs dd {
+    font-size: 34px;
+  }
+
+  .sheetActs {
+    grid-column: 2;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 32px;
+  }
+
+  .small {
+    grid-column: 1 / -1;
+    margin-top: 112px;
+  }
+
+  .bar {
+    display: none;
+  }
+}
+
+@keyframes lay {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(var(--side) * 101%));
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(0.3em);
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    transform: none;
+    clip-path: inset(0 0 -0.25em 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .strips {
+    display: none;
+  }
+  .title span {
+    animation: none;
+  }
+}

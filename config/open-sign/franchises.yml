@@ -1,0 +1,154 @@
+# Franchise and chain brands. A name containing one of these is dropped: the brand already has a site.
+# Matched without case, apostrophes or punctuation, on whole words.
+- subway
+- mcdonalds
+- wendys
+- taco bell
+- kfc
+- popeyes
+- dunkin
+- starbucks
+- dominos
+- pizza hut
+- papa johns
+- little caesars
+- jimmy johns
+- jersey mikes
+- firehouse subs
+- chick fil a
+- culvers
+- dairy queen
+- sonic drive in
+- arbys
+- burger king
+- five guys
+- wingstop
+- buffalo wild wings
+- chipotle
+- qdoba
+- panera
+- jets pizza
+- marcos pizza
+- hungry howies
+- penn station
+- white castle
+- steak n shake
+- skyline chili
+- gold star chili
+- tropical smoothie
+- smoothie king
+- nothing bundt cakes
+- crumbl
+- insomnia cookies
+- ritas italian ice
+- kona ice
+- great clips
+- sport clips
+- supercuts
+- fantastic sams
+- european wax center
+- massage envy
+- hand and stone
+- the joint chiropractic
+- orangetheory
+- anytime fitness
+- planet fitness
+- snap fitness
+- crunch fitness
+- f45
+- 9round
+- club pilates
+- pure barre
+- servpro
+- servicemaster
+- molly maid
+- merry maids
+- the cleaning authority
+- two men and a truck
+- roto rooter
+- mr rooter
+- mr electric
+- mister sparky
+- one hour heating
+- benjamin franklin plumbing
+- aire serv
+- mosquito joe
+- mosquito authority
+- lawn doctor
+- weed man
+- valvoline
+- jiffy lube
+- midas
+- meineke
+- take 5 oil
+- firestone
+- goodyear
+- mavis
+- christian brothers automotive
+- maaco
+- caliber collision
+- gerber collision
+- safelite
+- ziebart
+- tide cleaners
+- the ups store
+- cricket wireless
+- metro by t mobile
+- boost mobile
+- ubreakifix
+- cpr cell phone repair
+- batteries plus
+- kumon
+- mathnasium
+- sylvan learning
+- goddard school
+- kiddie academy
+- primrose school
+- the learning experience
+- home instead
+- right at home
+- visiting angels
+- comfort keepers
+- brightstar care
+- senior helpers
+- interim healthcare
+- dogtopia
+- camp bow wow
+- woof gang
+- 7 eleven
+- speedway
+- circle k
+- dollar general
+- family dollar
+- ace hardware
+- sherwin williams
+- h and r block
+# Added for the Open Sign sweep (RELAY-OPENSIGN-02). A name with a store number is dropped in code.
+- regis
+- cost cutters
+- take 5
+- discount tire
+- belle tire
+- tire barn
+- monro
+- mr clean car wash
+- crew carwash
+- the lash lounge
+- amazing lash
+- deka lash
+- waxing the city
+- marcos
+- jets
+- donatos
+- insomnia
+- scooters
+- 7 brew
+- biggby
+- tim hortons
+- del taco
+- two maids
+- maidpro
+- trugreen
+- grounds guys
+- fuzzys
+- condado

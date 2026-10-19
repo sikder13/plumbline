@@ -1,0 +1,470 @@
+/* TURBO TIRE SHOP: their building's blue, asphalt, white and door steel. */
+
+.root {
+  --blue: #1f6fb2;
+  --asphalt: #202228;
+  --white: #f4f6f8;
+  --steel: #8b9096;
+  --muted: #b8c0c8;
+  --display: 'Syne', system-ui, sans-serif;
+  --text: 'Familjen Grotesk', system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: 24px;
+  background: var(--asphalt);
+  color: var(--white);
+  font: 400 17px/1.55 var(--text);
+  overflow-x: clip;
+}
+
+.root a:focus-visible {
+  outline: 3px solid var(--white);
+  outline-offset: 3px;
+}
+
+/* Door slats: brushed steel with a groove at the foot of each. */
+.heroDoor i,
+.door i {
+  display: block;
+  background: linear-gradient(180deg, #a3a8ae, #868b91 80%, #5d6167 92%, #c3c7cc);
+  transform-origin: top;
+}
+
+.hero {
+  display: grid;
+}
+
+/* Their name on the blue fascia, as over the shop. */
+.fascia {
+  padding: 18px var(--gutter) 16px;
+  background: var(--blue);
+  border-bottom: 6px solid #185a92;
+}
+
+.photo {
+  position: relative;
+  aspect-ratio: 4 / 3.4;
+  overflow: hidden;
+  background: var(--blue);
+}
+
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.heroDoor,
+.door {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: repeat(8, 1fr);
+  pointer-events: none;
+}
+
+.heroDoor i {
+  animation: roll 0.42s var(--ease) calc(0.25s + var(--i) * 0.07s) both;
+}
+
+.say {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 18px;
+  padding: 20px var(--gutter) 44px;
+}
+
+.title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.3em;
+  margin: 0;
+  font: 800 clamp(30px, 9.4vw, 46px) / 1 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.title span + span {
+  font-size: 0.56em;
+  letter-spacing: 0.08em;
+}
+
+.where {
+  display: grid;
+}
+
+.street {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.now,
+.weekNow {
+  margin: 0 0 16px;
+  font: 700 16px/1.3 var(--text);
+}
+
+.now span::before,
+.weekNow span::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 6px;
+  margin-right: 10px;
+  background: var(--muted);
+  vertical-align: 0.15em;
+}
+
+.now span[data-open='yes']::before,
+.weekNow span[data-open='yes']::before {
+  background: #9bf0b0;
+}
+
+/* Calls: two square keys, blue and steel, the word large and the detail small. */
+.acts,
+.endActs {
+  display: flex;
+  gap: 6px;
+}
+
+.call,
+.go {
+  display: grid;
+  place-content: center;
+  gap: 4px;
+  width: 104px;
+  aspect-ratio: 1;
+  color: var(--white);
+  text-align: center;
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.call b,
+.go b {
+  font: 800 22px/1 var(--display);
+}
+
+.call span,
+.go span {
+  font: 600 11px/1.2 var(--text);
+  white-space: nowrap;
+}
+
+.call {
+  background: var(--blue);
+}
+
+.go {
+  background: #3a3d45;
+}
+
+.call:hover,
+.go:hover {
+  background: var(--white);
+  color: var(--asphalt);
+}
+
+/* The bays. */
+
+.baysSec {
+  padding: 96px var(--gutter);
+}
+
+.baysHead {
+  margin: 0 0 32px;
+  font: 800 clamp(46px, 13vw, 62px) / 0.95 var(--display);
+  letter-spacing: -0.03em;
+}
+
+.bays {
+  display: grid;
+  gap: 36px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bay {
+  position: relative;
+  overflow: hidden;
+  border: 6px solid #3a3d45;
+  border-top-width: 14px;
+}
+
+.bay img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
+.bay[data-on] .door i {
+  animation: roll 0.42s var(--ease) calc(var(--i) * 0.07s) both;
+}
+
+.bayLabel {
+  margin: 12px 0 0;
+  font: 700 22px/1.2 var(--display);
+}
+
+.bayLabel b {
+  margin-right: 8px;
+  color: var(--muted);
+}
+
+/* Six days. */
+
+.week {
+  padding: 96px var(--gutter);
+  background: var(--white);
+  color: var(--asphalt);
+}
+
+.weekLine {
+  margin: 0;
+  font: 800 clamp(40px, 11.6vw, 58px) / 0.95 var(--display);
+  letter-spacing: -0.03em;
+}
+
+.weekTime {
+  margin: 8px 0 12px;
+  font: 800 clamp(36px, 10vw, 52px) / 1 var(--display);
+  color: var(--blue);
+  font-variant-numeric: tabular-nums;
+}
+
+.weekClosed {
+  margin: 0 0 18px;
+  color: #4a5058;
+}
+
+.weekNow span::before {
+  background: #c7ccd2;
+}
+
+.weekNow span[data-open='yes']::before {
+  background: #2f8a4a;
+}
+
+/* The close: the shop shut for the night, the whole section its door, the address painted across it. */
+
+.end {
+  padding: 0 0 120px;
+}
+
+.shut {
+  display: grid;
+  align-content: end;
+  gap: 4px;
+  min-height: 88svh;
+  padding: 48px var(--gutter) 28px;
+  color: var(--asphalt);
+  background: repeating-linear-gradient(180deg, #a3a8ae 0, #868b91 34px, #5d6167 40px, #c3c7cc 42px);
+  border-top: 22px solid #3a3d45;
+}
+
+.shutName {
+  margin: 0 0 14px;
+  font: 800 clamp(44px, 14vw, 72px) / 0.92 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.shutAddr {
+  display: grid;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.shutTel {
+  margin-top: 10px;
+  color: var(--asphalt);
+  font: 800 26px/1 var(--display);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+
+.end .endActs {
+  margin-top: 28px;
+}
+
+.small {
+  display: grid;
+  gap: 8px;
+  max-width: 62ch;
+  margin: 48px var(--gutter) 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.small p {
+  margin: 0;
+}
+
+.small a {
+  color: var(--white);
+}
+
+/* On a phone: two blue squares at the bottom left. */
+
+.bar {
+  position: fixed;
+  z-index: 40;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  gap: 6px;
+  transform: translateY(150%);
+  transition: transform 0.4s var(--ease);
+}
+
+:global([data-past-hero]:not([data-covered])) .bar {
+  transform: none;
+}
+
+.bar a {
+  display: grid;
+  place-items: center;
+  width: 70px;
+  height: 70px;
+  color: var(--white);
+  font: 800 15px/1 var(--display);
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.4);
+}
+
+.barCall {
+  background: var(--blue);
+}
+
+.barGo {
+  background: #3a3d45;
+}
+
+@media (min-width: 900px) {
+  .root {
+    --gutter: 56px;
+  }
+
+  /* The fascia across the top, the building under it to the edges, the keys on an asphalt plate. */
+  .hero {
+    position: relative;
+    grid-template-rows: auto 1fr;
+    min-height: calc(100svh - 36px);
+  }
+
+  .fascia {
+    padding: 22px var(--gutter) 20px;
+  }
+
+  .title {
+    font-size: clamp(56px, 5.4vw, 104px);
+  }
+
+  .photo {
+    aspect-ratio: auto;
+  }
+
+  .say {
+    position: absolute;
+    left: var(--gutter);
+    bottom: 40px;
+    padding: 18px 26px 18px 18px;
+    background: var(--asphalt);
+  }
+
+  .call,
+  .go {
+    width: 120px;
+  }
+
+  .baysSec {
+    padding: 152px var(--gutter);
+  }
+
+  .baysHead {
+    font-size: clamp(72px, 7vw, 132px);
+  }
+
+  .bays {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .week {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: end;
+    gap: 0 56px;
+    padding: 160px var(--gutter);
+  }
+
+  .weekLine,
+  .weekTime {
+    font-size: clamp(64px, 6vw, 112px);
+  }
+
+  .weekTime {
+    grid-column: 1;
+  }
+
+  .weekClosed,
+  .weekNow {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  .end {
+    padding: 0 0 112px;
+  }
+
+  .shut {
+    grid-template-columns: 1fr auto;
+    column-gap: 56px;
+    min-height: 92svh;
+    padding: 72px var(--gutter) 56px;
+    background: repeating-linear-gradient(180deg, #a3a8ae 0, #868b91 52px, #5d6167 60px, #c3c7cc 62px);
+  }
+
+  .shutName {
+    grid-column: 1 / -1;
+    font-size: clamp(96px, 10vw, 190px);
+  }
+
+  .shutTel {
+    font-size: 44px;
+  }
+
+  .end .endActs {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    align-self: end;
+    margin: 0;
+  }
+
+  .small {
+    margin-top: 64px;
+  }
+
+  .bar {
+    display: none;
+  }
+}
+
+@keyframes roll {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroDoor,
+  .door {
+    display: none;
+  }
+}

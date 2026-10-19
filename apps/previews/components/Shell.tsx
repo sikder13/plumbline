@@ -6,10 +6,8 @@ import { report } from './Visits';
 
 type Tab = 'demo' | 'found';
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'demo', label: 'Demo' },
-  { id: 'found', label: 'Findings' },
-];
+const TAB_IDS: Tab[] = ['demo', 'found'];
+const TAB_LABELS: Record<Tab, string> = { demo: 'Demo', found: 'Findings' };
 
 interface Props {
   business: string;
@@ -18,6 +16,8 @@ interface Props {
   sender: { name: string; href: string };
   demo: ReactNode;
   found: ReactNode;
+  /** The words on the two tabs, when a page's second tab is not its findings. */
+  tabs?: Record<Tab, string>;
 }
 
 /**
@@ -25,7 +25,7 @@ interface Props {
  * the visitor reads down and returns when they scroll up, and a small pill at the bottom left for
  * moving between the two tabs once the opening photo has gone by. Both tabs are in the page.
  */
-export function Shell({ business, foundLink, sender, demo, found }: Props) {
+export function Shell({ business, foundLink, sender, demo, found, tabs = TAB_LABELS }: Props) {
   const [tab, setTab] = useState<Tab>('demo');
   // Until this component is awake, a small script in the page answers the tabs. This tells it to stand down.
   const [live, setLive] = useState(false);
@@ -110,9 +110,9 @@ export function Shell({ business, foundLink, sender, demo, found }: Props) {
         {found}
       </div>
       <div className="tab-pill" role="tablist" aria-label="Sections of this page">
-        {TABS.map((t) => (
-          <button key={t.id} type="button" role="tab" id={`tab-${t.id}`} aria-selected={tab === t.id} aria-controls={t.id} data-live={live ? '' : undefined} tabIndex={tab === t.id ? 0 : -1} onClick={() => show(t.id)}>
-            {t.label}
+        {TAB_IDS.map((id) => (
+          <button key={id} type="button" role="tab" id={`tab-${id}`} aria-selected={tab === id} aria-controls={id} data-live={live ? '' : undefined} tabIndex={tab === id ? 0 : -1} onClick={() => show(id)}>
+            {tabs[id]}
           </button>
         ))}
       </div>

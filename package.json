@@ -43,6 +43,7 @@
     "@plumbline/export": "workspace:*",
     "@plumbline/fetch": "workspace:*",
     "@plumbline/impact": "workspace:*",
+    "@plumbline/leads": "workspace:*",
     "@plumbline/preview": "workspace:*",
     "@plumbline/render": "workspace:*",
     "@plumbline/report": "workspace:*",
