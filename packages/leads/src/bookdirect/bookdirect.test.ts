@@ -145,6 +145,15 @@ describe('contact capture', () => {
     expect(fullSignal([page('<p>We are currently not taking new patients.</p>')])?.phrase).toMatch(/not taking new patients/);
     expect(fullSignal([page('<p>Sorry, no vacancy tonight</p>', 'book')])).not.toBeNull();
     expect(fullSignal([page('<p>Join the waitlist</p>', 'about')])).toBeNull();
+    expect(fullSignal([page('<p>We keep a waitlist for new patients.</p>')])).not.toBeNull();
+    expect(fullSignal([page('<p>Closed for the season. We reopen in October.</p>')])).not.toBeNull();
+  });
+  it('never takes a guest review, a holiday peak or a single-date waitlist for "already full"', () => {
+    expect(fullSignal([page('<p>Great location, and they went above and beyond despite being fully booked.</p>')])).toBeNull();
+    expect(fullSignal([page('<div class="reviews-widget"><p>It is always fully booked, sadly.</p></div>')])).toBeNull();
+    expect(fullSignal([page('<p>The park becomes fully booked for Christmas and New Year, so book early.</p>')])).toBeNull();
+    expect(fullSignal([page('<p>Want to join our wait list for a specific date? Call us.</p>')])).toBeNull();
+    expect(fullSignal([page('<blockquote>We stayed three nights, fully booked town but they found us a room.</blockquote>')])).toBeNull();
   });
   it('spots a web or marketing business and a site with many locations', () => {
     expect(sellsWebOrMarketing('<title>Pixel | Web Design Rotorua</title>')).toBe(true);

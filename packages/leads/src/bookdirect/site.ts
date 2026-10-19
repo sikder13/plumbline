@@ -338,16 +338,26 @@ export function bookingFacts(pages: SitePage[]): BookingFacts {
 }
 
 const FULL = /\b(?:not (?:currently )?(?:taking|accepting) (?:any )?new (?:patients|clients)|no longer (?:taking|accepting) new (?:patients|clients)|books? (?:are|is) (?:currently )?closed|wait ?list|waiting list|fully booked|closed for the (?:season|winter|summer)|no vacanc(?:y|ies))\b/i;
+/** A guest's words, not the business's: a review or testimonial. */
+const REVIEWISH = /\b(?:we|i) (?:stayed|went|spent|visited|loved|enjoyed|had|booked|arrived|will be back)\b|\bour (?:stay|visit|holiday|trip)\b|\bhighly recommend|\bdespite\b|\bwish (?:i|we) could\b|\bthank you\b|\b(?:5|five) stars?\b|\bguests?\b.{0,20}\bsaid\b/i;
+/** A note about a peak, a condition or a single date, not a statement that they are full now. */
+const NOT_NOW = /\b(?:christmas|new years?|easter|public holidays?|long weekends?|school holidays|peak (?:season|times?)|specific dates?|particular dates?|cancellations?|may be|might be|can be|could be|often|sometimes|becomes?|tends? to|so (?:book|please book)|book (?:early|ahead|in advance))\b/i;
+const REVIEW_BLOCKS = '[class*="review" i], [id*="review" i], [class*="testimonial" i], [id*="testimonial" i], [class*="trustindex" i], [class*="elfsight" i], [class*="tripadvisor" i], blockquote, q';
 
-/** "Already full" words on the homepage or a book page, with the sentence and its page. */
+/**
+ * "Already full" words on the homepage or a book page, said by the business about now: "not taking new
+ * patients", "no vacancy", "closed for the season", a waitlist for new patients. Reviews, testimonials,
+ * holiday peaks ("fully booked over Christmas, so book early") and single-date waitlists are left out.
+ */
 export function fullSignal(pages: SitePage[]): { phrase: string; url: string } | null {
   for (const p of pages.filter((x) => x.role === 'home' || x.role === 'book')) {
     if (!p.html) continue;
-    const text = visibleText(cheerio.load(p.html));
-    const m = FULL.exec(text);
-    if (m) {
-      const start = Math.max(0, text.lastIndexOf('\n', m.index) + 1);
-      return { phrase: text.slice(start, Math.min(text.length, m.index + m[0].length + 80)).replace(/\s+/g, ' ').trim().slice(0, 200), url: p.finalUrl };
+    const $ = cheerio.load(p.html);
+    $(REVIEW_BLOCKS).remove();
+    const text = visibleText($);
+    for (const sentence of text.split(/(?<=[.!?])\s+|\n+/)) {
+      if (!FULL.test(sentence) || REVIEWISH.test(sentence) || NOT_NOW.test(sentence) || sentence.length > 400) continue;
+      return { phrase: sentence.replace(/\s+/g, ' ').trim().slice(0, 200), url: p.finalUrl };
     }
   }
   return null;
