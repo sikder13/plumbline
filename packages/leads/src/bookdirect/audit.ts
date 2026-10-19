@@ -153,7 +153,29 @@ function ratesPage(pages: SitePage[], homeUrl: string): string | null {
   return pick?.finalUrl ?? null;
 }
 
+/**
+ * Leads that can still qualify first (a booking path, nothing saying they are full), those with 10 to
+ * 150 ratings before the rest, and the lists taken in turn, so a night that ends early has measured
+ * both lists where it counts.
+ */
+export function auditOrder<T extends Pick<ContactRow, 'list' | 'booking_engine_kind' | 'ota_links' | 'full_signal' | 'rating_count' | 'slug'>>(leads: T[]): T[] {
+  const likely = (l: T) => (l.booking_engine_kind !== 'none' || !!l.ota_links) && !l.full_signal;
+  const band = (l: T) => Number(l.rating_count) >= 10 && Number(l.rating_count) <= 150;
+  const rank = (a: T, b: T) => Number(likely(b)) - Number(likely(a)) || Number(band(b)) - Number(band(a)) || Number(b.rating_count) - Number(a.rating_count) || a.slug.localeCompare(b.slug);
+  const lists = [...new Set(leads.map((l) => l.list))].sort();
+  const queues = lists.map((x) => leads.filter((l) => l.list === x).sort(rank));
+  const out: T[] = [];
+  // Within each tier of likelihood, the lists alternate.
+  for (const want of [true, false]) {
+    const qs = queues.map((q) => q.filter((l) => likely(l) === want));
+    for (let i = 0; qs.some((q) => i < q.length); i++) for (const q of qs) if (i < q.length) out.push(q[i]!);
+  }
+  return out;
+}
+
 export interface AuditOptions {
+  /** Audit at most this many new leads in this run (those already audited are kept). */
+  max?: number;
   parallel?: number;
   lighthouseParallel?: number;
   only?: string[];
@@ -169,9 +191,12 @@ export async function auditVerified(opts: AuditOptions = {}): Promise<{ records:
   mkdirSync(join(dir, 'shots'), { recursive: true });
   let leads = parseCsv(readFileSync(join(p.leads, '_verified.csv'), 'utf8')) as unknown as ContactRow[];
   if (opts.only) leads = leads.filter((l) => opts.only!.includes(l.slug));
-  // Leads that can still qualify are measured first, so a short night spends its time where it counts.
-  const likely = (l: ContactRow) => (l.booking_engine_kind !== 'none' || !!l.ota_links) && !l.full_signal;
-  leads.sort((a, b) => Number(likely(b)) - Number(likely(a)) || Number(b.rating_count) - Number(a.rating_count));
+  leads = auditOrder(leads);
+  if (opts.max) {
+    const dir0 = join(p.data, 'audit');
+    const doneAlready = leads.filter((l) => existsSync(join(dir0, `${l.slug}.json`)));
+    leads = [...doneAlready, ...leads.filter((l) => !existsSync(join(dir0, `${l.slug}.json`))).slice(0, opts.max)];
+  }
   const polite = new Polite(new HostLimiter(BOOK_DIRECT_GAP_MS));
   const renderer = new Renderer(polite);
   const limit = pLimit(opts.parallel ?? 6);

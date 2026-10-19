@@ -34,6 +34,7 @@ export function registerBookDirectLeads(leads: Command): void {
       if (opts.campaign !== 'book-direct') throw new Error('contacts is for --campaign book-direct');
       const { summary } = await captureContacts({ lists: opts.list?.toUpperCase().split(','), parallel: Number(opts.parallel), log: console.log });
       console.log(JSON.stringify(summary, null, 2));
+      process.exit(0);
     });
   leads
     .command('qualify')
@@ -44,13 +45,14 @@ export function registerBookDirectLeads(leads: Command): void {
       if (opts.campaign !== 'book-direct') throw new Error('qualify is for --campaign book-direct');
       const s = await qualifyAll({ zeroBounceMax: opts.zerobounceMax ? Number(opts.zerobounceMax) : undefined, log: console.log });
       console.log(JSON.stringify(s, null, 2));
+      process.exit(0);
     });
 }
 
 /** Part 3: `wave run --wave book-direct-1 --audit-only` audits the leads that passed the contact gate. */
-export async function bookDirectAudit(o: { only?: string; parallel: number; speed?: boolean }): Promise<void> {
+export async function bookDirectAudit(o: { only?: string; parallel: number; speed?: boolean; max?: string }): Promise<void> {
   const started = Date.now();
-  const { records } = await auditVerified({ parallel: o.parallel, lighthouseParallel: 4, only: o.only?.split(','), speed: o.speed !== false, log: console.log });
+  const { records } = await auditVerified({ parallel: o.parallel, lighthouseParallel: 4, only: o.only?.split(','), speed: o.speed !== false, max: o.max ? Number(o.max) : undefined, log: console.log });
   writeFileSync(join(bookDirectPaths().leads, '_audit.csv'), auditCsv(records));
   console.log(`${records.length} audited in ${Math.round((Date.now() - started) / 1000)} s; ${records.filter((r) => !r.facts.speed.measured).length} without a speed measurement`);
 }

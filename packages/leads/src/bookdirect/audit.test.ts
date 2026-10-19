@@ -152,3 +152,12 @@ describe('room to sell', () => {
     expect(roomToSell(q({ findings: [], ratingCount: 5, verifyFlags: ['needs_verifier'] })).score).toBe(0);
   });
 });
+
+describe('audit order', () => {
+  it('puts leads that can still qualify first, 10 to 150 ratings first, and takes the lists in turn', async () => {
+    const { auditOrder } = await import('./audit.ts');
+    const l = (slug: string, list: string, kind: string, count: number, full = '') => ({ slug, list, booking_engine_kind: kind, ota_links: '', full_signal: full, rating_count: String(count) });
+    const order = auditOrder([l('a1', 'A', 'none', 50), l('a2', 'A', 'own', 300), l('a3', 'A', 'own', 40), l('b1', 'B', 'generic', 20), l('b2', 'B', 'own', 90, 'waitlist')]).map((x) => x.slug);
+    expect(order).toEqual(['a3', 'b1', 'a2', 'a1', 'b2']);
+  });
+});
