@@ -106,7 +106,8 @@ function distance(a: string, b: string): number {
   return prev[b.length]!;
 }
 
-function ratio(a: string, b: string): number {
+/** How alike two strings are, 0 to 1, by edit distance. */
+export function ratio(a: string, b: string): number {
   const total = a.length + b.length;
   return total === 0 ? 1 : (total - distance(a, b)) / total;
 }
