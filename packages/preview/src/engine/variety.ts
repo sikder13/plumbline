@@ -56,7 +56,7 @@ export const EARLIER_TYPE_PAIRS: { by: string; display: string; text: string }[]
   { by: 'wake', display: 'Geologica', text: 'Source Serif 4' },
   { by: 'spin', display: 'DM Sans', text: 'Instrument Sans' },
   // Open Sign batch 01.
-  { by: 'haute', display: 'Bodoni Moda', text: 'Schibsted Grotesk' },
+  { by: 'haute', display: 'Cinzel', text: 'Manrope' },
   { by: 'plank', display: 'League Spartan', text: 'Source Serif 4' },
   { by: 'mow', display: 'Big Shoulders Display', text: 'Work Sans' },
   { by: 'column', display: 'Unbounded', text: 'Onest' },

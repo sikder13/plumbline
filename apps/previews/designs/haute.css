@@ -1,140 +1,152 @@
-/* Haute Ink Tattoo Studio: the cover of a first issue. Paper, ink, and the gold of the cicada's flowers. */
+/* Haute Ink Tattoo Studio: their own logo's colours. Jade marble, the white of its centre, gold leaf and black script. */
 
 .root {
-  --paper: #f6ede6;
-  --ink: #1d1517;
-  --deep: #2b2024;
-  --gold: #d9a45a;
-  --rule: #e2d3c8;
-  --muted: #5d4d51;
-  --on-deep-muted: #cdbcb3;
-  --display: 'Bodoni Moda', 'Didot', 'Bodoni 72', serif;
-  --text: 'Schibsted Grotesk', system-ui, sans-serif;
+  --paper: #f0f6f2;
+  --marble: #dfece4;
+  --ink: #10221c;
+  --deep: #133a30;
+  --jade: #2c7259;
+  --gold: #c9a04a;
+  --leaf: #e6cf8a;
+  --rule: #c3d9cc;
+  --muted: #46605a;
+  --on-deep-muted: #b7d1c4;
+  --display: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  --text: 'Manrope', system-ui, sans-serif;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --gutter: 24px;
   background: var(--paper);
   color: var(--ink);
-  font: 400 17px/1.5 var(--text);
+  font: 400 17px/1.55 var(--text);
   overflow-x: clip;
 }
 
 .root a:focus-visible,
 .root button:focus-visible {
-  outline: 3px solid var(--gold);
+  outline: 3px solid currentColor;
   outline-offset: 3px;
 }
 
-/* The cover. */
+/* The seal: their round mark pressed into a ground of its own jade marble, gold leaf at the edges of the bands. */
 
-.cover {
+.seal {
   position: relative;
+  isolation: isolate;
   display: grid;
-}
-
-.photo {
-  position: relative;
-  aspect-ratio: 4 / 5;
+  justify-items: center;
+  padding: 24px var(--gutter) 44px;
   overflow: hidden;
-  background: var(--deep);
+  background:
+    radial-gradient(60% 34% at 18% 22%, rgb(171 207 186 / 0.8), transparent 70%),
+    radial-gradient(52% 30% at 90% 58%, rgb(143 194 167 / 0.6), transparent 72%),
+    radial-gradient(80% 40% at 50% 100%, rgb(240 246 242 / 0.95), transparent 70%),
+    var(--marble);
 }
 
-.photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  animation: drift 9s var(--ease) both;
-}
-
-/* A shade at the top and the foot of the photograph, so the words laid on it always read. */
-.photo::before,
-.photo::after {
-  content: '';
+.marble {
   position: absolute;
   inset: 0;
-  z-index: 1;
-  pointer-events: none;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
 }
 
-.photo::before {
-  background: linear-gradient(to bottom, rgb(29 21 23 / 0.72), rgb(29 21 23 / 0) 38%);
+.band {
+  fill: rgb(143 194 167 / 0.42);
 }
 
-.photo::after {
-  background: linear-gradient(to top, rgb(29 21 23 / 0.7), rgb(29 21 23 / 0) 34%);
+.bandDeep {
+  fill: rgb(95 160 128 / 0.26);
 }
 
-.mast {
+.vein {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: vein 1.9s var(--ease) calc(0.3s + var(--v) * 0.16s) both;
+}
+
+.mark {
+  position: relative;
+  width: min(70vw, 272px);
+  margin: 30px 0;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  animation: press 1.1s var(--ease) 0.1s both;
+}
+
+/* A clearing in the marble under the legend, so no vein runs through its letters. */
+.mark::before {
+  content: '';
   position: absolute;
-  z-index: 2;
-  top: 10px;
-  left: 0;
-  right: 0;
+  z-index: -1;
+  inset: -52px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--marble) 86%, rgb(223 236 228 / 0) 100%);
+}
+
+.markName {
   margin: 0;
-  font: 500 clamp(56px, 19vw, 300px) / 0.86 var(--display);
-  letter-spacing: -0.045em;
-  text-align: center;
-  white-space: nowrap;
 }
 
-.mastInk,
-.mastPaper {
-  display: block;
-  animation: rise 1s var(--ease) 0.1s both;
-}
-
-.mastInk {
-  color: var(--paper);
-}
-
-.mastPaper {
-  display: none;
-}
-
-.coverLeft {
+.legend {
   position: absolute;
-  z-index: 2;
-  left: var(--gutter);
-  right: var(--gutter);
-  /* The foot of the photograph: four fifths of the width down. */
-  top: calc(125vw - 92px);
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-  color: var(--paper);
+  top: -34px;
+  left: -34px;
+  width: calc(100% + 68px);
+  height: calc(100% + 68px);
+  overflow: visible;
+  animation: turn 120s linear infinite;
 }
 
-.lineKind,
-.lineTown {
-  margin: 0;
-  font: italic 500 20px/1.15 var(--display);
-}
-
-.lineTown {
-  font: 600 13px/1.3 var(--text);
-  letter-spacing: 0.08em;
+.legend text {
+  font: 600 8.6px/1 var(--display);
+  letter-spacing: 0.3em;
   text-transform: uppercase;
-  text-align: right;
+  fill: var(--ink);
 }
 
-.lineCap {
-  position: absolute;
-  z-index: 2;
-  left: var(--gutter);
-  top: calc(125vw - 46px);
-  margin: 0;
-  font: 400 13px/1.3 var(--text);
-  color: rgb(246 237 230 / 0.86);
+.markName picture,
+.markName img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
 }
 
-.lineCap b {
-  font-weight: 600;
-  margin-right: 6px;
-  color: var(--gold);
+/* A coin's double rim in gold, the marble showing between. On the image, so the clearing never covers it. */
+.markName img {
+  box-shadow:
+    0 0 0 2px var(--gold),
+    0 0 0 7px var(--marble),
+    0 0 0 8px var(--gold),
+    0 26px 60px rgb(19 58 48 / 0.3);
 }
 
-.coverSide {
-  padding: 22px var(--gutter) 40px;
+.say {
+  justify-self: stretch;
+  margin-top: 20px;
+}
+
+/* Their own words, set as engraved capitals: Cinzel draws the lowercase as small capitals. */
+.words::before {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 2px;
+  margin-bottom: 18px;
+  background: var(--gold);
+}
+
+.words {
+  margin: 0 0 22px;
+  font: 500 clamp(26px, 7.2vw, 34px) / 1.14 var(--display);
+  letter-spacing: 0.01em;
+  text-wrap: balance;
 }
 
 .coverNow {
@@ -156,12 +168,18 @@
 
 .coverNow span[data-open='yes']::before,
 .weekNow span[data-open='yes']::before {
-  background: #2f7d4f;
+  background: #1f7a4a;
 }
 
 .coverRun {
   margin: 4px 0 20px;
+  font-weight: 500;
   color: var(--muted);
+}
+
+/* Over the marble the outlined key keeps a pale ground, so no vein runs through its word. */
+.seal .go {
+  background: rgb(240 246 242 / 0.88);
 }
 
 .acts,
@@ -203,6 +221,111 @@
 .go:hover {
   background: var(--ink);
   color: var(--paper);
+}
+
+/* The artists their page names, each to their own Instagram, and the studio's booking line in its own words. */
+
+.artists {
+  padding: 88px var(--gutter) 96px;
+  background: var(--paper);
+}
+
+.artHead {
+  margin: 0 0 28px;
+  font: 500 clamp(40px, 11vw, 56px) / 1 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.artList {
+  display: grid;
+  margin: 0 0 44px;
+  padding: 0;
+  list-style: none;
+  border-top: 2px solid var(--gold);
+}
+
+.artList li {
+  border-bottom: 1px solid var(--rule);
+}
+
+.artist {
+  display: grid;
+  gap: 4px;
+  padding: 20px 0 22px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.artName {
+  font: 700 13px/1.3 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--jade);
+}
+
+.artHandle {
+  font: 500 clamp(28px, 8vw, 40px) / 1.1 var(--display);
+  overflow-wrap: anywhere;
+  transition: color 0.3s var(--ease);
+}
+
+/* Cinzel draws @ as a script capital; the handle's @ is set in the text face so it reads as an @. */
+.at {
+  margin-right: 0.04em;
+  font: 500 0.82em/1 var(--text);
+  color: var(--jade);
+}
+
+.artWhere {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: 600 15px/1.3 var(--text);
+  color: var(--muted);
+}
+
+.artist:hover .artHandle {
+  color: var(--jade);
+}
+
+.theirs {
+  margin: 0 0 28px;
+  padding: 2px 0 2px 20px;
+  border-left: 3px solid var(--gold);
+}
+
+.theirsText {
+  margin: 0;
+  font: 500 clamp(22px, 6vw, 28px) / 1.3 var(--display);
+}
+
+.theirsText p {
+  margin: 0;
+}
+
+.theirsText p + p {
+  margin-top: 10px;
+  font-size: 0.78em;
+}
+
+.theirsBy {
+  margin-top: 12px;
+  font: 600 14px/1.3 var(--text);
+  color: var(--muted);
+}
+
+.shop {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  color: var(--ink);
+  font: 600 17px/1.2 var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+  overflow-wrap: anywhere;
 }
 
 /* Inside: the book. */
@@ -355,7 +478,8 @@
 }
 
 .days li[data-today] .dayName {
-  font-style: italic;
+  font-weight: 700;
+  color: var(--jade);
 }
 
 .days li[data-today] .dayMark {
@@ -373,14 +497,14 @@
 
 .endLabel {
   margin: 0 var(--gutter) 24px;
-  font: italic 500 clamp(36px, 10vw, 48px) / 1 var(--display);
+  font: 500 clamp(36px, 10vw, 48px) / 1 var(--display);
   letter-spacing: -0.02em;
 }
 
 .colophon {
   display: grid;
   margin: 0 var(--gutter);
-  border-top: 1px solid rgb(246 237 230 / 0.28);
+  border-top: 1px solid rgb(240 246 242 / 0.28);
 }
 
 .colophon > div {
@@ -388,7 +512,7 @@
   align-content: start;
   gap: 8px;
   padding: 22px 0 26px;
-  border-bottom: 1px solid rgb(246 237 230 / 0.28);
+  border-bottom: 1px solid rgb(240 246 242 / 0.28);
 }
 
 .colTitle {
@@ -431,8 +555,8 @@
 .endMark {
   margin: 72px 0 40px;
   padding: 0 0 0 2vw;
-  font: italic 500 31vw/0.8 var(--display);
-  letter-spacing: -0.05em;
+  font: 500 31vw/0.8 var(--display);
+  letter-spacing: -0.02em;
   white-space: nowrap;
   color: var(--gold);
 }
@@ -467,7 +591,7 @@
   gap: 8px;
   padding: 8px;
   border-radius: 999px;
-  background: rgb(29 21 23 / 0.92);
+  background: rgb(16 34 28 / 0.92);
   backdrop-filter: blur(10px);
   transform: translateY(160%);
   transition: transform 0.45s var(--ease);
@@ -494,143 +618,111 @@
 
 .barGo {
   color: var(--paper);
-  border: 1px solid rgb(246 237 230 / 0.4);
+  border: 1px solid rgb(240 246 242 / 0.4);
 }
 
-.lineDays,
-.lineStreet {
-  display: none;
-}
-
-/* Desktop: the cover stands in the middle and the masthead runs across its edges. */
+/* Desktop: the seal on the left, as large as the screen allows, their words and the two actions beside it. */
 
 @media (min-width: 900px) {
   .root {
     --gutter: 56px;
-    --cw: min(40vw, calc((100svh - 36px - 72px) * 0.75));
   }
 
-  .cover {
+  .seal {
     min-height: calc(100svh - 36px);
-    grid-template-columns: [l] 1fr [c] var(--cw) [r] 1fr;
-    grid-template-rows: 1fr auto;
-    padding: 24px 0 48px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    justify-items: stretch;
+    column-gap: 72px;
+    padding: 28px var(--gutter) 56px;
   }
 
-  .photo {
-    grid-column: c;
-    grid-row: 1 / span 2;
-    aspect-ratio: 3 / 4;
-    width: var(--cw);
+  .mark::before {
+    inset: -66px;
   }
 
-  .photo::after {
-    background: linear-gradient(to top, rgb(29 21 23 / 0.55), rgb(29 21 23 / 0) 24%);
+  .legend {
+    top: -40px;
+    left: -40px;
+    width: calc(100% + 80px);
+    height: calc(100% + 80px);
   }
 
-  .mast {
-    top: 8vh;
-    font-size: min(19vw, 300px);
+  .legend text {
+    font-size: 7.2px;
   }
 
-  .mastInk {
-    color: var(--ink);
+  .mark {
+    justify-self: center;
+    width: min(36vw, 500px, calc(100svh - 300px));
+    margin: 50px 0;
   }
 
-  /* The same word over the photograph in paper, cut to the cover's edges, so the masthead changes colour where it crosses them. */
-  .mastPaper {
-    display: block;
-    position: absolute;
-    inset: 0;
-    color: var(--paper);
-    clip-path: inset(0 calc((100% - var(--cw)) / 2));
+  .vein {
+    stroke-width: 1.3;
   }
 
-  /* Two cover lines from their own facts, set like a magazine's, either side of the cover. */
-  .lineDays,
-  .lineStreet {
-    display: block;
-    grid-row: 1;
-    align-self: center;
-    margin: 18vh 0 0;
-    font: italic 500 clamp(30px, 2.9vw, 50px) / 1.02 var(--display);
-    letter-spacing: -0.02em;
+  .say {
+    max-width: 580px;
+    margin: 0;
   }
 
-  .lineDays {
-    grid-column: l;
-    padding: 0 32px 0 var(--gutter);
-    max-width: 11ch;
-    box-sizing: content-box;
-  }
-
-  .lineStreet {
-    grid-column: r;
-    justify-self: end;
-    padding: 0 var(--gutter) 0 32px;
-    text-align: right;
-  }
-
-  .lineDays::before,
-  .lineStreet::before {
-    content: '';
-    display: block;
-    width: 48px;
-    height: 2px;
-    margin-bottom: 18px;
-    background: var(--gold);
-  }
-
-  .lineStreet::before {
-    margin-left: auto;
-  }
-
-  .coverLeft {
-    position: static;
-    grid-column: l;
-    grid-row: 2;
-    align-self: end;
-    display: grid;
-    gap: 10px;
-    padding: 0 40px 8px var(--gutter);
-    color: var(--ink);
-  }
-
-  .lineKind {
-    font-size: clamp(28px, 2.6vw, 40px);
-  }
-
-  .lineTown {
-    text-align: left;
-    font-size: 14px;
-  }
-
-  .lineCap {
-    grid-column: c;
-    grid-row: 2;
-    position: relative;
-    left: auto;
-    top: auto;
-    align-self: end;
-    padding: 0;
-    transform: translateY(calc(100% + 10px));
-    font-size: 14px;
-    color: var(--muted);
-  }
-
-  .lineCap b {
-    color: var(--ink);
-  }
-
-  .coverSide {
-    grid-column: r;
-    grid-row: 2;
-    align-self: end;
-    padding: 0 var(--gutter) 8px 40px;
+  .words {
+    margin-bottom: 30px;
+    font-size: clamp(44px, 4vw, 72px);
   }
 
   .acts {
-    max-width: 320px;
+    grid-auto-flow: column;
+    justify-content: start;
+  }
+
+  .artists {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    column-gap: 96px;
+    align-items: end;
+    padding: 144px var(--gutter) 152px;
+  }
+
+  .artHead {
+    grid-column: 1 / -1;
+    margin-bottom: 56px;
+    font-size: clamp(56px, 6vw, 104px);
+  }
+
+  .artList {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 72px;
+  }
+
+  .artList li {
+    border-bottom: 0;
+  }
+
+  .artList li + li {
+    border-left: 1px solid var(--rule);
+  }
+
+  .artist {
+    padding: 28px 32px 32px;
+  }
+
+  .artList li:first-child .artist {
+    padding-left: 0;
+  }
+
+  .artHandle {
+    font-size: clamp(30px, 2.8vw, 46px);
+  }
+
+  .theirs {
+    margin: 0;
+  }
+
+  .shop {
+    justify-self: end;
   }
 
   .inside {
@@ -725,7 +817,7 @@
     place-items: center;
     width: 48px;
     height: 48px;
-    border: 1px solid rgb(246 237 230 / 0.35);
+    border: 1px solid rgb(240 246 242 / 0.35);
     border-radius: 50%;
     background: none;
     color: var(--paper);
@@ -759,7 +851,7 @@
     margin: 0;
     padding: 0;
     list-style: none;
-    border-top: 1px solid rgb(246 237 230 / 0.22);
+    border-top: 1px solid rgb(240 246 242 / 0.22);
   }
 
   .index button {
@@ -771,9 +863,9 @@
     min-height: 64px;
     padding: 14px 0;
     border: 0;
-    border-bottom: 1px solid rgb(246 237 230 / 0.22);
+    border-bottom: 1px solid rgb(240 246 242 / 0.22);
     background: none;
-    color: rgb(246 237 230 / 0.62);
+    color: rgb(240 246 242 / 0.62);
     font: 400 20px/1.2 var(--text);
     text-align: left;
     cursor: pointer;
@@ -852,7 +944,7 @@
 
   .colophon {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    border-bottom: 1px solid rgb(246 237 230 / 0.28);
+    border-bottom: 1px solid rgb(240 246 242 / 0.28);
   }
 
   .colophon > div {
@@ -862,7 +954,7 @@
 
   .colophon > div + div {
     padding-left: 32px;
-    border-left: 1px solid rgb(246 237 230 / 0.28);
+    border-left: 1px solid rgb(240 246 242 / 0.28);
   }
 
   .colText {
@@ -879,43 +971,34 @@
   }
 }
 
-@keyframes rise {
+@keyframes press {
   from {
-    transform: translateY(0.24em);
-    clip-path: inset(0 0 100% 0);
-  }
-  to {
-    transform: none;
-    clip-path: inset(0 0 -0.2em 0);
-  }
-}
-
-@keyframes drift {
-  from {
-    transform: scale(1.07);
+    transform: scale(1.1) rotate(-10deg);
   }
   to {
     transform: none;
   }
 }
 
-@media (min-width: 900px) {
-  @keyframes rise {
-    from {
-      transform: translateY(0.24em);
-      opacity: 0;
-    }
-    to {
-      transform: none;
-      opacity: 1;
-    }
+@keyframes turn {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes vein {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .photo img,
-  .mastInk,
-  .mastPaper {
+  .mark,
+  .legend,
+  .vein {
     animation: none;
   }
   .page {
