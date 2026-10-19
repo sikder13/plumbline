@@ -73,7 +73,7 @@ function Demo({ data }: { data: PageData }) {
         <section className={s.weekSec} aria-labelledby="week-h">
           <header className={s.weekHead}>
             <h2 id="week-h">The week</h2>
-            <p>{c.hoursSource} Each bar is one day of 24 hours, from midnight to midnight.</p>
+            <p>{c.hoursSource} Each bar is one day of 24 hours, from midnight to midnight, with lines at 6 AM, noon and 6 PM.</p>
           </header>
           <ColumnWeek week={c.hours} s={{ week: s.week!, colDay: s.colDay!, colBar: s.colBar!, colFill: s.colFill!, colNow: s.colNow!, colHours: s.colHours!, colToday: s.colToday! }} />
         </section>

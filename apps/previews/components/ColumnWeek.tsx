@@ -26,6 +26,7 @@ export function ColumnWeek({ week, s }: { week: Day[]; s: Record<string, string>
     const io = new IntersectionObserver(
       ([e]) => {
         if (!e?.isIntersecting) return;
+        el.removeAttribute('data-waiting');
         el.setAttribute('data-filled', '');
         io.disconnect();
       },
