@@ -70,7 +70,7 @@
 .say {
   position: relative;
   z-index: 1;
-  padding: 26px var(--gutter) 44px;
+  padding: 44px var(--gutter) 44px;
 }
 
 .title {

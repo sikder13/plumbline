@@ -110,9 +110,11 @@ export function registerLeads(program: Command): Command {
     .option('--only <slugs>', 'comma separated slugs')
     .option('--site', 'run the framework build and write previews/out/site/')
     .action(async (opts: { campaign: string; batch: string; only?: string; site?: boolean }) => {
-      const dir = join(campaignPaths(opts.campaign).batches, opts.batch);
+      // Several batches may be named, comma separated: the site then carries all of their pages.
+      const dirs = opts.batch.split(',').map((b) => join(campaignPaths(opts.campaign).batches, b.trim()));
       const wanted = opts.only ? new Set(opts.only.split(',')) : null;
-      const slugs = readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory() && existsSync(join(previewPaths.content, e.name, 'content.json')) && (!wanted || wanted.has(e.name))).map((e) => e.name);
+      const inBatches = (withData: boolean) => dirs.flatMap((d) => readdirSync(d, { withFileTypes: true }).filter((e) => e.isDirectory() && existsSync(withData ? join(previewPaths.data, `${e.name}.json`) : join(previewPaths.content, e.name, 'content.json'))).map((e) => e.name));
+      const slugs = inBatches(false).filter((x) => !wanted || wanted.has(x));
       const staged = join(previewPaths.out, 'staged');
       for (const slug of slugs) {
         const data = await buildOpenSignPage(db(), opts.campaign, slug, { replyEmail: 'udaay@nahltech.com' });
@@ -132,8 +134,8 @@ export function registerLeads(program: Command): Command {
         console.log(`${slug}: ${BASE_PATH}/${data.path}/ ${Object.keys(data.images).length} images`);
       }
       if (!opts.site) return;
-      // The site holds this batch's pages only. A deploy has to be merged with the New Zealand site first.
-      const pages = readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory() && existsSync(join(previewPaths.data, `${e.name}.json`))).map((e) => e.name);
+      // The site holds the named batches' pages only. A deploy has to be merged with the New Zealand site first.
+      const pages = inBatches(true);
       rmSync(staged, { recursive: true, force: true });
       mkdirSync(staged, { recursive: true });
       for (const slug of pages) cpSync(join(previewPaths.data, `${slug}.json`), join(staged, `${slug}.json`));
@@ -162,7 +164,8 @@ export function registerLeads(program: Command): Command {
     .option('--only <slugs>', 'comma separated slugs')
     .option('--runs <n>', 'Lighthouse runs per page', '3')
     .action(async (opts: { campaign: string; batch: string; only?: string; runs: string }) => {
-      const dir = join(campaignPaths(opts.campaign).batches, opts.batch);
+      const dirs = opts.batch.split(',').map((b) => join(campaignPaths(opts.campaign).batches, b.trim()));
+      const folderOf = (slug: string) => dirs.map((d) => join(d, slug)).find((f) => existsSync(f)) ?? join(dirs[0]!, slug);
       const staged = join(previewPaths.out, 'staged');
       const wanted = opts.only ? new Set(opts.only.split(',')) : null;
       const pages = readdirSync(staged).map((f) => JSON.parse(readFileSync(join(staged, f), 'utf8')) as PageData).filter((p) => !wanted || wanted.has(p.slug));
@@ -174,7 +177,7 @@ export function registerLeads(program: Command): Command {
           console.log(`${page.slug}: ${base}${BASE_PATH}/${page.path}/`);
           // Figures the page may show: its own facts, our offer, clock hours and the counts and numbers of its own lists.
           const allowed = new Set([...numbersIn(JSON.stringify(page.demo)).map((n) => n.token), ...numbersIn(offer.slice(offer.indexOf('OPEN_SIGN'))).map((n) => n.token), '30', ...Array.from({ length: 24 }, (_, i) => String(i + 1)), ...Array.from({ length: 20 }, (_, i) => String(i + 1).padStart(2, '0'))]);
-          const report = await checkOpenSignPage(page, { base, allowed, shotsDir: join(previewPaths.review, 'open-sign', page.slug), previewDir: join(dir, page.slug), lighthouseRuns: Number(opts.runs), log: console.log });
+          const report = await checkOpenSignPage(page, { base, allowed, shotsDir: join(previewPaths.review, 'open-sign', page.slug), previewDir: folderOf(page.slug), lighthouseRuns: Number(opts.runs), log: console.log });
           mkdirSync(join(previewPaths.review, 'open-sign', page.slug), { recursive: true });
           writeFileSync(join(previewPaths.review, 'open-sign', page.slug, 'gates.json'), JSON.stringify(report, null, 2));
           const l = report.lighthouse;
@@ -185,7 +188,7 @@ export function registerLeads(program: Command): Command {
       } finally {
         server.close();
       }
-      writeFileSync(join(previewPaths.review, 'open-sign', `gates-${opts.batch}.json`), JSON.stringify(summary, null, 2));
+      writeFileSync(join(previewPaths.review, 'open-sign', `gates-${opts.batch.replace(/,/g, '+')}${opts.only ? '-part' : ''}.json`), JSON.stringify(summary, null, 2));
       if (summary.some((x) => (x.failures as string[]).length)) process.exitCode = 1;
     });
   return leads;

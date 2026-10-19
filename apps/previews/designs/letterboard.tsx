@@ -117,9 +117,10 @@ function Demo({ data }: { data: PageData }) {
       </main>
 
       <footer className={s.end} data-covers>
-        <address className={s.addr}>
+        <p className={s.endLabel}>Find the shop</p>
+        <address className={s.addrBoard}>
           {c.address.map((l) => (
-            <span key={l}>{l}</span>
+            <span key={l}>{l.toUpperCase()}</span>
           ))}
         </address>
         <div className={s.endActs}>
