@@ -1,0 +1,435 @@
+# Words in an Indiana business name that say it serves people face to face.
+# A name containing one of these words (or its plural) is a trade hit, and the group of the
+# first word found becomes the lead's trade_group. Phrases of two words match as written.
+# Spanish words are the ones that appear in Indiana business names.
+
+food:
+  - restaurant
+  - restaurante
+  - cafe
+  - coffee
+  - espresso
+  - roasters
+  - bakery
+  - bakeshop
+  - bakehouse
+  - panaderia
+  - pasteleria
+  - pastry
+  - cakes
+  - cake
+  - cupcake
+  - cookie
+  - donut
+  - doughnut
+  - bagel
+  - pizza
+  - pizzeria
+  - grill
+  - grille
+  - kitchen
+  - cocina
+  - diner
+  - bistro
+  - eatery
+  - eats
+  - deli
+  - delicatessen
+  - bbq
+  - barbecue
+  - smokehouse
+  - taco
+  - tacos
+  - taqueria
+  - birrieria
+  - pupuseria
+  - tortilleria
+  - carniceria
+  - mariscos
+  - antojitos
+  - paleteria
+  - neveria
+  - raspados
+  - fruteria
+  - burrito
+  - burger
+  - burgers
+  - wings
+  - chicken
+  - pollo
+  - fish fry
+  - seafood
+  - sushi
+  - ramen
+  - pho
+  - noodle
+  - noodles
+  - hibachi
+  - teriyaki
+  - curry
+  - biryani
+  - halal
+  - kabob
+  - kebab
+  - shawarma
+  - gyro
+  - falafel
+  - creamery
+  - ice cream
+  - gelato
+  - frozen yogurt
+  - smoothie
+  - smoothies
+  - juice
+  - boba
+  - bubble tea
+  - tea house
+  - catering
+  - caterer
+  - food truck
+  - food
+  - foods
+  - meals
+  - soul food
+  - steakhouse
+  - sandwich
+  - sandwiches
+  - subs
+  - hot dog
+  - waffle
+  - crepe
+  - brunch
+  - breakfast
+  - desserts
+  - dessert
+  - sweets
+  - candy
+  - chocolate
+  - popcorn
+  - snacks
+  - butcher
+  - meats
+  - jerky
+  - salsa
+  - tamales
+  - empanadas
+  - dumpling
+  - wok
+  - asian cuisine
+  - cuisine
+
+beauty:
+  - salon
+  - salons
+  - hair
+  - hairstylist
+  - stylist
+  - barber
+  - barbers
+  - barbershop
+  - barberia
+  - nails
+  - nail
+  - manicure
+  - pedicure
+  - lash
+  - lashes
+  - brow
+  - brows
+  - beauty
+  - belleza
+  - estetica
+  - esthetics
+  - esthetician
+  - aesthetics
+  - skincare
+  - skin care
+  - facial
+  - facials
+  - waxing
+  - wax
+  - braids
+  - braiding
+  - locs
+  - weaves
+  - wigs
+  - makeup
+  - cosmetics
+  - glam
+  - tanning
+  - spa
+  - day spa
+  - med spa
+  - medspa
+  - tattoo
+  - tattoos
+  - piercing
+  - threading
+  - extensions
+  - blowout
+  - peluqueria
+
+cleaning:
+  - cleaning
+  - cleaners
+  - clean
+  - janitorial
+  - custodial
+  - maid
+  - maids
+  - housekeeping
+  - pressure washing
+  - power washing
+  - soft wash
+  - carpet cleaning
+  - window cleaning
+  - laundromat
+  - laundry
+  - lavanderia
+  - dry cleaning
+  - wash and fold
+  - junk removal
+  - sanitizing
+  - disinfecting
+  - gutter cleaning
+  - duct cleaning
+
+trades:
+  - plumbing
+  - plumber
+  - electric
+  - electrical
+  - electrician
+  - hvac
+  - heating
+  - cooling
+  - air conditioning
+  - furnace
+  - roofing
+  - roofer
+  - siding
+  - gutters
+  - construction
+  - contractor
+  - contractors
+  - contracting
+  - remodeling
+  - remodel
+  - renovation
+  - renovations
+  - restoration
+  - home improvement
+  - handyman
+  - carpentry
+  - carpenter
+  - cabinets
+  - cabinetry
+  - countertops
+  - flooring
+  - floors
+  - tile
+  - drywall
+  - painting
+  - painters
+  - concrete
+  - masonry
+  - brick
+  - paving
+  - asphalt
+  - sealcoating
+  - excavating
+  - excavation
+  - grading
+  - landscaping
+  - landscape
+  - lawn
+  - lawncare
+  - mowing
+  - tree service
+  - tree care
+  - stump
+  - irrigation
+  - snow removal
+  - fencing
+  - fence
+  - decks
+  - decking
+  - welding
+  - fabrication
+  - insulation
+  - waterproofing
+  - basement
+  - garage doors
+  - garage door
+  - locksmith
+  - glass
+  - windows
+  - doors
+  - pest control
+  - exterminating
+  - pools
+  - septic
+  - drain
+  - sewer
+  - appliance repair
+  - solar
+  - builders
+  - homebuilders
+
+auto:
+  - auto
+  - autos
+  - automotive
+  - autobody
+  - auto body
+  - body shop
+  - collision
+  - mechanic
+  - mechanical
+  - tire
+  - tires
+  - llantera
+  - wheels
+  - towing
+  - tow
+  - wrecker
+  - car wash
+  - carwash
+  - detailing
+  - detail
+  - transmission
+  - brakes
+  - muffler
+  - exhaust
+  - lube
+  - oil change
+  - motors
+  - motorsports
+  - car audio
+  - window tint
+  - tint
+  - wraps
+  - diesel
+  - truck repair
+  - taller
+
+care_fitness:
+  - fitness
+  - gym
+  - yoga
+  - pilates
+  - crossfit
+  - barre
+  - martial arts
+  - karate
+  - taekwondo
+  - jiu jitsu
+  - boxing
+  - kickboxing
+  - mma
+  - dance
+  - personal training
+  - bootcamp
+  - cycling studio
+  - swim
+  - massage
+  - chiropractic
+  - chiropractor
+  - acupuncture
+  - wellness
+  - physical therapy
+  - daycare
+  - day care
+  - childcare
+  - child care
+  - preschool
+  - learning center
+  - early learning
+  - tutoring
+  - home care
+  - home health
+  - senior care
+  - adult day
+  - pet grooming
+  - dog grooming
+  - grooming
+  - groomers
+  - kennel
+  - pet sitting
+  - dog walking
+  - doggy daycare
+  - veterinary
+  - animal hospital
+
+repair_retail:
+  - repair
+  - repairs
+  - phone repair
+  - cell phone
+  - computer repair
+  - electronics
+  - boutique
+  - florist
+  - flowers
+  - floral
+  - jewelry
+  - jeweler
+  - thrift
+  - resale
+  - consignment
+  - vintage
+  - antiques
+  - gifts
+  - gift shop
+  - bike shop
+  - bicycle
+  - shoes
+  - sneakers
+  - tailor
+  - tailoring
+  - alterations
+  - sewing
+  - embroidery
+  - screen printing
+  - printing
+  - print shop
+  - signs
+  - photography
+  - photo studio
+  - tienda
+  - mercado
+  - abarrotes
+  - botanica
+  - market
+  - mart
+  - grocery
+  - groceries
+  - convenience
+  - furniture
+  - mattress
+  - hardware
+  - framing
+  - frame shop
+  - apparel
+  - clothing
+  - fashion
+  - candles
+  - bookstore
+  - books
+  - toys
+  - games
+  - hobby
+  - music store
+  - guitar
+  - pet store
+  - pet supply
+  - feed store
+  - nursery
+  - garden center
+  - farm stand
+  - produce
+  - bridal
+  - tuxedo
+  - watch repair
+  - shoe repair
+  - vacuum

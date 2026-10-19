@@ -211,6 +211,9 @@ importers:
       '@plumbline/impact':
         specifier: workspace:*
         version: link:packages/impact
+      '@plumbline/leads':
+        specifier: workspace:*
+        version: link:packages/leads
       '@plumbline/preview':
         specifier: workspace:*
         version: link:packages/preview
@@ -588,6 +591,8 @@ importers:
   packages/fetch: {}
 
   packages/impact: {}
+
+  packages/leads: {}
 
   packages/preview: {}
 

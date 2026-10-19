@@ -12,6 +12,7 @@ import { aiCommand, aiSummary, brandCommand, contactsCommand, evaluateStoredComm
 import { writeReport } from '@plumbline/report';
 import { registerEngine } from './engine.ts';
 import { registerEnginePages } from './engine-pages.ts';
+import { registerLeads } from './leads.ts';
 import { registerPreview } from './preview.ts';
 import { seed } from './seed.ts';
 import { selectBatch } from './select.ts';
@@ -190,6 +191,7 @@ program
     for (const r of c.rows) for (const f of r.falseFindings) console.log(`  FALSE ${r.slug} ${f.check}: ${f.title}`);
   });
 
+registerLeads(program);
 registerPreview(program);
 registerWave(program);
 registerEnginePages(registerEngine(program));
