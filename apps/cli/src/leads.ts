@@ -165,10 +165,11 @@ export function registerLeads(program: Command): Command {
     .option('--runs <n>', 'Lighthouse runs per page', '3')
     .action(async (opts: { campaign: string; batch: string; only?: string; runs: string }) => {
       const dirs = opts.batch.split(',').map((b) => join(campaignPaths(opts.campaign).batches, b.trim()));
-      const folderOf = (slug: string) => dirs.map((d) => join(d, slug)).find((f) => existsSync(f)) ?? join(dirs[0]!, slug);
+      const folderOf = (slug: string) => dirs.map((d) => join(d, slug)).find((f) => existsSync(f))!;
       const staged = join(previewPaths.out, 'staged');
       const wanted = opts.only ? new Set(opts.only.split(',')) : null;
-      const pages = readdirSync(staged).map((f) => JSON.parse(readFileSync(join(staged, f), 'utf8')) as PageData).filter((p) => !wanted || wanted.has(p.slug));
+      const inBatch = (slug: string) => dirs.some((d) => existsSync(join(d, slug)));
+      const pages = readdirSync(staged).map((f) => JSON.parse(readFileSync(join(staged, f), 'utf8')) as PageData).filter((p) => inBatch(p.slug) && (!wanted || wanted.has(p.slug)));
       const offer = readFileSync(join(previewPaths.app, 'lib', 'offer.ts'), 'utf8');
       const { server, base } = await serveSite(previewPaths.site, 4321, { quiet: true });
       const summary: Record<string, unknown>[] = [];

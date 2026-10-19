@@ -79,7 +79,7 @@
 
 .street {
   margin: 6px 0 14px;
-  color: #e4eef8;
+  color: #fff;
 }
 
 .now,
@@ -107,7 +107,7 @@
 .acts,
 .endActs {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 1.6fr 1fr;
   gap: 8px;
 }
 
@@ -117,8 +117,10 @@
   align-items: center;
   justify-content: center;
   min-height: 56px;
-  padding: 0 14px;
-  font: 700 16px/1.1 var(--display);
+  padding: 0 10px;
+  font: 700 15px/1.1 var(--display);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
   text-align: center;
   text-decoration: none;
   font-variant-numeric: tabular-nums;

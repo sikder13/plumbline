@@ -73,7 +73,7 @@ function Demo({ data }: { data: PageData }) {
           <ShelfCase className={s.case!}>
             {c.shelves.map((row, r) => (
               <div key={row.join()} className={s.shelf} data-row={r}>
-                <ul className={s.trays}>
+                <ul className={s.trays} tabIndex={0} aria-label={r === 0 ? 'Top shelf, swipe for more' : 'Lower shelf, swipe for more'}>
                   {row.map((k) => (
                     <li key={k}>
                       <Pic pic={pic(data, k)} sizes="(min-width: 900px) 30vw, 72vw" low />

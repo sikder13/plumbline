@@ -194,6 +194,11 @@
   scrollbar-width: none;
 }
 
+.trays:focus-visible {
+  outline: 3px solid var(--raspberry);
+  outline-offset: 2px;
+}
+
 .trays::-webkit-scrollbar {
   display: none;
 }
