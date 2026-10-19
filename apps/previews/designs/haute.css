@@ -482,6 +482,11 @@
   border: 1px solid rgb(246 237 230 / 0.4);
 }
 
+.lineDays,
+.lineStreet {
+  display: none;
+}
+
 /* Desktop: the cover stands in the middle and the masthead runs across its edges. */
 
 @media (min-width: 900px) {
@@ -524,6 +529,45 @@
     inset: 0;
     color: var(--paper);
     clip-path: inset(0 calc((100% - var(--cw)) / 2));
+  }
+
+  /* Two cover lines from their own facts, set like a magazine's, either side of the cover. */
+  .lineDays,
+  .lineStreet {
+    display: block;
+    grid-row: 1;
+    align-self: center;
+    margin: 18vh 0 0;
+    font: italic 500 clamp(30px, 2.9vw, 50px) / 1.02 var(--display);
+    letter-spacing: -0.02em;
+  }
+
+  .lineDays {
+    grid-column: l;
+    padding: 0 32px 0 var(--gutter);
+    max-width: 11ch;
+    box-sizing: content-box;
+  }
+
+  .lineStreet {
+    grid-column: r;
+    justify-self: end;
+    padding: 0 var(--gutter) 0 32px;
+    text-align: right;
+  }
+
+  .lineDays::before,
+  .lineStreet::before {
+    content: '';
+    display: block;
+    width: 48px;
+    height: 2px;
+    margin-bottom: 18px;
+    background: var(--gold);
+  }
+
+  .lineStreet::before {
+    margin-left: auto;
   }
 
   .coverLeft {
@@ -599,8 +643,8 @@
 
   .book {
     display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-    gap: 64px;
+    grid-template-columns: min(42vw, calc(78svh * 0.75)) minmax(0, 1fr);
+    gap: 72px;
     padding: 0 var(--gutter);
     align-items: start;
   }
@@ -614,22 +658,33 @@
     display: block;
     position: relative;
     aspect-ratio: 3 / 4;
-    max-height: 82vh;
+    width: 100%;
   }
 
   .page {
     position: absolute;
     inset: 0;
     margin: 0;
-    opacity: 0;
     clip-path: inset(0 0 0 100%);
-    transition: opacity 0.45s var(--ease), clip-path 0.5s var(--ease);
+    z-index: 0;
   }
 
+  /* The new page wipes in from the right over the one it replaces. */
   .page[data-on] {
-    opacity: 1;
+    clip-path: inset(0);
+    z-index: 2;
+    transition: clip-path 0.55s var(--ease);
+  }
+
+  .page[data-was] {
     clip-path: inset(0);
     z-index: 1;
+  }
+
+  .page picture {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 
   .page img {

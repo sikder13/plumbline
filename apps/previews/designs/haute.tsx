@@ -67,6 +67,12 @@ function Demo({ data }: { data: PageData }) {
             {c.mast}
           </span>
         </h1>
+        <p className={s.lineDays} aria-hidden="true">
+          {run.replace('Open ', '')}
+        </p>
+        <p className={s.lineStreet} aria-hidden="true">
+          {c.address[0]}
+        </p>
         <div className={s.coverLeft}>
           <p className={s.lineKind}>{c.kind}</p>
           <p className={s.lineTown}>{c.town}</p>

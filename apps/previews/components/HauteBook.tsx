@@ -18,6 +18,13 @@ interface Item {
  */
 export function HauteBook({ items, s }: { items: Item[]; s: Record<string, string> }) {
   const [at, setAt] = useState(0);
+  // The page turned from stays under the new one while it wipes across, so the turn never shows two photos at once.
+  const [was, setWas] = useState<number | null>(null);
+  const shown = useRef(0);
+  useEffect(() => {
+    if (shown.current !== at) setWas(shown.current);
+    shown.current = at;
+  }, [at]);
   // The stage's pages are stacked and hidden, which a browser's own lazy loading never reaches, so they load once the book is near.
   const [near, setNear] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -81,7 +88,7 @@ export function HauteBook({ items, s }: { items: Item[]; s: Record<string, strin
     <div className={s.book} ref={root}>
       <div className={s.stage} aria-live="polite">
         {items.map((it, i) => (
-          <figure key={it.key} className={s.page} data-on={i === at ? '' : undefined} aria-hidden={i === at ? undefined : true}>
+          <figure key={it.key} className={s.page} data-on={i === at ? '' : undefined} data-was={i === was && i !== at ? '' : undefined} aria-hidden={i === at ? undefined : true}>
             {near && (
               <picture>
                 {it.pic.sources.map((src) => (
@@ -127,7 +134,7 @@ export function HauteBook({ items, s }: { items: Item[]; s: Record<string, strin
         ))}
       </ol>
 
-      <ol className={s.swipe} ref={row} aria-label="Swipe through the pieces">
+      <ol className={s.swipe} ref={row} aria-label="Swipe through the pieces" tabIndex={0}>
         {items.map((it, i) => (
           <li key={it.key} data-n={i}>
             <figure>
