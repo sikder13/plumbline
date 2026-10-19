@@ -72,7 +72,7 @@
   font: 600 13px/1.3 var(--text);
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: #e6c98e;
 }
 
 .kind span {
