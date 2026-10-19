@@ -65,3 +65,21 @@ export const VISIT_ENDPOINT = 'https://nahltech.com/api/demo-visit';
  * on no page reports anything from it; ?nahl-own=0 clears the mark. Every check we run sets it.
  */
 export const OWN_VISITS = { param: 'nahl-own', key: 'nahl-own' };
+
+/**
+ * The second tab of an Open Sign page: a new Indiana business with a Google profile and no website.
+ * The same on every page. Prices are in US dollars.
+ */
+export const OPEN_SIGN = {
+  tabs: { demo: 'Demo', found: 'Price' },
+  link: 'See the price',
+  title: 'A website like this one',
+  lead: 'Built from your Google profile, live within one week.',
+  website: { name: 'Website', price: 'US$500', text: 'Up to 3 pages: home, services or menu, and contact.' },
+  care: { name: 'Monthly care', price: 'US$40 a month', text: 'Hosting, edits, hours and menu changes, and security updates.' },
+  payment: ['US$200 deposit to start.', 'The balance when the site goes live.', 'Live within one week of the deposit.'],
+  separately: 'Extra pages, booking, ordering and Google profile work are priced separately.',
+  reply: 'Reply to Udaay’s email',
+  replySub: 'The link to this page came in an email from Udaay. A reply there reaches him directly.',
+  footer: 'Nahl Technologies Inc., 6902 Challenge Ln, Indianapolis, IN 46250',
+};

@@ -60,6 +60,8 @@ export interface PageData {
   secondCheck: SecondCheck | null;
   reply: { email: string; subject: string; call: string };
   builtAtNz: string;
+  /** Set for a page outside the audit waves, such as "open-sign": it carries our price instead of findings. */
+  campaign?: string;
 }
 
 /** previews/content/<slug>/content.json */
