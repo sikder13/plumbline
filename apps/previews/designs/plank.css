@@ -1,0 +1,536 @@
+/* L & R Flooring: their floor laid strip by strip, their logo's indigo for the action, oak and floor dark from the photos. */
+
+.root {
+  --paper: #f3eee6;
+  --soft: #e9e0d2;
+  --ink: #18140f;
+  --indigo: #2e129b;
+  --oak: #7c5430;
+  --deep: #221c13;
+  --muted: #5a4f43;
+  --on-deep: #efe7da;
+  --on-deep-muted: #c9b9a2;
+  --display: 'League Spartan', 'Futura', system-ui, sans-serif;
+  --mono: 'DM Mono', ui-monospace, 'SFMono-Regular', monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: 24px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 17px/1.5 var(--display);
+  overflow-x: clip;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 3px solid var(--oak);
+  outline-offset: 3px;
+}
+
+/* The top: their floor, laid in strips. */
+
+.hero {
+  display: grid;
+}
+
+.photo {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--deep);
+}
+
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.strips {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: repeat(7, 1fr);
+  pointer-events: none;
+}
+
+.strips i {
+  background: var(--paper);
+  border-bottom: 1px solid var(--soft);
+  animation: lay 0.75s var(--ease) calc(0.12s + var(--i) * 0.085s) both;
+}
+
+.say {
+  padding: 22px var(--gutter) 44px;
+}
+
+.mark {
+  margin: 0 0 14px;
+  font: 600 14px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--indigo);
+}
+
+.mark b {
+  font: 800 16px/1 var(--display);
+  letter-spacing: 0.02em;
+}
+
+.title {
+  margin: 0;
+  font: 700 clamp(46px, 13.4vw, 64px) / 0.9 var(--display);
+  letter-spacing: -0.035em;
+  color: var(--indigo);
+}
+
+.title span {
+  display: block;
+  animation: rise 1s cubic-bezier(0.16, 1, 0.3, 1) calc(0.25s + var(--i) * 0.16s) both;
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 18px 0 22px;
+  padding: 0;
+  list-style: none;
+  font: 400 14px/1.4 var(--mono);
+  color: var(--muted);
+}
+
+.facts {
+  flex-direction: column;
+}
+
+.acts {
+  display: grid;
+  gap: 10px;
+}
+
+.call,
+.go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 0 24px;
+  border-radius: 4px;
+  font: 600 17px/1 var(--display);
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.35s var(--ease), color 0.35s var(--ease), border-color 0.35s var(--ease);
+}
+
+.call {
+  background: var(--indigo);
+  color: var(--paper);
+}
+
+.call:hover {
+  background: var(--ink);
+}
+
+.go {
+  border: 1.5px solid var(--ink);
+  color: var(--ink);
+}
+
+.go:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Look closer. */
+
+.closerSec {
+  background: var(--soft);
+  padding: 96px var(--gutter) 104px;
+}
+
+.closerHead h2 {
+  margin: 0;
+  font: 700 clamp(44px, 12vw, 60px) / 0.95 var(--display);
+  letter-spacing: -0.035em;
+}
+
+.closerHead p {
+  max-width: 44ch;
+  margin: 14px 0 40px;
+  font: 400 15px/1.55 var(--mono);
+  color: var(--muted);
+}
+
+.floors {
+  display: grid;
+  gap: 48px;
+}
+
+.floor {
+  margin: 0;
+}
+
+.frame {
+  position: relative;
+  overflow: hidden;
+  cursor: zoom-in;
+  touch-action: pan-y;
+  background: var(--deep);
+}
+
+.frame img {
+  width: 100%;
+  height: auto;
+}
+
+.lens {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  border: 3px solid var(--paper);
+  border-radius: 50%;
+  box-shadow: 0 12px 32px rgb(24 20 15 / 0.35);
+  background-repeat: no-repeat;
+  background-color: var(--deep);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s var(--ease);
+}
+
+.lens[data-on] {
+  opacity: 1;
+}
+
+.floor figcaption {
+  display: grid;
+  gap: 2px;
+  margin-top: 14px;
+}
+
+.floor figcaption b {
+  font: 700 22px/1.2 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.floor figcaption span {
+  font: 400 14px/1.5 var(--mono);
+  color: var(--muted);
+}
+
+.closer {
+  justify-self: start;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--indigo);
+  font: 500 14px/1 var(--mono);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+/* The facts, as a spec sheet. */
+
+.sheet {
+  background: var(--deep);
+  color: var(--on-deep);
+  padding: 96px var(--gutter);
+}
+
+.sheetLabel {
+  margin: 0 0 28px;
+  font: 500 14px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--on-deep-muted);
+}
+
+.specs {
+  margin: 0 0 36px;
+  border-top: 1px solid rgb(239 231 218 / 0.24);
+}
+
+.specs div {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid rgb(239 231 218 / 0.24);
+}
+
+.specs dt {
+  padding-top: 6px;
+  font: 400 13px/1.3 var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--on-deep-muted);
+}
+
+.specs dd {
+  display: grid;
+  margin: 0;
+  font: 600 24px/1.2 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.specs small {
+  display: block;
+  margin-top: 4px;
+  font: 400 13px/1.3 var(--mono);
+  letter-spacing: 0;
+  color: var(--on-deep-muted);
+}
+
+.specs a {
+  color: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.sheet .go {
+  border-color: var(--on-deep);
+  color: var(--on-deep);
+}
+
+.sheet .go:hover {
+  background: var(--on-deep);
+  color: var(--deep);
+}
+
+/* The close: their number. */
+
+.close {
+  background: var(--indigo);
+  color: var(--paper);
+  padding: 96px var(--gutter) 120px;
+}
+
+.closeLabel {
+  margin: 0 0 14px;
+  font: 500 14px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.number {
+  display: block;
+  max-width: 7.2em;
+  color: var(--paper);
+  font: 700 clamp(52px, 16vw, 210px) / 0.9 var(--display);
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+
+.number span {
+  display: inline-block;
+  white-space: nowrap;
+  margin-right: 0.22em;
+}
+
+.number:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.08em;
+}
+
+.small {
+  display: grid;
+  gap: 8px;
+  max-width: 62ch;
+  margin-top: 72px;
+  font: 400 13px/1.6 var(--mono);
+  color: rgb(243 238 230 / 0.86);
+}
+
+.small p {
+  margin: 0;
+}
+
+.small a {
+  color: var(--paper);
+}
+
+/* The floating bar on a phone. */
+
+.bar {
+  position: fixed;
+  z-index: 40;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 1px;
+  background: var(--soft);
+  border-top: 1px solid var(--soft);
+  transform: translateY(110%);
+  transition: transform 0.45s var(--ease);
+}
+
+:global([data-past-hero]:not([data-covered])) .bar {
+  transform: none;
+}
+
+.bar a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 58px;
+  font: 600 16px/1 var(--display);
+  text-decoration: none;
+}
+
+.barCall {
+  background: var(--indigo);
+  color: var(--paper);
+}
+
+.barGo {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+@media (min-width: 900px) {
+  .root {
+    --gutter: 56px;
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 0.46fr) minmax(0, 0.54fr);
+    min-height: calc(100svh - 36px);
+  }
+
+  .photo {
+    grid-column: 2;
+    grid-row: 1;
+    aspect-ratio: auto;
+    height: 100%;
+  }
+
+  .say {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 48px var(--gutter) 48px;
+  }
+
+  .title {
+    margin-top: auto;
+    font-size: min(5.9vw, 150px);
+  }
+
+  .title span {
+    white-space: nowrap;
+  }
+
+  .facts {
+    flex-direction: row;
+  }
+
+  .facts li + li {
+    padding-left: 18px;
+    border-left: 1px solid var(--oak);
+  }
+
+  .acts {
+    grid-template-columns: auto auto;
+    justify-content: start;
+  }
+
+  .closerSec {
+    padding: 144px var(--gutter) 152px;
+  }
+
+  .closerHead {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+    gap: 40px;
+    margin-bottom: 56px;
+  }
+
+  .closerHead h2 {
+    font-size: clamp(64px, 7vw, 128px);
+  }
+
+  .closerHead p {
+    justify-self: end;
+    margin: 0;
+  }
+
+  .floors {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 32px;
+  }
+
+  .sheet {
+    display: grid;
+    grid-template-columns: minmax(0, 0.35fr) minmax(0, 0.65fr);
+    gap: 40px;
+    padding: 144px var(--gutter);
+  }
+
+  .sheetLabel {
+    grid-row: 1 / span 2;
+  }
+
+  .specs div {
+    grid-template-columns: 160px 1fr;
+    padding: 24px 0;
+  }
+
+  .specs dd {
+    font-size: 34px;
+  }
+
+  .sheet .go {
+    justify-self: start;
+  }
+
+  .close {
+    padding: 144px var(--gutter) 120px;
+  }
+
+  .number {
+    max-width: none;
+    white-space: nowrap;
+  }
+
+  .bar {
+    display: none;
+  }
+}
+
+@keyframes lay {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(var(--side) * 101%));
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(0.3em);
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    transform: none;
+    clip-path: inset(0 0 -0.25em 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .strips {
+    display: none;
+  }
+  .title span {
+    animation: none;
+  }
+}
