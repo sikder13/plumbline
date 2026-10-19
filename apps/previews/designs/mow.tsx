@@ -1,4 +1,5 @@
-import { MowDay } from '@/components/MowDay';
+import { Now } from '@/components/os/Now';
+import { clock } from '@/components/os/hours';
 import { MowStripes } from '@/components/MowStripes';
 import { Pic } from '@/components/Pic';
 import { Cover } from '@/components/os/Cover';
@@ -78,7 +79,7 @@ function Demo({ data }: { data: PageData }) {
 
         <section className={s.work} aria-label="Two of their jobs">
           {c.work.map((w, i) => (
-            <figure key={w.key} className={s.job} data-wipe>
+            <figure key={w.key} className={s.job} data-reveal>
               <Pic pic={pic(data, w.key)} sizes="(min-width: 900px) 44vw, 100vw" low />
               <figcaption>
                 <b>{String(i + 1).padStart(2, '0')}</b> {w.label}
@@ -88,8 +89,17 @@ function Demo({ data }: { data: PageData }) {
         </section>
 
         <section className={s.hours} aria-labelledby="hours-h">
-          <h2 id="hours-h">The day</h2>
-          <MowDay open={c.hours.open} close={c.hours.close} days={c.hours.days} s={{ day: s.day!, dayLine: s.dayLine!, dayTrack: s.dayTrack!, daySpan: s.daySpan!, dayNow: s.dayNow!, dayTick: s.dayTick!, dayPlain: s.dayPlain! }} />
+          <h2 id="hours-h" className={s.hoursLabel}>
+            {c.hours.days}
+          </h2>
+          <p className={s.times}>
+            <span>{clock(c.hours.open)}</span>
+            <span className={s.timesTo}>to</span>
+            <span>{clock(c.hours.close)}</span>
+          </p>
+          <p className={s.hoursNow}>
+            <Now week={Array.from({ length: 7 }, (_, i) => ({ day: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][i]!, open: c.hours.open, close: c.hours.close }))} fallback={`${c.hours.days}, ${clock(c.hours.open)} to ${clock(c.hours.close)}`} />
+          </p>
         </section>
       </main>
 
