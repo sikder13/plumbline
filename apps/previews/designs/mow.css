@@ -11,7 +11,7 @@
   --muted: #545a49;
   --on-deep-muted: #d3dbbf;
   --display: 'Big Shoulders Display', 'Oswald', system-ui, sans-serif;
-  --text: 'Hanken Grotesk', system-ui, sans-serif;
+  --text: 'Work Sans', system-ui, sans-serif;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --gutter: 24px;
   background: var(--paper);

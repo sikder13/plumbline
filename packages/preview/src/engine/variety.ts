@@ -55,6 +55,11 @@ export const EARLIER_TYPE_PAIRS: { by: string; display: string; text: string }[]
   { by: 'longline', display: 'Schibsted Grotesk', text: 'IBM Plex Sans' },
   { by: 'wake', display: 'Geologica', text: 'Source Serif 4' },
   { by: 'spin', display: 'DM Sans', text: 'Instrument Sans' },
+  // Open Sign batch 01.
+  { by: 'haute', display: 'Bodoni Moda', text: 'Schibsted Grotesk' },
+  { by: 'plank', display: 'League Spartan', text: 'Source Serif 4' },
+  { by: 'mow', display: 'Big Shoulders Display', text: 'Work Sans' },
+  { by: 'column', display: 'Unbounded', text: 'JetBrains Mono' },
 ];
 
 const key = (display: string, text: string) => `${display.toLowerCase()}|${text.toLowerCase()}`;

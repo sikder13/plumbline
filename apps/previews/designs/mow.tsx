@@ -36,7 +36,7 @@ function Arrow() {
  * cut up and back. Two of their own jobs follow, then their day from 6 AM to 11 PM, with now marked.
  */
 function Demo({ data }: { data: PageData }) {
-  const { css, s } = designStyles('mow', ['Big Shoulders Display', 'Hanken Grotesk']);
+  const { css, s } = designStyles('mow', ['Big Shoulders Display', 'Work Sans']);
   const c = data.demo as Content;
 
   return (
@@ -145,4 +145,4 @@ function Demo({ data }: { data: PageData }) {
   );
 }
 
-export const mow: Design = { Demo, fonts: ['big-shoulders-display-latin-wght-normal', 'hanken-grotesk-latin-wght-normal'], heroSizes: '100vw' };
+export const mow: Design = { Demo, fonts: ['big-shoulders-display-latin-wght-normal', 'work-sans-latin-wght-normal'], heroSizes: '100vw' };
