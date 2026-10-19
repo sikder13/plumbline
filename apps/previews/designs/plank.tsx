@@ -60,12 +60,16 @@ function Demo({ data }: { data: PageData }) {
           <p className={s.mark}>
             <b>{c.mark}</b> {c.word}
           </p>
-          <h1 id="hero-h" className={s.title}>
-            {c.headline.map((l, i) => (
-              <span key={l} style={{ '--i': i } as CSSProperties}>
-                {l}
-              </span>
-            ))}
+          <h1 id="hero-h" className={s.title} aria-label={c.headline.join(' ')}>
+            <span aria-hidden="true" style={{ '--i': 0 } as CSSProperties}>
+              {c.headline[0]}
+            </span>
+            <span aria-hidden="true" className={s.amp} style={{ '--i': 1 } as CSSProperties}>
+              &amp;
+            </span>
+            <span aria-hidden="true" style={{ '--i': 2 } as CSSProperties}>
+              {c.headline[1]!.replace(/^&\s*/, '')}
+            </span>
           </h1>
           <ul className={s.facts}>
             <li>{c.town}</li>
