@@ -1,0 +1,460 @@
+/* Roatan Barbershop & Salon: the navy, white and red of their own shirts, and the blue of their capes. */
+
+.root {
+  --navy: #0b1f4d;
+  --red: #d6282c;
+  --white: #f7f7f4;
+  --blue: #1f4fb5;
+  --muted: #c6cfe2;
+  --display: 'Rozha One', Georgia, serif;
+  --text: 'Outfit', system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: 24px;
+  background: var(--white);
+  color: var(--navy);
+  font: 400 17px/1.55 var(--text);
+  overflow-x: clip;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 3px;
+}
+
+/* Three fields of their shirt colours, the shirts on a tilted card. */
+
+.hero {
+  position: relative;
+  display: grid;
+}
+
+.fields {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 86vw;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.fields i:nth-child(1) {
+  background: var(--navy);
+}
+
+.fields i:nth-child(2) {
+  background: var(--white);
+}
+
+.fields i:nth-child(3) {
+  background: var(--red);
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  width: 78vw;
+  margin: 28px auto 0;
+  padding: 10px 10px 34px;
+  background: #fff;
+  box-shadow: 0 24px 50px rgb(11 31 77 / 0.35);
+  transform: rotate(-4deg);
+  animation: deal 1s cubic-bezier(0.34, 1.4, 0.64, 1) 0.1s both;
+}
+
+.card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.say {
+  position: relative;
+  z-index: 1;
+  padding: 26px var(--gutter) 44px;
+}
+
+.title {
+  display: grid;
+  margin: 0 0 6px;
+  font: 400 clamp(64px, 19vw, 96px) / 0.9 var(--display);
+}
+
+.title small {
+  font: 600 15px/1.3 var(--text);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.street {
+  margin: 8px 0 14px;
+  color: #3d4a6b;
+}
+
+.now,
+.weekNow {
+  margin: 0 0 16px;
+  font: 600 16px/1.3 var(--text);
+}
+
+.now span::before,
+.weekNow span::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background: #a7b0c4;
+}
+
+.now span[data-open='yes']::before,
+.weekNow span[data-open='yes']::before {
+  background: #2f8a4a;
+}
+
+.acts,
+.endActs {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 8px;
+}
+
+.call,
+.go,
+.goLight {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font: 600 16px/1.1 var(--text);
+  text-align: center;
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.call {
+  background: var(--red);
+  color: var(--white);
+}
+
+.call:hover {
+  background: var(--navy);
+}
+
+.go {
+  box-shadow: inset 0 0 0 2px var(--navy);
+  color: var(--navy);
+}
+
+.go:hover {
+  background: var(--navy);
+  color: var(--white);
+}
+
+/* Fresh cuts: the deck. */
+
+.cuts {
+  background: var(--navy);
+  color: var(--white);
+  padding: 96px var(--gutter) 88px;
+  text-align: center;
+}
+
+.cutsHead {
+  margin: 0 0 36px;
+  font: 400 clamp(50px, 14vw, 68px) / 1 var(--display);
+}
+
+.deck {
+  display: grid;
+  justify-items: center;
+  gap: 22px;
+}
+
+.stack {
+  position: relative;
+  width: min(72vw, 320px);
+  aspect-ratio: 3 / 4;
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+}
+
+.dcard {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 8px 8px 28px;
+  background: #fff;
+  box-shadow: 0 14px 30px rgb(0 0 0 / 0.35);
+  transform: translateX(var(--drag)) rotate(calc(var(--k) * 3deg - 2deg)) translateY(calc(var(--k) * 6px));
+  transition: transform 0.45s var(--ease), opacity 0.3s var(--ease);
+}
+
+.dcard[data-k='0'] {
+  transform: translateX(var(--drag)) rotate(calc(var(--drag) / 20px * 1deg));
+}
+
+.dcard picture {
+  display: block;
+  height: 100%;
+}
+
+.dcard img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.deckRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.deckCount {
+  font: 600 15px/1 var(--text);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.deckNext {
+  min-height: 48px;
+  padding: 0 22px;
+  border: 2px solid var(--white);
+  border-radius: 999px;
+  background: none;
+  color: var(--white);
+  font: 600 15px/1 var(--text);
+  cursor: pointer;
+}
+
+.deckNext:hover {
+  background: var(--white);
+  color: var(--navy);
+}
+
+/* Every day. */
+
+.week {
+  padding: 96px var(--gutter);
+}
+
+.weekLine {
+  margin: 0 0 14px;
+  font: 400 clamp(54px, 16vw, 80px) / 0.95 var(--display);
+  color: var(--red);
+}
+
+.weekRow {
+  display: grid;
+  margin: 0 0 12px;
+  font: 400 26px/1.2 var(--display);
+  font-variant-numeric: tabular-nums;
+}
+
+.weekRow b {
+  font: 600 13px/1.4 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #3d4a6b;
+}
+
+/* The close: the navy and white dot of their capes. */
+
+.end {
+  padding: 88px var(--gutter) 120px;
+  background-color: var(--blue);
+  background-image: radial-gradient(circle, rgb(255 255 255 / 0.28) 2px, transparent 2.5px);
+  background-size: 22px 22px;
+  color: var(--white);
+}
+
+.endName {
+  margin: 0 0 8px;
+  font: 400 clamp(38px, 11vw, 54px) / 1 var(--display);
+}
+
+.endAddr {
+  display: grid;
+  margin: 0 0 22px;
+  font-style: normal;
+  font-size: 19px;
+}
+
+.goLight {
+  box-shadow: inset 0 0 0 2px var(--white);
+  color: var(--white);
+  background: rgb(11 31 77 / 0.35);
+}
+
+.goLight:hover {
+  background: var(--white);
+  color: var(--navy);
+}
+
+.small {
+  display: grid;
+  gap: 8px;
+  max-width: 62ch;
+  margin-top: 48px;
+  padding: 16px 18px;
+  font-size: 14px;
+  background: var(--navy);
+}
+
+.small p {
+  margin: 0;
+}
+
+.small a {
+  color: var(--white);
+}
+
+/* On a phone: two stacked rounds at the right, red and navy. */
+
+.bar {
+  position: fixed;
+  z-index: 40;
+  right: 14px;
+  bottom: 18px;
+  display: grid;
+  gap: 8px;
+  transform: translateX(160%);
+  transition: transform 0.4s var(--ease);
+}
+
+:global([data-past-hero]:not([data-covered])) .bar {
+  transform: none;
+}
+
+.bar a {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  color: var(--white);
+  font: 600 14px/1 var(--text);
+  text-decoration: none;
+  box-shadow: 0 0 0 3px var(--white), 0 10px 22px rgb(11 31 77 / 0.35);
+}
+
+.barCall {
+  background: var(--red);
+}
+
+.barGo {
+  background: var(--navy);
+}
+
+@media (min-width: 900px) {
+  .root {
+    --gutter: 56px;
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 0.5fr) minmax(0, 0.5fr);
+    align-items: center;
+    min-height: calc(100svh - 36px);
+  }
+
+  .fields {
+    inset: 0 0 0 50%;
+    height: auto;
+  }
+
+  .card {
+    grid-column: 2;
+    grid-row: 1;
+    width: min(36vw, 620px);
+    margin: 0 auto;
+  }
+
+  .say {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 48px var(--gutter);
+  }
+
+  .title {
+    font-size: clamp(110px, 11vw, 210px);
+  }
+
+  .acts,
+  .endActs {
+    grid-template-columns: auto auto;
+    justify-content: start;
+  }
+
+  .call,
+  .go,
+  .goLight {
+    padding: 0 28px;
+  }
+
+  .cuts {
+    padding: 152px var(--gutter) 144px;
+  }
+
+  .cutsHead {
+    font-size: clamp(80px, 8vw, 148px);
+  }
+
+  .stack {
+    width: min(30vw, 440px);
+  }
+
+  .week {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0 72px;
+    align-items: end;
+    padding: 160px var(--gutter);
+  }
+
+  .weekLine {
+    grid-row: 1 / span 3;
+    margin: 0;
+    font-size: clamp(96px, 9vw, 170px);
+  }
+
+  .weekRow {
+    font-size: 40px;
+  }
+
+  .end {
+    padding: 152px var(--gutter) 112px;
+  }
+
+  .endName {
+    font-size: clamp(64px, 6vw, 112px);
+  }
+
+  .bar {
+    display: none;
+  }
+}
+
+@keyframes deal {
+  from {
+    transform: rotate(-16deg) translateY(40px);
+  }
+  to {
+    transform: rotate(-4deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
+  .dcard {
+    transition: none;
+  }
+}

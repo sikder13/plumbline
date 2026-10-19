@@ -1,0 +1,447 @@
+/* TURBO TIRE SHOP: their building's blue, asphalt, white and door steel. */
+
+.root {
+  --blue: #1f6fb2;
+  --asphalt: #202228;
+  --white: #f4f6f8;
+  --steel: #8b9096;
+  --muted: #b8c0c8;
+  --display: 'Syne', system-ui, sans-serif;
+  --text: 'Familjen Grotesk', system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: 24px;
+  background: var(--asphalt);
+  color: var(--white);
+  font: 400 17px/1.55 var(--text);
+  overflow-x: clip;
+}
+
+.root a:focus-visible {
+  outline: 3px solid var(--white);
+  outline-offset: 3px;
+}
+
+/* Door slats: brushed steel with a groove at the foot of each. */
+.heroDoor i,
+.door i {
+  display: block;
+  background: linear-gradient(180deg, #a3a8ae, #868b91 80%, #5d6167 92%, #c3c7cc);
+  transform-origin: top;
+}
+
+.hero {
+  display: grid;
+}
+
+.photo {
+  position: relative;
+  aspect-ratio: 4 / 3.4;
+  overflow: hidden;
+  background: var(--blue);
+}
+
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.heroDoor,
+.door {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: repeat(8, 1fr);
+  pointer-events: none;
+}
+
+.heroDoor i {
+  animation: roll 0.42s var(--ease) calc(0.25s + var(--i) * 0.07s) both;
+}
+
+.say {
+  padding: 24px var(--gutter) 44px;
+  background: var(--blue);
+}
+
+.title {
+  display: grid;
+  margin: 0 0 10px;
+  font: 800 clamp(44px, 14vw, 76px) / 0.86 var(--display);
+  letter-spacing: -0.03em;
+}
+
+.title span + span {
+  font-size: 0.42em;
+  letter-spacing: 0.08em;
+  margin-top: 8px;
+}
+
+.street {
+  margin: 6px 0 14px;
+  color: #e4eef8;
+}
+
+.now,
+.weekNow {
+  margin: 0 0 16px;
+  font: 700 16px/1.3 var(--text);
+}
+
+.now span::before,
+.weekNow span::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 6px;
+  margin-right: 10px;
+  background: var(--muted);
+  vertical-align: 0.15em;
+}
+
+.now span[data-open='yes']::before,
+.weekNow span[data-open='yes']::before {
+  background: #9bf0b0;
+}
+
+.acts,
+.endActs {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 8px;
+}
+
+.call,
+.go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 14px;
+  font: 700 16px/1.1 var(--display);
+  text-align: center;
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.call {
+  background: var(--asphalt);
+  color: var(--white);
+}
+
+.call:hover {
+  background: var(--white);
+  color: var(--asphalt);
+}
+
+.go {
+  box-shadow: inset 0 0 0 2px var(--white);
+  color: var(--white);
+}
+
+.go:hover {
+  background: var(--white);
+  color: var(--blue);
+}
+
+/* The bays. */
+
+.baysSec {
+  padding: 96px var(--gutter);
+}
+
+.baysHead {
+  margin: 0 0 32px;
+  font: 800 clamp(46px, 13vw, 62px) / 0.95 var(--display);
+  letter-spacing: -0.03em;
+}
+
+.bays {
+  display: grid;
+  gap: 36px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bay {
+  position: relative;
+  overflow: hidden;
+  border: 6px solid #3a3d45;
+  border-top-width: 14px;
+}
+
+.bay img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
+.bay[data-on] .door i {
+  animation: roll 0.42s var(--ease) calc(var(--i) * 0.07s) both;
+}
+
+.bayLabel {
+  margin: 12px 0 0;
+  font: 700 22px/1.2 var(--display);
+}
+
+.bayLabel b {
+  margin-right: 8px;
+  color: var(--muted);
+}
+
+/* Six days. */
+
+.week {
+  padding: 96px var(--gutter);
+  background: var(--white);
+  color: var(--asphalt);
+}
+
+.weekLine {
+  margin: 0;
+  font: 800 clamp(40px, 11.6vw, 58px) / 0.95 var(--display);
+  letter-spacing: -0.03em;
+}
+
+.weekTime {
+  margin: 8px 0 12px;
+  font: 800 clamp(36px, 10vw, 52px) / 1 var(--display);
+  color: var(--blue);
+  font-variant-numeric: tabular-nums;
+}
+
+.weekClosed {
+  margin: 0 0 18px;
+  color: #4a5058;
+}
+
+.weekNow span::before {
+  background: #c7ccd2;
+}
+
+.weekNow span[data-open='yes']::before {
+  background: #2f8a4a;
+}
+
+/* The close: a shut door, the address painted on its slats. */
+
+.end {
+  padding: 88px var(--gutter) 120px;
+}
+
+.shut {
+  display: grid;
+  gap: 4px;
+  padding: 34px 24px;
+  color: var(--asphalt);
+  background: repeating-linear-gradient(180deg, #a3a8ae 0, #868b91 34px, #5d6167 40px, #c3c7cc 42px);
+  border: 8px solid #3a3d45;
+  border-top-width: 18px;
+}
+
+.shutName {
+  margin: 0 0 10px;
+  font: 800 clamp(30px, 8.6vw, 44px) / 0.95 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.shutAddr {
+  display: grid;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.shutTel {
+  margin-top: 10px;
+  color: var(--asphalt);
+  font: 800 30px/1 var(--display);
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+
+.end .endActs {
+  margin-top: 24px;
+}
+
+.end .call {
+  background: var(--blue);
+}
+
+.small {
+  display: grid;
+  gap: 8px;
+  max-width: 62ch;
+  margin-top: 48px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.small p {
+  margin: 0;
+}
+
+.small a {
+  color: var(--white);
+}
+
+/* On a phone: two blue squares at the bottom left. */
+
+.bar {
+  position: fixed;
+  z-index: 40;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  gap: 6px;
+  transform: translateY(150%);
+  transition: transform 0.4s var(--ease);
+}
+
+:global([data-past-hero]:not([data-covered])) .bar {
+  transform: none;
+}
+
+.bar a {
+  display: grid;
+  place-items: center;
+  width: 70px;
+  height: 70px;
+  color: var(--white);
+  font: 800 15px/1 var(--display);
+  text-decoration: none;
+  box-shadow: 0 10px 24px rgb(0 0 0 / 0.4);
+}
+
+.barCall {
+  background: var(--blue);
+}
+
+.barGo {
+  background: #3a3d45;
+}
+
+@media (min-width: 900px) {
+  .root {
+    --gutter: 56px;
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 0.6fr) minmax(0, 0.4fr);
+    min-height: calc(100svh - 36px);
+  }
+
+  .photo {
+    aspect-ratio: auto;
+  }
+
+  .say {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 48px var(--gutter) 56px;
+  }
+
+  .title {
+    font-size: min(4.9vw, 96px);
+  }
+
+  .acts {
+    grid-template-columns: auto auto;
+    justify-content: start;
+  }
+
+  .call,
+  .go {
+    padding: 0 28px;
+  }
+
+  .baysSec {
+    padding: 152px var(--gutter);
+  }
+
+  .baysHead {
+    font-size: clamp(72px, 7vw, 132px);
+  }
+
+  .bays {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  .week {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: end;
+    gap: 0 56px;
+    padding: 160px var(--gutter);
+  }
+
+  .weekLine,
+  .weekTime {
+    font-size: clamp(64px, 6vw, 112px);
+  }
+
+  .weekTime {
+    grid-column: 1;
+  }
+
+  .weekClosed,
+  .weekNow {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  .end {
+    display: grid;
+    grid-template-columns: minmax(0, 0.6fr) minmax(0, 0.4fr);
+    align-items: end;
+    gap: 0 56px;
+    padding: 160px var(--gutter) 112px;
+  }
+
+  .shut {
+    padding: 56px 48px;
+    background: repeating-linear-gradient(180deg, #a3a8ae 0, #868b91 52px, #5d6167 60px, #c3c7cc 62px);
+  }
+
+  .shutName {
+    font-size: clamp(48px, 4.6vw, 84px);
+  }
+
+  .shutTel {
+    font-size: 44px;
+  }
+
+  .end .endActs {
+    grid-template-columns: auto auto;
+    margin: 0;
+  }
+
+  .small {
+    grid-column: 1 / -1;
+    margin-top: 72px;
+  }
+
+  .bar {
+    display: none;
+  }
+}
+
+@keyframes roll {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heroDoor,
+  .door {
+    display: none;
+  }
+}

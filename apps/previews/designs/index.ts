@@ -41,8 +41,11 @@ import { panorama } from './panorama';
 import { plate } from './plate';
 import { shelf } from './shelf';
 import { tier } from './tier';
+import { mesa } from './mesa';
+import { bay } from './bay';
+import { deck } from './deck';
 import { recipe } from '@/sections/Recipe';
 import { ENGINES_AS_DESIGNS } from '@/engines';
 
 /** The wave 1 pages each have a design of their own, as does a page made to order. A later page is laid out from its recipe by the section library. */
-export const DESIGNS: Record<string, Design> = { coastal, earth, journal, label, loop, waterline, afoot, paddock, fathom, lineage, earshot, meander, galaxy, latch, landing, haul, pour, backyard, sunpath, lamplight, ingrained, settle, clearing, hush, skyline, aperture, sounder, bearing, longline, wake, spin, haute, plank, mow, column, cottage, letterboard, ticket, panorama, plate, shelf, tier, recipe, ...ENGINES_AS_DESIGNS };
+export const DESIGNS: Record<string, Design> = { coastal, earth, journal, label, loop, waterline, afoot, paddock, fathom, lineage, earshot, meander, galaxy, latch, landing, haul, pour, backyard, sunpath, lamplight, ingrained, settle, clearing, hush, skyline, aperture, sounder, bearing, longline, wake, spin, haute, plank, mow, column, cottage, letterboard, ticket, panorama, plate, shelf, tier, mesa, bay, deck, recipe, ...ENGINES_AS_DESIGNS };
