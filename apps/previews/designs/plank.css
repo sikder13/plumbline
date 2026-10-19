@@ -109,46 +109,45 @@
   animation: lay 0.75s var(--ease) calc(0.12s + var(--i) * 0.085s) both;
 }
 
+/* Calls: ruled lines, like rows of a spec sheet, each with its arrow. */
 .acts {
   display: grid;
-  grid-template-columns: 1.3fr 1fr;
-  gap: 8px;
   padding: 14px var(--gutter) 44px;
 }
 
 .call,
 .go {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 10px;
-  min-height: 56px;
-  padding: 0 18px;
-  border-radius: 4px;
-  font: 600 16px/1.1 var(--display);
-  text-align: center;
+  min-height: 60px;
+  padding: 0 4px;
+  border-bottom: 1.5px solid var(--ink);
+  color: var(--ink);
+  font: 600 18px/1.1 var(--display);
   text-decoration: none;
   font-variant-numeric: tabular-nums;
-  transition: background-color 0.35s var(--ease), color 0.35s var(--ease), border-color 0.35s var(--ease);
+  transition: background-color 0.35s var(--ease), color 0.35s var(--ease), padding 0.35s var(--ease);
+}
+
+.acts > :first-child,
+.sheetActs > :first-child {
+  border-top: 1.5px solid var(--ink);
 }
 
 .call {
-  background: var(--indigo);
-  color: var(--paper);
+  color: var(--indigo);
 }
 
-.call:hover {
-  background: var(--ink);
+.call::after {
+  content: '\2192';
 }
 
-.go {
-  border: 1.5px solid var(--ink);
-  color: var(--ink);
-}
-
+.call:hover,
 .go:hover {
-  background: var(--ink);
-  color: var(--paper);
+  padding: 0 14px;
+  background: var(--soft);
 }
 
 /* Look closer. */
@@ -296,20 +295,17 @@
 
 .sheetActs {
   display: grid;
-  gap: 10px;
 }
 
-.sheet .go {
-  border-color: var(--on-deep);
+.sheet .call,
+.sheet .go,
+.sheet .sheetActs > :first-child {
+  border-color: var(--on-deep-muted);
   color: var(--on-deep);
 }
 
+.sheet .call:hover,
 .sheet .go:hover {
-  background: var(--on-deep);
-  color: var(--deep);
-}
-
-.sheet .call:hover {
   background: var(--on-deep);
   color: var(--deep);
 }
@@ -378,27 +374,32 @@
     --gutter: 56px;
   }
 
+  /* The headline in one line across the top, the floor laid under it to the edges, the ruled calls at its foot. */
   .hero {
-    grid-template-columns: minmax(0, 0.46fr) minmax(0, 0.54fr);
-    grid-template-rows: 1fr auto;
-    min-height: calc(100svh - 36px);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    height: calc(100svh - 36px);
+    min-height: 640px;
   }
 
   .say {
-    grid-column: 1;
-    grid-row: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 48px var(--gutter) 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0 40px;
+    padding: 36px var(--gutter) 26px;
+  }
+
+  .mark {
+    grid-column: 1 / -1;
   }
 
   .title {
-    margin-top: auto;
-    font-size: min(5.9vw, 150px);
+    font-size: min(4.6vw, 112px);
+    white-space: nowrap;
   }
 
   .title span {
-    white-space: nowrap;
+    display: inline;
   }
 
   .amp {
@@ -407,33 +408,29 @@
   }
 
   .facts {
-    margin-top: 18px;
-  }
-
-  .facts li + li {
-    padding-left: 14px;
-    border-left: 1px solid var(--oak);
+    flex-direction: column;
+    align-items: flex-end;
+    margin: 0 0 6px;
   }
 
   .photo {
-    grid-column: 2;
-    grid-row: 1 / span 2;
     aspect-ratio: auto;
-    height: 100%;
+    min-height: 0;
   }
 
   .acts {
-    grid-column: 1;
-    grid-row: 2;
-    grid-template-columns: auto auto;
-    justify-content: start;
-    gap: 10px;
-    padding: 24px var(--gutter) 48px;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 48px;
+    padding: 22px var(--gutter) 40px;
   }
 
-  .call,
-  .go {
-    padding: 0 24px;
+  .acts > :nth-child(2),
+  .sheetActs > :nth-child(2) {
+    border-top: 1.5px solid var(--ink);
+  }
+
+  .sheet .sheetActs > :nth-child(2) {
+    border-color: var(--on-deep-muted);
   }
 
   .closerSec {
@@ -491,8 +488,8 @@
 
   .sheetActs {
     grid-column: 2;
-    grid-template-columns: auto auto;
-    justify-content: start;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 32px;
   }
 
   .small {

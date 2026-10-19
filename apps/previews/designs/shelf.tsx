@@ -22,7 +22,7 @@ interface Content {
 
 /**
  * La Reyna Bakery, Commercial Drive. A tray of their conchas with the name on a round pink box sticker;
- * then their glass case, two shelves sliding past each other; open every day in one line; and the
+ * then their glass case, two shelves sliding past each other, the hours on the shelf rail; and the
  * address beside the case to close.
  */
 function Demo({ data }: { data: PageData }) {
@@ -42,14 +42,11 @@ function Demo({ data }: { data: PageData }) {
         <div className={s.photo}>
           <Pic pic={pic(data, 'hero')} sizes="100vw" first />
         </div>
-        <div className={s.sticker} aria-hidden="true">
-          <span>{c.nameSticker[0]}</span>
-          <span>{c.nameSticker[1]}</span>
-        </div>
+        <h1 id="hero-h" className={s.sticker} aria-label={c.name}>
+          <span aria-hidden="true">{c.nameSticker[0]}</span>
+          <span aria-hidden="true">{c.nameSticker[1]}</span>
+        </h1>
         <div className={s.say}>
-          <h1 id="hero-h" className={s.title}>
-            {c.name}
-          </h1>
           <p className={s.street}>{c.street}</p>
           <p className={s.now}>
             <Now week={c.hours} fallback={line} />
@@ -83,16 +80,12 @@ function Demo({ data }: { data: PageData }) {
               </div>
             ))}
           </ShelfCase>
-        </section>
-
-        <section className={s.days} aria-labelledby="days-h">
-          <h2 id="days-h" className={s.daysLine}>
-            {line}
-          </h2>
-          <p className={s.daysNow}>
+          <p className={s.rail}>
+            <b>{line}</b>
             <Now week={c.hours} fallback={line} />
           </p>
         </section>
+
       </main>
 
       <footer className={s.end} data-covers>

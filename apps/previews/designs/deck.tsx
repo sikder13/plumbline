@@ -22,9 +22,9 @@ interface Content {
 }
 
 /**
- * Roatan Barbershop & Salon, South Keystone Avenue. Their shirts as a tilted card on three fields of
- * their own colours; a deck of their cuts to flick through; every day in two lines; and the dot of their
- * barber capes, with the address on it, to close.
+ * Roatan Barbershop & Salon, South Keystone Avenue. The name over a band of their own three colours with
+ * their shirts as a tilted card on it, and their week beside the call; a deck of their cuts to flick
+ * through; and the dot of their barber capes, with the address on it, to close.
  */
 function Demo({ data }: { data: PageData }) {
   const { css, s } = designStyles('deck', ['Rozha One', 'Outfit']);
@@ -39,22 +39,34 @@ function Demo({ data }: { data: PageData }) {
       </style>
 
       <section className={s.hero} data-hero aria-labelledby="hero-h">
-        <div className={s.fields} aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </div>
-        <div className={s.card}>
-          <Pic pic={pic(data, 'hero')} sizes="(min-width: 900px) 36vw, 78vw" first />
+        <h1 id="hero-h" className={s.title} aria-label={c.nameFull}>
+          <span aria-hidden="true">{c.name}</span>
+          <small aria-hidden="true">{c.nameRest}</small>
+        </h1>
+        <div className={s.stage}>
+          <div className={s.fields} aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </div>
+          <div className={s.card}>
+            <Pic pic={pic(data, 'hero')} sizes="(min-width: 900px) 34vw, 78vw" first />
+          </div>
         </div>
         <div className={s.say}>
-          <h1 id="hero-h" className={s.title} aria-label={c.nameFull}>
-            <span aria-hidden="true">{c.name}</span>
-            <small aria-hidden="true">{c.nameRest}</small>
-          </h1>
-          <p className={s.street}>{c.street}</p>
-          <p className={s.now}>
-            <Now week={c.hours} fallback="Open every day" />
+          <div className={s.where}>
+            <p className={s.now}>
+              <Now week={c.hours} fallback="Open every day" />
+            </p>
+            <p className={s.street}>{c.street}</p>
+          </div>
+          <p className={s.days}>
+            <span>
+              <b>Monday to Saturday</b> {clock(weekday.open!)} to {clock(weekday.close!)}
+            </span>
+            <span>
+              <b>Sunday</b> {clock(sunday.open!)} to {clock(sunday.close!)}
+            </span>
           </p>
           <div className={s.acts} data-covers>
             <a className={s.call} href={c.phone.tel} data-press data-magnetic>
@@ -75,20 +87,6 @@ function Demo({ data }: { data: PageData }) {
           <CardDeck cards={c.deck.map((k) => pic(data, k))} s={{ deck: s.deck!, stack: s.stack!, card: s.dcard!, deckRow: s.deckRow!, deckCount: s.deckCount!, deckNext: s.deckNext! }} />
         </section>
 
-        <section className={s.week} aria-labelledby="week-h">
-          <h2 id="week-h" className={s.weekLine}>
-            Every day
-          </h2>
-          <p className={s.weekRow}>
-            <b>Monday to Saturday</b> {clock(weekday.open!)} to {clock(weekday.close!)}
-          </p>
-          <p className={s.weekRow}>
-            <b>Sunday</b> {clock(sunday.open!)} to {clock(sunday.close!)}
-          </p>
-          <p className={s.weekNow}>
-            <Now week={c.hours} fallback="Open every day" />
-          </p>
-        </section>
       </main>
 
       <footer className={s.end} data-covers>
@@ -131,4 +129,4 @@ function Demo({ data }: { data: PageData }) {
   );
 }
 
-export const deck: Design = { Demo, fonts: ['rozha-one-latin-400-normal', 'outfit-latin-wght-normal'], heroSizes: '(min-width: 900px) 36vw, 78vw' };
+export const deck: Design = { Demo, fonts: ['rozha-one-latin-400-normal', 'outfit-latin-wght-normal'], heroSizes: '(min-width: 900px) 34vw, 78vw' };

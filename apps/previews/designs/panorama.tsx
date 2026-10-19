@@ -56,10 +56,10 @@ function Demo({ data }: { data: PageData }) {
           </p>
           <div className={s.acts} data-covers>
             <a className={s.call} href={c.phone.tel} data-press data-magnetic>
-              Call {c.phone.display}
+              <small>Call the shop</small> {c.phone.display}
             </a>
             <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
-              Directions
+              Map <span aria-hidden="true">&#8599;</span>
             </a>
           </div>
         </div>
@@ -130,10 +130,10 @@ function Demo({ data }: { data: PageData }) {
         </address>
         <div className={s.endActs}>
           <a className={s.callLight} href={c.phone.tel} data-press>
-            Call {c.phone.display}
+            <small>Call the shop</small> {c.phone.display}
           </a>
           <a className={s.goLight} href={c.maps} rel="noopener" target="_blank" data-press>
-            Directions
+            Map <span aria-hidden="true">&#8599;</span>
           </a>
         </div>
         <div className={s.small}>

@@ -69,7 +69,7 @@ function Demo({ data }: { data: PageData }) {
           </ul>
         </div>
         <div className={s.photo}>
-          <Pic pic={pic(data, 'hero')} sizes="(min-width: 900px) 54vw, 100vw" first />
+          <Pic pic={pic(data, 'hero')} sizes="100vw" first />
           <div className={s.strips} aria-hidden="true">
             {Array.from({ length: STRIPS }, (_, i) => (
               <i key={i} style={{ '--i': i, '--side': i % 2 ? 1 : -1 } as CSSProperties} />
@@ -166,4 +166,4 @@ function Demo({ data }: { data: PageData }) {
   );
 }
 
-export const plank: Design = { Demo, fonts: ['league-spartan-latin-wght-normal', 'source-serif-4-latin-wght-normal'], heroSizes: '(min-width: 900px) 54vw, 100vw' };
+export const plank: Design = { Demo, fonts: ['league-spartan-latin-wght-normal', 'source-serif-4-latin-wght-normal'], heroSizes: '100vw' };

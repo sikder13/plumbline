@@ -30,7 +30,7 @@
 
 .photo {
   position: relative;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 4 / 4.6;
   overflow: hidden;
   background: var(--green);
 }
@@ -66,8 +66,16 @@
   transform-origin: left;
 }
 
+/* A cream plaque hung across the foot of the photo, as by a cottage door. */
 .say {
-  padding: 24px var(--gutter) 44px;
+  position: relative;
+  z-index: 1;
+  margin: -72px var(--gutter) 44px;
+  padding: 24px 22px 18px;
+  background: var(--paper);
+  border: 1px solid var(--tan);
+  box-shadow: 0 0 0 6px var(--paper), 0 18px 40px rgb(35 31 23 / 0.18);
+  text-align: center;
 }
 
 .street {
@@ -123,45 +131,64 @@
   background: #3f7a4a;
 }
 
+/* Calls: the number written out large as the link, directions as a small engraved line. */
 .acts,
 .endActs {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  align-items: flex-end;
+  gap: 6px 28px;
 }
 
-.call,
-.go {
-  display: inline-flex;
-  align-items: center;
+.acts {
   justify-content: center;
-  min-height: 54px;
-  padding: 0 24px;
-  border-radius: 27px 27px 27px 4px;
-  font: 400 17px/1 var(--display);
-  letter-spacing: 0.04em;
-  text-decoration: none;
-  font-variant-numeric: tabular-nums;
-  transition: background-color 0.35s var(--ease), color 0.35s var(--ease);
+}
+
+.acts .call {
+  justify-items: center;
 }
 
 .call {
-  background: var(--green);
-  color: var(--paper);
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  padding: 4px 0 8px;
+  border-bottom: 2px solid var(--green);
+  color: var(--green);
+  font: 400 30px/1 var(--display);
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.35s var(--ease), border-color 0.35s var(--ease);
+}
+
+.call small {
+  font: italic 400 16px/1.2 var(--text);
+  color: var(--muted);
 }
 
 .call:hover {
-  background: var(--ink);
+  color: var(--ink);
+  border-color: var(--tan);
 }
 
 .go {
-  border: 1.5px solid var(--green);
-  color: var(--green);
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+  font: 400 14px/1 var(--display);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-underline-offset: 6px;
+}
+
+.go::after {
+  content: ' \2197';
+  margin-left: 6px;
 }
 
 .go:hover {
-  background: var(--green);
-  color: var(--paper);
+  color: var(--green);
 }
 
 /* Walk in. */
@@ -384,25 +411,39 @@
     --gutter: 56px;
   }
 
+  /* The cottage across the whole screen, the plaque straddling its lower edge at the left. */
   .hero {
-    grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
-    min-height: calc(100svh - 36px);
+    padding-bottom: 40px;
   }
 
   .photo {
-    grid-column: 2;
-    grid-row: 1;
     aspect-ratio: auto;
-    margin: 28px 28px 28px 0;
-    border: 10px solid var(--paper);
-    outline: 1px solid var(--tan);
+    height: calc(100svh - 240px);
+    min-height: 460px;
   }
 
   .say {
-    grid-column: 1;
-    grid-row: 1;
-    align-self: center;
-    padding: 48px 40px 48px var(--gutter);
+    justify-self: start;
+    width: min(700px, 52vw);
+    margin: -250px 0 0 var(--gutter);
+    padding: 30px 40px 24px;
+    text-align: left;
+  }
+
+  .say .title {
+    font-size: clamp(56px, 4.6vw, 88px);
+  }
+
+  .say .line {
+    margin: 8px 0 12px;
+  }
+
+  .acts {
+    justify-content: start;
+  }
+
+  .acts .call {
+    justify-items: start;
   }
 
   .title {

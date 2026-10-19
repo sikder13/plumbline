@@ -21,14 +21,21 @@
   outline-offset: 3px;
 }
 
+/* The hero: the sign first, a shop window of pastries under it, then the call. */
 .hero {
   display: grid;
+  justify-items: center;
+  padding: 40px var(--gutter) 48px;
+  text-align: center;
 }
 
 .photo {
   position: relative;
-  aspect-ratio: 4 / 4.4;
+  width: min(72vw, 340px);
+  aspect-ratio: 3 / 4;
   overflow: hidden;
+  border-radius: 999px 999px 0 0;
+  box-shadow: 0 0 0 6px var(--night), 0 0 0 8px rgb(255 90 95 / 0.55), 0 0 34px rgb(255 90 95 / 0.25);
 }
 
 .photo img {
@@ -38,18 +45,20 @@
 }
 
 .say {
-  padding: 22px var(--gutter) 44px;
+  display: grid;
+  justify-items: center;
+  padding: 24px 0 0;
 }
 
 .street {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   font-size: 13px;
   color: var(--muted);
 }
 
 .title {
   display: grid;
-  margin: 0 0 16px;
+  margin: 0 0 26px;
 }
 
 .titleName {
@@ -64,6 +73,7 @@
   color: var(--red);
   text-shadow: 0 0 12px rgb(255 90 95 / 0.65), 0 0 32px rgb(255 90 95 / 0.35);
   animation: glow 1.2s var(--ease) 0.3s both;
+  order: -1;
 }
 
 .now {
@@ -87,44 +97,48 @@
   box-shadow: 0 0 8px #7ee08f;
 }
 
-.acts,
-.endActs {
+/* Calls: a neon tube around the number, directions as a quiet line under it. */
+.acts {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 8px;
+  justify-items: center;
+  gap: 6px;
 }
 
-.call,
-.go {
+.call {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 56px;
-  padding: 0 16px;
-  font: 600 15px/1.1 var(--text);
-  text-align: center;
+  padding: 0 30px;
+  border: 2px solid var(--red);
+  border-radius: 999px;
+  color: var(--cream);
+  font: 600 16px/1.1 var(--text);
   text-decoration: none;
   font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 8px rgb(255 90 95 / 0.6);
+  box-shadow: 0 0 14px rgb(255 90 95 / 0.45), inset 0 0 10px rgb(255 90 95 / 0.25);
   transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
-}
-
-.call {
-  background: var(--cream);
-  color: var(--night);
 }
 
 .call:hover {
   background: var(--red);
+  color: var(--night);
+  text-shadow: none;
 }
 
 .go {
-  box-shadow: inset 0 0 0 1.5px var(--cream);
-  color: var(--cream);
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--muted);
+  font: 600 14px/1 var(--text);
+  letter-spacing: 0.08em;
+  text-underline-offset: 6px;
 }
 
 .go:hover {
-  background: var(--cream);
-  color: var(--night);
+  color: var(--cream);
 }
 
 /* Cakes, stacking into tiers. */
@@ -196,10 +210,6 @@
   object-fit: cover;
 }
 
-.hours {
-  padding: 48px var(--gutter) 32px;
-}
-
 .hoursHead {
   margin: 0;
   font: 400 clamp(32px, 9vw, 44px) / 1.1 var(--display);
@@ -235,16 +245,27 @@
 /* The close: a neon sign, lit while they are open. */
 
 .end {
+  display: grid;
+  gap: 56px;
   padding: 88px var(--gutter) 120px;
-  text-align: center;
   border-top: 1px solid rgb(246 239 230 / 0.12);
+}
+
+.endNight {
+  display: grid;
+  justify-items: start;
+  gap: 22px;
+}
+
+.endFind {
+  display: grid;
 }
 
 .neonWrap {
   display: grid;
-  justify-items: center;
+  justify-items: start;
   gap: 10px;
-  margin-bottom: 40px;
+  margin-bottom: 12px;
 }
 
 .neon {
@@ -252,7 +273,7 @@
   padding: 10px 26px 14px;
   border: 3px solid #938bab;
   border-radius: 999px;
-  font: 400 clamp(52px, 16vw, 84px) / 1 var(--display);
+  font: 400 clamp(44px, 13vw, 64px) / 1 var(--display);
   color: #938bab;
   transition: color 0.6s var(--ease), border-color 0.6s var(--ease), text-shadow 0.6s var(--ease), box-shadow 0.6s var(--ease);
 }
@@ -282,15 +303,16 @@
 }
 
 .endActs {
-  max-width: 420px;
-  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
 }
 
 .small {
   display: grid;
   gap: 8px;
   max-width: 62ch;
-  margin: 56px auto 0;
   font-size: 13px;
   color: var(--muted);
 }
@@ -336,41 +358,42 @@
     --gutter: 56px;
   }
 
+  /* The window in the middle, the sign to its left, the call to its right. */
   .hero {
-    grid-template-columns: minmax(0, 0.62fr) minmax(0, 0.38fr);
+    grid-template-columns: minmax(0, 1.2fr) auto minmax(0, 0.8fr);
+    align-items: center;
+    gap: 0 56px;
     min-height: calc(100svh - 36px);
-  }
-
-  .photo {
-    grid-column: 2;
-    grid-row: 1;
-    aspect-ratio: auto;
-  }
-
-  .say {
-    grid-column: 1;
-    grid-row: 1;
-    align-self: center;
     padding: 48px var(--gutter);
   }
 
+  .title {
+    justify-self: end;
+    margin: 0;
+    text-align: right;
+  }
+
+  .photo {
+    width: min(30vw, 480px);
+  }
+
+  .say {
+    justify-self: start;
+    justify-items: start;
+    padding: 0;
+    text-align: left;
+  }
+
+  .acts {
+    justify-items: start;
+  }
+
   .titleName {
-    font-size: clamp(96px, 10.6vw, 200px);
+    font-size: clamp(72px, 6.4vw, 120px);
   }
 
   .titleWord {
-    font-size: clamp(56px, 5.6vw, 104px);
-  }
-
-  .acts,
-  .endActs {
-    grid-template-columns: auto auto;
-    justify-content: start;
-  }
-
-  .call,
-  .go {
-    padding: 0 28px;
+    font-size: clamp(44px, 4.2vw, 78px);
   }
 
   .cakes {
@@ -406,27 +429,26 @@
     grid-column: 1 / -1;
   }
 
-  .hours {
-    align-self: center;
-    padding: 72px var(--gutter);
-  }
-
   .hoursHead {
     font-size: clamp(48px, 4.6vw, 84px);
   }
 
   .tray {
+    grid-column: 2;
     width: auto;
-    margin: 72px var(--gutter) 0 0;
+    margin: -14vw var(--gutter) 0 12%;
+    position: relative;
   }
 
   .end {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: end;
+    gap: 64px 96px;
     padding: 152px var(--gutter) 112px;
   }
 
-  .endActs {
-    justify-content: center;
-    max-width: none;
+  .small {
+    grid-column: 1 / -1;
   }
 
   .bar {

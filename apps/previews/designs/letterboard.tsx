@@ -32,12 +32,12 @@ function boardSpan(d: Day): string {
 }
 
 /**
- * Players Way Barbershop, West 16th Street. Their red front beside the name on black felt; the services
- * Google lists for them put up on a letterboard, letter by letter; their own cuts; the week on a smaller
- * board with today in red; and the shop's red to close.
+ * Players Way Barbershop, West 16th Street. The name on a felt board hung over their red front; the
+ * services Google lists for them put up on a letterboard, letter by letter; their own cuts; and the week
+ * on a smaller board beside the address to close, today in red.
  */
 function Demo({ data }: { data: PageData }) {
-  const { css, s } = designStyles('letterboard', ['Oswald', 'Space Mono']);
+  const { css, s } = designStyles('letterboard', ['Oswald', 'Bitter']);
   const c = data.demo as Content;
 
   return (
@@ -48,28 +48,30 @@ function Demo({ data }: { data: PageData }) {
 
       <section className={s.hero} data-hero aria-labelledby="hero-h">
         <div className={s.photo}>
-          <Pic pic={pic(data, 'hero')} sizes="(min-width: 900px) 44vw, 100vw" first />
+          <Pic pic={pic(data, 'hero')} sizes="100vw" first />
         </div>
-        <div className={s.felt}>
-          <p className={s.street}>{c.street}</p>
-          <h1 id="hero-h" className={s.title} aria-label={c.name}>
-            {c.nameBoard.map((l) => (
-              <span key={l} aria-hidden="true">
-                {l}
-              </span>
-            ))}
-          </h1>
-          <p className={s.now}>
-            <Now week={c.hours} fallback="Open Tuesday to Saturday" />
-          </p>
-          <div className={s.acts} data-covers>
-            <a className={s.call} href={c.phone.tel} data-press data-magnetic>
-              Call {c.phone.display}
-            </a>
-            <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
-              Directions
-            </a>
+        <div className={s.frame}>
+          <div className={s.felt}>
+            <p className={s.street}>{c.street}</p>
+            <h1 id="hero-h" className={s.title} aria-label={c.name}>
+              {c.nameBoard.map((l) => (
+                <span key={l} aria-hidden="true">
+                  {l}
+                </span>
+              ))}
+            </h1>
+            <p className={s.now}>
+              <Now week={c.hours} fallback="Open Tuesday to Saturday" />
+            </p>
           </div>
+        </div>
+        <div className={s.acts} data-covers>
+          <a className={s.call} href={c.phone.tel} data-press data-magnetic>
+            Call {c.phone.display}
+          </a>
+          <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
+            Directions
+          </a>
         </div>
       </section>
 
@@ -98,10 +100,11 @@ function Demo({ data }: { data: PageData }) {
           </div>
         </section>
 
-        <section className={s.week} id="week" aria-labelledby="week-h">
-          <h2 id="week-h" className={s.label}>
-            Hours
-          </h2>
+      </main>
+
+      <footer className={s.end} data-covers>
+        <div className={s.week} id="week">
+          <h2 className={s.label}>Hours</h2>
           <p className={s.weekNow}>
             <Now week={c.hours} fallback="Open Tuesday to Saturday" scope="#week" />
           </p>
@@ -113,23 +116,22 @@ function Demo({ data }: { data: PageData }) {
               </li>
             ))}
           </ol>
-        </section>
-      </main>
-
-      <footer className={s.end} data-covers>
-        <p className={s.endLabel}>Find the shop</p>
-        <address className={s.addrBoard}>
-          {c.address.map((l) => (
-            <span key={l}>{l.toUpperCase()}</span>
-          ))}
-        </address>
-        <div className={s.endActs}>
-          <a className={s.callDark} href={c.phone.tel} data-press>
-            Call {c.phone.display}
-          </a>
-          <a className={s.goDark} href={c.maps} rel="noopener" target="_blank" data-press>
-            Directions
-          </a>
+        </div>
+        <div className={s.find}>
+          <h2 className={s.label}>Find the shop</h2>
+          <address className={s.addr}>
+            {c.address.map((l) => (
+              <span key={l}>{l}</span>
+            ))}
+          </address>
+          <div className={s.endActs}>
+            <a className={s.call} href={c.phone.tel} data-press>
+              Call {c.phone.display}
+            </a>
+            <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
+              Directions
+            </a>
+          </div>
         </div>
         <div className={s.small}>
           <p>{c.credit}</p>
@@ -156,4 +158,4 @@ function Demo({ data }: { data: PageData }) {
   );
 }
 
-export const letterboard: Design = { Demo, fonts: ['oswald-latin-wght-normal', 'space-mono-latin-400-normal'], heroSizes: '(min-width: 900px) 44vw, 100vw' };
+export const letterboard: Design = { Demo, fonts: ['oswald-latin-wght-normal', 'bitter-latin-wght-normal'], heroSizes: '100vw' };

@@ -22,17 +22,37 @@
   outline-offset: 3px;
 }
 
-/* Three fields of their shirt colours, the shirts on a tilted card. */
+/* The name first, then a band of their shirt colours with the shirts on a tilted card, then the week and the call. */
 
 .hero {
+  display: grid;
+  padding-top: 28px;
+}
+
+.title {
+  display: grid;
+  margin: 0 var(--gutter) 22px;
+  font: 400 clamp(72px, 22vw, 110px) / 0.86 var(--display);
+}
+
+.title small {
+  margin-top: 8px;
+  font: 600 15px/1.3 var(--text);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.stage {
   position: relative;
   display: grid;
+  place-items: center;
+  padding: 22px 0;
 }
 
 .fields {
   position: absolute;
-  inset: 0 0 auto 0;
-  height: 86vw;
+  inset: 52px 0;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
 }
@@ -42,7 +62,7 @@
 }
 
 .fields i:nth-child(2) {
-  background: var(--white);
+  background: #e9e9e4;
 }
 
 .fields i:nth-child(3) {
@@ -53,7 +73,6 @@
   position: relative;
   z-index: 1;
   width: 78vw;
-  margin: 28px auto 0;
   padding: 10px 10px 34px;
   background: #fff;
   box-shadow: 0 24px 50px rgb(11 31 77 / 0.35);
@@ -68,37 +87,46 @@
 }
 
 .say {
-  position: relative;
-  z-index: 1;
-  padding: 44px var(--gutter) 44px;
-}
-
-.title {
   display: grid;
-  margin: 0 0 6px;
-  font: 400 clamp(64px, 19vw, 96px) / 0.9 var(--display);
+  gap: 18px;
+  padding: 18px var(--gutter) 48px;
 }
 
-.title small {
-  font: 600 15px/1.3 var(--text);
-  letter-spacing: 0.16em;
+.now {
+  justify-self: start;
+  margin: 0 0 8px;
+  padding: 6px 14px;
+  border: 1.5px solid var(--navy);
+  border-radius: 999px;
+  font: 600 14px/1.3 var(--text);
+}
+
+.where {
+  display: grid;
+}
+
+.street {
+  margin: 0;
+  color: #3d4a6b;
+}
+
+.days {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  font: 400 22px/1.2 var(--display);
+  font-variant-numeric: tabular-nums;
+}
+
+.days b {
+  display: block;
+  font: 600 12px/1.4 var(--text);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--red);
 }
 
-.street {
-  margin: 8px 0 14px;
-  color: #3d4a6b;
-}
-
-.now,
-.weekNow {
-  margin: 0 0 16px;
-  font: 600 16px/1.3 var(--text);
-}
-
-.now span::before,
-.weekNow span::before {
+.now span::before {
   content: '';
   display: inline-block;
   width: 10px;
@@ -108,15 +136,14 @@
   background: #a7b0c4;
 }
 
-.now span[data-open='yes']::before,
-.weekNow span[data-open='yes']::before {
+.now span[data-open='yes']::before {
   background: #2f8a4a;
 }
 
+/* Calls: two full width bars, red and navy, one over the other. */
 .acts,
 .endActs {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
   gap: 8px;
 }
 
@@ -125,15 +152,19 @@
 .goLight {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-height: 56px;
-  padding: 0 14px;
-  border-radius: 8px;
+  justify-content: space-between;
+  min-height: 58px;
+  padding: 0 20px;
   font: 600 16px/1.1 var(--text);
-  text-align: center;
   text-decoration: none;
   font-variant-numeric: tabular-nums;
   transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.call::after,
+.go::after,
+.goLight::after {
+  content: '\2192';
 }
 
 .call {
@@ -146,13 +177,12 @@
 }
 
 .go {
-  box-shadow: inset 0 0 0 2px var(--navy);
-  color: var(--navy);
+  background: var(--navy);
+  color: var(--white);
 }
 
 .go:hover {
-  background: var(--navy);
-  color: var(--white);
+  background: var(--blue);
 }
 
 /* Fresh cuts: the deck. */
@@ -237,32 +267,6 @@
 .deckNext:hover {
   background: var(--white);
   color: var(--navy);
-}
-
-/* Every day. */
-
-.week {
-  padding: 96px var(--gutter);
-}
-
-.weekLine {
-  margin: 0 0 14px;
-  font: 400 clamp(54px, 16vw, 80px) / 0.95 var(--display);
-  color: var(--red);
-}
-
-.weekRow {
-  display: grid;
-  margin: 0 0 12px;
-  font: 400 26px/1.2 var(--display);
-  font-variant-numeric: tabular-nums;
-}
-
-.weekRow b {
-  font: 600 13px/1.4 var(--text);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: #3d4a6b;
 }
 
 /* The close: the navy and white dot of their capes. */
@@ -359,34 +363,53 @@
   }
 
   .hero {
-    grid-template-columns: minmax(0, 0.5fr) minmax(0, 0.5fr);
-    align-items: center;
     min-height: calc(100svh - 36px);
-  }
-
-  .fields {
-    inset: 0 0 0 50%;
-    height: auto;
-  }
-
-  .card {
-    grid-column: 2;
-    grid-row: 1;
-    width: min(36vw, 620px);
-    margin: 0 auto;
-  }
-
-  .say {
-    grid-column: 1;
-    grid-row: 1;
-    padding: 48px var(--gutter);
+    padding-top: 36px;
+    align-content: start;
   }
 
   .title {
-    font-size: clamp(110px, 11vw, 210px);
+    display: flex;
+    align-items: baseline;
+    gap: 32px;
+    margin: 0 var(--gutter) 8px;
+    font-size: clamp(120px, 12vw, 220px);
   }
 
-  .acts,
+  .title small {
+    font-size: 17px;
+  }
+
+  .stage {
+    padding: 26px 0;
+  }
+
+  .fields {
+    inset: 70px 0;
+  }
+
+  .card {
+    width: min(34vw, 560px);
+  }
+
+  .say {
+    grid-template-columns: auto auto 1fr;
+    align-items: end;
+    gap: 64px;
+    padding: 20px var(--gutter) 40px;
+  }
+
+  .days {
+    grid-auto-flow: column;
+    gap: 40px;
+    font-size: 28px;
+  }
+
+  .acts {
+    grid-template-columns: auto auto;
+    justify-content: end;
+  }
+
   .endActs {
     grid-template-columns: auto auto;
     justify-content: start;
@@ -395,7 +418,8 @@
   .call,
   .go,
   .goLight {
-    padding: 0 28px;
+    gap: 22px;
+    padding: 0 24px;
   }
 
   .cuts {
@@ -408,24 +432,6 @@
 
   .stack {
     width: min(30vw, 440px);
-  }
-
-  .week {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0 72px;
-    align-items: end;
-    padding: 160px var(--gutter);
-  }
-
-  .weekLine {
-    grid-row: 1 / span 3;
-    margin: 0;
-    font-size: clamp(96px, 9vw, 170px);
-  }
-
-  .weekRow {
-    font-size: 40px;
   }
 
   .end {

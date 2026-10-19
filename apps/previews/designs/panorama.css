@@ -97,25 +97,42 @@
   border-color: #3f8a52;
 }
 
+/* Calls: a wide brick block with the number under its label, and a small square for the map. */
 .acts {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  display: flex;
   gap: 8px;
 }
 
 .call,
-.go,
-.callLight,
-.goLight {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 54px;
-  padding: 0 16px;
-  font: 700 16px/1.1 var(--text);
-  text-align: center;
+.callLight {
+  display: grid;
+  align-content: center;
+  flex: 1;
+  gap: 3px;
+  min-height: 66px;
+  padding: 0 20px;
+  font: 700 22px/1 var(--display);
   text-decoration: none;
   font-variant-numeric: tabular-nums;
+  transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.call small,
+.callLight small {
+  font: 600 12px/1.2 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.go,
+.goLight {
+  display: grid;
+  place-content: center;
+  width: 66px;
+  min-height: 66px;
+  font: 700 15px/1.1 var(--text);
+  text-align: center;
+  text-decoration: none;
   transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
 }
 
@@ -334,11 +351,11 @@
 }
 
 .endActs {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  display: flex;
   gap: 8px;
   max-width: 420px;
   margin: 0 auto;
+  text-align: left;
 }
 
 .callLight {
@@ -434,13 +451,9 @@
     margin: 0;
   }
 
-  .acts {
-    grid-template-columns: auto auto;
-  }
-
-  .call,
-  .go {
-    padding: 0 26px;
+  .call {
+    flex: none;
+    padding: 0 28px;
   }
 
   .room {

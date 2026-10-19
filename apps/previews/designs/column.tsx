@@ -33,7 +33,7 @@ function Arrow() {
  * seven columns of 24 hours with today marked, and the number to close.
  */
 function Demo({ data }: { data: PageData }) {
-  const { css, s } = designStyles('column', ['Unbounded', 'JetBrains Mono']);
+  const { css, s } = designStyles('column', ['Unbounded', 'Onest']);
   const c = data.demo as Content;
 
   return (
@@ -123,4 +123,4 @@ function Demo({ data }: { data: PageData }) {
   );
 }
 
-export const column: Design = { Demo, fonts: ['unbounded-latin-wght-normal', 'jetbrains-mono-latin-wght-normal'], heroSizes: '100vw' };
+export const column: Design = { Demo, fonts: ['unbounded-latin-wght-normal', 'onest-latin-wght-normal'], heroSizes: '100vw' };

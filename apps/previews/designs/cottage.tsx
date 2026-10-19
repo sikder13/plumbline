@@ -42,7 +42,7 @@ function Demo({ data }: { data: PageData }) {
 
       <section className={s.hero} data-hero aria-labelledby="hero-h">
         <div className={s.photo}>
-          <Pic pic={pic(data, 'hero')} sizes="(min-width: 900px) 58vw, 100vw" first />
+          <Pic pic={pic(data, 'hero')} sizes="100vw" first />
           <i className={s.paneV} aria-hidden="true" />
           <i className={s.paneH} aria-hidden="true" />
         </div>
@@ -60,7 +60,7 @@ function Demo({ data }: { data: PageData }) {
           </p>
           <div className={s.acts} data-covers>
             <a className={s.call} href={c.phone.tel} data-press data-magnetic>
-              Call {c.phone.display}
+              <small>Call the salon</small> {c.phone.display}
             </a>
             <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
               Directions
@@ -121,7 +121,7 @@ function Demo({ data }: { data: PageData }) {
         </address>
         <div className={s.endActs}>
           <a className={s.call} href={c.phone.tel} data-press>
-            Call {c.phone.display}
+            <small>Call the salon</small> {c.phone.display}
           </a>
           <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
             Directions
@@ -147,4 +147,4 @@ function Demo({ data }: { data: PageData }) {
   );
 }
 
-export const cottage: Design = { Demo, fonts: ['marcellus-latin-400-normal', 'alegreya-latin-wght-normal'], heroSizes: '(min-width: 900px) 58vw, 100vw' };
+export const cottage: Design = { Demo, fonts: ['marcellus-latin-400-normal', 'alegreya-latin-wght-normal'], heroSizes: '100vw' };

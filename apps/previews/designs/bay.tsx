@@ -36,9 +36,9 @@ function Door({ s }: { s: Record<string, string> }) {
 }
 
 /**
- * TURBO TIRE SHOP, Lafayette Road. Their blue building behind a roll-up door that lifts as the page
- * opens; three bays, each behind a door that lifts as it arrives; six days in one line; and a closed
- * door with the address painted on it to close.
+ * TURBO TIRE SHOP, Lafayette Road. Their name on a blue fascia over their building, behind a roll-up
+ * door that lifts as the page opens; six days in one line; three bays, each behind a door that lifts as
+ * it arrives; and the shop shut for the night, the address painted across its door, to close.
  */
 function Demo({ data }: { data: PageData }) {
   const { css, s } = designStyles('bay', ['Syne', 'Familjen Grotesk']);
@@ -53,6 +53,11 @@ function Demo({ data }: { data: PageData }) {
       </style>
 
       <section className={s.hero} data-hero aria-labelledby="hero-h">
+        <div className={s.fascia}>
+          <h1 id="hero-h" className={s.title} aria-label={c.nameFull}>
+            <span aria-hidden="true">{c.name}</span> <span aria-hidden="true">{c.nameRest}</span>
+          </h1>
+        </div>
         <div className={s.photo}>
           <Pic pic={pic(data, 'hero')} sizes="100vw" first />
           <div className={s.heroDoor} aria-hidden="true">
@@ -62,26 +67,36 @@ function Demo({ data }: { data: PageData }) {
           </div>
         </div>
         <div className={s.say}>
-          <h1 id="hero-h" className={s.title} aria-label={c.nameFull}>
-            <span aria-hidden="true">{c.name}</span>
-            <span aria-hidden="true">{c.nameRest}</span>
-          </h1>
-          <p className={s.street}>{c.street}</p>
-          <p className={s.now}>
-            <Now week={c.hours} fallback="Open Monday to Saturday" />
-          </p>
           <div className={s.acts} data-covers>
             <a className={s.call} href={c.phone.tel} data-press data-magnetic>
-              Call {c.phone.display}
+              <b>Call</b> <span>{c.phone.display}</span>
             </a>
             <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
-              Directions
+              <b>Map</b> <span>Directions</span>
             </a>
+          </div>
+          <div className={s.where}>
+            <p className={s.street}>{c.street}</p>
+            <p className={s.now}>
+              <Now week={c.hours} fallback="Open Monday to Saturday" />
+            </p>
           </div>
         </div>
       </section>
 
       <main>
+        <section className={s.week} aria-labelledby="week-h">
+          <h2 id="week-h" className={s.weekLine}>
+            {open[0]!.day} to {open.at(-1)!.day}
+          </h2>
+          <p className={s.weekTime}>
+            {clock(open[0]!.open!)} to {clock(open[0]!.close!)}
+          </p>
+          <p className={s.weekClosed}>Closed {closed.map((d) => d.day).join(' and ')}.</p>
+          <p className={s.weekNow}>
+            <Now week={c.hours} fallback="Open Monday to Saturday" />
+          </p>
+        </section>
         <section className={s.baysSec} aria-labelledby="bays-h">
           <h2 id="bays-h" className={s.baysHead}>
             Open the doors
@@ -101,18 +116,6 @@ function Demo({ data }: { data: PageData }) {
           </ol>
         </section>
 
-        <section className={s.week} aria-labelledby="week-h">
-          <h2 id="week-h" className={s.weekLine}>
-            {open[0]!.day} to {open.at(-1)!.day}
-          </h2>
-          <p className={s.weekTime}>
-            {clock(open[0]!.open!)} to {clock(open[0]!.close!)}
-          </p>
-          <p className={s.weekClosed}>Closed {closed.map((d) => d.day).join(' and ')}.</p>
-          <p className={s.weekNow}>
-            <Now week={c.hours} fallback="Open Monday to Saturday" />
-          </p>
-        </section>
       </main>
 
       <footer className={s.end} data-covers>
@@ -126,14 +129,14 @@ function Demo({ data }: { data: PageData }) {
           <a className={s.shutTel} href={c.phone.tel} data-press>
             {c.phone.display}
           </a>
-        </div>
-        <div className={s.endActs}>
-          <a className={s.call} href={c.phone.tel} data-press>
-            Call {c.phone.display}
-          </a>
-          <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
-            Directions
-          </a>
+          <div className={s.endActs}>
+            <a className={s.call} href={c.phone.tel} data-press>
+              <b>Call</b> <span>{c.phone.display}</span>
+            </a>
+            <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
+              <b>Map</b> <span>Directions</span>
+            </a>
+          </div>
         </div>
         <div className={s.small}>
           <p>{c.credit}</p>

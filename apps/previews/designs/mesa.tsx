@@ -33,9 +33,9 @@ const SPOTS = [
 ];
 
 /**
- * El Tajin Taquería & Birriería, East Washington Street. Their spread full bleed under the name; then
- * one table, six of their plates set down on it from its edges; seven days in two lines; and their
- * yellow street sign, set in type, to close.
+ * El Tajin Taquería & Birriería, East Washington Street. Their spread filling the screen with the name
+ * and a ticket to call on it; then one table, six of their plates and the order slip with their hours set
+ * down on it from its edges; and the page turning into their yellow street sign to close.
  */
 function Demo({ data }: { data: PageData }) {
   const { css, s } = designStyles('mesa', ['Bricolage Grotesque', 'Fraunces']);
@@ -71,7 +71,7 @@ function Demo({ data }: { data: PageData }) {
               Call {c.phone.display}
             </a>
             <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
-              Directions
+              Map
             </a>
           </div>
         </div>
@@ -83,6 +83,20 @@ function Demo({ data }: { data: PageData }) {
             On the table
           </h2>
           <OnView className={s.table} threshold={0.25}>
+            <div className={s.slip} data-from="bottom" style={{ '--i': c.table.length } as CSSProperties}>
+              <p className={s.slipHead}>Order hours</p>
+              <p className={s.slipLine}>
+                Every day <b>{clock(usual.open!)} to {clock(usual.close!)}</b>
+              </p>
+              {odd.map((d) => (
+                <p key={d.day} className={s.slipOdd}>
+                  {d.day} from {clock(d.open!)}
+                </p>
+              ))}
+              <p className={s.slipNow}>
+                <Now week={c.hours} fallback="Open seven days a week" />
+              </p>
+            </div>
             {c.table.map((k, i) => {
               const spot = SPOTS[i % SPOTS.length]!;
               return (
@@ -94,31 +108,14 @@ function Demo({ data }: { data: PageData }) {
           </OnView>
         </section>
 
-        <section className={s.week} aria-labelledby="week-h">
-          <h2 id="week-h" className={s.weekLine}>
-            Every day <span>{clock(usual.open!)} to {clock(usual.close!)}</span>
-          </h2>
-          {odd.map((d) => (
-            <p key={d.day} className={s.weekOdd}>
-              {d.day} from {clock(d.open!)}
-            </p>
-          ))}
-          <p className={s.weekNow}>
-            <Now week={c.hours} fallback="Open seven days a week" />
-          </p>
-        </section>
       </main>
 
       <footer className={s.end} data-covers>
-        <div className={s.sign}>
-          <p className={s.signName}>{c.nameFull}</p>
-          <a className={s.signTel} href={c.phone.tel} aria-label={`Call ${c.phone.display}`} data-press>
-            {c.phone.display}
-          </a>
-        </div>
-        <address className={s.endAddr}>
-          {c.address.join(', ')}
-        </address>
+        <p className={s.signName}>{c.nameFull}</p>
+        <a className={s.signTel} href={c.phone.tel} aria-label={`Call ${c.phone.display}`} data-press>
+          {c.phone.display}
+        </a>
+        <address className={s.endAddr}>{c.address.join(', ')}</address>
         <a className={s.endGo} href={c.maps} rel="noopener" target="_blank">
           Directions on Google Maps
         </a>

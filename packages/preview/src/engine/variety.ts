@@ -59,10 +59,10 @@ export const EARLIER_TYPE_PAIRS: { by: string; display: string; text: string }[]
   { by: 'haute', display: 'Bodoni Moda', text: 'Schibsted Grotesk' },
   { by: 'plank', display: 'League Spartan', text: 'Source Serif 4' },
   { by: 'mow', display: 'Big Shoulders Display', text: 'Work Sans' },
-  { by: 'column', display: 'Unbounded', text: 'JetBrains Mono' },
+  { by: 'column', display: 'Unbounded', text: 'Onest' },
   // Open Sign batch 02.
   { by: 'cottage', display: 'Marcellus', text: 'Alegreya' },
-  { by: 'letterboard', display: 'Oswald', text: 'Space Mono' },
+  { by: 'letterboard', display: 'Oswald', text: 'Bitter' },
   { by: 'ticket', display: 'Roboto Slab', text: 'Martian Mono' },
   { by: 'panorama', display: 'Zilla Slab', text: 'Hanken Grotesk' },
   { by: 'plate', display: 'Young Serif', text: 'Instrument Sans' },

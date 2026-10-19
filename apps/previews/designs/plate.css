@@ -29,14 +29,25 @@
   display: grid;
   background: var(--olive);
   color: var(--paper);
-  padding: 22px 0 40px;
+  padding: 26px 0 44px;
+}
+
+/* The name parted by the plate: the words over its rim, one above, one below. */
+.stage {
+  display: grid;
+  padding: 0 var(--gutter);
+}
+
+.stage > * {
+  grid-area: 1 / 1;
 }
 
 .round {
   position: relative;
-  width: 92vw;
+  width: 74vw;
   aspect-ratio: 1;
-  margin: 0 auto;
+  margin: 46px 0;
+  justify-self: center;
   border-radius: 50%;
   overflow: hidden;
   box-shadow: 0 0 0 10px var(--paper), 0 0 0 11px rgb(42 36 22 / 0.2), 0 30px 60px rgb(0 0 0 / 0.35);
@@ -50,11 +61,14 @@
 }
 
 .say {
-  padding: 32px var(--gutter) 0;
+  display: grid;
+  justify-items: center;
+  padding: 26px var(--gutter) 0;
+  text-align: center;
 }
 
 .kind {
-  margin: 0 0 8px;
+  margin: 0 var(--gutter) 14px;
   font: 600 13px/1.3 var(--text);
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -69,9 +83,20 @@
 }
 
 .title {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   margin: 0;
   font: 400 clamp(58px, 18vw, 90px) / 0.9 var(--display);
   letter-spacing: -0.02em;
+  text-shadow: 0 4px 22px rgb(42 36 22 / 0.55);
+  pointer-events: none;
+}
+
+.title span:last-child {
+  align-self: flex-end;
 }
 
 .street {
@@ -106,30 +131,34 @@
   background: #2f7d45;
 }
 
+/* Calls: a round gold token with the number on it, directions as a line beside. */
 .acts {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 8px;
-}
-
-.call,
-.go {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 56px;
-  padding: 0 16px;
-  border-radius: 999px;
-  font: 700 16px/1.1 var(--text);
-  text-align: center;
-  text-decoration: none;
-  font-variant-numeric: tabular-nums;
-  transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
+  gap: 22px;
 }
 
 .call {
+  display: grid;
+  place-content: center;
+  gap: 2px;
+  width: 128px;
+  aspect-ratio: 1;
+  border-radius: 50%;
   background: var(--gold);
   color: var(--ink);
+  font: 700 13px/1.2 var(--text);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 6px rgb(199 158 82 / 0.25);
+  transition: background-color 0.3s var(--ease), transform 0.3s var(--ease);
+}
+
+.call b {
+  font: 400 24px/1 var(--display);
 }
 
 .call:hover {
@@ -137,13 +166,17 @@
 }
 
 .go {
-  box-shadow: inset 0 0 0 2px var(--paper);
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
   color: var(--paper);
+  font: 700 16px/1 var(--text);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
 }
 
 .go:hover {
-  background: var(--paper);
-  color: var(--olive);
+  color: var(--gold);
 }
 
 /* From the kitchen: the turning table. */
@@ -252,62 +285,35 @@
 
 /* The dining room and the week. */
 
-.room {
-  display: grid;
-  gap: 28px;
-  padding: 0 var(--gutter) 96px;
-}
-
-.roomPhoto {
-  margin: 0;
-}
-
-.roomPhoto img {
-  width: 100%;
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
-  border-radius: 200px 200px 0 0;
-}
-
-.roomText {
-  display: grid;
-  align-content: end;
-}
-
-.weekLine {
-  display: grid;
-  margin: 0;
-  font: 400 clamp(34px, 9.6vw, 46px) / 1.05 var(--display);
-  color: var(--olive);
-}
-
-.weekLine span {
-  font-variant-numeric: tabular-nums;
-  color: var(--brown);
-}
-
-.weekNote {
-  margin: 12px 0 18px;
-  color: var(--muted);
-}
-
 /* The close: a round card, the size of a plate. */
 
 .end {
-  background: var(--olive);
+  display: grid;
+  padding: 0 0 120px;
   color: var(--ink);
-  padding: 88px var(--gutter) 120px;
 }
 
+.endRoom {
+  margin: 0;
+}
+
+.endRoom img {
+  width: 100%;
+  aspect-ratio: 4 / 4.4;
+  object-fit: cover;
+}
+
+/* Set down on the dining room, off centre, like a plate on a table. */
 .endPlate {
+  position: relative;
   display: grid;
   place-content: center;
   justify-items: center;
-  gap: 6px;
-  width: min(86vw, 420px);
+  gap: 4px;
+  width: min(84vw, 400px);
   aspect-ratio: 1;
-  margin: 0 auto;
-  padding: 40px;
+  margin: -36vw 0 0 var(--gutter);
+  padding: 36px;
   border-radius: 50%;
   background: var(--paper);
   text-align: center;
@@ -324,6 +330,23 @@
   display: grid;
   font-style: normal;
   font-size: 16px;
+}
+
+.endHours {
+  display: grid;
+  margin: 8px 0 0;
+  font: 400 17px/1.2 var(--display);
+  color: var(--olive);
+}
+
+.endHours span {
+  font-variant-numeric: tabular-nums;
+  color: var(--brown);
+}
+
+.weekNow {
+  margin: 4px 0 0;
+  font-size: 14px;
 }
 
 .endTel {
@@ -347,10 +370,9 @@
   display: grid;
   gap: 8px;
   max-width: 62ch;
-  margin: 56px auto 0;
+  margin: 48px var(--gutter) 0;
   font-size: 14px;
-  color: #e3dcc6;
-  text-align: center;
+  color: var(--muted);
 }
 
 .small p {
@@ -358,7 +380,7 @@
 }
 
 .small a {
-  color: var(--paper);
+  color: var(--ink);
 }
 
 /* On a phone: one gold pill centred at the foot. */
@@ -389,39 +411,43 @@
     --gutter: 56px;
   }
 
+  /* The words either side of the plate, the call under it. */
   .hero {
-    grid-template-columns: minmax(0, 0.5fr) minmax(0, 0.5fr);
-    align-items: center;
+    align-content: center;
     min-height: calc(100svh - 36px);
-    padding: 40px 0;
+    padding: 32px 0;
+  }
+
+  .kind {
+    justify-self: center;
   }
 
   .round {
-    grid-column: 2;
-    grid-row: 1;
-    width: min(44vw, calc(100svh - 140px));
-    margin-right: var(--gutter);
-    justify-self: end;
-  }
-
-  .say {
-    grid-column: 1;
-    grid-row: 1;
-    padding: 0 40px 0 var(--gutter);
+    width: min(36vw, calc(100svh - 330px));
+    margin: 0;
   }
 
   .title {
-    font-size: clamp(88px, 9.4vw, 180px);
+    flex-direction: row;
+    align-items: center;
+    font-size: clamp(96px, 9vw, 170px);
   }
 
-  .acts {
-    grid-template-columns: auto auto;
-    justify-content: start;
+  .title span:last-child {
+    align-self: center;
   }
 
-  .call,
-  .go {
-    padding: 0 28px;
+  .say {
+    grid-auto-flow: column;
+    align-items: center;
+    justify-content: center;
+    gap: 36px;
+    padding-top: 22px;
+  }
+
+  .street,
+  .now {
+    margin: 0;
   }
 
   .plates {
@@ -436,23 +462,36 @@
     --size: min(46vw, 620px);
   }
 
-  .room {
-    grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
-    align-items: end;
-    gap: 64px;
-    padding: 0 var(--gutter) 160px;
-  }
-
-  .weekLine {
-    font-size: clamp(56px, 5.4vw, 96px);
-  }
-
   .end {
-    padding: 144px var(--gutter) 112px;
+    grid-template-columns: minmax(0, 0.38fr) minmax(0, 0.62fr);
+    align-items: center;
+    padding: 0 0 112px;
+  }
+
+  .endRoom {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .endRoom img {
+    aspect-ratio: auto;
+    height: min(86svh, 820px);
   }
 
   .endPlate {
-    width: 520px;
+    grid-column: 1 / span 2;
+    grid-row: 1;
+    width: 500px;
+    margin: 0 0 0 var(--gutter);
+  }
+
+  .endHours {
+    font-size: 22px;
+  }
+
+  .small {
+    grid-column: 1 / -1;
+    margin: 56px var(--gutter) 0;
   }
 
   .endName {

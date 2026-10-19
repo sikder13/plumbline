@@ -60,7 +60,7 @@ function Demo({ data }: { data: PageData }) {
               Call {c.phone.display}
             </a>
             <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
-              Directions
+              <span className={s.hide}>Directions</span>
               <Arrow />
             </a>
           </div>
@@ -115,7 +115,7 @@ function Demo({ data }: { data: PageData }) {
               Call {c.phone.display}
             </a>
             <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
-              Directions
+              <span className={s.hide}>Directions</span>
               <Arrow />
             </a>
           </div>

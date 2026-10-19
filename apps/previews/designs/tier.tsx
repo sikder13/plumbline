@@ -23,9 +23,9 @@ interface Content {
 }
 
 /**
- * Alexiva bakery, North Mitthoefer Road. Their sign's word glowing over the night beside a tray of their
- * pastries; three cakes stacking into tiers; their case as one long band; the week in two lines; and a
- * neon OPEN sign at the close that is lit only while they are open.
+ * Alexiva bakery, North Mitthoefer Road. Their sign's word glowing over the night above a shop window of
+ * their pastries; three cakes stacking into tiers; their case as one long band; and a neon OPEN sign,
+ * lit only while they are open, over the week to close.
  */
 function Demo({ data }: { data: PageData }) {
   const { css, s } = designStyles('tier', ['Yeseva One', 'Sora']);
@@ -40,19 +40,19 @@ function Demo({ data }: { data: PageData }) {
       </style>
 
       <section className={s.hero} data-hero aria-labelledby="hero-h">
+        <h1 id="hero-h" className={s.title} aria-label={c.nameFull}>
+          <span className={s.titleName} aria-hidden="true">
+            {c.name}
+          </span>
+          <span className={s.titleWord} aria-hidden="true">
+            {c.word}
+          </span>
+        </h1>
         <div className={s.photo}>
-          <Pic pic={pic(data, 'hero')} sizes="(min-width: 900px) 38vw, 100vw" first />
+          <Pic pic={pic(data, 'hero')} sizes="(min-width: 900px) 30vw, 72vw" first />
         </div>
         <div className={s.say}>
           <p className={s.street}>{c.street}</p>
-          <h1 id="hero-h" className={s.title} aria-label={c.nameFull}>
-            <span className={s.titleName} aria-hidden="true">
-              {c.name}
-            </span>
-            <span className={s.titleWord} aria-hidden="true">
-              {c.word}
-            </span>
-          </h1>
           <p className={s.now}>
             <Now week={c.hours} fallback="Open every day" />
           </p>
@@ -90,14 +90,6 @@ function Demo({ data }: { data: PageData }) {
           <figure className={s.band} data-reveal>
             <Pic pic={pic(data, 'case')} sizes="100vw" low />
           </figure>
-          <div className={s.hours}>
-            <h2 className={s.hoursHead}>
-              <span>Monday to Saturday</span> {clock(weekday.open!)} to {clock(weekday.close!)}
-            </h2>
-            <p className={s.hoursSun}>
-              <span>Sunday</span> {clock(sunday.open!)} to {clock(sunday.close!)}
-            </p>
-          </div>
           <figure className={s.tray} data-reveal>
             <Pic pic={pic(data, 'tray')} sizes="(min-width: 900px) 30vw, 60vw" low />
           </figure>
@@ -105,20 +97,30 @@ function Demo({ data }: { data: PageData }) {
       </main>
 
       <footer className={s.end} data-covers>
-        <NeonOpen week={c.hours} s={{ neonWrap: s.neonWrap!, neon: s.neon!, neonLine: s.neonLine! }} />
-        <p className={s.endName}>{c.nameFull}</p>
-        <address className={s.endAddr}>
-          {c.address.map((l) => (
-            <span key={l}>{l}</span>
-          ))}
-        </address>
-        <div className={s.endActs}>
-          <a className={s.call} href={c.phone.tel} data-press>
-            Call {c.phone.display}
-          </a>
-          <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
-            Directions
-          </a>
+        <div className={s.endNight}>
+          <NeonOpen week={c.hours} s={{ neonWrap: s.neonWrap!, neon: s.neon!, neonLine: s.neonLine! }} />
+          <h2 className={s.hoursHead}>
+            <span>Monday to Saturday</span> {clock(weekday.open!)} to {clock(weekday.close!)}
+          </h2>
+          <p className={s.hoursSun}>
+            <span>Sunday</span> {clock(sunday.open!)} to {clock(sunday.close!)}
+          </p>
+        </div>
+        <div className={s.endFind}>
+          <p className={s.endName}>{c.nameFull}</p>
+          <address className={s.endAddr}>
+            {c.address.map((l) => (
+              <span key={l}>{l}</span>
+            ))}
+          </address>
+          <div className={s.endActs}>
+            <a className={s.call} href={c.phone.tel} data-press>
+              Call {c.phone.display}
+            </a>
+            <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
+              Directions
+            </a>
+          </div>
         </div>
         <div className={s.small}>
           <p>{c.credit}</p>
@@ -140,4 +142,4 @@ function Demo({ data }: { data: PageData }) {
   );
 }
 
-export const tier: Design = { Demo, fonts: ['yeseva-one-latin-400-normal', 'sora-latin-wght-normal'], heroSizes: '(min-width: 900px) 38vw, 100vw' };
+export const tier: Design = { Demo, fonts: ['yeseva-one-latin-400-normal', 'sora-latin-wght-normal'], heroSizes: '(min-width: 900px) 30vw, 72vw' };
