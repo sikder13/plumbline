@@ -1,0 +1,513 @@
+/* Players Way Barbershop: black felt, white board letters, the red of their front wall. */
+
+.root {
+  --felt: #17191f;
+  --letter: #f3f0e8;
+  --red: #c8323a;
+  --sky: #a7c7e8;
+  --muted: #b9b6ae;
+  --display: 'Oswald', 'Impact', sans-serif;
+  --mono: 'Space Mono', ui-monospace, monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: 24px;
+  background: var(--felt);
+  color: var(--letter);
+  font: 400 16px/1.6 var(--mono);
+  overflow-x: clip;
+}
+
+.root a:focus-visible {
+  outline: 3px solid var(--sky);
+  outline-offset: 3px;
+}
+
+/* Felt: fine horizontal grooves, as on a letterboard. */
+.felt,
+.board,
+.weekBoard {
+  background-color: var(--felt);
+  background-image: repeating-linear-gradient(180deg, rgb(255 255 255 / 0.045) 0 1px, transparent 1px 9px);
+}
+
+.hero {
+  display: grid;
+}
+
+.photo {
+  position: relative;
+  aspect-ratio: 4 / 4.2;
+  overflow: hidden;
+  background: var(--red);
+}
+
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.felt {
+  padding: 22px var(--gutter) 40px;
+}
+
+.street {
+  margin: 0 0 12px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--sky);
+}
+
+.title {
+  display: grid;
+  margin: 0 0 16px;
+  font: 600 clamp(48px, 14vw, 66px) / 0.98 var(--display);
+  letter-spacing: 0.06em;
+}
+
+.title span {
+  animation: rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.title span + span {
+  animation-delay: 0.16s;
+  color: var(--red);
+  text-shadow: 0 0 0 var(--red);
+}
+
+.now,
+.weekNow {
+  margin: 0 0 16px;
+  font: 700 15px/1.4 var(--mono);
+}
+
+.now span::before,
+.weekNow span::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 10px;
+  background: var(--muted);
+}
+
+.now span[data-open='yes']::before,
+.weekNow span[data-open='yes']::before {
+  background: #5fbf7f;
+}
+
+.acts {
+  display: grid;
+  gap: 10px;
+}
+
+.call,
+.go,
+.callDark,
+.goDark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 24px;
+  font: 600 18px/1 var(--display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.call {
+  background: var(--red);
+  color: var(--letter);
+}
+
+.call:hover {
+  background: var(--letter);
+  color: var(--felt);
+}
+
+.go {
+  box-shadow: inset 0 0 0 2px var(--letter);
+  color: var(--letter);
+}
+
+.go:hover {
+  background: var(--letter);
+  color: var(--felt);
+}
+
+/* The board. */
+
+.boardSec {
+  padding: 96px var(--gutter) 88px;
+}
+
+.label {
+  margin: 0 0 22px;
+  font: 400 13px/1 var(--mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sky);
+}
+
+.board {
+  display: grid;
+  gap: 12px;
+  padding: 26px 18px;
+  border: 10px solid #2a1f17;
+  border-radius: 6px;
+  box-shadow: inset 0 0 30px rgb(0 0 0 / 0.5);
+}
+
+.boardLine {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 0;
+  font: 500 clamp(22px, 6.6vw, 34px) / 1.1 var(--display);
+  letter-spacing: 0.02em;
+}
+
+.tile {
+  display: inline-block;
+  min-width: 0.5em;
+  text-align: center;
+  color: var(--letter);
+}
+
+.gap {
+  display: inline-block;
+  width: 0.45em;
+}
+
+.board[data-waiting] .tile {
+  opacity: 0;
+  transform: translateY(-0.3em);
+}
+
+.board[data-setting] .tile {
+  animation: set 0.32s var(--ease) calc(var(--n) * var(--step)) both;
+}
+
+.source {
+  max-width: 46ch;
+  margin: 18px auto 0;
+  font-size: 13px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* From the chair. */
+
+.cuts {
+  padding: 0 0 96px;
+}
+
+.cutsHead {
+  margin: 0 var(--gutter) 24px;
+  font: 600 clamp(44px, 12vw, 60px) / 1 var(--display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cutGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.cutWide {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.cutWide img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.cut {
+  margin: 0;
+}
+
+.cut img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  filter: saturate(0.92);
+}
+
+/* The week board. */
+
+.week {
+  padding: 0 var(--gutter) 104px;
+}
+
+.weekBoard {
+  margin: 0;
+  padding: 18px 20px;
+  list-style: none;
+  border: 8px solid #2a1f17;
+  border-radius: 6px;
+}
+
+.weekBoard li {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 12px;
+  padding: 6px 0;
+  font: 500 22px/1.2 var(--display);
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.weekBoard li[data-closed] {
+  color: var(--muted);
+}
+
+.weekBoard li[data-today] {
+  color: #ff8f8f;
+}
+
+.weekBoard li[data-today] span:first-child::after {
+  content: ' \2022';
+}
+
+/* The close, on their red. */
+
+.end {
+  background: var(--red);
+  color: var(--letter);
+  padding: 80px var(--gutter) 120px;
+}
+
+.addr {
+  display: grid;
+  margin: 0 0 28px;
+  font: 600 clamp(40px, 12vw, 56px) / 1 var(--display);
+  font-style: normal;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.endActs {
+  display: grid;
+  gap: 10px;
+}
+
+.callDark {
+  background: var(--felt);
+  color: var(--letter);
+}
+
+.callDark:hover {
+  background: var(--letter);
+  color: var(--felt);
+}
+
+.goDark {
+  box-shadow: inset 0 0 0 2px var(--letter);
+  color: var(--letter);
+}
+
+.goDark:hover {
+  background: var(--letter);
+  color: var(--red);
+}
+
+.small {
+  display: grid;
+  gap: 8px;
+  max-width: 62ch;
+  margin-top: 56px;
+  font-size: 13px;
+}
+
+.small p {
+  margin: 0;
+}
+
+.small a {
+  color: var(--letter);
+}
+
+/* On a phone: a felt strip along the bottom with two board words. */
+
+.bar {
+  position: fixed;
+  z-index: 40;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 var(--gutter);
+  background: var(--felt);
+  border-top: 2px solid var(--red);
+  transform: translateY(110%);
+  transition: transform 0.4s var(--ease);
+}
+
+:global([data-past-hero]:not([data-covered])) .bar {
+  transform: none;
+}
+
+.bar a {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  font: 600 18px/1 var(--display);
+  letter-spacing: 0.14em;
+  text-decoration: none;
+}
+
+.barCall {
+  color: #ff8f8f;
+}
+
+.barGo {
+  color: var(--letter);
+}
+
+@media (min-width: 900px) {
+  .root {
+    --gutter: 56px;
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 0.44fr) minmax(0, 0.56fr);
+    min-height: calc(100svh - 36px);
+  }
+
+  .photo {
+    aspect-ratio: auto;
+  }
+
+  .felt {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 48px var(--gutter);
+  }
+
+  .title {
+    font-size: clamp(72px, 7.4vw, 148px);
+  }
+
+  .acts {
+    grid-template-columns: auto auto;
+    justify-content: start;
+  }
+
+  .boardSec {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 160px var(--gutter) 128px;
+  }
+
+  .board {
+    padding: 48px 40px;
+    gap: 18px;
+  }
+
+  .boardLine {
+    font-size: clamp(36px, 4.2vw, 64px);
+  }
+
+  .cuts {
+    padding-bottom: 160px;
+  }
+
+  .cutsHead {
+    font-size: clamp(64px, 6vw, 112px);
+  }
+
+  .cutGrid {
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .cutWide {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .cutWide img {
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .week {
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 520px);
+    gap: 48px;
+    align-items: start;
+    padding: 0 var(--gutter) 160px;
+  }
+
+  .label,
+  .weekNow {
+    grid-column: 1;
+  }
+
+  .weekBoard {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  .end {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 0 48px;
+    padding: 128px var(--gutter) 112px;
+  }
+
+  .addr {
+    margin: 0;
+    font-size: clamp(64px, 6.4vw, 120px);
+  }
+
+  .endActs {
+    grid-template-columns: auto auto;
+  }
+
+  .small {
+    grid-column: 1 / -1;
+  }
+
+  .bar {
+    display: none;
+  }
+}
+
+@keyframes set {
+  from {
+    opacity: 0;
+    transform: translateY(-0.3em) rotate(-4deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(0.3em);
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    transform: none;
+    clip-path: inset(0 0 -0.2em 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title span,
+  .board[data-setting] .tile {
+    animation: none;
+  }
+}
