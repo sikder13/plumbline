@@ -39,8 +39,8 @@ Bucket A by area (each profile counted in the first area whose search returned i
 Place Details: 336 calls, one per bucket A lead (all of them fit under the 1,200 cap, so the 5 to 60 rating count priority never had to cut anything).
 
 New filings (INBiz cross-check, same street number and a name match of 0.8 or more): **2 of 336**.
-- Epiphany Braids (beauty, filed 15 September 2026, 3645 Commercial Dr; score 6 with 3 reviews, so behind 73 other score 6 leads on rating count).
-- Honest Mann's Tire & Auto (auto, filed 7 September 2026, 2554 N Emerson Ave; score 4).
+- Epiphany Braids (beauty, Indianapolis, filed in September 2026; score 6 with 3 reviews, so behind the other score 6 leads on rating count).
+- Honest Mann's Tire & Auto (auto, Indianapolis, filed in September 2026; score 4).
 
 Score spread in bucket A (out of 8): 7: 1, 6: 73, 5: 99, 4: 111, 3: 40, 2: 10, 1: 1, 0: 1. Written to data/open-sign/leads/_sweep_scored.csv.
 
