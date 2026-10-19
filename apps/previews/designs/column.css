@@ -1,0 +1,520 @@
+/* LV Construction: concrete, asphalt and one high visibility yellow. No photos exist, so the page is type and the week. */
+
+.root {
+  --paper: #e4e1da;
+  --ink: #141413;
+  --deep: #1f1f1d;
+  --yellow: #f2c230;
+  --muted: #4d4b46;
+  --on-deep: #ebe8e1;
+  --on-deep-muted: #b9b5ab;
+  --display: 'Unbounded', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: 24px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 16px/1.55 var(--mono);
+  overflow-x: clip;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 3px;
+}
+
+/* The monogram on concrete: a fine grain over the ground, the initials, two small captions in the corners. */
+
+.hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-content: start;
+  gap: 0 16px;
+  padding: 18px var(--gutter) 48px;
+  background-color: var(--paper);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27160%27 height=%27160%27%3E%3Cfilter id=%27g%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%272%27 stitchTiles=%27stitch%27/%3E%3CfeColorMatrix values=%270 0 0 0 0.08 0 0 0 0 0.08 0 0 0 0 0.07 0 0 0 0.09 0%27/%3E%3C/filter%3E%3Crect width=%27160%27 height=%27160%27 filter=%27url%28%23g%29%27/%3E%3C/svg%3E");
+}
+
+.capTown,
+.capCounty {
+  margin: 0;
+  font: 500 12px/1.3 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.capCounty {
+  text-align: right;
+}
+
+.title {
+  grid-column: 1 / -1;
+  display: grid;
+  margin: 28px 0 0;
+}
+
+.mono {
+  font: 900 56vw/0.78 var(--display);
+  letter-spacing: -0.07em;
+  margin-left: -0.04em;
+  animation: rise 1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+.word {
+  margin-top: 14px;
+  font: 600 clamp(24px, 7.6vw, 34px) / 1 var(--display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  animation: rise 1s cubic-bezier(0.16, 1, 0.3, 1) 0.26s both;
+}
+
+.side {
+  grid-column: 1 / -1;
+  margin-top: 28px;
+}
+
+.now {
+  margin: 0 0 18px;
+  font: 700 16px/1.35 var(--mono);
+}
+
+.now span::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 10px;
+  background: var(--muted);
+  vertical-align: 0.05em;
+}
+
+.now span[data-open='yes']::before {
+  background: #2e7d4a;
+}
+
+.acts {
+  display: grid;
+  gap: 10px;
+}
+
+.call,
+.go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 0 24px;
+  font: 700 16px/1 var(--mono);
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.35s var(--ease), color 0.35s var(--ease);
+}
+
+.call {
+  background: var(--yellow);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+
+.call:hover {
+  background: var(--ink);
+  color: var(--yellow);
+}
+
+.go {
+  box-shadow: inset 0 0 0 2px var(--ink);
+  color: var(--ink);
+}
+
+.go:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* The week: seven days of 24 hours. */
+
+.weekSec {
+  background: var(--deep);
+  color: var(--on-deep);
+  padding: 96px var(--gutter) 104px;
+}
+
+.weekHead h2 {
+  margin: 0;
+  font: 700 clamp(40px, 11vw, 56px) / 1 var(--display);
+  letter-spacing: -0.03em;
+}
+
+.weekHead p {
+  max-width: 46ch;
+  margin: 16px 0 40px;
+  font-size: 14px;
+  color: var(--on-deep-muted);
+}
+
+.week {
+  display: grid;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.week li {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  grid-template-areas: 'day bar' 'day hours';
+  gap: 6px 14px;
+  align-items: center;
+}
+
+.colDay {
+  grid-area: day;
+  align-self: start;
+  font: 700 18px/1 var(--display);
+}
+
+.colDay span {
+  display: none;
+}
+
+.colBar {
+  grid-area: bar;
+  position: relative;
+  height: 30px;
+  box-shadow: inset 0 0 0 1px rgb(235 232 225 / 0.3);
+}
+
+.colFill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--from) * 100%);
+  width: calc((var(--to) - var(--from)) * 100%);
+  background: var(--on-deep);
+  transform-origin: left center;
+  transition: transform 0.6s var(--ease) calc(var(--i) * 0.18s);
+}
+
+.week[data-waiting] .colFill {
+  transform: scaleX(0);
+}
+
+.week[data-filled] .colFill {
+  transform: none;
+}
+
+.week li[data-today] .colFill {
+  background: var(--yellow);
+}
+
+.week li[data-closed] .colBar {
+  box-shadow: none;
+  background: repeating-linear-gradient(90deg, rgb(235 232 225 / 0.32) 0 6px, transparent 6px 12px) bottom / 100% 1px no-repeat, repeating-linear-gradient(90deg, rgb(235 232 225 / 0.32) 0 6px, transparent 6px 12px) top / 100% 1px no-repeat;
+}
+
+.colNow {
+  position: absolute;
+  z-index: 1;
+  top: -6px;
+  bottom: -6px;
+  left: calc(var(--at) * 100%);
+  width: 3px;
+  margin-left: -1px;
+  background: var(--ink);
+  box-shadow: 0 0 0 1px var(--yellow);
+}
+
+.colHours {
+  grid-area: hours;
+  font-size: 14px;
+  color: var(--on-deep-muted);
+}
+
+.week li[data-today] .colHours {
+  color: var(--on-deep);
+}
+
+.colToday {
+  grid-area: hours;
+  justify-self: end;
+  padding: 3px 9px;
+  background: var(--yellow);
+  color: var(--ink);
+  font: 700 12px/1.2 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* The close: their number on high visibility yellow. */
+
+.end {
+  background: var(--yellow);
+  color: var(--ink);
+  padding: 88px var(--gutter) 120px;
+}
+
+.endLabel {
+  margin: 0 0 14px;
+  font: 700 13px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.number {
+  display: block;
+  color: var(--ink);
+  font: 800 clamp(46px, 14vw, 180px) / 0.95 var(--display);
+  max-width: 100%;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+
+.number span {
+  display: inline-block;
+  white-space: nowrap;
+  margin-right: 0.24em;
+}
+
+.number:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 0.06em;
+}
+
+.endRow {
+  display: grid;
+  gap: 20px;
+  margin-top: 48px;
+}
+
+.addr {
+  display: grid;
+  font: 600 20px/1.3 var(--display);
+  font-style: normal;
+}
+
+.small {
+  max-width: 62ch;
+  margin: 56px 0 0;
+  font-size: 13px;
+  color: #3a372f;
+}
+
+.small a {
+  color: var(--ink);
+}
+
+/* The floating bar on a phone. */
+
+.bar {
+  position: fixed;
+  z-index: 40;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  background: var(--ink);
+  transform: translateY(110%);
+  transition: transform 0.45s var(--ease);
+}
+
+:global([data-past-hero]:not([data-covered])) .bar {
+  transform: none;
+}
+
+.bar a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 58px;
+  font: 700 16px/1 var(--mono);
+  text-decoration: none;
+}
+
+.barCall {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+.barGo {
+  color: var(--on-deep);
+}
+
+@media (min-width: 900px) {
+  .root {
+    --gutter: 56px;
+  }
+
+  .hero {
+    min-height: calc(100svh - 36px);
+    grid-template-columns: 1fr minmax(320px, 0.34fr);
+    grid-template-rows: auto 1fr;
+    align-content: stretch;
+    padding: 28px var(--gutter) 48px;
+  }
+
+  .title {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-self: end;
+    margin: 0;
+  }
+
+  .mono {
+    font-size: min(46vw, calc(100svh - 260px));
+  }
+
+  .word {
+    font-size: clamp(32px, 3.2vw, 56px);
+  }
+
+  .side {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: end;
+    margin: 0;
+    padding-bottom: 6px;
+  }
+
+  .weekSec {
+    padding: 144px var(--gutter) 152px;
+  }
+
+  .weekHead {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+    gap: 40px;
+    margin-bottom: 56px;
+  }
+
+  .weekHead h2 {
+    font-size: clamp(56px, 6.4vw, 112px);
+  }
+
+  .weekHead p {
+    justify-self: end;
+    margin: 0;
+  }
+
+  .week {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .week li {
+    grid-template-columns: 1fr;
+    grid-template-areas: 'day' 'bar' 'hours' 'today';
+    gap: 14px;
+    align-items: start;
+  }
+
+  .colDay {
+    font-size: 22px;
+  }
+
+  .colDay span {
+    display: inline;
+    font-weight: 400;
+  }
+
+  .colBar {
+    height: min(46vh, 420px);
+  }
+
+  .colFill {
+    left: 0;
+    right: 0;
+    width: auto;
+    top: calc(var(--from) * 100%);
+    bottom: auto;
+    height: calc((var(--to) - var(--from)) * 100%);
+    transform-origin: center top;
+  }
+
+  .week[data-waiting] .colFill {
+    transform: scaleY(0);
+  }
+
+  .week li[data-closed] .colBar {
+    background: none;
+    box-shadow: inset 0 0 0 1px rgb(235 232 225 / 0.3);
+    background-image: repeating-linear-gradient(135deg, rgb(235 232 225 / 0.09) 0 2px, transparent 2px 12px);
+  }
+
+  .colNow {
+    top: calc(var(--at) * 100%);
+    bottom: auto;
+    left: -6px;
+    right: -6px;
+    width: auto;
+    height: 3px;
+    margin: -1px 0 0;
+  }
+
+  .colNow::after {
+    content: attr(data-time);
+    position: absolute;
+    top: 8px;
+    left: 6px;
+    padding: 2px 6px;
+    background: var(--ink);
+    color: var(--yellow);
+    font: 700 12px/1.2 var(--mono);
+    white-space: nowrap;
+  }
+
+  .colToday {
+    grid-area: today;
+    justify-self: start;
+  }
+
+  .end {
+    padding: 144px var(--gutter) 120px;
+  }
+
+  .number {
+    white-space: nowrap;
+    font-size: min(9.4vw, 170px);
+  }
+
+  .endRow {
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    margin-top: 72px;
+  }
+
+  .addr {
+    font-size: 28px;
+  }
+
+  .bar {
+    display: none;
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(0.3em);
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    transform: none;
+    clip-path: inset(-0.1em -0.1em -0.3em -0.1em);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mono,
+  .word {
+    animation: none;
+  }
+  .colFill {
+    transition: none;
+  }
+}
