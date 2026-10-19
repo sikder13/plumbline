@@ -1,0 +1,487 @@
+/* MISS FOOD Restaurant: their olive dining room, cream plates, fried plantain gold. */
+
+.root {
+  --paper: #f3efe3;
+  --olive: #55502f;
+  --gold: #c79e52;
+  --ink: #2a2416;
+  --brown: #5a3a17;
+  --muted: #5d5640;
+  --display: 'Young Serif', Georgia, serif;
+  --text: 'Instrument Sans', system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: 24px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 17px/1.55 var(--text);
+  overflow-x: clip;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+
+/* One great round plate on the olive wall. */
+
+.hero {
+  display: grid;
+  background: var(--olive);
+  color: var(--paper);
+  padding: 22px 0 40px;
+}
+
+.round {
+  position: relative;
+  width: 92vw;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 0 10px var(--paper), 0 0 0 11px rgb(42 36 22 / 0.2), 0 30px 60px rgb(0 0 0 / 0.35);
+  animation: settle 1.2s var(--ease) both;
+}
+
+.round img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.say {
+  padding: 32px var(--gutter) 0;
+}
+
+.kind {
+  margin: 0 0 8px;
+  font: 600 13px/1.3 var(--text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.kind span {
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #e3dcc6;
+}
+
+.title {
+  margin: 0;
+  font: 400 clamp(58px, 18vw, 90px) / 0.9 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.street {
+  margin: 10px 0 16px;
+  color: #e3dcc6;
+}
+
+.now,
+.weekNow {
+  margin: 0 0 16px;
+  font: 700 17px/1.3 var(--text);
+}
+
+.now span::before,
+.weekNow span::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background: #a39d84;
+  vertical-align: 0.04em;
+}
+
+.now span[data-open='yes']::before,
+.weekNow span[data-open='yes']::before {
+  background: #7fd18f;
+}
+
+.weekNow span[data-open='yes']::before {
+  background: #2f7d45;
+}
+
+.acts {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 8px;
+}
+
+.call,
+.go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font: 700 16px/1.1 var(--text);
+  text-align: center;
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.call {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.call:hover {
+  background: var(--paper);
+}
+
+.go {
+  box-shadow: inset 0 0 0 2px var(--paper);
+  color: var(--paper);
+}
+
+.go:hover {
+  background: var(--paper);
+  color: var(--olive);
+}
+
+/* From the kitchen: the turning table. */
+
+.plates {
+  padding: 96px var(--gutter) 88px;
+  text-align: center;
+}
+
+.platesHead {
+  margin: 0 0 32px;
+  font: 400 clamp(42px, 12vw, 58px) / 1 var(--display);
+  color: var(--brown);
+}
+
+.wheel {
+  --size: min(88vw, 360px);
+  display: grid;
+  justify-items: center;
+  gap: 20px;
+  touch-action: pan-y;
+}
+
+.table {
+  position: relative;
+  width: var(--size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, #e8e1cd 0 58%, #ddd4bc 58.5% 100%);
+  box-shadow: inset 0 0 0 1px rgb(42 36 22 / 0.1);
+}
+
+.plateSpot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--size) * 0.26);
+  aspect-ratio: 1;
+  margin: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 0 4px var(--paper), 0 8px 18px rgb(42 36 22 / 0.25);
+  transform: translate(-50%, -50%) translate(calc(var(--x) * var(--size) * 0.37), calc(var(--y) * var(--size) * 0.37));
+  opacity: 0.85;
+  transition: transform 0.7s var(--ease), width 0.7s var(--ease), opacity 0.4s var(--ease);
+}
+
+.plateSpot[data-front] {
+  width: calc(var(--size) * 0.52);
+  opacity: 1;
+  z-index: 1;
+  box-shadow: 0 0 0 7px var(--paper), 0 18px 36px rgb(42 36 22 / 0.35);
+}
+
+.plateSpot picture {
+  display: block;
+  height: 100%;
+}
+
+.plateSpot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.turns {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.turns button {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1.5px solid var(--olive);
+  border-radius: 50%;
+  background: none;
+  color: var(--olive);
+  cursor: pointer;
+}
+
+.turns button:hover {
+  background: var(--olive);
+  color: var(--paper);
+}
+
+.turns svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.count {
+  min-width: 56px;
+  font: 700 15px/1 var(--text);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* The dining room and the week. */
+
+.room {
+  display: grid;
+  gap: 28px;
+  padding: 0 var(--gutter) 96px;
+}
+
+.roomPhoto {
+  margin: 0;
+}
+
+.roomPhoto img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 200px 200px 0 0;
+}
+
+.roomText {
+  display: grid;
+  align-content: end;
+}
+
+.weekLine {
+  display: grid;
+  margin: 0;
+  font: 400 clamp(34px, 9.6vw, 46px) / 1.05 var(--display);
+  color: var(--olive);
+}
+
+.weekLine span {
+  font-variant-numeric: tabular-nums;
+  color: var(--brown);
+}
+
+.weekNote {
+  margin: 12px 0 18px;
+  color: var(--muted);
+}
+
+/* The close: a round card, the size of a plate. */
+
+.end {
+  background: var(--olive);
+  color: var(--ink);
+  padding: 88px var(--gutter) 120px;
+}
+
+.endPlate {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 6px;
+  width: min(86vw, 420px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  padding: 40px;
+  border-radius: 50%;
+  background: var(--paper);
+  text-align: center;
+  box-shadow: inset 0 0 0 14px #e8e1cd, 0 30px 60px rgb(0 0 0 / 0.35);
+}
+
+.endName {
+  margin: 0;
+  font: 400 26px/1.05 var(--display);
+  color: var(--brown);
+}
+
+.endAddr {
+  display: grid;
+  font-style: normal;
+  font-size: 16px;
+}
+
+.endTel {
+  margin-top: 6px;
+  color: var(--olive);
+  font: 400 28px/1 var(--display);
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+}
+
+.endGo {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink);
+  font-weight: 700;
+  text-underline-offset: 4px;
+}
+
+.small {
+  display: grid;
+  gap: 8px;
+  max-width: 62ch;
+  margin: 56px auto 0;
+  font-size: 14px;
+  color: #e3dcc6;
+  text-align: center;
+}
+
+.small p {
+  margin: 0;
+}
+
+.small a {
+  color: var(--paper);
+}
+
+/* On a phone: one gold pill centred at the foot. */
+
+.bar {
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  bottom: 18px;
+  padding: 18px 28px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--ink);
+  font: 700 16px/1 var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 12px 28px rgb(42 36 22 / 0.35);
+  transform: translate(-50%, 160%);
+  transition: transform 0.4s var(--ease);
+}
+
+:global([data-past-hero]:not([data-covered])) .bar {
+  transform: translate(-50%, 0);
+}
+
+@media (min-width: 900px) {
+  .root {
+    --gutter: 56px;
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 0.5fr) minmax(0, 0.5fr);
+    align-items: center;
+    min-height: calc(100svh - 36px);
+    padding: 40px 0;
+  }
+
+  .round {
+    grid-column: 2;
+    grid-row: 1;
+    width: min(44vw, calc(100svh - 140px));
+    margin-right: var(--gutter);
+    justify-self: end;
+  }
+
+  .say {
+    grid-column: 1;
+    grid-row: 1;
+    padding: 0 40px 0 var(--gutter);
+  }
+
+  .title {
+    font-size: clamp(88px, 9.4vw, 180px);
+  }
+
+  .acts {
+    grid-template-columns: auto auto;
+    justify-content: start;
+  }
+
+  .call,
+  .go {
+    padding: 0 28px;
+  }
+
+  .plates {
+    padding: 152px var(--gutter) 128px;
+  }
+
+  .platesHead {
+    font-size: clamp(64px, 6vw, 112px);
+  }
+
+  .wheel {
+    --size: min(46vw, 620px);
+  }
+
+  .room {
+    grid-template-columns: minmax(0, 0.42fr) minmax(0, 0.58fr);
+    align-items: end;
+    gap: 64px;
+    padding: 0 var(--gutter) 160px;
+  }
+
+  .weekLine {
+    font-size: clamp(56px, 5.4vw, 96px);
+  }
+
+  .end {
+    padding: 144px var(--gutter) 112px;
+  }
+
+  .endPlate {
+    width: 520px;
+  }
+
+  .endName {
+    font-size: 34px;
+  }
+
+  .endTel {
+    font-size: 36px;
+  }
+
+  .bar {
+    display: none;
+  }
+}
+
+@keyframes settle {
+  from {
+    transform: scale(0.94) rotate(-10deg);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .round {
+    animation: none;
+  }
+  .plateSpot {
+    transition: none;
+  }
+}

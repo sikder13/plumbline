@@ -1,0 +1,458 @@
+/* Alexiva bakery: the night outside the shop, their sign's red, frosting cream, pastry brown. */
+
+.root {
+  --night: #262033;
+  --red: #ff5a5f;
+  --cream: #f6efe6;
+  --brown: #6a3110;
+  --muted: #cfc4d8;
+  --display: 'Yeseva One', 'Didot', serif;
+  --text: 'Sora', system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --gutter: 24px;
+  background: var(--night);
+  color: var(--cream);
+  font: 400 16px/1.6 var(--text);
+  overflow-x: clip;
+}
+
+.root a:focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 3px;
+}
+
+.hero {
+  display: grid;
+}
+
+.photo {
+  position: relative;
+  aspect-ratio: 4 / 4.4;
+  overflow: hidden;
+}
+
+.photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.say {
+  padding: 22px var(--gutter) 44px;
+}
+
+.street {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.title {
+  display: grid;
+  margin: 0 0 16px;
+}
+
+.titleName {
+  font: 400 clamp(54px, 16vw, 80px) / 0.95 var(--display);
+}
+
+/* Their sign's word, glowing. */
+.titleWord {
+  font: 700 clamp(40px, 12vw, 60px) / 1 var(--text);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--red);
+  text-shadow: 0 0 12px rgb(255 90 95 / 0.65), 0 0 32px rgb(255 90 95 / 0.35);
+  animation: glow 1.2s var(--ease) 0.3s both;
+}
+
+.now {
+  margin: 0 0 16px;
+  font: 600 15px/1.4 var(--text);
+}
+
+.now span::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background: #6b6280;
+  vertical-align: 0.04em;
+}
+
+.now span[data-open='yes']::before {
+  background: #7ee08f;
+  box-shadow: 0 0 8px #7ee08f;
+}
+
+.acts,
+.endActs {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 8px;
+}
+
+.call,
+.go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 16px;
+  font: 600 15px/1.1 var(--text);
+  text-align: center;
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.call {
+  background: var(--cream);
+  color: var(--night);
+}
+
+.call:hover {
+  background: var(--red);
+}
+
+.go {
+  box-shadow: inset 0 0 0 1.5px var(--cream);
+  color: var(--cream);
+}
+
+.go:hover {
+  background: var(--cream);
+  color: var(--night);
+}
+
+/* Cakes, stacking into tiers. */
+
+.cakes {
+  background: var(--cream);
+  color: var(--night);
+  padding: 96px var(--gutter) 88px;
+}
+
+.cakesHead {
+  margin: 0 0 32px;
+  font: 400 clamp(52px, 15vw, 72px) / 1 var(--display);
+  text-align: center;
+  color: var(--brown);
+}
+
+.tiers {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tierItem {
+  width: calc(100% - var(--i) * 12%);
+}
+
+.tierItem figure {
+  margin: 0;
+}
+
+.tierItem img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 12px 12px 4px 4px;
+  box-shadow: 0 14px 30px rgb(38 32 51 / 0.2);
+}
+
+.tierItem figcaption {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 15px;
+}
+
+.tierItem figcaption b {
+  margin-right: 6px;
+  font: 400 18px/1 var(--display);
+  color: var(--brown);
+}
+
+/* The counter: the case as one long band, the week, a tray. */
+
+.counter {
+  display: grid;
+  padding: 0 0 96px;
+}
+
+.band {
+  margin: 0;
+}
+
+.band img {
+  width: 100%;
+  aspect-ratio: 2000 / 901;
+  object-fit: cover;
+}
+
+.hours {
+  padding: 48px var(--gutter) 32px;
+}
+
+.hoursHead {
+  margin: 0;
+  font: 400 clamp(32px, 9vw, 44px) / 1.1 var(--display);
+  font-variant-numeric: tabular-nums;
+}
+
+.hoursHead span,
+.hoursSun span {
+  display: block;
+  font: 600 13px/1.4 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.hoursSun {
+  margin: 18px 0 0;
+  font: 400 24px/1.2 var(--display);
+  font-variant-numeric: tabular-nums;
+}
+
+.tray {
+  width: 64%;
+  margin: 0 var(--gutter) 0 auto;
+}
+
+.tray img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+/* The close: a neon sign, lit while they are open. */
+
+.end {
+  padding: 88px var(--gutter) 120px;
+  text-align: center;
+  border-top: 1px solid rgb(246 239 230 / 0.12);
+}
+
+.neonWrap {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+
+.neon {
+  margin: 0;
+  padding: 10px 26px 14px;
+  border: 3px solid #938bab;
+  border-radius: 999px;
+  font: 400 clamp(52px, 16vw, 84px) / 1 var(--display);
+  color: #938bab;
+  transition: color 0.6s var(--ease), border-color 0.6s var(--ease), text-shadow 0.6s var(--ease), box-shadow 0.6s var(--ease);
+}
+
+.neon[data-lit] {
+  color: var(--red);
+  border-color: var(--red);
+  text-shadow: 0 0 10px rgb(255 90 95 / 0.8), 0 0 30px rgb(255 90 95 / 0.45);
+  box-shadow: 0 0 16px rgb(255 90 95 / 0.55), inset 0 0 16px rgb(255 90 95 / 0.35);
+}
+
+.neonLine {
+  margin: 0;
+  font: 600 15px/1.4 var(--text);
+}
+
+.endName {
+  margin: 0 0 6px;
+  font: 400 clamp(32px, 9vw, 44px) / 1 var(--display);
+}
+
+.endAddr {
+  display: grid;
+  margin: 0 0 22px;
+  font-style: normal;
+  color: var(--muted);
+}
+
+.endActs {
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.small {
+  display: grid;
+  gap: 8px;
+  max-width: 62ch;
+  margin: 56px auto 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.small p {
+  margin: 0;
+}
+
+.small a {
+  color: var(--cream);
+}
+
+/* On a phone: a narrow red tab on the right edge. */
+
+.bar {
+  position: fixed;
+  z-index: 40;
+  right: 0;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  min-height: 120px;
+  border-radius: 10px 0 0 10px;
+  background: var(--red);
+  color: var(--night);
+  font: 700 15px/1 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  writing-mode: vertical-rl;
+  box-shadow: 0 0 18px rgb(255 90 95 / 0.5);
+  transform: translate(110%, -50%);
+  transition: transform 0.4s var(--ease);
+}
+
+:global([data-past-hero]:not([data-covered])) .bar {
+  transform: translate(0, -50%);
+}
+
+@media (min-width: 900px) {
+  .root {
+    --gutter: 56px;
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 0.62fr) minmax(0, 0.38fr);
+    min-height: calc(100svh - 36px);
+  }
+
+  .photo {
+    grid-column: 2;
+    grid-row: 1;
+    aspect-ratio: auto;
+  }
+
+  .say {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+    padding: 48px var(--gutter);
+  }
+
+  .titleName {
+    font-size: clamp(96px, 10.6vw, 200px);
+  }
+
+  .titleWord {
+    font-size: clamp(56px, 5.6vw, 104px);
+  }
+
+  .acts,
+  .endActs {
+    grid-template-columns: auto auto;
+    justify-content: start;
+  }
+
+  .call,
+  .go {
+    padding: 0 28px;
+  }
+
+  .cakes {
+    padding: 152px var(--gutter) 160px;
+  }
+
+  .cakesHead {
+    font-size: clamp(80px, 8vw, 152px);
+  }
+
+  /* On a wide screen the three cakes stack, each held a little lower and narrower than the last. */
+  .tiers {
+    gap: 0;
+  }
+
+  .tierItem {
+    position: sticky;
+    top: calc(80px + var(--i) * 70px);
+    width: calc(56% - var(--i) * 9%);
+    margin-bottom: 30vh;
+  }
+
+  .tierItem:last-child {
+    margin-bottom: 0;
+  }
+
+  .counter {
+    grid-template-columns: minmax(0, 0.5fr) minmax(0, 0.5fr);
+    padding-bottom: 152px;
+  }
+
+  .band {
+    grid-column: 1 / -1;
+  }
+
+  .hours {
+    align-self: center;
+    padding: 72px var(--gutter);
+  }
+
+  .hoursHead {
+    font-size: clamp(48px, 4.6vw, 84px);
+  }
+
+  .tray {
+    width: auto;
+    margin: 72px var(--gutter) 0 0;
+  }
+
+  .end {
+    padding: 152px var(--gutter) 112px;
+  }
+
+  .endActs {
+    justify-content: center;
+    max-width: none;
+  }
+
+  .bar {
+    display: none;
+  }
+}
+
+@keyframes glow {
+  from {
+    opacity: 0.3;
+    text-shadow: none;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .titleWord {
+    animation: none;
+  }
+  .neon {
+    transition: none;
+  }
+  .tierItem {
+    position: static;
+    margin-bottom: 18px;
+  }
+}
