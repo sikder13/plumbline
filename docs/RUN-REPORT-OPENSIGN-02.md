@@ -154,7 +154,7 @@ Every part that got a yes was rebuilt once, keeping the one page the reviewer na
 
 ## Elapsed and decisions
 
-Started 04:27 EDT, report written 06:50 EDT: 2 h 23 min, inside the 5 hour budget.
+Started 04:27 EDT, report finished and pushed 06:46 EDT: 2 h 19 min, inside the 5 hour budget.
 
 Decisions I made alone (each also in data/open-sign/STATUS.md):
 1. **Ceiling 1,950 for the day, not 1,800 more.** Run 01 had already used 237 calls in the same Pacific quota day, so the sweep counted both ledgers against one ceiling under the raised 2,000 quota. Cost if wrong: none, the day ended at 992.
