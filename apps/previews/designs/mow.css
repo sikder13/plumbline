@@ -142,20 +142,22 @@
 }
 
 .lawnHead {
+  margin: 0;
   padding: 0 var(--gutter) 40px;
 }
 
-.lawnHead h2 {
+.lawnHead {
   margin: 0;
   font: 800 clamp(52px, 15vw, 72px) / 0.88 var(--display);
   text-transform: uppercase;
 }
 
-.lawnHead p {
-  max-width: 40ch;
-  margin: 14px 0 0;
-  font-size: 15px;
+.lawnNote {
+  margin: 0;
+  padding: 18px var(--gutter) 22px;
+  font-size: 14px;
   color: var(--on-deep-muted);
+  text-align: right;
 }
 
 .stripes {
@@ -345,8 +347,8 @@
   right: 12px;
   bottom: 12px;
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  box-shadow: 0 10px 30px rgb(27 32 20 / 0.3);
+  grid-template-columns: 1fr auto;
+  gap: 6px;
   transform: translateY(160%);
   transition: transform 0.45s var(--ease);
 }
@@ -367,11 +369,16 @@
 .barCall {
   background: var(--sky);
   color: var(--ink);
+  box-shadow: 0 10px 30px rgb(27 32 20 / 0.3);
+  font-variant-numeric: tabular-nums;
 }
 
 .barGo {
+  padding: 0 18px;
   background: var(--deep);
   color: var(--paper);
+  font-size: 15px !important;
+  box-shadow: 0 10px 30px rgb(27 32 20 / 0.3);
 }
 
 @media (min-width: 900px) {
@@ -454,21 +461,13 @@
   }
 
   .lawnHead {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: end;
-    gap: 40px;
     padding-bottom: 64px;
   }
 
-  .lawnHead h2 {
-    font-size: clamp(80px, 8vw, 140px);
+  .lawnHead {
+    font-size: min(11.5vw, 210px);
   }
 
-  .lawnHead p {
-    justify-self: end;
-    margin: 0;
-  }
 
   .stripeIn {
     min-height: 116px;

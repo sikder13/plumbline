@@ -70,11 +70,11 @@ function Demo({ data }: { data: PageData }) {
 
       <main>
         <section className={s.lawn} aria-labelledby="lawn-h">
-          <header className={s.lawnHead}>
-            <h2 id="lawn-h">What they do</h2>
-            <p>{c.servicesSource}</p>
-          </header>
+          <h2 id="lawn-h" className={s.lawnHead}>
+            What they do
+          </h2>
           <MowStripes items={c.services} s={{ stripes: s.stripes!, stripeIn: s.stripeIn!, stripeNo: s.stripeNo!, stripeName: s.stripeName! }} />
+          <p className={s.lawnNote}>{c.servicesSource}</p>
         </section>
 
         <section className={s.work} aria-label="Two of their jobs">
@@ -134,7 +134,7 @@ function Demo({ data }: { data: PageData }) {
 
       <nav className={s.bar} aria-label="Call or get directions">
         <a href={c.phone.tel} className={s.barCall} data-press>
-          Call
+          Call {c.phone.display}
         </a>
         <a href={c.maps} className={s.barGo} rel="noopener" target="_blank" data-press>
           Directions

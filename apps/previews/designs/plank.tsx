@@ -38,7 +38,7 @@ function Arrow() {
  * a lens that shows the seams at full size, a short spec sheet of the facts, and their number to close.
  */
 function Demo({ data }: { data: PageData }) {
-  const { css, s } = designStyles('plank', ['League Spartan', 'DM Mono']);
+  const { css, s } = designStyles('plank', ['League Spartan', 'Source Serif 4']);
   const c = data.demo as Content;
 
   return (
@@ -48,17 +48,9 @@ function Demo({ data }: { data: PageData }) {
       </style>
 
       <section className={s.hero} data-hero aria-labelledby="hero-h">
-        <div className={s.photo}>
-          <Pic pic={pic(data, 'hero')} sizes="(min-width: 900px) 58vw, 100vw" first />
-          <div className={s.strips} aria-hidden="true">
-            {Array.from({ length: STRIPS }, (_, i) => (
-              <i key={i} style={{ '--i': i, '--side': i % 2 ? 1 : -1 } as CSSProperties} />
-            ))}
-          </div>
-        </div>
         <div className={s.say}>
           <p className={s.mark}>
-            <b>{c.mark}</b> {c.word}
+            <b>{c.mark}</b> <i>{c.word}</i>
           </p>
           <h1 id="hero-h" className={s.title} aria-label={c.headline.join(' ')}>
             <span aria-hidden="true" style={{ '--i': 0 } as CSSProperties}>
@@ -75,15 +67,23 @@ function Demo({ data }: { data: PageData }) {
             <li>{c.town}</li>
             <li>{c.hours}</li>
           </ul>
-          <div className={s.acts} data-covers>
-            <a className={s.call} href={c.phone.tel} data-press data-magnetic>
-              Call {c.phone.display}
-            </a>
-            <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
-              Directions
-              <Arrow />
-            </a>
+        </div>
+        <div className={s.photo}>
+          <Pic pic={pic(data, 'hero')} sizes="(min-width: 900px) 54vw, 100vw" first />
+          <div className={s.strips} aria-hidden="true">
+            {Array.from({ length: STRIPS }, (_, i) => (
+              <i key={i} style={{ '--i': i, '--side': i % 2 ? 1 : -1 } as CSSProperties} />
+            ))}
           </div>
+        </div>
+        <div className={s.acts} data-covers>
+          <a className={s.call} href={c.phone.tel} data-press data-magnetic>
+            Call {c.phone.display}
+          </a>
+          <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
+            Directions
+            <Arrow />
+          </a>
         </div>
       </section>
 
@@ -100,52 +100,47 @@ function Demo({ data }: { data: PageData }) {
           </div>
         </section>
 
-        <section className={s.sheet} aria-labelledby="sheet-h">
-          <h2 id="sheet-h" className={s.sheetLabel}>
-            The facts
-          </h2>
-          <dl className={s.specs}>
-            <div>
-              <dt>Work</dt>
-              <dd>{c.headline.join(' ')}</dd>
-            </div>
-            <div>
-              <dt>Hours</dt>
-              <dd>
-                {c.hours} <small>{c.hoursSource}</small>
-              </dd>
-            </div>
-            <div>
-              <dt>Address</dt>
-              <dd>
-                {c.address.map((l) => (
-                  <span key={l}>{l}</span>
-                ))}
-              </dd>
-            </div>
-            <div>
-              <dt>Phone</dt>
-              <dd>
-                <a href={c.phone.tel}>{c.phone.display}</a>
-              </dd>
-            </div>
-          </dl>
+      </main>
+
+      <footer className={s.sheet} aria-labelledby="sheet-h" data-covers>
+        <h2 id="sheet-h" className={s.sheetLabel}>
+          {c.mark} {c.word}
+        </h2>
+        <dl className={s.specs}>
+          <div>
+            <dt>Work</dt>
+            <dd>{c.headline.join(' ')}</dd>
+          </div>
+          <div>
+            <dt>Hours</dt>
+            <dd>
+              {c.hours} <small>{c.hoursSource}</small>
+            </dd>
+          </div>
+          <div>
+            <dt>Address</dt>
+            <dd>
+              {c.address.map((l) => (
+                <span key={l}>{l}</span>
+              ))}
+            </dd>
+          </div>
+          <div>
+            <dt>Phone</dt>
+            <dd>
+              <a href={c.phone.tel}>{c.phone.display}</a>
+            </dd>
+          </div>
+        </dl>
+        <div className={s.sheetActs}>
+          <a className={s.call} href={c.phone.tel} data-press>
+            Call {c.phone.display}
+          </a>
           <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
             Directions on Google Maps
             <Arrow />
           </a>
-        </section>
-      </main>
-
-      <footer className={s.close} data-covers>
-        <p className={s.closeLabel}>
-          Call {c.mark} {c.word}
-        </p>
-        <a className={s.number} href={c.phone.tel} aria-label={`Call ${c.phone.display}`} data-press>
-          {c.phone.display.split(' ').map((part) => (
-            <span key={part}>{part}</span>
-          ))}
-        </a>
+        </div>
         <div className={s.small}>
           <p>{c.credit}</p>
           <p>
@@ -160,7 +155,7 @@ function Demo({ data }: { data: PageData }) {
 
       <nav className={s.bar} aria-label="Call or get directions">
         <a href={c.phone.tel} className={s.barCall} data-press>
-          Call
+          Call {c.phone.display}
         </a>
         <a href={c.maps} className={s.barGo} rel="noopener" target="_blank" data-press>
           Directions
@@ -171,4 +166,4 @@ function Demo({ data }: { data: PageData }) {
   );
 }
 
-export const plank: Design = { Demo, fonts: ['league-spartan-latin-wght-normal', 'dm-mono-latin-400-normal'], heroSizes: '(min-width: 900px) 58vw, 100vw' };
+export const plank: Design = { Demo, fonts: ['league-spartan-latin-wght-normal', 'source-serif-4-latin-wght-normal'], heroSizes: '(min-width: 900px) 54vw, 100vw' };

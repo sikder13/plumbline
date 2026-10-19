@@ -142,15 +142,17 @@
   padding: 96px var(--gutter) 104px;
 }
 
-.weekHead h2 {
-  margin: 0;
+.weekHead {
+  margin: 0 0 36px;
   font: 700 clamp(40px, 11vw, 56px) / 1 var(--display);
   letter-spacing: -0.03em;
 }
 
-.weekHead p {
-  max-width: 46ch;
-  margin: 16px 0 40px;
+.legend {
+  max-width: 52ch;
+  margin: 36px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid rgb(235 232 225 / 0.2);
   font-size: 14px;
   color: var(--on-deep-muted);
 }
@@ -365,21 +367,28 @@
 
   .hero {
     min-height: calc(100svh - 36px);
-    grid-template-columns: 1fr minmax(320px, 0.34fr);
-    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto 1fr auto;
     align-content: stretch;
-    padding: 28px var(--gutter) 48px;
+    padding: 28px var(--gutter) 40px;
   }
 
   .title {
     grid-column: 1 / -1;
     grid-row: 2;
     align-self: end;
+    grid-template-columns: auto 1fr;
+    align-items: end;
+    gap: 0 40px;
     margin: 0;
   }
 
   .mono {
-    font-size: min(46vw, calc(100svh - 260px));
+    font-size: min(40vw, calc(100svh - 300px));
+  }
+
+  .word {
+    padding-bottom: 0.18em;
   }
 
   .word {
@@ -387,11 +396,22 @@
   }
 
   .side {
-    grid-column: 2;
-    grid-row: 2;
-    align-self: end;
-    margin: 0;
-    padding-bottom: 6px;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    margin: 28px 0 0;
+    padding-top: 24px;
+    border-top: 2px solid var(--ink);
+  }
+
+  .now {
+    margin: 0 auto 0 0;
+  }
+
+  .acts {
+    grid-template-columns: auto auto;
   }
 
   .weekSec {
@@ -399,20 +419,12 @@
   }
 
   .weekHead {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: end;
-    gap: 40px;
     margin-bottom: 56px;
-  }
-
-  .weekHead h2 {
     font-size: clamp(56px, 6.4vw, 112px);
   }
 
-  .weekHead p {
-    justify-self: end;
-    margin: 0;
+  .legend {
+    margin-top: 40px;
   }
 
   .week {

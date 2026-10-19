@@ -128,33 +128,46 @@ function Demo({ data }: { data: PageData }) {
           </ol>
         </section>
 
-        <section className={s.visit} aria-labelledby="visit-h" data-covers>
-          <h2 id="visit-h" className={s.visitLabel}>
-            Find the studio
-          </h2>
-          <address className={s.visitAddr}>
-            {c.address.map((l) => (
-              <span key={l}>{l}</span>
-            ))}
-          </address>
-          <div className={s.visitActs}>
-            <a className={s.call} href={c.phone.tel} data-press>
-              Call {c.phone.display}
-            </a>
-            <a className={s.go} href={c.maps} rel="noopener" target="_blank" data-press>
+      </main>
+
+      <footer className={s.end} data-covers aria-labelledby="visit-h">
+        <h2 id="visit-h" className={s.endLabel}>
+          Find the studio
+        </h2>
+        <div className={s.colophon}>
+          <div>
+            <p className={s.colTitle}>Address</p>
+            <address className={s.colText}>
+              {c.address.map((l) => (
+                <span key={l}>{l}</span>
+              ))}
+            </address>
+            <a className={s.colLink} href={c.maps} rel="noopener" target="_blank">
               Directions
               <Arrow />
             </a>
           </div>
-        </section>
-      </main>
-
-      <footer className={s.end} data-covers>
+          <div>
+            <p className={s.colTitle}>Today</p>
+            <p className={s.colText}>
+              <Now week={c.hours} fallback={run} />
+            </p>
+            <a className={s.colLink} href="#week">
+              The week
+            </a>
+          </div>
+          <div>
+            <p className={s.colTitle}>Phone</p>
+            <p className={s.colText}>{c.phone.display}</p>
+            <a className={s.call} href={c.phone.tel} data-press>
+              Call the studio
+            </a>
+          </div>
+        </div>
         <p className={s.endMark} aria-hidden="true">
           {c.mast}
         </p>
         <div className={s.endSmall}>
-          <p>{data.name}. {c.address.join(', ')}.</p>
           <p>{c.credit}</p>
           <p>
             Demo made from their Google profile. Not an official site. Demo by{' '}

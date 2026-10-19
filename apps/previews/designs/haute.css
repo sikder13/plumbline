@@ -362,59 +362,74 @@
   display: inline-block;
 }
 
-/* Find the studio. */
-
-.visit {
-  background: var(--gold);
-  color: var(--ink);
-  padding: 88px var(--gutter) 96px;
-}
-
-.visitLabel {
-  margin: 0 0 18px;
-  font: 600 14px/1.2 var(--text);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.visitAddr {
-  display: grid;
-  margin: 0 0 36px;
-  font: 500 clamp(40px, 11vw, 54px) / 1 var(--display);
-  font-style: normal;
-  letter-spacing: -0.03em;
-}
-
-.visitAddr span + span {
-  font-style: italic;
-}
-
-.visit .call {
-  background: var(--ink);
-  color: var(--paper);
-}
-
-.visit .call:hover {
-  background: var(--paper);
-  color: var(--ink);
-}
-
-.visit .go:hover {
-  background: var(--ink);
-  color: var(--gold);
-}
-
-/* The close: the name again, too big for the page. */
+/* The close: where to find them as a colophon, then the name again, too big for the page. */
 
 .end {
   background: var(--deep);
   color: var(--paper);
   overflow: hidden;
-  padding: 72px 0 120px;
+  padding: 88px 0 120px;
+}
+
+.endLabel {
+  margin: 0 var(--gutter) 24px;
+  font: italic 500 clamp(36px, 10vw, 48px) / 1 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.colophon {
+  display: grid;
+  margin: 0 var(--gutter);
+  border-top: 1px solid rgb(246 237 230 / 0.28);
+}
+
+.colophon > div {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 22px 0 26px;
+  border-bottom: 1px solid rgb(246 237 230 / 0.28);
+}
+
+.colTitle {
+  margin: 0;
+  font: 600 13px/1 var(--text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.colText {
+  display: grid;
+  margin: 0;
+  font: 500 24px/1.2 var(--display);
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+.colLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  min-height: 44px;
+  color: var(--paper);
+  font: 600 16px/1 var(--text);
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+
+.end .call {
+  justify-self: start;
+  margin-top: 6px;
+}
+
+.end .call:hover {
+  background: var(--paper);
 }
 
 .endMark {
-  margin: 0 0 40px;
+  margin: 72px 0 40px;
   padding: 0 0 0 2vw;
   font: italic 500 31vw/0.8 var(--display);
   letter-spacing: -0.05em;
@@ -623,10 +638,6 @@
   }
 
   .insideHead {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: end;
-    gap: 40px;
     margin-bottom: 64px;
   }
 
@@ -636,9 +647,7 @@
   }
 
   .insideHead p {
-    margin: 0;
-    justify-self: end;
-    max-width: 34ch;
+    max-width: 44ch;
   }
 
   .book {
@@ -833,30 +842,36 @@
     visibility: visible;
   }
 
-  .visit {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: end;
-    gap: 40px;
-    padding: 144px var(--gutter);
+  .end {
+    padding-top: 144px;
   }
 
-  .visitLabel {
-    grid-column: 1 / -1;
+  .endLabel {
+    font-size: clamp(48px, 4.4vw, 72px);
   }
 
-  .visitAddr {
-    margin: 0;
-    font-size: clamp(56px, 6.4vw, 112px);
+  .colophon {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-bottom: 1px solid rgb(246 237 230 / 0.28);
   }
 
-  .visitActs {
-    grid-template-columns: auto auto;
+  .colophon > div {
+    padding: 28px 32px 32px 0;
+    border-bottom: 0;
+  }
+
+  .colophon > div + div {
+    padding-left: 32px;
+    border-left: 1px solid rgb(246 237 230 / 0.28);
+  }
+
+  .colText {
+    font-size: 30px;
   }
 
   .endMark {
     font-size: 24vw;
-    margin-bottom: 56px;
+    margin: 96px 0 56px;
   }
 
   .bar {
