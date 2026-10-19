@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import sharp from 'sharp';
 import { openDb, paths } from '@plumbline/core';
@@ -59,6 +59,18 @@ export async function sharpness(file: string): Promise<number> {
   return n ? Math.round(sq / n - (sum / n) ** 2) : 0;
 }
 
+/** The businesses already in another batch's LEADS.csv: a lead is built once. */
+export function earlierSlugs(batches: string, current: string): Set<string> {
+  const out = new Set<string>();
+  if (!existsSync(batches)) return out;
+  for (const b of readdirSync(batches, { withFileTypes: true })) {
+    const file = join(batches, b.name, 'LEADS.csv');
+    if (!b.isDirectory() || b.name === current || !existsSync(file)) continue;
+    for (const r of parseCsv(readFileSync(file, 'utf8'))) if (r.slug) out.add(r.slug);
+  }
+  return out;
+}
+
 export interface PhotoFile {
   file: string;
   width: number;
@@ -96,7 +108,8 @@ function enrichedFrom(r: Record<string, string>): Enriched {
 export async function pickBatch(campaign: string, batch: string, opts: { ceiling: number; log?: (line: string) => void }): Promise<{ picked: Picked[]; alternates: Enriched[]; stopped: string | null; calls: number }> {
   const p = campaignPaths(campaign);
   const log = opts.log ?? (() => undefined);
-  const scored = parseCsv(readFileSync(join(p.leads, '_scored.csv'), 'utf8')).map(enrichedFrom);
+  const earlier = earlierSlugs(p.batches, batch);
+  const scored = parseCsv(readFileSync(join(p.leads, '_scored.csv'), 'utf8')).map(enrichedFrom).filter((l) => !earlier.has(l.slug));
   const pool = new Map(parseCsv(readFileSync(join(p.leads, '_pool.csv'), 'utf8')).map((r) => [r.slug!, r]));
   const { picked, alternates } = pickTen(scored);
   const dir = join(p.batches, batch);

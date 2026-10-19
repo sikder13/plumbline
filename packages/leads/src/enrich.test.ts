@@ -98,3 +98,18 @@ describe('sameAddress', () => {
     expect(sameAddress('2517 RANSDELL ST', 'Indianapolis, IN, USA')).toBe(false);
   });
 });
+
+describe('earlierSlugs', () => {
+  it('collects the businesses of every other batch so a lead is never picked twice', async () => {
+    const { mkdtempSync, mkdirSync, writeFileSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const { tmpdir } = await import('node:os');
+    const { earlierSlugs } = await import('./batch.ts');
+    const dir = mkdtempSync(join(tmpdir(), 'batches-'));
+    mkdirSync(join(dir, 'batch-01'));
+    writeFileSync(join(dir, 'batch-01', 'LEADS.csv'), 'slug,legal_name\nhaute-ink,X\nl-and-r,Y\n');
+    mkdirSync(join(dir, 'batch-02'));
+    expect([...earlierSlugs(dir, 'batch-02')].sort()).toEqual(['haute-ink', 'l-and-r']);
+    expect([...earlierSlugs(dir, 'batch-01')]).toEqual([]);
+  });
+});
