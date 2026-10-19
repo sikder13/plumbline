@@ -1,0 +1,81 @@
+# Book Direct discovery: where to search, what for, and what is never a lead.
+# Read by `plumb leads discover --campaign book-direct --list <A|B|C|D>`.
+
+# The centres from RELAY-BOOKDIRECT-01, each with its surrounds as a search circle.
+centres:
+  - { id: whangarei, name: Whangārei, lat: -35.7251, lng: 174.3237, radiusKm: 30 }
+  - { id: auckland-north, name: "Auckland North Shore", lat: -36.7600, lng: 174.7400, radiusKm: 15 }
+  - { id: auckland-west, name: "West Auckland", lat: -36.8790, lng: 174.6310, radiusKm: 15 }
+  - { id: auckland-south, name: "South Auckland", lat: -36.9930, lng: 174.8800, radiusKm: 15 }
+  - { id: hamilton, name: Hamilton, lat: -37.7870, lng: 175.2790, radiusKm: 30 }
+  - { id: tauranga, name: Tauranga, lat: -37.6870, lng: 176.1650, radiusKm: 30 }
+  - { id: rotorua, name: Rotorua, lat: -38.1370, lng: 176.2510, radiusKm: 25 }
+  - { id: taupo, name: Taupō, lat: -38.6860, lng: 176.0700, radiusKm: 25 }
+  - { id: gisborne, name: Gisborne, lat: -38.6620, lng: 178.0180, radiusKm: 30 }
+  - { id: napier, name: Napier, lat: -39.4930, lng: 176.9120, radiusKm: 30 }
+  - { id: new-plymouth, name: "New Plymouth", lat: -39.0570, lng: 174.0750, radiusKm: 30 }
+  - { id: whanganui, name: Whanganui, lat: -39.9300, lng: 175.0480, radiusKm: 25 }
+  - { id: palmerston-north, name: "Palmerston North", lat: -40.3520, lng: 175.6080, radiusKm: 25 }
+  - { id: wellington, name: Wellington, lat: -41.2860, lng: 174.7760, radiusKm: 25 }
+  - { id: nelson, name: Nelson, lat: -41.2710, lng: 173.2840, radiusKm: 30 }
+  - { id: blenheim, name: Blenheim, lat: -41.5140, lng: 173.9540, radiusKm: 30 }
+  - { id: greymouth, name: Greymouth, lat: -42.4500, lng: 171.2070, radiusKm: 30 }
+  - { id: westport, name: Westport, lat: -41.7540, lng: 171.6010, radiusKm: 30 }
+  - { id: hokitika, name: Hokitika, lat: -42.7170, lng: 170.9660, radiusKm: 30 }
+  - { id: christchurch, name: Christchurch, lat: -43.5320, lng: 172.6370, radiusKm: 25 }
+  - { id: timaru, name: Timaru, lat: -44.3960, lng: 171.2540, radiusKm: 30 }
+  - { id: oamaru, name: Oamaru, lat: -45.0970, lng: 170.9710, radiusKm: 30 }
+  - { id: dunedin, name: Dunedin, lat: -45.8790, lng: 170.5030, radiusKm: 25 }
+  - { id: invercargill, name: Invercargill, lat: -46.4130, lng: 168.3540, radiusKm: 30 }
+  - { id: queenstown, name: Queenstown, lat: -45.0310, lng: 168.6630, radiusKm: 25 }
+  - { id: wanaka, name: Wānaka, lat: -44.7000, lng: 169.1320, radiusKm: 25 }
+  - { id: te-anau, name: "Te Anau", lat: -45.4140, lng: 167.7180, radiusKm: 30 }
+
+lists:
+  A:
+    label: accommodation
+    terms: [motel, holiday park, lodge, bed and breakfast]
+    ratingCount: [5, 400]
+  B:
+    label: allied health
+    terms: [physiotherapy, physio, chiropractor, osteopath]
+    ratingCount: [3, 400]
+  C:
+    label: dental
+    terms: [dentist, dental clinic, emergency dentist]
+    ratingCount: [3, 400]
+  D:
+    label: emergency trades
+    terms: [locksmith, emergency plumber, emergency electrician, glazier, drainlayer]
+    ratingCount: [3, 400]
+
+# Names that are a chain or franchise: whole words, any case. Top 10 parks are kept and flagged.
+chains:
+  A: [quest, sudima, scenic hotel, scenic suites, scenic circle, heritage hotel, heritage hotels, heritage hanmer, heritage queenstown, heritage auckland, heritage christchurch, heritage collection, distinction, ramada, ibis, novotel, best western, mercure, holiday inn, hilton, rydges, copthorne, kingsgate, millennium hotel, jucy, yha, bella vista, travelodge, sofitel, crowne plaza, pullman, intercontinental, sheraton, marriott, hyatt, accor, nomads, base backpackers, haka lodge, tasman holiday parks, holiday inn express, econo lodge, quality hotel, quality inn, comfort inn, nightcap, kiwi holiday parks group, the sebel, mantra, peppers, swiss-belhotel, swiss-belresort, wyndham, voco, naumi, vr queenstown, hotel grand chancellor, grand chancellor, james cook hotel, jet park, ascott, citadines]
+  B: [habit health, proactive, tbi health, physio direct, active plus, back in motion]
+  C: [lumino, maven dental, smile dental group, pacific smiles, abano, bupa dental, total dental, pearl dental group]
+  D: [mr locksmith, ezylock, mike pero, laser electrical, laser plumbing, hire a hubby, my plumber nz]
+
+# Website hosts that are a directory, a booking platform or a social profile, not the business's own site.
+directories: [facebook.com, fb.com, fb.me, instagram.com, booking.com, airbnb.com, airbnb.co.nz, expedia.com, expedia.co.nz, agoda.com, hotels.com, trivago.com, tripadvisor.com, tripadvisor.co.nz, bookme.co.nz, bookabach.co.nz, holidayhouses.co.nz, nzmotels.co.nz, motels.co.nz, aatravel.co.nz, jasons.co.nz, newzealand.com, holidayparks.co.nz, kiwiholidayparks.com, top10.co.nz, healthpoint.co.nz, yellow.co.nz, neighbourly.co.nz, finda.co.nz, localist.co.nz, nocowboys.co.nz, builderscrack.co.nz, hotfrog.co.nz, cylex.co.nz, linktr.ee, linkedin.com, youtube.com, tiktok.com, business.site, g.page, google.com, goo.gl, cliniko.com, halaxy.com, gensolve.com, nookal.com, janeapp.com, fresha.com, gettimely.com, bookings.gettimely.com, physiotherapy.org.nz, chiropractic.org.nz, osteopathsnz.co.nz, wix.com, carrd.co, beds24.com, lodgify.com, seekom.com, staah.net, littlehotelier.com, direct-book.com, book-directonline.com, hotelscheck-in.com, trip.com, kayak.com, hostelworld.com, wotif.com, vrbo.com, stayz.com.au, booked.net, hotelmix.co.nz, hotelmix.com]
+
+# Hospitals, health boards and public bodies: a host suffix, or a word in the name or type.
+publicHealth:
+  hosts: [govt.nz, health.nz, tewhatuora.govt.nz, acc.co.nz, ac.nz, school.nz]
+  names: [hospital, te whatu ora, health nz, district health board, dhb, accident and medical, a&m, urgent care, medical centre, university, polytechnic, rehab plus]
+  types: [hospital, general_hospital, medical_center, university, school]
+
+# holidayparks.co.nz: the park pages of the parks' own association (robots.txt allows all).
+holidayParks:
+  sitemap: https://holidayparks.co.nz/park-sitemap.xml
+
+# Businesses already emailed or opted out. Read only, from the main checkout.
+priorContact:
+  suppression: ../plumbline/data/suppression.csv
+  lists:
+    - ../plumbline/inputs/NZ-OPERATORS-MASTER.csv
+    - ../plumbline/inputs/NZ-WAVE-2-LIST.csv
+    - ../plumbline/inputs/NZ-WAVE-3-LIST.csv
+    - ../plumbline/inputs/NZ-WAVE-4-LIST.csv
+  extraDomains: [winehopperbus.co.nz]
+  extraNames: ["Wine Hopper|"]

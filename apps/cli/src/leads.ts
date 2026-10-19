@@ -5,6 +5,7 @@ import { cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rm
 import { db } from '@plumbline/core';
 import { BASE_PATH, buildOpenSignPage, checkOpenSignPage, numbersIn, previewPaths, serveSite, type PageData } from '@plumbline/preview';
 import { scriptsAfterPaint, VERCEL_JSON } from './preview.ts';
+import { registerBookDirectLeads } from './book-direct.ts';
 import { campaignPaths, enrich, pickBatch, pickSweepBatch, pullLeads, sweep, writeEnriched, type PoolRow } from '@plumbline/leads';
 
 function readCandidates(campaign: string): PoolRow[] {
@@ -192,5 +193,6 @@ export function registerLeads(program: Command): Command {
       writeFileSync(join(previewPaths.review, 'open-sign', `gates-${opts.batch.replace(/,/g, '+')}${opts.only ? '-part' : ''}.json`), JSON.stringify(summary, null, 2));
       if (summary.some((x) => (x.failures as string[]).length)) process.exitCode = 1;
     });
+  registerBookDirectLeads(leads);
   return leads;
 }

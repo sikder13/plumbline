@@ -4,3 +4,4 @@ export * from './pull.ts';
 export * from './enrich.ts';
 export * from './batch.ts';
 export * from './sweep.ts';
+export * from './bookdirect/index.ts';
