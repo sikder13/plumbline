@@ -14,6 +14,7 @@ import { BOOK_DIRECT_GAP_MS, PLACES_CAP, bookDirectPaths, type CandidateRow } fr
 import { hostIn, hostOfUrl, loadDiscoverConfig, priorContactReason } from './filters.ts';
 import { loadPriorContact } from './prior.ts';
 import { excludedType, qualifyReason, roomToSell, type QualifyInput } from './qualify.ts';
+import { leadsReadme } from './readme.ts';
 import { verdictOf, zeroBounceCheck, type SingleCheck, type VerifyStatus } from './verify.ts';
 
 export const QUALIFIED_COLUMNS = ['list', 'business', 'town', 'website', 'email', 'email_source_url', 'email_seen_on', 'verify_status', 'greeting_names', 'booking_engine', 'booking_url', 'ota_links', 'lead_finding', 'lead_value', 'lead_evidence_url', 'second_finding', 'lcp_mobile_s', 'first_screen_cta', 'competitors_book_online', 'rating', 'rating_count', 'score', 'flags'] as const;
@@ -339,5 +340,6 @@ export async function qualifyAll(opts: { zeroBounceMax?: number; log?: (l: strin
     lighthouse: { leadsMeasured: recs.filter((r) => r.facts.speed.measured).length, pagesMeasured: recs.reduce((n, r) => n + r.facts.speed.pages.length, 0), runs: recs.reduce((n, r) => n + r.facts.speed.pages.reduce((m, x) => m + x.runs, 0), 0) },
   };
   writeFileSync(join(p.leads, '_summary.json'), JSON.stringify(summary, null, 2));
+  writeFileSync(join(p.leads, 'README.md'), leadsReadme({ qualified: summary.qualified, needsVerifier: summary.needsVerifier, zeroBounceChecked: zb.checked + zb.fromCache, generatedAt: new Date().toISOString() }));
   return summary;
 }
