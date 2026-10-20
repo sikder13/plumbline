@@ -69,7 +69,7 @@ export function notMobile(m: NonNullable<Visit['measure']>): string | null {
   if (m.scrollX > 20) out.push(`the page scrolls ${m.scrollX} px sideways on a 390 px screen`);
   if (desktop) out.push(`no viewport tag: it lays out ${m.innerWidth} px wide, desktop width, and is shrunk to fit the phone`);
   // Text size as the phone shows it: a desktop-width page is shrunk, so its text is too. A page with a viewport tag is read as set.
-  const effective = m.medianFontPx !== null ? Math.round(m.medianFontPx * (desktop ? 390 / m.innerWidth : 1) * 10) / 10 : null;
+  const effective = m.medianFontPx !== null && (m.bodyChars ?? m.textChars) >= 200 ? Math.round(m.medianFontPx * (desktop ? 390 / m.innerWidth : 1) * 10) / 10 : null;
   if (effective !== null && effective < 11) out.push(`most of the body text shows at ${effective} px`);
   return out.length ? out.join('; ') : null;
 }

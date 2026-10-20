@@ -1,10 +1,10 @@
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import pLimit from 'p-limit';
 import { HostLimiter, Polite } from '@plumbline/fetch';
 import { BOOK_DIRECT_GAP_MS } from '../discover.ts';
 import { verdictOf, zeroBounceCheck, type VerifyStatus } from '../verify.ts';
-import { Shooter } from './browser.ts';
+import { BROWSER_GONE, Shooter } from './browser.ts';
 import { checkHours, checkSite, type CheckId, type CheckResult, type SiteChecks } from './checks.ts';
 import { sweepPaths } from './discover.ts';
 import type { Gathered } from './gather.ts';
@@ -45,10 +45,14 @@ export async function checkAll(sweep: string, opts: { browsers?: number; only?: 
             done++;
             return;
           }
+          // A fresh check starts from an empty picture folder, so no proof from an earlier rule lingers.
+          if (opts.refresh) rmSync(join(sp.shots, g.domain), { recursive: true, force: true });
           let c: SiteChecks;
           try {
             c = await withTimeout(checkSite(g, shooter, sp.shots, sp.crawlCache), 6 * 60_000);
           } catch (e) {
+            // A browser that went away (a stopped run) leaves the site unchecked, to be done on the next run.
+            if (BROWSER_GONE.test((e as Error).message)) return;
             c = { domain: g.domain, checkedAt: new Date().toISOString(), home: null, homeShot: null, hasOnlineBooking: false, onlineBookingHow: '', engine: '', results: [], error: (e as Error).message.slice(0, 200) } as SiteChecks;
           }
           saveChecks(sweep, c);

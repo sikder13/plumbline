@@ -50,7 +50,8 @@ export function registerBookDirectLeads(leads: Command): void {
     .option('--browsers <n>', 'pages open in the browser at once', '8')
     .option('--only <domains>', 'comma separated domains')
     .option('--refresh', 'read the sites again instead of using the saved reads')
-    .action(async (opts: { campaign: string; sweep: string; stage: string; parallel: string; browsers: string; only?: string; refresh?: boolean; recheck?: string }) => {
+    .option('--no-competitors', 'with --stage check: leave the competitor check for a later run')
+    .action(async (opts: { campaign: string; sweep: string; stage: string; parallel: string; browsers: string; only?: string; refresh?: boolean; recheck?: string; competitors?: boolean }) => {
       if (opts.campaign !== 'book-direct') throw new Error('sweep is for --campaign book-direct');
       const only = opts.only?.split(',').map((s) => s.trim().toLowerCase().replace(/^www\./, ''));
       if (opts.stage === 'gather' || opts.stage === 'all') {
@@ -62,8 +63,10 @@ export function registerBookDirectLeads(leads: Command): void {
         const started = Date.now();
         const c = await checkAll(opts.sweep, { browsers: Number(opts.browsers), only, refresh: opts.refresh, log: console.log });
         console.log(`checked ${c.length} sites in ${Math.round((Date.now() - started) / 1000)} s`);
-        const n = await competitorPass(opts.sweep, { log: console.log });
-        console.log(`competitor check: ${n} flagged`);
+        if (opts.competitors !== false) {
+          const n = await competitorPass(opts.sweep, { log: console.log });
+          console.log(`competitor check: ${n} flagged`);
+        }
       }
       if (opts.stage === 'recheck') {
         const n = await recheckAll(opts.sweep, (opts.recheck ?? '').split(',').filter(Boolean) as CheckId[], { browsers: Number(opts.browsers), only, log: console.log });

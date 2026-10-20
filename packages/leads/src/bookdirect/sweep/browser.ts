@@ -10,8 +10,12 @@ export interface Measure {
   scrollWidth: number;
   /** How far the page moves when pushed sideways: more than 20 is a page wider than the phone. */
   scrollX: number;
+  /** The middle font size of the page's sentences, by characters. */
   medianFontPx: number | null;
+  /** All visible text. */
   textChars: number;
+  /** Sentence text outside menus, buttons and the footer. */
+  bodyChars?: number;
   images: number;
   media: number;
 }
@@ -34,6 +38,8 @@ export interface Visit {
   measure: Measure | null;
   html: string;
   highlighted: boolean;
+  /** Pop-ups hidden before the picture. */
+  overlaysHidden: number;
   shot: string | null;
   at: string;
 }
@@ -55,6 +61,7 @@ export interface VisitOptions {
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+export const BROWSER_GONE = /Target page, context or browser has been closed|Browser has been closed|browser\.newContext|Connection closed/i;
 /** A page call that gives up after `ms`, so one hung frame cannot hold the sweep. */
 const within = <T>(p: Promise<T>, ms: number, fallback: T): Promise<T> => Promise.race([p.catch(() => fallback), new Promise<T>((res) => setTimeout(() => res(fallback), ms).unref())]);
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
@@ -104,7 +111,7 @@ export class Shooter {
   }
 
   async visit(url: string, opts: VisitOptions = {}): Promise<Visit> {
-    const v: Visit = { url, finalUrl: url, status: null, error: null, certError: null, blocked: false, security: null, securityIssues: [], loadMs: 0, slowRender: false, title: '', text: '', frames: [], measure: null, html: '', highlighted: false, shot: null, at: new Date().toISOString() };
+    const v: Visit = { url, finalUrl: url, status: null, error: null, certError: null, blocked: false, security: null, securityIssues: [], loadMs: 0, slowRender: false, title: '', text: '', frames: [], measure: null, html: '', highlighted: false, overlaysHidden: 0, shot: null, at: new Date().toISOString() };
     if (!(await this.polite.robots.allows(url).catch(() => false))) {
       v.blocked = true;
       v.error = 'robots';
@@ -124,7 +131,10 @@ export class Shooter {
         if (again) continue;
         return v;
       } catch (e) {
-        v.error = ((e as Error).message.split('\n')[0] ?? 'failed').slice(0, 200);
+        const msg = (e as Error).message.split('\n')[0] ?? 'failed';
+        // Our own browser going away is never something the site did.
+        if (BROWSER_GONE.test(msg)) throw e;
+        v.error = msg.slice(0, 200);
         return v;
       } finally {
         await ctx.close().catch(() => undefined);
@@ -151,6 +161,7 @@ export class Shooter {
       v.status = res?.status() ?? v.status;
     } catch (e) {
       const msg = (e as Error).message.split('\n')[0] ?? 'navigation failed';
+      if (BROWSER_GONE.test(msg)) throw e;
       if (!ignoringCert && /ERR_CERT|ERR_SSL|SSL_ERROR/i.test(msg)) {
         v.certError = (/net::(\w+)/.exec(msg)?.[1] ?? msg).slice(0, 80);
         // The browser's warning page is the proof: photograph it before trying again past it.
@@ -187,6 +198,7 @@ export class Shooter {
         if (text) v.frames.push({ url: f.url(), text });
       }
     }
+    if (opts.shot) v.overlaysHidden = await within(page.evaluate(CLEAR_OVERLAYS), 5000, 0);
     if (opts.highlight) {
       v.highlighted = await within(page.evaluate(HIGHLIGHT, opts.highlight), 10_000, false);
       if (v.highlighted) {
@@ -259,6 +271,7 @@ const MEASURE = (): Measure => {
   window.scrollTo(0, 0);
   const counts = new Map<number, number>();
   let chars = 0;
+  let all = 0;
   const walker = document.createTreeWalker(document.body ?? document.documentElement, NodeFilter.SHOW_TEXT);
   let n: Node | null;
   let i = 0;
@@ -271,6 +284,9 @@ const MEASURE = (): Measure => {
     if (cs.visibility === 'hidden' || cs.display === 'none' || Number(cs.opacity) === 0) continue;
     const r = el.getBoundingClientRect();
     if (!r.width || !r.height) continue;
+    all += t.length;
+    // Body text is sentences: not menu words, buttons, labels or the footer's small print.
+    if (t.length < 30 || el.closest('nav, header, footer, button, a, label, small, sup, sub, figcaption, [role="navigation"]')) continue;
     const fs = Math.round(parseFloat(cs.fontSize));
     counts.set(fs, (counts.get(fs) ?? 0) + t.length);
     chars += t.length;
@@ -286,7 +302,7 @@ const MEASURE = (): Measure => {
   }
   const images = [...document.images].filter((im) => im.naturalWidth > 20 && im.getBoundingClientRect().width > 20).length;
   const media = document.querySelectorAll('video, canvas, iframe, picture').length;
-  return { viewport, innerWidth, scrollWidth, scrollX, medianFontPx: median, textChars: chars, images, media };
+  return { viewport, innerWidth, scrollWidth, scrollX, medianFontPx: median, textChars: all, bodyChars: chars, images, media };
 };
 
 const HIGHLIGHT = (needle: { href?: string; text?: string; digits?: string }): boolean => {
@@ -320,9 +336,41 @@ const HIGHLIGHT = (needle: { href?: string; text?: string; digits?: string }): b
   if (!target || !visible(target)) return false;
   target.setAttribute('data-plumb-proof', '1');
   target.scrollIntoView({ block: 'center' });
-  (target as HTMLElement).style.outline = '3px solid #e11d48';
-  (target as HTMLElement).style.outlineOffset = '2px';
+  // Set over the site's own styles: some themes remove outlines from links.
+  const st = (target as HTMLElement).style;
+  st.setProperty('outline', '3px solid #e11d48', 'important');
+  st.setProperty('outline-offset', '2px', 'important');
+  st.setProperty('box-shadow', '0 0 0 3px #e11d48', 'important');
   return true;
+};
+
+/** Pop-ups, newsletter boxes and modals that cover most of the screen are hidden, so the page under them shows. Returns how many. */
+const CLEAR_OVERLAYS = (): number => {
+  let n = 0;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const POPUP = /modal|popup|pop-up|lightbox|newsletter|subscribe|overlay|optin|opt-in|klaviyo|mailchimp|privy|giveaway|promo|announcement|cookie|consent|gdpr/i;
+  const pageText = (document.body?.innerText ?? '').length || 1;
+  for (const el of document.querySelectorAll('body *')) {
+    const cs = getComputedStyle(el);
+    if (cs.visibility === 'hidden' || cs.display === 'none') continue;
+    const isDialog = el.matches('[role="dialog"], [aria-modal="true"], dialog[open]');
+    const named = POPUP.test(`${el.id} ${typeof el.className === 'string' ? el.className : ''}`);
+    // A box fixed on top of everything that holds little of the page's words is a pop-up, whatever it is called.
+    const onTop = cs.position === 'fixed' && Number(cs.zIndex) >= 100 && ((el as HTMLElement).innerText ?? '').length < 0.5 * pageText;
+    if (!isDialog && !named && !onTop) continue;
+    if (cs.position !== 'fixed' && cs.position !== 'absolute' && !isDialog) continue;
+    const r = el.getBoundingClientRect();
+    const area = Math.max(0, Math.min(r.right, vw) - Math.max(r.left, 0)) * Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
+    if (area < (onTop && !isDialog && !named ? 0.5 : 0.3) * vw * vh) continue;
+    (el as HTMLElement).style.setProperty('visibility', 'hidden', 'important');
+    n++;
+  }
+  if (n) {
+    document.documentElement.style.setProperty('overflow', 'auto', 'important');
+    if (document.body) document.body.style.setProperty('overflow', 'auto', 'important');
+  }
+  return n;
 };
 
 /** After the page settles: the outlined item must sit inside the screen and not under a sticky bar or a pop-up; covering bars are hidden. */
