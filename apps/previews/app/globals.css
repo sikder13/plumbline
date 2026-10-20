@@ -262,6 +262,14 @@ img {
   color: inherit;
 }
 
+.found-note {
+  max-width: 62ch;
+  margin: 24px 0 0;
+  padding: 16px 18px;
+  border-left: 4px solid currentColor;
+  background: var(--soft, rgb(0 0 0 / 0.04));
+}
+
 .cards {
   list-style: none;
   margin: 0;

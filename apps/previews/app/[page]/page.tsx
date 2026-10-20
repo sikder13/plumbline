@@ -2,12 +2,13 @@ import type { Metadata } from 'next';
 import { preload } from 'react-dom';
 import { Found } from '@/components/Found';
 import { OpenSignOffer } from '@/components/OpenSignOffer';
+import { BookDirectOffer } from '@/components/BookDirectOffer';
 import { MotionLayer } from '@/components/MotionLayer';
 import { Shell } from '@/components/Shell';
 import { DESIGNS } from '@/designs';
 import { allPages, pageByPath, pic } from '@/lib/data';
 import { PHONE_MEDIA } from '@/components/Pic';
-import { BASE, ENGINE_DESIGNS, FOUND_LINK, OPEN_SIGN, SENDER, SENDER_SITE } from '@/lib/offer';
+import { BASE, BOOK_DIRECT, ENGINE_DESIGNS, FOUND_LINK, OPEN_SIGN, SENDER, SENDER_SITE } from '@/lib/offer';
 import { Visits } from '@/components/Visits';
 
 export const dynamicParams = false;
@@ -39,7 +40,9 @@ export default async function Page({ params }: { params: Promise<{ page: string 
     <>
       {phoneHero && <link rel="preload" as="image" type={phoneHero.type} imageSrcSet={phoneHero.srcset} imageSizes="100vw" media={PHONE_MEDIA} fetchPriority="high" />}
       {hero && <link rel="preload" as="image" type={hero.type} imageSrcSet={hero.srcset} imageSizes={heroSizes} media={phoneHero ? `not all and ${PHONE_MEDIA}` : undefined} fetchPriority="high" />}
-      {data.campaign === 'open-sign' ? (
+      {data.campaign === 'book-direct' ? (
+        <Shell business={data.name} foundLink={BOOK_DIRECT.link} tabs={BOOK_DIRECT.tabs} sender={{ name: SENDER, href: SENDER_SITE }} demo={<Demo data={data} />} found={<BookDirectOffer data={data} />} />
+      ) : data.campaign === 'open-sign' ? (
         <Shell business={data.name} foundLink={OPEN_SIGN.link} tabs={OPEN_SIGN.tabs} sender={{ name: SENDER, href: SENDER_SITE }} demo={<Demo data={data} />} found={<OpenSignOffer data={data} />} />
       ) : (
         <Shell business={data.name} foundLink={FOUND_LINK} sender={{ name: SENDER, href: SENDER_SITE }} demo={<Demo data={data} />} found={<Found data={data} />} />
