@@ -191,7 +191,11 @@ export async function checkOpenSignPage(data: PageData, opts: { base: string; al
       let r = seen.get(l.href);
       if (!r) {
         if (l.href.startsWith('tel:')) r = { ok: G.telOk(l.href), note: G.telOk(l.href) ? 'a number a phone can dial' : 'not a number a phone can dial from here' };
-        else if (l.href.startsWith('mailto:')) r = { ok: validMailto(l.href), note: validMailto(l.href) ? 'valid address' : 'not a valid address' };
+        else if (l.href.startsWith('sms:')) {
+          // A text message link: the number, before any prefilled body, must be one a phone can text.
+          const tel = `tel:${l.href.slice(4).split(/[?&]/)[0]}`;
+          r = { ok: G.telOk(tel), note: G.telOk(tel) ? 'a number a phone can text' : 'not a number a phone can text from here' };
+        } else if (l.href.startsWith('mailto:')) r = { ok: validMailto(l.href), note: validMailto(l.href) ? 'valid address' : 'not a valid address' };
         else if (l.href.startsWith('#')) r = { ok: !!l.anchor, note: l.anchor ? 'target exists' : 'no element with that id' };
         else if (/^https?:/.test(l.href)) {
           const c = await quietContext(browser, { viewport: { width: 390, height: 844 } });
