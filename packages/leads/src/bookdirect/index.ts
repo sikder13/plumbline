@@ -10,3 +10,4 @@ export * from './audit.ts';
 export * from './qualify.ts';
 export * from './qualify-run.ts';
 export * from './readme.ts';
+export * from './sweep/index.ts';

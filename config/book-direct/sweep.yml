@@ -1,0 +1,71 @@
+# Book Direct sweeps (RELAY-BOOKDIRECT-02 onwards): ten industries, about 100 sites each, every
+# site checked for broken doors. Read by `plumb leads discover --campaign book-direct --sweep <name>`.
+# Centres, directories, public bodies and earlier contacts come from discover.yml; this file adds to them.
+
+# Eleven more centres, after relay 01's.
+moreCentres:
+  - { id: kerikeri, name: Kerikeri, lat: -35.2276, lng: 173.9474, radiusKm: 20 }
+  - { id: thames, name: Thames, lat: -37.1383, lng: 175.5404, radiusKm: 20 }
+  - { id: whakatane, name: Whakatāne, lat: -37.9533, lng: 176.9931, radiusKm: 20 }
+  - { id: hastings, name: Hastings, lat: -39.6381, lng: 176.8492, radiusKm: 15 }
+  - { id: masterton, name: Masterton, lat: -40.9597, lng: 175.6575, radiusKm: 20 }
+  - { id: levin, name: Levin, lat: -40.6218, lng: 175.2867, radiusKm: 20 }
+  - { id: motueka, name: Motueka, lat: -41.1093, lng: 173.0110, radiusKm: 20 }
+  - { id: ashburton, name: Ashburton, lat: -43.9020, lng: 171.7300, radiusKm: 20 }
+  - { id: gore, name: Gore, lat: -46.0988, lng: 168.9458, radiusKm: 20 }
+  - { id: cromwell, name: Cromwell, lat: -45.0448, lng: 169.1960, radiusKm: 15 }
+  - { id: alexandra, name: Alexandra, lat: -45.2486, lng: 169.3797, radiusKm: 15 }
+
+# Sites per industry, spread evenly over its terms.
+perIndustry: 100
+ratingCount: [3, 400]
+
+industries:
+  - id: accommodation
+    label: accommodation
+    terms: [motel, holiday park, lodge, bed and breakfast]
+    chains: [quest, sudima, scenic hotel, scenic suites, scenic circle, heritage hotel, heritage hotels, distinction, ramada, ibis, novotel, best western, mercure, holiday inn, hilton, rydges, copthorne, kingsgate, millennium hotel, jucy, yha, bella vista, travelodge, sofitel, crowne plaza, pullman, intercontinental, sheraton, marriott, hyatt, accor, nomads, base backpackers, haka lodge, tasman holiday parks, econo lodge, quality hotel, quality inn, comfort inn, nightcap, the sebel, mantra, peppers, wyndham, voco, naumi, grand chancellor, jet park, ascott, citadines]
+  - id: allied-health
+    label: allied health
+    terms: [physiotherapy, chiropractor, osteopath, podiatrist]
+    chains: [habit health, proactive, tbi health, physio direct, active plus, back in motion, unichem, life pharmacy, the foot clinic group]
+  - id: dental
+    label: dental
+    terms: [dentist, dental clinic, emergency dentist]
+    chains: [lumino, maven dental, smile dental group, pacific smiles, abano, bupa dental, total dental, pearl dental group]
+  - id: trades
+    label: trades and property
+    terms: [plumber, electrician, locksmith, glazier, drainlayer, roofer, property maintenance]
+    chains: [mr locksmith, ezylock, mike pero, laser electrical, laser plumbing, hire a hubby, my plumber nz, jim's, jims, metro glass, metroglass, smith & smith, smith and smith, crestclean, hirepool, kennards, master electricians, apex electrical, roofing industries]
+  - id: hospitality
+    label: hospitality
+    terms: [restaurant, cafe]
+    chains: [mcdonald's, mcdonalds, kfc, burger king, subway, domino's, dominos, pizza hut, hell pizza, nando's, nandos, wendy's, carl's jr, burgerfuel, burger fuel, sal's, muffin break, columbus coffee, robert harris, esquires, starbucks, mexicali fresh, denny's, cobb & co, hollywood bakery, wild bean, gloria jean's, wildbean, coffee culture, mojo, joe's garage, st pierre's, sushi sushi, pita pit, lone star, valentines, sumo salad, mad mex, zambrero, taco bell, tank, boost juice, the coffee club, dunkin, little bird, best ugly, pizza club, burger wisconsin, fat burger, chipmunks, pak'nsave, countdown, new world, z energy, bp, mobil, gull]
+  - id: hair-beauty
+    label: hair and beauty
+    terms: [hair salon, barber, beauty clinic, nail salon]
+    chains: [rodney wayne, just cuts, servilles, stephen marr, laser clinics, caci, endota, hair by servilles, sk:n, skin institute, natural looks]
+  - id: tourism
+    label: tourism operators
+    terms: [kayak tours, fishing charter, guided walks, jet boat, scenic tours]
+    chains: [realnz, real nz, ngai tahu tourism, ngāi tahu tourism, shotover jet, dart river, huka jet, kjet, thrillseekers, skyline, ziptrek, flight centre, house of travel, helloworld, great sights, gray line, intercity, kiwi experience, stray, discover waitomo, fullers, explore group, realnz milford]
+  - id: vets-pets
+    label: vets and pet care
+    terms: [vet clinic, dog grooming, boarding kennels]
+    chains: [vetent, pet doctors, animates, vetcare, petstock, vet services hawkes bay, anexa, vetora, totally vets, vet focus, provet]
+  - id: fitness
+    label: fitness and wellness
+    terms: [gym, yoga studio, pilates studio, massage therapy]
+    chains: [anytime fitness, snap fitness, jetts, les mills, cityfitness, city fitness, f45, orangetheory, club physical, plus fitness, fernwood, curves, bodyfit, 24/7 fitness, gym 24/7, pulse fitness, flex fitness, ymca, ywca, hot yoga, power living, studio pilates, kx pilates, club pilates, the pilates studio group, bodystream]
+  - id: auto-home
+    label: auto and home services
+    terms: [mechanic, auto repair, tyre shop, house cleaning, lawn care, pest control]
+    chains: [midas, pit stop, pitstop, tony's tyre, tonys tyre, beaurepaires, bridgestone, firestone, goodyear, bob jane, tyreland, repco, supercheap, aa auto centre, smart brakes, mag & turbo, mag and turbo, jim's, jims, crestclean, jani-king, merry maids, molly maid, absolute domestics, rentokil, flick, anticimex, green acres, crewcut, lawnmowing, mowmasters, hynds, vtnz, vehicle testing new zealand, on road nz, autosure, carfix, ultra tune, aa, nzaa]
+
+# Website hosts that are a booking platform, a delivery app or a listing, not the business's own site, on top of discover.yml's.
+moreDirectories: [mindbodyonline.com, mindbody.io, glofox.com, resdiary.com, kitomba.com, vagaro.com, booksy.com, setmore.com, simplybook.me, squareup.com, calendly.com, acuityscheduling.com, fareharbor.com, rezdy.com, bookeo.com, checkfront.com, viator.com, getyourguide.com, menulog.co.nz, ubereats.com, doordash.com, delivereasy.co.nz, dineout.co.nz, firsttable.co.nz, zomato.com, opentable.com, opentable.co.nz, mryum.com, beacons.ai, vetstoria.com, treatwell.com, trybooking.com, eventbrite.com, eventbrite.co.nz, meetup.com, classpass.com, bookwhen.com, timely.as, salonist.io, phorest.com, square.site, nzherald.co.nz, stuff.co.nz, menufyy.com, hungryhungry.com, bopple.app, gloriafood.com, order.online, toasttab.com, linkedin.com, thumbtack.com, builderscrack.co.nz, wix.com, wixsite.com,
+  nzmca.org.nz, nzcamping.com, camping.org.nz, fiordland.org.nz, dentist.co.nz, millenniumhotels.com, visitheritage.co.nz, heritage.org.nz, bp.com, respark.in, centre-city.co.nz, pragmahospitality.co.nz, distinctionhotelsdunedin.co.nz, distinctionhotels.co.nz,
+  southlandnz.com, queenstownnz.co.nz, lovewanaka.co.nz, nelsontasman.nz, marlboroughnz.com, rotoruanz.com, lovetaupo.com, hawkesbaynz.com, visitruapehu.com, wellingtonnz.com, christchurchnz.com, dunedinnz.com, westcoastnz.com, northlandnz.com, aucklandnz.com, bayofplentynz.com, waikatonz.com, tairawhitigisborne.co.nz, taranaki.info, manawatunz.co.nz, wairarapanz.com, kaikoura.co.nz, mackenzienz.com, centralotagonz.com, cluthanz.com, waitakinz.com, visitwhanganui.nz, thecoromandel.com, visithurunui.co.nz, doc.govt.nz, nzgolf.org.nz, westfield.co.nz, kiwiproperty.com, sylviapark.co.nz]
+
+# Places types that are never the business we want, whatever the term found them with.
+neverTypes: [hiking_area, park, national_park, state_park, museum, tourist_information_center, visitor_center, beach, scenic_spot, church, place_of_worship, mosque, synagogue, hindu_temple, school, primary_school, secondary_school, university, library, local_government_office, city_hall, courthouse, police, fire_station, post_office, hospital, general_hospital, supermarket, grocery_store, convenience_store, gas_station, department_store, shopping_mall, airport, bus_station, train_station, transit_station, ferry_terminal, real_estate_agency, insurance_agency, bank, atm, lawyer, accounting, marketing_agency, website_designer, graphic_designer, advertising_agency, store, garden_center, building_materials_store, hardware_store, home_improvement_store, manufacturer, wholesaler, car_wash, chauffeur_service, furniture_store, clothing_store, pet_store, sporting_goods_store, auto_parts_store, car_dealer, nature_preserve, wildlife_park, zoo, aquarium, botanical_garden, garden, historical_landmark, monument, cultural_landmark, observation_deck]

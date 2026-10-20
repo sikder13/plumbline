@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { auditCsv, auditVerified, bookDirectPaths, captureContacts, discover, qualifyAll, type ListId } from '@plumbline/leads';
+import { auditCsv, auditVerified, bookDirectPaths, captureContacts, discover, qualifyAll, Registry, seedRegistryFromRelay01, sweepDiscover, type ListId } from '@plumbline/leads';
 
 const LISTS = ['A', 'B', 'C', 'D'];
 
@@ -11,13 +11,28 @@ export function registerBookDirectLeads(leads: Command): void {
     .command('discover')
     .description('Book Direct Part 1: Google Places in every centre (and holidayparks.co.nz for list A), filtered, all cached; writes data/book-direct/leads/_candidates.csv')
     .requiredOption('--campaign <name>', 'campaign, book-direct')
-    .requiredOption('--list <letter>', 'A accommodation, B allied health, C dental, D emergency trades')
-    .option('--cap <n>', 'Places calls allowed in this run, every list together', '1500')
-    .action(async (opts: { campaign: string; list: string; cap: string }) => {
+    .option('--list <letter>', 'A accommodation, B allied health, C dental, D emergency trades')
+    .option('--sweep <name>', 'a ten-industry sweep instead of a list, for example nz-1000; writes data/book-direct/sweep/<name>/_candidates.csv')
+    .option('--reaudit', 'sweep only: keep domains already in the registry as candidates')
+    .option('--cap <n>', 'Places calls allowed in this run, every list together (a sweep defaults to 2000)')
+    .action(async (opts: { campaign: string; list?: string; sweep?: string; reaudit?: boolean; cap?: string }) => {
       if (opts.campaign !== 'book-direct') throw new Error('discover is for --campaign book-direct');
+      if (opts.sweep) {
+        const registry = new Registry();
+        const added = seedRegistryFromRelay01(registry);
+        if (added) {
+          registry.save();
+          console.log(`registry: ${added} relay 01 sites entered as audit version 1`);
+        }
+        const { summary } = await sweepDiscover(opts.sweep, { cap: opts.cap ? Number(opts.cap) : undefined, reaudit: opts.reaudit, log: console.log });
+        console.log(JSON.stringify(summary, null, 2));
+        if (summary.stopped) console.log(`STOPPED: ${summary.stopped}`);
+        process.exit(summary.stopped ? 2 : 0);
+      }
+      if (!opts.list) throw new Error('discover needs --list or --sweep');
       const list = opts.list.toUpperCase();
       if (!LISTS.includes(list)) throw new Error(`--list must be one of ${LISTS.join(', ')}`);
-      const { summary } = await discover(list as ListId, { cap: Number(opts.cap), log: console.log });
+      const { summary } = await discover(list as ListId, { cap: Number(opts.cap ?? '1500'), log: console.log });
       console.log(JSON.stringify(summary, null, 2));
       if (summary.stopped) {
         console.log(`STOPPED: ${summary.stopped}`);
