@@ -195,7 +195,7 @@ export async function qualifyAll(opts: { zeroBounceMax?: number; log?: (l: strin
       telPath: !!(c.tel_href || c.phone_shown),
       findings: rec?.findings ?? [],
       fullSignal: c.full_signal,
-      excluded: excludedType(c.name, cand?.primary_type ?? ''),
+      excluded: excludedType(c.name, cand?.primary_type ?? '') ?? ([rec?.facts.ownEngine, ...c.engines.split(';'), ...(rec?.facts.landings.map((l) => l.engine) ?? [])].includes('Habit Health') ? 'books through Habit Health, a chain' : null),
       prior: priorContactReason(prior, { name: c.name, town: c.town, website: c.website, emails: [c.email] }),
       ratingCount: Number(c.rating_count) || 0,
       competitorsBookOnline: comps ? comps.filter((x) => x.bookOnFirstScreen).length : null,

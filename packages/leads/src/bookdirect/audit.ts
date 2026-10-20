@@ -174,6 +174,8 @@ export function auditOrder<T extends Pick<ContactRow, 'list' | 'booking_engine_k
 }
 
 export interface AuditOptions {
+  /** Audit again every lead already audited, keeping its stored phone speed. */
+  refresh?: boolean;
   /** Audit at most this many new leads in this run (those already audited are kept). */
   max?: number;
   /** Only these lists, for example ['C', 'D']. */
@@ -211,12 +213,21 @@ export async function auditVerified(opts: AuditOptions = {}): Promise<{ records:
       leads.map((lead) =>
         limit(async () => {
           const file = join(dir, `${lead.slug}.json`);
-          if (existsSync(file) && !opts.only) {
-            records.push(JSON.parse(readFileSync(file, 'utf8')) as AuditRecord);
+          const stored = existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as AuditRecord) : null;
+          if (stored && !opts.only && !opts.refresh) {
+            records.push(stored);
             done++;
             return;
           }
-          const rec = await auditOne(lead, { polite, renderer, lhLimit, shots: join(dir, 'shots'), speed: opts.speed !== false });
+          // A refresh reads the pages and follows the links again, and keeps the phone speed already measured.
+          const keep = opts.refresh && stored ? stored.facts.speed : null;
+          if (opts.refresh && !stored) return;
+          const rec = await auditOne(lead, { polite, renderer, lhLimit, shots: join(dir, 'shots'), speed: keep ? false : opts.speed !== false });
+          if (keep) {
+            rec.facts.speed = keep;
+            rec.findings = findingsOf(rec.facts);
+            rec.measuredAt = `${rec.measuredAt} (speed ${stored!.measuredAt})`;
+          }
           writeFileSync(file, JSON.stringify(rec, null, 1));
           records.push(rec);
           const lead1 = leadFindings(rec.findings)[0];

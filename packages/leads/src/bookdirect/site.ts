@@ -309,20 +309,21 @@ export function bookingFacts(pages: SitePage[]): BookingFacts {
   for (const p of pages) {
     if (!p.html) continue;
     const $ = cheerio.load(p.html);
-    const refs: { value: string; text: string }[] = [
+    const refs: { value: string; text: string; link: boolean }[] = [
       ...$('a[href]')
         .toArray()
-        .map((a) => ({ value: $(a).attr('href') ?? '', text: $(a).text().replace(/\s+/g, ' ').trim() })),
+        .map((a) => ({ value: $(a).attr('href') ?? '', text: $(a).text().replace(/\s+/g, ' ').trim(), link: true })),
       ...$('iframe[src], iframe[data-src], script[src], form[action]')
         .toArray()
-        .map((el) => ({ value: $(el).attr('src') ?? $(el).attr('data-src') ?? $(el).attr('action') ?? '', text: '' })),
+        .map((el) => ({ value: $(el).attr('src') ?? $(el).attr('data-src') ?? $(el).attr('action') ?? '', text: '', link: false })),
     ];
     for (const r of refs) {
       const url = abs(r.value, p.finalUrl);
       if (!url) continue;
       const e = engineOf(url);
       if (e?.kind === 'ota') {
-        if (!ota.has(e.name) && /^https?:/i.test(url)) ota.set(e.name, url);
+        // Only a link a visitor can follow counts; a review badge or a script from the OTA is not a booking path.
+        if (r.link && !ota.has(e.name) && /^https?:/i.test(url) && !/flexiproduct|[?&]product=rw|\/widget|badge/i.test(url)) ota.set(e.name, url);
       } else if (e) {
         if (!engines.has(e.name)) engines.set(e.name, { e, url, on: p.finalUrl });
       } else if (!generic && r.text && isBookWords(r.text) && !/^(?:mailto|tel):/i.test(r.value)) generic = { url, on: p.finalUrl };

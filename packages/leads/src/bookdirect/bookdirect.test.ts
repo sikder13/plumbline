@@ -135,6 +135,9 @@ describe('contact capture', () => {
     const generic = bookingFacts([page('<a href="/enquire">Book Now</a>')]);
     expect(generic).toMatchObject({ engine: 'generic', engineKind: 'generic', bookingUrl: 'https://www.kiwicourt.co.nz/enquire' });
     expect(bookingFacts([page('<a href="https://x.cliniko.com/bookings">Book online</a>')]).engine).toBe('Cliniko');
+    expect(bookingFacts([page('<a href="https://www.freeonlinebooking.com/b.php?id=1">Book Now</a>')]).engine).toBe('Free Online Booking');
+    // A Booking.com review badge is not a booking path.
+    expect(bookingFacts([page('<iframe src="//www.booking.com/flexiproduct.html?product=rw&hid=1"></iframe><script src="https://www.booking.com/x.js"></script>')]).otaLinks).toEqual([]);
   });
   it('recognises Book controls by their words', () => {
     for (const t of ['Book', 'Book Now', 'BOOK ONLINE', 'Check Availability', 'Book Appointment', 'Book an appointment', 'Reserve', 'Book your stay']) expect(isBookWords(t)).toBe(true);
