@@ -8,7 +8,7 @@ import type { Shooter, Visit } from './browser.ts';
 import { bookingLinks, isEmailProtection, isKeyMenu, linkedinLinks, nzDigits, otaLinks, phonesOnSite } from './crawl.ts';
 import { INACTIVE, MISSING, type Follow } from './follow.ts';
 import { plausibleEmail, type Gathered } from './gather.ts';
-import { googleWeek, hoursConflicts, siteWeek } from './hours.ts';
+import { googleWeek, googleWeekFromText, hoursConflicts, siteWeek } from './hours.ts';
 
 export const CHECKS = ['booking_link_broken', 'site_down_or_broken', 'not_secure', 'main_nav_404', 'ota_only_booking', 'own_email_dead', 'phone_mismatch', 'hours_mismatch', 'no_online_booking_vs_competitors', 'not_mobile'] as const;
 export type CheckId = (typeof CHECKS)[number];
@@ -257,7 +257,22 @@ export async function checkSite(g: Gathered, shooter: Shooter, shotsDir: string,
   }
 
   // 6. hours_mismatch
-  const gweek = googleWeek(g.candidate.hours_periods);
+  push(await checkHours(g, shooter, dir, crawlCacheDir));
+  return out;
+}
+
+/** Check 6 on its own, so it can run again on stored reads. */
+export async function checkHours(g: Gathered, shooter: Shooter, dir: string, crawlCacheDir: string): Promise<CheckResult> {
+  const shotPath = (c: string) => join(dir, `${c}.png`);
+  let res: CheckResult | null = null;
+  const push = (r: CheckResult) => {
+    if (r.result === 'flag' && (!r.shot || !existsSync(r.shot))) {
+      r.result = 'unproven';
+      r.detail = `${r.detail} (no picture could be taken, so not a flag)`;
+    }
+    res = r;
+  };
+  const gweek = googleWeekFromText(g.candidate.hours) ?? googleWeek(g.candidate.hours_periods);
   let siteHours: { week: ReturnType<typeof googleWeek>; lines: string[]; on: string } | null = null;
   if (gweek) {
     const idx = join(crawlCacheDir, g.domain, 'pages.json');
@@ -284,7 +299,7 @@ export async function checkSite(g: Gathered, shooter: Shooter, shotsDir: string,
       push(result('hours_mismatch', { result: 'flag', evidenceUrl: siteHours.on, http: `site: ${siteHours.lines.join(' / ').slice(0, 300)}; Google: ${g.candidate.hours}`, detail: `${diff.length} days differ: ${lines.join('; ')}`, shot: v.shot && v.highlighted ? await shooter.write(readFileSync(v.shot), shotPath('hours_mismatch'), ['Opening hours differ from the Google listing', ...lines.slice(0, 4)]) : null }));
     }
   }
-  return out;
+  return res!;
 }
 
 async function checkBooking(g: Gathered, shooter: Shooter, dir: string, push: (r: CheckResult) => void): Promise<void> {

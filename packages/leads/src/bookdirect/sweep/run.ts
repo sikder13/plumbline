@@ -5,7 +5,7 @@ import { HostLimiter, Polite } from '@plumbline/fetch';
 import { BOOK_DIRECT_GAP_MS } from '../discover.ts';
 import { verdictOf, zeroBounceCheck, type VerifyStatus } from '../verify.ts';
 import { Shooter } from './browser.ts';
-import { checkSite, type CheckResult, type SiteChecks } from './checks.ts';
+import { checkHours, checkSite, type CheckId, type CheckResult, type SiteChecks } from './checks.ts';
 import { sweepPaths } from './discover.ts';
 import type { Gathered } from './gather.ts';
 
@@ -69,6 +69,38 @@ export async function checkAll(sweep: string, opts: { browsers?: number; only?: 
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error(`timed out after ${ms / 1000} s`)), ms).unref())]);
+}
+
+/** Runs named checks again on the stored reads, replacing their earlier results. Only the hours check is supported so far. */
+export async function recheckAll(sweep: string, checks: CheckId[], opts: { browsers?: number; only?: string[]; log?: (l: string) => void } = {}): Promise<number> {
+  const sp = sweepPaths(sweep);
+  const supported: CheckId[] = ['hours_mismatch'];
+  const bad = checks.filter((c) => !supported.includes(c));
+  if (bad.length) throw new Error(`recheck supports ${supported.join(', ')}, not ${bad.join(', ')}`);
+  let sites = loadGathered(sweep).filter((g) => !g.excluded);
+  if (opts.only) sites = sites.filter((g) => opts.only!.includes(g.domain));
+  const shooter = new Shooter(new Polite(new HostLimiter(BOOK_DIRECT_GAP_MS)));
+  const limit = pLimit(opts.browsers ?? 8);
+  let n = 0;
+  try {
+    await Promise.all(
+      sites.map((g) =>
+        limit(async () => {
+          const c = loadChecks(sweep, g.domain);
+          if (!c?.home) return;
+          c.results = c.results.filter((r) => !checks.includes(r.check));
+          if (checks.includes('hours_mismatch')) c.results.push(await withTimeout(checkHours(g, shooter, join(sp.shots, g.domain), sp.crawlCache), 4 * 60_000).catch((e: Error) => ({ check: 'hours_mismatch', result: 'unknown', evidenceUrl: '', http: '', detail: e.message, shot: null, more: [] }) as CheckResult));
+          saveChecks(sweep, c);
+          n++;
+          const f = c.results.filter((r) => checks.includes(r.check) && r.result === 'flag');
+          if (f.length) opts.log?.(`recheck ${g.domain}: ${f.map((r) => r.check).join(', ')}`);
+        }),
+      ),
+    );
+  } finally {
+    await shooter.stop();
+  }
+  return n;
 }
 
 const COMPETITOR_INDUSTRIES = ['allied-health', 'dental', 'hair-beauty', 'fitness'];

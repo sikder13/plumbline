@@ -7,7 +7,7 @@ import { faithReason, onTargetIndustry, perCentreCap, rotation, termShares } fro
 import { bookingLinks, isKeyMenu, menuItems, nzDigits, otaLinks, phonesOnSite } from './crawl.ts';
 import { INACTIVE } from './follow.ts';
 import { isPlaceholderEmail, plausibleEmail } from './gather.ts';
-import { daysIn, googleWeek, hoursConflicts, hoursIn, siteWeek } from './hours.ts';
+import { daysIn, googleWeek, googleWeekFromText, hoursConflicts, hoursIn, siteWeek } from './hours.ts';
 import { Registry } from './registry.ts';
 
 const page = (html: string, url = 'https://motel.co.nz/') => ({ url, finalUrl: url, status: 200, html, role: 'home' });
@@ -134,6 +134,21 @@ describe('opening hours', () => {
     expect(w!.week[1]).toEqual({ open: 540, close: 1080 });
     expect(w!.week[6]).toEqual({ open: 600, close: 960 });
     expect(w!.week[0]).toBe('closed');
+  });
+
+  it("reads Google's own wording, including open around the clock and split sessions", () => {
+    const w = googleWeekFromText('Monday: Open 24 hours | Tuesday: 9:00\u202fAM\u2009–\u20095:00\u202fPM | Wednesday: 11:30\u202fAM\u2009–\u20092:00\u202fPM, 5:00\u2009–\u20099:00\u202fPM | Thursday: Closed | Friday: 9:00\u202fAM\u2009–\u200912:00\u202fAM | Saturday: Closed | Sunday: Closed')!;
+    expect(w[1]).toEqual({ open: 0, close: 1440 });
+    expect(w[2]).toEqual({ open: 540, close: 1020 });
+    expect(w[3]).toEqual({ open: 690, close: 1260 });
+    expect(w[4]).toBe('closed');
+    expect(w[5]).toEqual({ open: 540, close: 1440 });
+  });
+
+  it('joins a second session to its days and leaves out office, kitchen and holiday hours', () => {
+    const w = siteWeek('Mon 7:00 - 10:30\n3:00 - 6:00pm\nWed 7:00 - 10:30\n3:00 - 6:00pm\nFri 7:00 - 11:00')!;
+    expect(w.week[1]).toEqual({ open: 420, close: 1080 });
+    expect(siteWeek('Office Hours - Mon to Fri 8am - 4pm\nKitchen: Sat 11am - 9pm\nChristmas: Sun 10am - 2pm')).toBeNull();
   });
 
   it('gives up on a page that names a day twice with different hours', () => {

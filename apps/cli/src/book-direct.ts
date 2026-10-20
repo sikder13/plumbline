@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { auditCsv, auditVerified, bookDirectPaths, captureContacts, checkAll, competitorPass, discover, gatherAll, qualifyAll, Registry, seedRegistryFromRelay01, sweepDiscover, writeSweepOutputs, type ListId } from '@plumbline/leads';
+import { auditCsv, auditVerified, bookDirectPaths, captureContacts, checkAll, competitorPass, discover, gatherAll, qualifyAll, recheckAll, Registry, seedRegistryFromRelay01, sweepDiscover, writeSweepOutputs, type CheckId, type ListId } from '@plumbline/leads';
 
 const LISTS = ['A', 'B', 'C', 'D'];
 
@@ -44,12 +44,13 @@ export function registerBookDirectLeads(leads: Command): void {
     .description('Book Direct sweep (RELAY-BOOKDIRECT-02): read each candidate site (8 pages at most, 1 request a second per host), follow its booking links, run the ten checks with a screenshot for every flag, and write FLAGGED.csv, CLEAN.csv, the registry and the contact sheets')
     .requiredOption('--campaign <name>', 'campaign, book-direct')
     .requiredOption('--sweep <name>', 'the sweep discovered with `leads discover --sweep`, for example nz-1000')
-    .option('--stage <stage>', 'gather (network reads only), check (browser and checks), report (outputs only), or all', 'all')
+    .option('--stage <stage>', 'gather (network reads only), check (browser and checks), report (outputs only), recheck, or all', 'all')
+    .option('--recheck <checks>', 'with --stage recheck: the checks to run again on the stored reads, for example hours_mismatch')
     .option('--parallel <n>', 'sites read at once (each host still gets one request a second)', '24')
     .option('--browsers <n>', 'pages open in the browser at once', '8')
     .option('--only <domains>', 'comma separated domains')
     .option('--refresh', 'read the sites again instead of using the saved reads')
-    .action(async (opts: { campaign: string; sweep: string; stage: string; parallel: string; browsers: string; only?: string; refresh?: boolean }) => {
+    .action(async (opts: { campaign: string; sweep: string; stage: string; parallel: string; browsers: string; only?: string; refresh?: boolean; recheck?: string }) => {
       if (opts.campaign !== 'book-direct') throw new Error('sweep is for --campaign book-direct');
       const only = opts.only?.split(',').map((s) => s.trim().toLowerCase().replace(/^www\./, ''));
       if (opts.stage === 'gather' || opts.stage === 'all') {
@@ -63,6 +64,10 @@ export function registerBookDirectLeads(leads: Command): void {
         console.log(`checked ${c.length} sites in ${Math.round((Date.now() - started) / 1000)} s`);
         const n = await competitorPass(opts.sweep, { log: console.log });
         console.log(`competitor check: ${n} flagged`);
+      }
+      if (opts.stage === 'recheck') {
+        const n = await recheckAll(opts.sweep, (opts.recheck ?? '').split(',').filter(Boolean) as CheckId[], { browsers: Number(opts.browsers), only, log: console.log });
+        console.log(`rechecked ${n} sites`);
       }
       if (opts.stage === 'report' || opts.stage === 'all') {
         const s = await writeSweepOutputs(opts.sweep, { log: console.log });

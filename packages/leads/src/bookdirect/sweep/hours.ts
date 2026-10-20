@@ -33,6 +33,27 @@ export function googleWeek(periodsJson: string): Week | null {
   return week;
 }
 
+/** Odd spaces Google and site builders use, made plain. */
+const plain = (s: string) => s.replace(/[\u00a0\u2000-\u200f\u202f\u205f\ufeff]/g, ' ');
+
+/**
+ * Google's own day-by-day wording ("Monday: 9:00 AM – 5:00 PM | Tuesday: Closed | Wednesday: Open 24
+ * hours"), which is what a visitor reads on the listing. More dependable than the raw periods.
+ */
+export function googleWeekFromText(desc: string): Week | null {
+  if (!desc) return null;
+  const week: Week = Array.from({ length: 7 }, () => undefined);
+  for (const part of desc.split('|')) {
+    const m = /^\s*(\w+):\s*(.+)$/.exec(plain(part));
+    if (!m) continue;
+    const d = dayIndex(m[1]!);
+    if (d < 0) continue;
+    const h = /\bclosed\b/i.test(m[2]!) ? 'closed' : hoursIn(m[2]!);
+    if (h) week[d] = h;
+  }
+  return week.filter((x) => x !== undefined).length >= 5 ? week : null;
+}
+
 const DAY_TOKEN = '(mon(?:day)?|tue(?:s(?:day)?)?|wed(?:nesday)?|thu(?:r(?:s(?:day)?)?)?|fri(?:day)?|sat(?:urday)?|sun(?:day)?)';
 const DAY_RE = new RegExp(`\\b${DAY_TOKEN}\\b`, 'gi');
 const dayIndex = (t: string): number => ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].indexOf(t.slice(0, 3).toLowerCase());
@@ -106,22 +127,39 @@ export function hoursIn(text: string): DayHours | null {
  * Opening hours published on a page, from its visible text. A day named twice with different hours
  * (summer and winter, kitchen and bar, two locations) makes the whole page unreadable: null.
  */
+/** Hours that are not the opening hours: the office, the phones, the kitchen, a holiday or a season. */
+const SUB_HOURS = /\b(?:office|reception|phones?|admin|kitchen|bar|delivery|takeaways?|happy hour|holidays?|christmas|easter|anzac|waitangi|matariki|labour|winter|summer|autumn|spring|school|term|classes?|class|lessons?|session|by appointment|appointments? only|check[- ]?in|check[- ]?out|after hours|emergency)\b/i;
+
 export function siteWeek(text: string): { week: Week; lines: string[] } | null {
-  const lines = text.split('\n').map((l) => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const lines = plain(text)
+    .split('\n')
+    .map((l) => l.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
   const week: Week = Array.from({ length: 7 }, () => undefined);
   const used: string[] = [];
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i]!;
-    if (line.length > 160) continue;
+    if (line.length > 160 || SUB_HOURS.test(line) || (i > 0 && SUB_HOURS.test(lines[i - 1]!) && lines[i - 1]!.length < 40 && !daysIn(lines[i - 1]!).length)) continue;
     let days = daysIn(line);
     if (!days.length) continue;
     let h = hoursIn(line);
     // A table: the day in one cell, the hours in the next.
     if (!h && i + 1 < lines.length && !daysIn(lines[i + 1]!).length) {
       h = hoursIn(lines[i + 1]!);
-      if (h) line = `${line} ${lines[i + 1]}`;
+      if (h) {
+        line = `${line} ${lines[i + 1]}`;
+        i++;
+      }
     }
     if (!h) continue;
+    // A second session on the next line ("3:00 - 6:00pm") belongs to the same days.
+    while (h !== 'closed' && i + 1 < lines.length && !daysIn(lines[i + 1]!).length && lines[i + 1]!.length < 40) {
+      const more = hoursIn(lines[i + 1]!);
+      if (!more || more === 'closed') break;
+      h = { open: Math.min(h.open, more.open), close: Math.max(h.close, more.close) };
+      line = `${line}, ${lines[i + 1]}`;
+      i++;
+    }
     days = daysIn(line.replace(RANGE_RE, ' '));
     RANGE_RE.lastIndex = 0;
     for (const d of days) {
