@@ -8,7 +8,7 @@ import { verdictOf, zeroBounceCheck, type VerifyStatus } from '../verify.ts';
 import { BROWSER_GONE, Shooter } from './browser.ts';
 import { checkHours, checkSite, type CheckId, type CheckResult, type SiteChecks } from './checks.ts';
 import { sweepPaths } from './discover.ts';
-import type { Gathered } from './gather.ts';
+import { applyLateExclusions, type Gathered } from './gather.ts';
 
 export function loadGathered(sweep: string): Gathered[] {
   const dir = sweepPaths(sweep).sites;
@@ -28,6 +28,7 @@ const saveChecks = (sweep: string, c: SiteChecks) => writeFileSync(join(sweepPat
 export async function checkAll(sweep: string, opts: { browsers?: number; only?: string[]; refresh?: boolean; log?: (l: string) => void } = {}): Promise<SiteChecks[]> {
   const sp = sweepPaths(sweep);
   const log = opts.log ?? (() => undefined);
+  applyLateExclusions(sweep);
   let sites = loadGathered(sweep).filter((g) => !g.excluded);
   if (opts.only) sites = sites.filter((g) => opts.only!.includes(g.domain));
   const polite = new Polite(new HostLimiter(BOOK_DIRECT_GAP_MS));

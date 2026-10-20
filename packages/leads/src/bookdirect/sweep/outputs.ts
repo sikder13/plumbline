@@ -10,7 +10,7 @@ import { hostOfUrl } from '../filters.ts';
 import { Shooter } from './browser.ts';
 import { CHECKS, checkLabel, flagRank, type CheckResult, type SiteChecks } from './checks.ts';
 import { sweepPaths, type SweepCandidate } from './discover.ts';
-import { isPlaceholderEmail, type Gathered } from './gather.ts';
+import { applyLateExclusions, isPlaceholderEmail, type Gathered } from './gather.ts';
 import { AUDIT_VERSION, Registry } from './registry.ts';
 import { LIST_INDUSTRY, relay01V2, seedRegistryFromRelay01 } from './relay01.ts';
 import { loadChecks, loadGathered, verifyFlagged, type EmailVerdict } from './run.ts';
@@ -127,11 +127,13 @@ const inc = (o: Record<string, number>, k: string, n = 1) => (o[k] = (o[k] ?? 0)
 export async function writeSweepOutputs(sweep: string, opts: { log?: (l: string) => void } = {}): Promise<DoorSweepSummary> {
   const sp = sweepPaths(sweep);
   const log = opts.log ?? (() => undefined);
+  const late = applyLateExclusions(sweep);
+  if (late.length) log(`excluded after discovery: ${late.join(', ')}`);
   const gathered = loadGathered(sweep);
   const cands = parseCsv(readFileSync(join(sp.dir, '_candidates.csv'), 'utf8')) as unknown as SweepCandidate[];
   const pool = existsSync(join(sp.dir, '_pool.csv')) ? (parseCsv(readFileSync(join(sp.dir, '_pool.csv'), 'utf8')) as unknown as SweepCandidate[]) : [];
   const checks = new Map(gathered.map((g) => [g.domain, loadChecks(sweep, g.domain)]));
-  const flaggedOf = (g: Gathered) => (checks.get(g.domain)?.results ?? []).filter((r) => r.result === 'flag').sort((a, b) => flagRank(a) - flagRank(b));
+  const flaggedOf = (g: Gathered) => (g.excluded ? [] : (checks.get(g.domain)?.results ?? []).filter((r) => r.result === 'flag').sort((a, b) => flagRank(a) - flagRank(b)));
 
   // Single-address checks for flagged sites only.
   const flaggedEmails = gathered.filter((g) => flaggedOf(g).length).flatMap((g) => orderEmails(g).filter((e) => e.mxOk).map((e) => e.email));
@@ -153,8 +155,8 @@ export async function writeSweepOutputs(sweep: string, opts: { log?: (l: string)
     if (!g.homeUrl) inc(s.homeUnread, ind);
     const c = checks.get(g.domain);
     const flagged = flaggedOf(g);
-    if (c?.home) inc(s.checked, ind);
-    if (c?.home?.slowRender) s.slowRenders++;
+    if (c?.home && !g.excluded) inc(s.checked, ind);
+    if (c?.home?.slowRender && !g.excluded) s.slowRenders++;
     if (!g.excluded && c?.home) {
       s.contact.sites++;
       if (g.emails.length) s.contact.withEmail++;
@@ -162,7 +164,7 @@ export async function writeSweepOutputs(sweep: string, opts: { log?: (l: string)
       if (g.linkedin.length) s.contact.withLinkedin++;
       if (g.names.length) s.contact.withNamedPerson++;
     }
-    for (const r of c?.results ?? []) {
+    for (const r of g.excluded ? [] : (c?.results ?? [])) {
       if (r.result === 'flag') inc(s.flags, r.check);
       if (r.result === 'unproven') inc(s.unproven, r.check);
       if (r.result === 'unknown') inc(s.unknown, r.check);

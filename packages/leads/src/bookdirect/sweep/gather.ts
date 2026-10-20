@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as cheerio from 'cheerio';
 import pLimit from 'p-limit';
@@ -6,6 +6,8 @@ import { HostLimiter, Polite } from '@plumbline/fetch';
 import { parseCsv } from '../../batch.ts';
 import { nzDate } from '../contacts.ts';
 import { BOOK_DIRECT_GAP_MS } from '../discover.ts';
+import { hasPhrase, hostIn } from '../filters.ts';
+import { loadSweepConfig } from './config.ts';
 import { bookingFacts, emailsOnPage, greetingNamesOn, locationCount, sellsWebOrMarketing, type Greeting } from '../site.ts';
 import { mxCheck } from '../verify.ts';
 import { bookingLinks, crawlSite, hasAvailabilityForm, homeOf, linkedinLinks, otaLinks, phonesOnSite, sitePages, type BookingLink, type CrawlPage, type MenuItem, type SitePhone } from './crawl.ts';
@@ -163,4 +165,29 @@ async function gatherOne(polite: Polite, c: SweepCandidate, cacheDir: string, mx
   g.availabilityForm = hasAvailabilityForm(pages);
   g.follows = await followBooking(polite, g.booking, [...site.homeTries, ...site.pages], site.html);
   return g;
+}
+
+/**
+ * Directories, booking platforms and chains added to the config after a sweep's discovery: a site read
+ * under an earlier list is marked excluded, with the reason, so it is never counted as checked or flagged.
+ */
+export function applyLateExclusions(sweep: string): string[] {
+  const cfg = loadSweepConfig();
+  const dir = sweepPaths(sweep).sites;
+  const marked: string[] = [];
+  for (const f of readdirSync(dir).filter((x) => x.endsWith('.gather.json'))) {
+    const g = JSON.parse(readFileSync(join(dir, f), 'utf8')) as Gathered;
+    if (g.excluded) continue;
+    const ind = cfg.industries.find((i) => i.id === g.candidate.industry);
+    const why = hostIn(g.domain, cfg.directories)
+      ? 'directory_or_platform_website (a booking, ordering or listing platform page; listed after discovery)'
+      : ind?.chains.some((c) => hasPhrase(g.candidate.name, c))
+        ? 'chain_or_franchise (listed after discovery)'
+        : null;
+    if (!why) continue;
+    g.excluded = why;
+    writeFileSync(join(dir, f), JSON.stringify(g, null, 1));
+    marked.push(g.domain);
+  }
+  return marked;
 }
