@@ -5,7 +5,7 @@ import { engineOf } from '../engines.ts';
 import { bookingFacts, emailsOnPage, greetingNamesOn, visibleText, type SitePage } from '../site.ts';
 import { mxCheck } from '../verify.ts';
 import type { Shooter, Visit } from './browser.ts';
-import { bookingLinks, isEmailProtection, isKeyMenu, linkedinLinks, nzDigits, otaLinks, phonesOnSite } from './crawl.ts';
+import { bookingLinks, isEmailProtection, isKeyMenu, linkedinLinks, nzDigits, otaLinks, phonesOnSite, samePhone } from './crawl.ts';
 import { INACTIVE, MISSING, type Follow } from './follow.ts';
 import { plausibleEmail, type Gathered } from './gather.ts';
 import { googleWeek, googleWeekFromText, hoursConflicts, siteWeek } from './hours.ts';
@@ -244,21 +244,36 @@ export async function checkSite(g: Gathered, shooter: Shooter, shotsDir: string,
   }
 
   // 5. phone_mismatch
+  push(await checkPhone(g, shooter, dir));
+
+  // 6. hours_mismatch
+  push(await checkHours(g, shooter, dir, crawlCacheDir));
+  return out;
+}
+
+/** Check 5 on its own, so it can run again on stored reads. */
+export async function checkPhone(g: Gathered, shooter: Shooter, dir: string): Promise<CheckResult> {
+  const shotPath = (c: string) => join(dir, `${c}.png`);
+  let res: CheckResult | null = null;
+  const push = (r: CheckResult) => {
+    if (r.result === 'flag' && (!r.shot || !existsSync(r.shot))) {
+      r.result = 'unproven';
+      r.detail = `${r.detail} (no picture could be taken, so not a flag)`;
+    }
+    res = r;
+  };
   const gphone = nzDigits(g.candidate.phone || '');
   const sitePhones = [...g.phones.shown, ...g.phones.tel];
   if (!gphone || gphone.length < 8) push(result('phone_mismatch', { result: 'not_applicable', detail: 'no phone on the Google listing' }));
   else if (!sitePhones.length) push(result('phone_mismatch', { result: 'not_applicable', detail: 'no phone number found on the pages read' }));
-  else if (sitePhones.some((p) => p.digits === gphone)) push(result('phone_mismatch', { result: 'pass', http: `Google ${g.candidate.phone} is on the site` }));
+  else if (sitePhones.some((p) => samePhone(nzDigits(p.shown), gphone) || samePhone(p.digits, gphone))) push(result('phone_mismatch', { result: 'pass', http: `Google ${g.candidate.phone} is on the site` }));
   else {
     const first = g.phones.shown[0] ?? g.phones.tel[0]!;
     const shown = [...new Set(g.phones.shown.map((p) => p.shown))].slice(0, 3).join(', ') || [...new Set(g.phones.tel.map((p) => p.shown))].slice(0, 3).join(', ');
     const v = await proofVisit(shooter, first.on, { digits: first.digits }, join(dir, 'phone-page.png'));
     push(result('phone_mismatch', { result: 'flag', evidenceUrl: first.on, http: `Google listing: ${g.candidate.phone}; site: ${shown}`, detail: `Google lists ${g.candidate.phone}, which is not on the ${g.pages.length + 1} pages read; the site shows ${shown}`, shot: v.shot && v.highlighted ? await shooter.write(readFileSync(v.shot), shotPath('phone_mismatch'), [`Google listing: ${g.candidate.phone}`, `This site: ${shown}`]) : null }));
   }
-
-  // 6. hours_mismatch
-  push(await checkHours(g, shooter, dir, crawlCacheDir));
-  return out;
+  return res!;
 }
 
 /** Check 6 on its own, so it can run again on stored reads. */

@@ -307,7 +307,14 @@ export function nzDigits(raw: string): string {
   else if (d.startsWith('64') && d.length >= 10) d = `0${d.slice(2)}`;
   d = d.replace(/\D/g, '');
   if (d.length >= 8 && !d.startsWith('0')) d = `0${d}`;
-  return d;
+  // "+64 (0) 27 ..." keeps its trunk zero after the country code: one zero only.
+  return d.replace(/^00(?=[2-9])/, '0');
+}
+
+/** The same number, however it is written: one contains the other, or the last seven digits agree (with or without the area code). */
+export function samePhone(a: string, b: string): boolean {
+  if (a.length < 7 || b.length < 7) return false;
+  return a === b || a.includes(b) || b.includes(a) || a.slice(-7) === b.slice(-7);
 }
 
 export interface SitePhone {

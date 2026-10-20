@@ -6,7 +6,7 @@ import { HostLimiter, Polite } from '@plumbline/fetch';
 import { BOOK_DIRECT_GAP_MS } from '../discover.ts';
 import { verdictOf, zeroBounceCheck, type VerifyStatus } from '../verify.ts';
 import { BROWSER_GONE, Shooter } from './browser.ts';
-import { checkHours, checkSite, type CheckId, type CheckResult, type SiteChecks } from './checks.ts';
+import { checkHours, checkPhone, checkSite, type CheckId, type CheckResult, type SiteChecks } from './checks.ts';
 import { sweepPaths } from './discover.ts';
 import { applyLateExclusions, type Gathered } from './gather.ts';
 
@@ -77,10 +77,10 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error(`timed out after ${ms / 1000} s`)), ms).unref())]);
 }
 
-/** Runs named checks again on the stored reads, replacing their earlier results. Only the hours check is supported so far. */
+/** Runs named checks again on the stored reads, replacing their earlier results: the hours and phone checks. */
 export async function recheckAll(sweep: string, checks: CheckId[], opts: { browsers?: number; only?: string[]; log?: (l: string) => void } = {}): Promise<number> {
   const sp = sweepPaths(sweep);
-  const supported: CheckId[] = ['hours_mismatch'];
+  const supported: CheckId[] = ['hours_mismatch', 'phone_mismatch'];
   const bad = checks.filter((c) => !supported.includes(c));
   if (bad.length) throw new Error(`recheck supports ${supported.join(', ')}, not ${bad.join(', ')}`);
   let sites = loadGathered(sweep).filter((g) => !g.excluded);
@@ -95,6 +95,8 @@ export async function recheckAll(sweep: string, checks: CheckId[], opts: { brows
           const c = loadChecks(sweep, g.domain);
           if (!c?.home) return;
           c.results = c.results.filter((r) => !checks.includes(r.check));
+          const fail = (check: CheckId) => (e: Error) => ({ check, result: 'unknown', evidenceUrl: '', http: '', detail: e.message, shot: null, more: [] }) as CheckResult;
+          if (checks.includes('phone_mismatch')) c.results.push(await withTimeout(checkPhone(g, shooter, join(sp.shots, g.domain)), 4 * 60_000).catch(fail('phone_mismatch')));
           if (checks.includes('hours_mismatch')) c.results.push(await withTimeout(checkHours(g, shooter, join(sp.shots, g.domain), sp.crawlCache), 4 * 60_000).catch((e: Error) => ({ check: 'hours_mismatch', result: 'unknown', evidenceUrl: '', http: '', detail: e.message, shot: null, more: [] }) as CheckResult));
           saveChecks(sweep, c);
           n++;
