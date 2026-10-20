@@ -158,19 +158,20 @@ export async function qualifyAll(opts: { zeroBounceMax?: number; log?: (l: strin
   const renderer = new Renderer(polite);
   const renderLimit = pLimit(4);
   const competitors = new Map<string, Competitor[]>();
+  const homeFiles = () => readdirSync(cacheDir).filter((f) => !f.startsWith('town-')).length;
+  const rendersBefore = homeFiles();
   let renders = 0;
   try {
     const bLeads = contacts.filter((c) => c.list === 'B' && c.gate === 'passed' && records.has(c.slug));
     await Promise.all(
       bLeads.map(async (lead) => {
-        const before = existsSync(cacheDir) ? readdirSync(cacheDir).length : 0;
         competitors.set(lead.slug, await competitorsFor(lead, cands, records, { renderer, ledger, cacheDir, directories: cfg.directories, renderLimit }));
-        renders += Math.max(0, readdirSync(cacheDir).length - before);
       }),
     );
   } finally {
     await renderer.stop();
   }
+  renders = homeFiles() - rendersBefore;
   writeFileSync(join(p.leads, '_competitors.csv'), toCsv([...competitors.entries()].flatMap(([slug, cs]) => cs.map((c) => ({ lead: slug, competitor: c.name, website: c.website, book_on_first_screen: c.bookOnFirstScreen === null ? 'not read' : c.bookOnFirstScreen ? 'yes' : 'no', how: c.how }))), ['lead', 'competitor', 'website', 'book_on_first_screen', 'how']));
   log(`competitors: ${competitors.size} clinics checked`);
 
