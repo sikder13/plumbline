@@ -58,6 +58,8 @@ export interface VisitOptions {
   frames?: boolean;
   /** Keep the page's code after it ran. */
   html?: boolean;
+  /** Push the page as far right as it goes before the picture: shows a page wider than the phone. */
+  scrollRight?: boolean;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -208,7 +210,10 @@ export class Shooter {
     }
     if (opts.shot) {
       if (opts.highlight && v.highlighted) await sleep(400);
-      else await within(page.evaluate(() => window.scrollTo(0, 0)), 5000, undefined);
+      else if (opts.scrollRight) {
+        await within(page.evaluate(() => window.scrollTo(10_000, 0)), 5000, undefined);
+        await sleep(400);
+      } else await within(page.evaluate(() => window.scrollTo(0, 0)), 5000, undefined);
       const buf = await within(page.screenshot({ type: 'png', timeout: 20_000 }), 25_000, null);
       if (buf) v.shot = await this.write(buf, opts.shot, opts.banner ?? []);
     }

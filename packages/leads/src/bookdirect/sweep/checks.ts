@@ -114,6 +114,23 @@ export function flagRank(r: CheckResult): number {
   }
 }
 
+/** The not_mobile proof: the homepage as it loaded, or pushed fully right when the page is wider than the phone. */
+export async function notMobileProof(home: Pick<Visit, 'finalUrl' | 'measure' | 'shot'>, nm: string, shooter: Shooter, dir: string): Promise<CheckResult> {
+  const m = home.measure!;
+  let src = home.shot;
+  if (m.scrollX > 20) {
+    const v = await shooter.visit(home.finalUrl, { shot: join(dir, 'not_mobile-page.png'), scrollRight: true });
+    src = v.shot ?? src;
+  }
+  const shot = src ? await shooter.write(readFileSync(src), join(dir, 'not_mobile.png'), ['Not built for a phone (390 x 844)', m.scrollX > 20 ? `${nm} (picture taken pushed fully right)` : nm]) : null;
+  const r = result('not_mobile', { result: 'flag', evidenceUrl: home.finalUrl, http: `viewport tag: ${m.viewport ?? 'none'}; layout width ${m.innerWidth} px; sideways ${m.scrollX} px; median sentence text ${m.medianFontPx} px`, detail: nm, shot });
+  if (!shot) {
+    r.result = 'unproven';
+    r.detail = `${r.detail} (no picture could be taken, so not a flag)`;
+  }
+  return r;
+}
+
 const ENGINE_WALL = /cloudflare|just a moment|verify you are human|captcha/i;
 
 /** A picture with one item outlined: at phone width first, and at desktop width when the phone layout hides it (a closed menu, a desktop-only footer). */
@@ -184,7 +201,7 @@ export async function checkSite(g: Gathered, shooter: Shooter, shotsDir: string,
   // 10. not_mobile
   const nm = homeOk && home.measure ? notMobile(home.measure) : null;
   if (!homeOk || !home.measure) push(result('not_mobile', { result: 'not_applicable', detail: 'the homepage did not open' }));
-  else if (nm) push(result('not_mobile', { result: 'flag', evidenceUrl: home.finalUrl, http: `viewport tag: ${home.measure.viewport ?? 'none'}; layout width ${home.measure.innerWidth} px; sideways ${home.measure.scrollX} px; median text ${home.measure.medianFontPx} px`, detail: nm, shot: home.shot ? await shooter.write(readFileSync(home.shot), shotPath('not_mobile'), ['Not built for a phone (390 x 844)', nm]) : null }));
+  else if (nm) push(await notMobileProof(home, nm, shooter, dir));
   else push(result('not_mobile', { result: 'pass', evidenceUrl: home.finalUrl, http: `viewport tag: ${home.measure.viewport ?? 'none'}; layout width ${home.measure.innerWidth} px; sideways ${home.measure.scrollX} px; median text ${home.measure.medianFontPx} px` }));
 
   // Engines: in the pages read, in the homepage as rendered, and wherever a booking link landed.

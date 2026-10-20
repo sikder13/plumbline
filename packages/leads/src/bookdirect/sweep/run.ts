@@ -6,7 +6,7 @@ import { HostLimiter, Polite } from '@plumbline/fetch';
 import { BOOK_DIRECT_GAP_MS } from '../discover.ts';
 import { verdictOf, zeroBounceCheck, type VerifyStatus } from '../verify.ts';
 import { BROWSER_GONE, Shooter } from './browser.ts';
-import { checkHours, checkPhone, checkSite, type CheckId, type CheckResult, type SiteChecks } from './checks.ts';
+import { checkHours, checkPhone, checkSite, notMobile, notMobileProof, type CheckId, type CheckResult, type SiteChecks } from './checks.ts';
 import { sweepPaths } from './discover.ts';
 import { applyLateExclusions, type Gathered } from './gather.ts';
 
@@ -77,10 +77,10 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error(`timed out after ${ms / 1000} s`)), ms).unref())]);
 }
 
-/** Runs named checks again on the stored reads, replacing their earlier results: the hours and phone checks. */
+/** Runs named checks again on the stored reads, replacing their earlier results: hours and phone everywhere, not_mobile where it flagged. */
 export async function recheckAll(sweep: string, checks: CheckId[], opts: { browsers?: number; only?: string[]; log?: (l: string) => void } = {}): Promise<number> {
   const sp = sweepPaths(sweep);
-  const supported: CheckId[] = ['hours_mismatch', 'phone_mismatch'];
+  const supported: CheckId[] = ['hours_mismatch', 'phone_mismatch', 'not_mobile'];
   const bad = checks.filter((c) => !supported.includes(c));
   if (bad.length) throw new Error(`recheck supports ${supported.join(', ')}, not ${bad.join(', ')}`);
   let sites = loadGathered(sweep).filter((g) => !g.excluded);
@@ -94,7 +94,17 @@ export async function recheckAll(sweep: string, checks: CheckId[], opts: { brows
         limit(async () => {
           const c = loadChecks(sweep, g.domain);
           if (!c?.home) return;
-          c.results = c.results.filter((r) => !checks.includes(r.check));
+          // not_mobile is measured again only where it flagged: the homepage is opened once more for it.
+          const nmBefore = c.results.find((r) => r.check === 'not_mobile');
+          const redoNm = checks.includes('not_mobile') && (nmBefore?.result === 'flag' || nmBefore?.result === 'unproven');
+          c.results = c.results.filter((r) => !checks.includes(r.check) || (r.check === 'not_mobile' && !redoNm));
+          // The pictures of the checks run again go first, so a check that no longer flags leaves no proof behind.
+          for (const k of checks) if (k !== 'not_mobile' || redoNm) for (const f of [`${k}.png`, `${k}-desktop.png`]) rmSync(join(sp.shots, g.domain, f), { force: true });
+          if (redoNm) {
+            const home = await shooter.visit(c.home.finalUrl || c.home.url, { measure: true, shot: join(sp.shots, g.domain, 'home-recheck.png') });
+            const nm = home.measure ? notMobile(home.measure) : null;
+            c.results.push(nm ? await notMobileProof(home, nm, shooter, join(sp.shots, g.domain)) : ({ check: 'not_mobile', result: home.measure ? 'pass' : 'unknown', evidenceUrl: home.finalUrl, http: home.measure ? `sideways ${home.measure.scrollX} px; median sentence text ${home.measure.medianFontPx} px` : (home.error ?? ''), detail: '', shot: null, more: [] } as CheckResult));
+          }
           const fail = (check: CheckId) => (e: Error) => ({ check, result: 'unknown', evidenceUrl: '', http: '', detail: e.message, shot: null, more: [] }) as CheckResult;
           if (checks.includes('phone_mismatch')) c.results.push(await withTimeout(checkPhone(g, shooter, join(sp.shots, g.domain)), 4 * 60_000).catch(fail('phone_mismatch')));
           if (checks.includes('hours_mismatch')) c.results.push(await withTimeout(checkHours(g, shooter, join(sp.shots, g.domain), sp.crawlCache), 4 * 60_000).catch((e: Error) => ({ check: 'hours_mismatch', result: 'unknown', evidenceUrl: '', http: '', detail: e.message, shot: null, more: [] }) as CheckResult));
