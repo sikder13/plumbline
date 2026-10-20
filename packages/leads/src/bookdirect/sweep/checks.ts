@@ -369,7 +369,8 @@ async function checkBooking(g: Gathered, shooter: Shooter, dir: string, push: (r
   const shot = join(dir, 'booking_link_broken.png');
   const suspects: { f: Follow; why: string }[] = [];
   for (const f of g.follows) {
-    if (f.error === 'robots' || isEmailProtection(f.url)) continue;
+    // A link to "/.lightbox-header" or a pop-up is a hook a script opens on the page: the address itself was never meant to load.
+    if (f.error === 'robots' || isEmailProtection(f.url) || /\/\.[\w-]+\/?$|lightbox|popup|pop-up|modal/i.test(f.url)) continue;
     if (f.status !== null && (f.status === 404 || f.status === 410 || f.status >= 500)) suspects.push({ f, why: `answers ${f.status}` });
     else if (f.status === null && f.error && /ENOTFOUND|ECONNREFUSED|EAI_AGAIN|ERR_NAME|CERT|SSL|TLS/i.test(f.error)) suspects.push({ f, why: `cannot be reached (${f.error})` });
     else if (f.says === 'inactive') suspects.push({ f, why: `the booking page says "${f.saysText}"` });

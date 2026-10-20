@@ -107,6 +107,8 @@ export interface DoorSweepSummary {
   excluded: Record<string, number>;
   homeUnread: Record<string, number>;
   checked: Record<string, number>;
+  /** Homepages robots.txt keeps us out of: nothing on them was checked. */
+  robotsBlocked: Record<string, number>;
   contact: { sites: number; withEmail: number; withTel: number; withLinkedin: number; withNamedPerson: number };
   flags: Record<string, number>;
   unproven: Record<string, number>;
@@ -141,7 +143,7 @@ export async function writeSweepOutputs(sweep: string, opts: { log?: (l: string)
 
   const flaggedRows: { row: DoorRow; rank: number; g: Gathered; top: CheckResult }[] = [];
   const cleanRows: DoorRow[] = [];
-  const s: DoorSweepSummary = { sweep, discovered: {}, skippedByRegistry: pool.filter((r) => r.reason === 'in_registry').length, gathered: {}, excluded: {}, homeUnread: {}, checked: {}, contact: { sites: 0, withEmail: 0, withTel: 0, withLinkedin: 0, withNamedPerson: 0 }, flags: {}, unproven: {}, unknown: {}, flaggedSites: 0, flaggedByIndustry: {}, slowRenders: 0, requests: { pages: 0, bookingFollows: 0, browserVisits: 0 }, zeroBounce: { credits: zb.credits, checked: zb.checked }, sheets: [], relay01: { sites: 0, wouldFlag: {}, anyWouldFlag: 0 }, top20: [] };
+  const s: DoorSweepSummary = { sweep, discovered: {}, skippedByRegistry: pool.filter((r) => r.reason === 'in_registry').length, gathered: {}, excluded: {}, homeUnread: {}, checked: {}, robotsBlocked: {}, contact: { sites: 0, withEmail: 0, withTel: 0, withLinkedin: 0, withNamedPerson: 0 }, flags: {}, unproven: {}, unknown: {}, flaggedSites: 0, flaggedByIndustry: {}, slowRenders: 0, requests: { pages: 0, bookingFollows: 0, browserVisits: 0 }, zeroBounce: { credits: zb.credits, checked: zb.checked }, sheets: [], relay01: { sites: 0, wouldFlag: {}, anyWouldFlag: 0 }, top20: [] };
   for (const c of cands) inc(s.discovered, c.industry);
   const registry = new Registry();
   seedRegistryFromRelay01(registry);
@@ -155,9 +157,11 @@ export async function writeSweepOutputs(sweep: string, opts: { log?: (l: string)
     if (!g.homeUrl) inc(s.homeUnread, ind);
     const c = checks.get(g.domain);
     const flagged = flaggedOf(g);
-    if (c?.home && !g.excluded) inc(s.checked, ind);
+    const looked = !!c?.home && !c.home.blocked;
+    if (looked && !g.excluded) inc(s.checked, ind);
+    if (c?.home?.blocked && !g.excluded) inc(s.robotsBlocked, ind);
     if (c?.home?.slowRender && !g.excluded) s.slowRenders++;
-    if (!g.excluded && c?.home) {
+    if (!g.excluded && looked) {
       s.contact.sites++;
       if (g.emails.length) s.contact.withEmail++;
       if (g.phones.tel.length) s.contact.withTel++;
@@ -177,7 +181,7 @@ export async function writeSweepOutputs(sweep: string, opts: { log?: (l: string)
       inc(s.flaggedByIndustry, ind);
       flaggedRows.push({ row, rank: flagRank(flagged[0]!), g, top: flagged[0]! });
     } else cleanRows.push(row);
-    const outcome = g.excluded ? `excluded: ${g.excluded}` : !c?.home ? `not checked: ${(c as { error?: string } | null)?.error ?? g.homeError ?? 'no browser visit'}` : flagged.length ? `flagged (unchecked): ${flagged.map((r) => r.check).join(';')}` : 'clean';
+    const outcome = g.excluded ? `excluded: ${g.excluded}` : c?.home?.blocked ? 'not checked: robots.txt does not allow the homepage' : !c?.home ? `not checked: ${(c as { error?: string } | null)?.error ?? g.homeError ?? 'no browser visit'}` : flagged.length ? `flagged (unchecked): ${flagged.map((r) => r.check).join(';')}` : 'clean';
     registry.record({ domain: g.domain, business: g.candidate.name, industry: ind, first_audited: g.seenOn, last_audited: today, audit_version: String(AUDIT_VERSION), outcome });
   }
   flaggedRows.sort((a, b) => a.rank - b.rank || a.row.industry.localeCompare(b.row.industry) || a.row.business.localeCompare(b.row.business));
