@@ -137,11 +137,16 @@ export function siteWeek(text: string): { week: Week; lines: string[] } | null {
     .filter(Boolean);
   const week: Week = Array.from({ length: 7 }, () => undefined);
   const used: string[] = [];
+  // A heading such as "Staffed hours" or "Kitchen" covers the lines under it until the next heading.
+  let underSub = false;
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i]!;
-    if (line.length > 160 || SUB_HOURS.test(line) || (i > 0 && SUB_HOURS.test(lines[i - 1]!) && lines[i - 1]!.length < 40 && !daysIn(lines[i - 1]!).length)) continue;
     let days = daysIn(line);
-    if (!days.length) continue;
+    if (!days.length) {
+      if (line.length < 40 && !hoursIn(line)) underSub = SUB_HOURS.test(line);
+      continue;
+    }
+    if (line.length > 160 || SUB_HOURS.test(line) || underSub) continue;
     let h = hoursIn(line);
     // A table: the day in one cell, the hours in the next.
     if (!h && i + 1 < lines.length && !daysIn(lines[i + 1]!).length) {
