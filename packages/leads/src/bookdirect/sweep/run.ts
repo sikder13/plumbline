@@ -4,6 +4,8 @@ import pLimit from 'p-limit';
 import { env } from '@plumbline/core';
 import { HostLimiter, Polite } from '@plumbline/fetch';
 import { BOOK_DIRECT_GAP_MS } from '../discover.ts';
+import { engineOf } from '../engines.ts';
+import { bookingLinks } from './crawl.ts';
 import { verdictOf, zeroBounceCheck, type VerifyStatus } from '../verify.ts';
 import { BROWSER_GONE, Shooter } from './browser.ts';
 import { checkHours, checkPhone, checkSite, notMobile, notMobileProof, type CheckId, type CheckResult, type SiteChecks } from './checks.ts';
@@ -122,6 +124,7 @@ export async function recheckAll(sweep: string, checks: CheckId[], opts: { brows
 }
 
 const COMPETITOR_INDUSTRIES = ['allied-health', 'dental', 'hair-beauty', 'fitness'];
+const RIVAL_KM = 30;
 
 function km(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
   const r = (x: number) => (x * Math.PI) / 180;
@@ -150,16 +153,25 @@ export async function competitorPass(sweep: string, opts: { log?: (l: string) =>
       if (!COMPETITOR_INDUSTRIES.includes(g.candidate.industry)) push({ result: 'not_applicable' });
       else if (c.hasOnlineBooking) push({ result: 'pass', detail: `books online: ${c.onlineBookingHow}` });
       else if (!g.candidate.lat) push({ result: 'unknown', detail: 'no location on the Google listing' });
+      else if (!g.homeUrl) push({ result: 'unknown', detail: 'only the homepage could be read (a plain request was refused), too little to say the site has no booking at all' });
       else {
         const here = { lat: Number(g.candidate.lat), lng: Number(g.candidate.lng) };
+        // Rivals are the three nearest of the same trade, all within 30 km: further away is not where this customer shops.
         const peers = gathered
           .filter((x) => x.domain !== g.domain && x.candidate.industry === g.candidate.industry && x.candidate.trade === g.candidate.trade && x.candidate.lat && checks.get(x.domain)?.home)
           .map((x) => ({ x, d: km(here, { lat: Number(x.candidate.lat), lng: Number(x.candidate.lng) }), c: checks.get(x.domain)! }))
           .sort((a, b) => a.d - b.d)
-          .slice(0, 3);
+          .slice(0, 3)
+          .filter((p) => p.d <= RIVAL_KM);
         const withBooking = peers.filter((p) => p.c.hasOnlineBooking);
         const named = peers.map((p) => `${p.x.candidate.name} (${p.x.candidate.town}, ${p.d.toFixed(1)} km): ${p.c.hasOnlineBooking ? p.c.onlineBookingHow.split(' ').slice(0, 3).join(' ') : 'no online booking'}`);
-        if (peers.length < 3 || withBooking.length < 2) push({ result: 'pass', detail: `no online booking, but ${withBooking.length} of the ${peers.length} nearest have it`, http: named.join(' | ') });
+        // A booking button a script adds shows only in the browser: the rendered homepage is read before anything is flagged.
+        const rendered = peers.length >= 3 && withBooking.length >= 2 ? await shooter.visit(c.home.finalUrl || c.home.url, { html: true, frames: true }) : null;
+        const late = rendered?.html ? [...bookingLinks([{ url: rendered.finalUrl, finalUrl: rendered.finalUrl, status: rendered.status, html: rendered.html, role: 'home' }]).filter((b) => !/contact|enquir|get-in-touch/i.test(b.url)), ...rendered.frames.filter((f) => engineOf(f.url))] : [];
+        if (peers.length < 3) push({ result: 'not_applicable', detail: `fewer than three ${g.candidate.trade} candidates within ${RIVAL_KM} km`, http: named.join(' | ') });
+        else if (withBooking.length < 2) push({ result: 'pass', detail: `no online booking, but ${withBooking.length} of the 3 nearest have it`, http: named.join(' | ') });
+        else if (late.length) push({ result: 'pass', detail: `the homepage, once its scripts ran, has a booking link: ${'url' in late[0]! ? late[0]!.url : ''}`, http: named.join(' | ') });
+        else if (!rendered?.html) push({ result: 'unknown', detail: `the homepage could not be opened in the browser to look for a booking button (${rendered?.error ?? 'no page'})`, http: named.join(' | ') });
         else {
           const page = g.pages.find((p) => p.role === 'contact' && p.status === 200) ?? g.pages.find((p) => p.role === 'book' && p.status === 200);
           const url = page?.finalUrl ?? c.home.finalUrl;

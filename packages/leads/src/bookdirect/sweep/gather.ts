@@ -179,7 +179,12 @@ export function applyLateExclusions(sweep: string): string[] {
     const g = JSON.parse(readFileSync(join(dir, f), 'utf8')) as Gathered;
     if (g.excluded) continue;
     const ind = cfg.industries.find((i) => i.id === g.candidate.industry);
-    const why = hostIn(g.domain, cfg.directories)
+    const lat = Number(g.candidate.lat);
+    const lng = Number(g.candidate.lng);
+    const outsideNz = g.candidate.lat !== '' && (lat > -33 || lat < -48 || lng < 165 || lng > 179);
+    const why = outsideNz
+      ? `outside_new_zealand (the listing is at ${g.candidate.address || `${lat}, ${lng}`})`
+      : hostIn(g.domain, cfg.directories)
       ? 'directory_or_platform_website (a booking, ordering or listing platform page; listed after discovery)'
       : ind?.chains.some((c) => hasPhrase(g.candidate.name, c))
         ? 'chain_or_franchise (listed after discovery)'

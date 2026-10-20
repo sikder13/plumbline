@@ -131,6 +131,8 @@ const CHAIN_HOST_ABOVE = 4;
 export function sweepDropReason(p: PlaceLike & { types?: string[] }, ctx: SweepKeepContext): string | null {
   const name = p.displayName?.text ?? '';
   if (p.businessStatus !== 'OPERATIONAL') return 'not_operational';
+  // A name match can bring a business from the other side of the world ("Cromwell Dental Practice", Surrey).
+  if (p.formattedAddress && !/New Zealand|Aotearoa/i.test(p.formattedAddress)) return 'outside_new_zealand';
   const host = hostOfUrl(p.websiteUri);
   if (!host) return 'no_website';
   if (hostIn(host, ctx.cfg.directories)) return 'directory_or_platform_website';

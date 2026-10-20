@@ -51,7 +51,7 @@ export function registerBookDirectLeads(leads: Command): void {
     .description('Book Direct sweep (RELAY-BOOKDIRECT-02): read each candidate site (8 pages at most, 1 request a second per host), follow its booking links, run the ten checks with a screenshot for every flag, and write FLAGGED.csv, CLEAN.csv, the registry and the contact sheets')
     .requiredOption('--campaign <name>', 'campaign, book-direct')
     .requiredOption('--sweep <name>', 'the sweep discovered with `leads discover --sweep`, for example nz-1000')
-    .option('--stage <stage>', 'gather (network reads only), check (browser and checks), report (outputs only), recheck, or all', 'all')
+    .option('--stage <stage>', 'gather (network reads only), check (browser and checks), competitors (the competitor check alone), report (outputs only), recheck, or all', 'all')
     .option('--recheck <checks>', 'with --stage recheck: the checks to run again on the stored reads, for example hours_mismatch')
     .option('--parallel <n>', 'sites read at once (each host still gets one request a second)', '24')
     .option('--browsers <n>', 'pages open in the browser at once', '8')
@@ -74,6 +74,10 @@ export function registerBookDirectLeads(leads: Command): void {
           const n = await competitorPass(opts.sweep, { log: console.log });
           console.log(`competitor check: ${n} flagged`);
         }
+      }
+      if (opts.stage === 'competitors') {
+        const n = await competitorPass(opts.sweep, { log: console.log });
+        console.log(`competitor check: ${n} flagged`);
       }
       if (opts.stage === 'recheck') {
         const n = await recheckAll(opts.sweep, (opts.recheck ?? '').split(',').filter(Boolean) as CheckId[], { browsers: Number(opts.browsers), only, log: console.log });
