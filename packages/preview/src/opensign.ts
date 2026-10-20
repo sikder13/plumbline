@@ -14,6 +14,8 @@ export interface OpenSignContent extends Pick<ContentFile, 'images' | 'look' | '
   design: string;
   /** The business name as the page shows it: their trading name on Google. */
   name: string;
+  /** Their own site's domain, shown above the findings. */
+  domain?: string;
 }
 
 export function openSignContent(slug: string): OpenSignContent {
@@ -36,7 +38,7 @@ export async function buildOpenSignPage(db: Db, campaign: string, slug: string, 
     token,
     path,
     name: content.name,
-    domain: '',
+    domain: content.domain ?? '',
     design: content.design,
     demo: content.demo,
     images,

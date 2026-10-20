@@ -83,3 +83,26 @@ export const OPEN_SIGN = {
   replySub: 'The link to this page came in an email from Udaay. A reply there reaches him directly.',
   footer: 'Nahl Technologies Inc., 6902 Challenge Ln, Indianapolis, IN 46250',
 };
+
+/**
+ * The second tab of a Book Direct page: what we found on their current site, then our price. The price
+ * is the relay's text word for word; only the thing fixed first is the page's own (a broken booking
+ * link, a broken menu link, or the "Not secure" warning).
+ */
+export const BOOK_DIRECT = {
+  tabs: { demo: 'Demo', found: 'Findings and price' },
+  link: 'See what we found',
+  findingsTitle: 'What we found on your current site',
+  findingsLead: 'Each item was seen on your current site on the date shown. “Seen again” means we saw it in our sweep and once more on that date.',
+  priceTitle: 'What happens next',
+  price: (fixFirst: string) => [
+    `First, ${fixFirst} gets fixed, free, within 48 hours of you giving us access. No obligation.`,
+    'If you then want the full rebuild: NZ$1,490 including GST, live within two weeks.',
+    'A 30% deposit starts it and is refunded in full if you do not like the design; the balance is due when the new site goes live.',
+    'Optional care plan NZ$79 a month including GST: hosting, edits, hours and price changes, security updates.',
+    'GST invoice, bank transfer in NZ$.',
+  ],
+  reply: 'Reply to Udaay’s email',
+  replySub: 'The link to this page came in an email from Udaay. A reply there reaches him directly.',
+  footer: 'Nahl Technologies Inc., 6902 Challenge Ln, Indianapolis, IN 46250',
+};

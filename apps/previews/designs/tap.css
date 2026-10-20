@@ -1,0 +1,589 @@
+/* The Comm. Whakatane: their deep purple and blue, Good George amber, a pub poster in condensed caps. */
+
+.root {
+  --paper: #f7f2ea;
+  --soft: #ece3d4;
+  --ink: #1d1530;
+  --muted: #554c63;
+  --deep: #2a1758;
+  --onDeep: #f6f1ff;
+  --onDeepMuted: #c9bde6;
+  --accent: #5b2bc0;
+  --onAccent: #ffffff;
+  --amber: #f0a92b;
+  --rule: #d8ccb8;
+  --display: 'Anton', Impact, sans-serif;
+  --text: 'Libre Franklin', system-ui, sans-serif;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --gutter: 22px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 18px/1.6 var(--text);
+  overflow-x: clip;
+}
+
+.root a:focus-visible {
+  outline: 3px solid var(--amber);
+  outline-offset: 3px;
+}
+
+.hero {
+  position: relative;
+  display: grid;
+  min-height: 90svh;
+  background: var(--deep);
+  color: #ffffff;
+}
+
+.heroPhoto {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.heroPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: settle 9s ease-out both;
+}
+
+.heroPhoto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgb(42 23 88 / 0.95) 0%, rgb(42 23 88 / 0.6) 50%, rgb(42 23 88 / 0.2) 80%, rgb(42 23 88 / 0.45) 100%);
+}
+
+@keyframes settle {
+  from {
+    transform: scale(1.07);
+  }
+}
+
+.top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px var(--gutter);
+  align-self: start;
+}
+
+.brand {
+  margin: 0;
+  font: 400 30px/1 var(--display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.brand span,
+.bookHead span {
+  color: var(--amber);
+}
+
+.topCall {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 4px;
+  background: #ffffff;
+  color: var(--deep);
+  font: 700 14px/1 var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.heroWords {
+  position: relative;
+  align-self: end;
+  padding: 0 var(--gutter) 44px;
+}
+
+.place {
+  margin: 0 0 10px;
+  font: 700 13px/1 var(--text);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+.head {
+  margin: 0;
+  font: 400 clamp(64px, 20vw, 110px) / 0.92 var(--display);
+  text-transform: uppercase;
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+}
+
+.line > span {
+  display: block;
+  animation: rise 0.9s var(--ease) both;
+  animation-delay: calc(var(--i) * 0.14s);
+}
+
+.line:nth-child(3) > span {
+  color: var(--amber);
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(105%);
+  }
+}
+
+.open {
+  margin: 16px 0 0;
+  font-weight: 600;
+}
+
+.acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: 4px;
+  font: 700 16px/1 var(--text);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.primary {
+  background: var(--amber);
+  color: var(--ink);
+}
+
+.secondary {
+  border: 2px solid #ffffff;
+  color: #ffffff;
+}
+
+.intro {
+  padding: 80px var(--gutter);
+}
+
+.introText {
+  max-width: 32ch;
+  margin: 0;
+  font: 500 clamp(24px, 6.4vw, 36px) / 1.3 var(--text);
+  letter-spacing: -0.01em;
+}
+
+.h2 {
+  margin: 0;
+  font: 400 clamp(52px, 15vw, 96px) / 0.95 var(--display);
+  text-transform: uppercase;
+}
+
+.body {
+  max-width: 46ch;
+  margin: 14px 0 0;
+  color: var(--muted);
+}
+
+/* The signature: a pint that pours as it scrolls in. */
+
+.drink {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 28px;
+  padding: 80px var(--gutter);
+  background: var(--deep);
+  color: var(--onDeep);
+}
+
+.drink .body {
+  color: var(--onDeepMuted);
+}
+
+.pint {
+  padding-top: 8px;
+}
+
+.glass {
+  position: relative;
+  display: block;
+  width: 84px;
+  height: 150px;
+  border: 3px solid rgb(246 241 255 / 0.85);
+  border-top-width: 2px;
+  border-radius: 4px 4px 14px 14px;
+  clip-path: polygon(0 0, 100% 0, 88% 100%, 12% 100%);
+  overflow: hidden;
+}
+
+.beer {
+  position: absolute;
+  inset: auto 0 0;
+  height: 0;
+  background: linear-gradient(to top, #c7781b, var(--amber));
+  transition: height 2s cubic-bezier(0.3, 0.7, 0.2, 1) 0.2s;
+}
+
+.foam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 18px;
+  background: #fff7e6;
+  border-radius: 6px 6px 0 0;
+  opacity: 0;
+  transition: bottom 2s cubic-bezier(0.3, 0.7, 0.2, 1) 0.2s, opacity 0.4s ease 0.3s;
+}
+
+.pint[data-shown] .beer {
+  height: 84%;
+}
+
+.pint[data-shown] .foam {
+  bottom: 84%;
+  opacity: 1;
+}
+
+.drinkWords {
+  min-width: 0;
+}
+
+.big {
+  margin: 18px 0 0;
+  font: 500 clamp(21px, 5.6vw, 28px) / 1.35 var(--text);
+}
+
+.taps {
+  grid-column: 1 / -1;
+  margin: 8px 0 0;
+}
+
+.taps img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.menu {
+  padding: 88px var(--gutter);
+}
+
+.board {
+  display: grid;
+  gap: 40px;
+  margin-top: 40px;
+}
+
+.groupTitle {
+  margin: 0 0 8px;
+  padding-bottom: 8px;
+  border-bottom: 3px solid var(--ink);
+  font: 400 30px/1 var(--display);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 2px 10px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.itemName {
+  font: 700 18px/1.3 var(--text);
+}
+
+.leader {
+  border-bottom: 2px dotted var(--rule);
+  transform: translateY(-4px);
+}
+
+.itemPrice {
+  font: 400 22px/1 var(--display);
+  font-variant-numeric: tabular-nums;
+}
+
+.itemText {
+  grid-column: 1 / -1;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.room {
+  display: grid;
+  gap: 8px;
+  padding: 0 8px;
+}
+
+.room figure {
+  margin: 0;
+}
+
+.room img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.r_bar,
+.r_plates,
+.r_salad {
+  min-width: 0;
+}
+
+.book {
+  padding: 88px var(--gutter);
+  scroll-margin-top: 16px;
+}
+
+.bookHead {
+  margin: 0;
+  font: 400 clamp(48px, 14vw, 96px) / 0.95 var(--display);
+  text-transform: uppercase;
+}
+
+.ways {
+  display: grid;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.ways .primary {
+  justify-content: center;
+}
+
+.way {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 20px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.foot {
+  padding: 56px var(--gutter) 120px;
+  background: var(--deep);
+  color: var(--onDeep);
+}
+
+.footName {
+  margin: 0;
+  font: 400 32px/1 var(--display);
+  text-transform: uppercase;
+}
+
+.footAddr {
+  display: inline-block;
+  margin-top: 12px;
+  color: var(--onDeep);
+}
+
+.footLinks {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0 0;
+}
+
+.footLinks a {
+  color: var(--onDeep);
+  font-weight: 600;
+}
+
+.small {
+  margin: 28px 0 0;
+  font-size: 15px;
+  color: var(--onDeepMuted);
+}
+
+.small a {
+  color: inherit;
+}
+
+.bar {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  transition: transform 0.4s var(--ease), opacity 0.4s var(--ease);
+}
+
+.barBook,
+.barCall {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 22px;
+  border-radius: 4px;
+  font: 700 16px/1 var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  box-shadow: 0 8px 22px rgb(29 21 48 / 0.3);
+}
+
+.barBook {
+  background: var(--amber);
+  color: var(--ink);
+}
+
+.barCall {
+  background: var(--deep);
+  color: #ffffff;
+}
+
+:global(html:not([data-past-hero])) .bar,
+:global(html[data-covered]) .bar {
+  transform: translateY(140%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (min-width: 760px) {
+  .root {
+    --gutter: 40px;
+  }
+
+  .bar {
+    display: none;
+  }
+
+  .board {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 56px;
+  }
+
+  .room {
+    grid-template-columns: 1.4fr 1fr 1fr;
+  }
+
+  .room img {
+    height: 100%;
+    aspect-ratio: auto;
+    max-height: 520px;
+  }
+
+  .ways {
+    grid-template-columns: repeat(3, max-content);
+  }
+}
+
+@media (min-width: 1100px) {
+  .root {
+    --gutter: 56px;
+  }
+
+  .heroWords,
+  .top,
+  .intro,
+  .drink,
+  .menu,
+  .book,
+  .foot {
+    padding-inline: max(var(--gutter), calc((100vw - 1240px) / 2));
+  }
+
+  .hero {
+    min-height: min(100svh, 940px);
+  }
+
+  .heroWords {
+    padding-bottom: 80px;
+  }
+
+  .head {
+    font-size: clamp(120px, 11vw, 176px);
+  }
+
+  .intro,
+  .drink,
+  .menu,
+  .book {
+    padding-block: 120px;
+  }
+
+  .drink {
+    grid-template-columns: auto 1.2fr 1fr;
+    align-items: center;
+    gap: 56px;
+  }
+
+  .glass {
+    width: 120px;
+    height: 214px;
+  }
+
+  .taps {
+    grid-column: auto;
+    margin: 0;
+  }
+
+  .menu {
+    display: grid;
+    grid-template-columns: 0.7fr 2fr;
+    gap: 56px;
+    align-items: start;
+  }
+
+  .board {
+    margin-top: 0;
+  }
+
+  .menuHead {
+    position: sticky;
+    top: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line > span,
+  .heroPhoto img {
+    animation: none;
+  }
+
+  .beer,
+  .foam,
+  .bar {
+    transition: none;
+  }
+}
+
+.group {
+  min-width: 0;
+}

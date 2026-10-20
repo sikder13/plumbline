@@ -73,6 +73,8 @@ export interface RawFetchOptions {
   maxBytes?: number;
   maxRedirects?: number;
   accept?: string;
+  /** Checked before every request, redirects included: a host it refuses is never contacted. */
+  allowHost?: (host: string) => boolean;
 }
 
 /** A single request with redirects followed by hand, so each hop is rate limited. */
@@ -83,6 +85,7 @@ export async function rawFetch(limiter: HostLimiter, url: string, opts: RawFetch
   for (let hop = 0; hop <= maxRedirects; hop++) {
     const host = hostOf(current);
     if (!host) return { url, finalUrl: current, status: null, headers: {}, body: '', error: 'invalid URL', redirects };
+    if (opts.allowHost && !opts.allowHost(host)) return { url, finalUrl: current, status: null, headers: {}, body: '', error: 'off_limits_host', redirects };
     await limiter.acquire(host);
     try {
       const res = await undiciFetch(current, {
@@ -222,6 +225,8 @@ export class Polite {
 
   /** A robots-checked GET. Returns status null with error 'robots' when disallowed. */
   async get(url: string, opts: RawFetchOptions = {}): Promise<FetchResult> {
+    const first = hostOf(url);
+    if (opts.allowHost && first && !opts.allowHost(first)) return { url, finalUrl: url, status: null, headers: {}, body: '', error: 'off_limits_host', redirects: [] };
     if (!(await this.robots.allows(url))) return { url, finalUrl: url, status: null, headers: {}, body: '', error: 'robots', redirects: [] };
     const res = await rawFetch(this.limiter, url, opts);
     if (res.redirects.length && res.finalUrl !== url && !(await this.robots.allows(res.finalUrl))) {

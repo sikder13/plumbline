@@ -23,6 +23,7 @@ import {
   type WaveRow,
 } from '@plumbline/wave';
 import { parseCsv } from './csv.ts';
+import { bookDirectAudit } from './book-direct.ts';
 
 export interface WaveRunOptions {
   wave: string;
@@ -155,5 +156,17 @@ export function registerWaveRun(wave: Command): void {
     .option('--rank-only', 'open no site: rank and write the packs from the stored results')
     .option('--speed-only', 'measure phone speed again and nothing else')
     .option('--no-reserves', 'leave the reserve rows out')
-    .action((o: { wave: string; batch: string; file?: string; only?: string; parallel: number; rankOnly?: boolean; speedOnly?: boolean; reserves?: boolean }) => waveRun(o));
+    .option('--audit-only', 'Book Direct: audit the leads that passed the contact gate (data/book-direct/leads/_verified.csv); no packs')
+    .option('--no-speed', 'with --audit-only: leave out the Lighthouse measurement')
+    .option('--max <n>', 'with --audit-only: audit at most this many more leads, best first')
+    .option('--list <letters>', 'with --audit-only: only these Book Direct lists, for example C,D')
+    .option('--refresh', 'with --audit-only: audit the audited leads again, keeping their stored phone speed')
+    .action((o: { wave: string; batch: string; file?: string; only?: string; parallel: number; rankOnly?: boolean; speedOnly?: boolean; reserves?: boolean; auditOnly?: boolean; speed?: boolean; max?: string; list?: string; refresh?: boolean }) => {
+      if (o.auditOnly) {
+        if (!o.wave.startsWith('book-direct')) throw new Error('--audit-only is for a book-direct wave');
+        // A browser or socket left open would keep the process alive after the work is done.
+        return bookDirectAudit({ only: o.only, parallel: o.parallel, speed: o.speed, max: o.max, list: o.list, refresh: o.refresh }).then(() => process.exit(0));
+      }
+      return waveRun(o);
+    });
 }

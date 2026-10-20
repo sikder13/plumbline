@@ -1,0 +1,528 @@
+/* St Georges Kennels and Cattery: warm clay and straw, Hawke's Bay sun, a wide friendly display face. */
+
+.root {
+  --paper: #fbf4ea;
+  --soft: #f1e2cc;
+  --ink: #2a1a12;
+  --muted: #5e4a3e;
+  --deep: #5b2d1c;
+  --onDeep: #fdf3e8;
+  --onDeepMuted: #e3c9b6;
+  --accent: #a8431f;
+  --onAccent: #ffffff;
+  --straw: #e9b44c;
+  --rule: #e2cfb4;
+  --display: 'Unbounded', system-ui, sans-serif;
+  --text: 'Zilla Slab', Georgia, serif;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --gutter: 22px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 20px/1.5 var(--text);
+  overflow-x: clip;
+}
+
+.root a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px var(--gutter);
+}
+
+.brand {
+  margin: 0;
+  font: 700 17px/1 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.topCall {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--onAccent);
+  font: 700 15px/1 var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.hero {
+  padding: 28px var(--gutter) 64px;
+}
+
+.place {
+  margin: 0 0 18px;
+  font: 700 15px/1.35 var(--text);
+  color: var(--accent);
+}
+
+.head {
+  margin: 0;
+  font: 800 clamp(40px, 11.8vw, 64px) / 1.02 var(--display);
+  letter-spacing: -0.05em;
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.04em;
+}
+
+.line > span {
+  display: block;
+  animation: rise 1s var(--ease) both;
+  animation-delay: calc(var(--i) * 0.14s);
+}
+
+.line:nth-child(2) > span {
+  color: var(--accent);
+}
+
+.line:nth-child(4) > span {
+  color: var(--deep);
+  font-weight: 400;
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(105%);
+  }
+}
+
+.now {
+  margin: 24px 0 0;
+}
+
+.nowLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--soft);
+  font: 700 17px/1.3 var(--text);
+}
+
+.nowLine::before {
+  content: '';
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.nowLine[data-open='yes']::before {
+  background: #3f9a52;
+  box-shadow: 0 0 0 4px rgb(63 154 82 / 0.25);
+}
+
+.acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font: 700 18px/1 var(--text);
+  text-decoration: none;
+}
+
+.primary {
+  background: var(--accent);
+  color: var(--onAccent);
+}
+
+.secondary {
+  border: 2px solid var(--ink);
+  color: var(--ink);
+}
+
+.facts {
+  display: grid;
+  margin: 36px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 2px solid var(--ink);
+}
+
+.facts li {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.h2 {
+  margin: 0;
+  font: 700 clamp(28px, 7.8vw, 46px) / 1.08 var(--display);
+  letter-spacing: -0.04em;
+}
+
+.h3 {
+  margin: 0 0 12px;
+  font: 700 20px/1.2 var(--display);
+  letter-spacing: -0.02em;
+}
+
+/* The signature: three big doors in, then the windows. */
+
+.ways {
+  padding: 88px var(--gutter);
+  background: var(--deep);
+  color: var(--onDeep);
+  scroll-margin-top: 16px;
+}
+
+.doors {
+  display: grid;
+  gap: 12px;
+  margin: 32px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.door {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 24px 24px 24px 84px;
+  border-radius: 22px;
+  background: var(--onDeep);
+  color: var(--ink);
+  text-decoration: none;
+  transition: transform 0.35s var(--ease);
+}
+
+.door:hover {
+  transform: translateY(-3px);
+}
+
+.doorN {
+  position: absolute;
+  top: 18px;
+  left: 22px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--straw);
+  font: 800 20px/1 var(--display);
+}
+
+.doorHow {
+  font: 700 22px/1.2 var(--display);
+  letter-spacing: -0.03em;
+}
+
+.doorLine {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.early {
+  margin: 24px 0 0;
+  color: var(--onDeepMuted);
+}
+
+.rates {
+  padding: 88px var(--gutter);
+}
+
+.boards {
+  display: grid;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.board {
+  padding: 22px;
+  border-radius: 22px;
+  background: #ffffff;
+  border: 2px solid var(--rule);
+}
+
+.boardTitle {
+  margin: 0 0 8px;
+  font: 800 16px/1 var(--display);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.rateList {
+  margin: 0;
+}
+
+.rateList div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.rateList div:last-child {
+  border-bottom: 0;
+}
+
+.rateList dd {
+  margin: 0;
+  font: 700 22px/1 var(--display);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  max-width: 60ch;
+  margin: 20px 0 0;
+  font-size: 18px;
+  color: var(--muted);
+}
+
+.stay {
+  padding: 88px var(--gutter);
+  background: var(--soft);
+}
+
+.stayCols {
+  display: grid;
+  gap: 32px;
+  margin-top: 28px;
+}
+
+.ticks {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ticks li {
+  position: relative;
+  padding-left: 30px;
+}
+
+.ticks li::before {
+  content: '';
+  position: absolute;
+  top: 0.45em;
+  left: 2px;
+  width: 14px;
+  height: 8px;
+  border-left: 3px solid var(--accent);
+  border-bottom: 3px solid var(--accent);
+  transform: rotate(-45deg);
+}
+
+.body {
+  margin: 0 0 12px;
+}
+
+.vaccines {
+  max-width: 62ch;
+  margin: 32px 0 0;
+  padding: 18px 20px;
+  border-left: 4px solid var(--straw);
+  background: #ffffff;
+  font-size: 18px;
+}
+
+.hours {
+  padding: 88px var(--gutter);
+}
+
+.hourList {
+  display: grid;
+  gap: 12px;
+  margin: 28px 0 0;
+}
+
+.hourList div {
+  display: grid;
+  gap: 6px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: var(--soft);
+}
+
+.hourList dt {
+  font: 700 16px/1.2 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.hourList dd {
+  margin: 0;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.near {
+  margin: 16px 0 0;
+  font-weight: 700;
+}
+
+.foot {
+  padding: 56px var(--gutter) 120px;
+  background: var(--deep);
+  color: var(--onDeep);
+}
+
+.footName {
+  margin: 0;
+  font: 700 20px/1.2 var(--display);
+  letter-spacing: -0.03em;
+}
+
+.footLinks {
+  display: grid;
+  gap: 6px;
+  margin: 14px 0 0;
+}
+
+.footLinks a {
+  color: var(--onDeep);
+  font-weight: 700;
+}
+
+.small {
+  margin: 28px 0 0;
+  font-size: 16px;
+  color: var(--onDeepMuted);
+}
+
+.small a {
+  color: inherit;
+}
+
+.bar {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  transition: transform 0.4s var(--ease), opacity 0.4s var(--ease);
+}
+
+.barBook,
+.barCall {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font: 700 18px/1 var(--text);
+  text-decoration: none;
+  box-shadow: 0 8px 22px rgb(91 45 28 / 0.3);
+}
+
+.barBook {
+  background: var(--accent);
+  color: var(--onAccent);
+}
+
+.barCall {
+  background: #ffffff;
+  color: var(--ink);
+}
+
+:global(html:not([data-past-hero])) .bar,
+:global(html[data-covered]) .bar {
+  transform: translateY(140%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (min-width: 760px) {
+  .root {
+    --gutter: 40px;
+  }
+
+  .bar {
+    display: none;
+  }
+
+  .doors {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .door {
+    min-height: 220px;
+    align-content: end;
+    padding: 24px;
+  }
+
+  .boards,
+  .stayCols,
+  .hourList {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .facts {
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: 24px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .root {
+    --gutter: 56px;
+  }
+
+  .top,
+  .hero,
+  .ways,
+  .rates,
+  .stay,
+  .hours,
+  .foot {
+    padding-inline: max(var(--gutter), calc((100vw - 1200px) / 2));
+  }
+
+  .hero {
+    padding-top: 56px;
+    padding-bottom: 104px;
+  }
+
+  .head {
+    font-size: clamp(76px, 7.4vw, 116px);
+  }
+
+  .ways,
+  .rates,
+  .stay,
+  .hours {
+    padding-block: 120px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line > span {
+    animation: none;
+  }
+
+  .door,
+  .bar {
+    transition: none;
+  }
+}

@@ -3,8 +3,9 @@ import type { Command } from 'commander';
 import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { db } from '@plumbline/core';
-import { BASE_PATH, buildOpenSignPage, checkOpenSignPage, numbersIn, previewPaths, serveSite, type PageData } from '@plumbline/preview';
+import { BASE_PATH, BOOK_DIRECT_GATES, buildOpenSignPage, checkOpenSignPage, numbersIn, previewPaths, serveSite, type PageData } from '@plumbline/preview';
 import { scriptsAfterPaint, VERCEL_JSON } from './preview.ts';
+import { registerBookDirectLeads } from './book-direct.ts';
 import { campaignPaths, enrich, pickBatch, pickSweepBatch, pullLeads, sweep, writeEnriched, type PoolRow } from '@plumbline/leads';
 
 function readCandidates(campaign: string): PoolRow[] {
@@ -177,10 +178,14 @@ export function registerLeads(program: Command): Command {
         for (const page of pages) {
           console.log(`${page.slug}: ${base}${BASE_PATH}/${page.path}/`);
           // Figures the page may show: its own facts, our offer, clock hours and the counts and numbers of its own lists.
-          const allowed = new Set([...numbersIn(JSON.stringify(page.demo)).map((n) => n.token), ...numbersIn(offer.slice(offer.indexOf('OPEN_SIGN'))).map((n) => n.token), '30', ...Array.from({ length: 24 }, (_, i) => String(i + 1)), ...Array.from({ length: 20 }, (_, i) => String(i + 1).padStart(2, '0'))]);
-          const report = await checkOpenSignPage(page, { base, allowed, shotsDir: join(previewPaths.review, 'open-sign', page.slug), previewDir: folderOf(page.slug), lighthouseRuns: Number(opts.runs), log: console.log });
-          mkdirSync(join(previewPaths.review, 'open-sign', page.slug), { recursive: true });
-          writeFileSync(join(previewPaths.review, 'open-sign', page.slug, 'gates.json'), JSON.stringify(report, null, 2));
+          const ours = opts.campaign === 'book-direct' ? offer.slice(offer.indexOf('BOOK_DIRECT')) : offer.slice(offer.indexOf('OPEN_SIGN'), offer.indexOf('BOOK_DIRECT') > 0 ? offer.indexOf('BOOK_DIRECT') : undefined);
+          const allowed = new Set([...numbersIn(JSON.stringify(page.demo)).map((n) => n.token), ...numbersIn(ours).map((n) => n.token), '30', ...Array.from({ length: 24 }, (_, i) => String(i + 1)), ...Array.from({ length: 20 }, (_, i) => String(i + 1).padStart(2, '0'))]);
+          // A Book Direct page is held to the stricter bars, and a health or dental page carries no testimonials.
+          const gates = opts.campaign === 'book-direct' ? { ...BOOK_DIRECT_GATES, noTestimonials: !!(page.demo as { health?: boolean }).health } : undefined;
+          const shots = join(previewPaths.review, opts.campaign, opts.campaign === 'book-direct' ? opts.batch.replace(/^book-direct-/, 'batch-') : '', page.slug);
+          const report = await checkOpenSignPage(page, { base, allowed, shotsDir: shots, previewDir: folderOf(page.slug), lighthouseRuns: Number(opts.runs), gates, log: console.log });
+          mkdirSync(shots, { recursive: true });
+          writeFileSync(join(shots, 'gates.json'), JSON.stringify(report, null, 2));
           const l = report.lighthouse;
           console.log(`  performance ${l.performance}, accessibility ${l.accessibility}, LCP ${((l.lcpMs ?? 0) / 1000).toFixed(2)} s, CLS ${l.cls?.toFixed(3)}, TBT ${Math.round(l.tbtMs ?? 0)} ms, beacon ${report.beacon.ok ? 'ok' : 'FAIL'}, ${report.failures.length ? `${report.failures.length} failure(s)` : 'PASS'}`);
           for (const f of report.failures) console.log(`    ${f}`);
@@ -189,8 +194,9 @@ export function registerLeads(program: Command): Command {
       } finally {
         server.close();
       }
-      writeFileSync(join(previewPaths.review, 'open-sign', `gates-${opts.batch.replace(/,/g, '+')}${opts.only ? '-part' : ''}.json`), JSON.stringify(summary, null, 2));
+      writeFileSync(join(previewPaths.review, opts.campaign, `gates-${opts.batch.replace(/,/g, '+')}${opts.only ? '-part' : ''}.json`), JSON.stringify(summary, null, 2));
       if (summary.some((x) => (x.failures as string[]).length)) process.exitCode = 1;
     });
+  registerBookDirectLeads(leads);
   return leads;
 }

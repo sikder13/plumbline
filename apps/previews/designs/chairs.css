@@ -1,0 +1,635 @@
+/* Dental@105, Hastings: the blue of their mark on a clean, cool ground; a warm serif for their words. */
+
+.root {
+  --paper: #f5f8f9;
+  --soft: #e4eef1;
+  --ink: #0f2430;
+  --muted: #3f5663;
+  --deep: #0d3547;
+  --onDeep: #f1f7f9;
+  --onDeepMuted: #b5ccd6;
+  --accent: #0a5f78;
+  --onAccent: #ffffff;
+  --rule: #c9d9df;
+  --display: 'Gelasio', Georgia, serif;
+  --text: 'Hanken Grotesk', system-ui, sans-serif;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --gutter: 24px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 18px/1.55 var(--text);
+  overflow-x: clip;
+}
+
+.root a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px var(--gutter);
+}
+
+.brand {
+  margin: 0;
+  font: 600 20px/1 var(--display);
+}
+
+.topNav {
+  display: none;
+}
+
+.topCall {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--onAccent);
+  font: 600 15px/1 var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.hero {
+  display: grid;
+  gap: 28px;
+  padding: 28px 0 0;
+}
+
+.heroWords {
+  padding: 0 var(--gutter);
+}
+
+.place {
+  margin: 0 0 14px;
+  font: 600 13px/1 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.head {
+  margin: 0;
+  font: 500 clamp(46px, 13.4vw, 64px) / 1.02 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+}
+
+.line > span {
+  display: block;
+  animation: rise 1s var(--ease) both;
+  animation-delay: calc(var(--i) * 0.16s);
+}
+
+.line:nth-child(2) > span {
+  font-style: italic;
+  color: var(--accent);
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(105%);
+  }
+}
+
+.lede {
+  margin: 18px 0 0;
+  font-size: 20px;
+  color: var(--muted);
+}
+
+.acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 52px;
+  padding: 0 22px;
+  border-radius: 8px;
+  font: 600 17px/1 var(--text);
+  text-decoration: none;
+}
+
+.primary {
+  background: var(--accent);
+  color: var(--onAccent);
+}
+
+.secondary {
+  border: 2px solid var(--accent);
+  color: var(--accent);
+}
+
+.heroPhoto {
+  margin: 0;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  clip-path: inset(0 0 0 0);
+  animation: open 1.4s var(--ease) both;
+}
+
+.heroPhoto img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: settle 9s ease-out both;
+}
+
+@keyframes open {
+  from {
+    clip-path: inset(10% 8% 10% 8%);
+  }
+}
+
+@keyframes settle {
+  from {
+    transform: scale(1.07);
+  }
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0 var(--gutter);
+  list-style: none;
+}
+
+.tags li {
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: var(--soft);
+  font: 600 15px/1.2 var(--text);
+}
+
+.welcome {
+  padding: 88px var(--gutter) 40px;
+}
+
+.kicker {
+  margin: 0 0 16px;
+  font: 600 13px/1.2 var(--text);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.welcomeText {
+  max-width: 30ch;
+  margin: 0;
+  font: 400 clamp(26px, 7vw, 40px) / 1.3 var(--display);
+}
+
+.h2 {
+  margin: 0;
+  font: 500 clamp(34px, 9.4vw, 54px) / 1.05 var(--display);
+  letter-spacing: -0.02em;
+}
+
+.body {
+  max-width: 40ch;
+  margin: 14px 0 0;
+  color: var(--muted);
+}
+
+/* The signature: three chairs, one for each dentist they name, filling in turn. */
+
+.chairs {
+  display: grid;
+  gap: 32px;
+  padding: 72px var(--gutter);
+}
+
+.chairList {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chair {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 22px 20px 22px 72px;
+  border: 2px solid var(--rule);
+  border-radius: 16px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.chair::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--deep);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  z-index: 0;
+}
+
+.chairList[data-shown] .chair::before {
+  animation: fill 0.6s var(--ease) both;
+  animation-delay: calc(var(--i) * 0.45s + 0.2s);
+}
+
+.chairList[data-shown] .chair > span {
+  animation: turn 0.6s var(--ease) both;
+  animation-delay: calc(var(--i) * 0.45s + 0.2s);
+}
+
+@keyframes fill {
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes turn {
+  to {
+    color: var(--onDeep);
+  }
+}
+
+.chair > span {
+  position: relative;
+  z-index: 1;
+}
+
+.chairNo {
+  position: absolute !important;
+  top: 22px;
+  left: 22px;
+  font: 500 34px/1 var(--display);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+}
+
+.chairName {
+  font: 500 24px/1.2 var(--display);
+}
+
+.chairLine {
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.chairList[data-shown] .chairLine {
+  animation-name: turnMuted;
+}
+
+@keyframes turnMuted {
+  to {
+    color: var(--onDeepMuted);
+  }
+}
+
+.trio {
+  margin: 0;
+}
+
+.trio img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+.trio figcaption {
+  max-width: 58ch;
+  margin-top: 14px;
+  font-size: 17px;
+  color: var(--muted);
+}
+
+.promise {
+  padding: 88px var(--gutter);
+  background: var(--deep);
+  color: var(--onDeep);
+}
+
+.promise .kicker {
+  color: var(--onDeepMuted);
+}
+
+.quote {
+  margin: 0;
+}
+
+.quote p {
+  max-width: 24ch;
+  margin: 0;
+  font: 400 clamp(30px, 8.4vw, 54px) / 1.18 var(--display);
+}
+
+.cost {
+  max-width: 46ch;
+  margin: 32px 0 0;
+  color: var(--onDeepMuted);
+}
+
+.services {
+  padding: 88px var(--gutter);
+}
+
+.serviceList {
+  display: grid;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--rule);
+}
+
+.serviceList li {
+  padding: 15px 0;
+  border-bottom: 1px solid var(--rule);
+  font: 500 20px/1.3 var(--text);
+}
+
+.sterile {
+  max-width: 56ch;
+  margin: 28px 0 0;
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.book {
+  padding: 88px var(--gutter);
+  background: var(--soft);
+  scroll-margin-top: 16px;
+}
+
+.bookNote {
+  margin: 14px 0 28px;
+  font-weight: 600;
+}
+
+.bookWays {
+  display: grid;
+  gap: 12px;
+}
+
+.way {
+  display: grid;
+  gap: 4px;
+  min-height: 44px;
+  padding: 20px 22px;
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--ink);
+  text-decoration: none;
+  border: 2px solid transparent;
+  transition: border-color 0.35s var(--ease);
+}
+
+.way:hover {
+  border-color: var(--accent);
+}
+
+.wayLabel {
+  font: 600 13px/1.2 var(--text);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.wayValue {
+  font: 500 24px/1.25 var(--display);
+  color: var(--accent);
+  overflow-wrap: anywhere;
+}
+
+.foot {
+  padding: 56px var(--gutter) 120px;
+  background: var(--deep);
+  color: var(--onDeep);
+}
+
+.footGrid {
+  display: grid;
+  gap: 24px;
+}
+
+.footAddr {
+  display: grid;
+  gap: 2px;
+  font-style: normal;
+}
+
+.footAddr strong {
+  font: 500 22px/1.3 var(--display);
+}
+
+.footLinks {
+  display: grid;
+  gap: 8px;
+}
+
+.footLinks a {
+  color: var(--onDeep);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.small {
+  margin: 36px 0 0;
+  font-size: 15px;
+  color: var(--onDeepMuted);
+}
+
+.small a {
+  color: inherit;
+}
+
+.bar {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  transition: transform 0.4s var(--ease), opacity 0.4s var(--ease);
+}
+
+.barBook,
+.barCall {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  border-radius: 10px;
+  font: 600 16px/1 var(--text);
+  text-decoration: none;
+  box-shadow: 0 8px 22px rgb(13 53 71 / 0.22);
+}
+
+.barBook {
+  background: var(--accent);
+  color: var(--onAccent);
+}
+
+.barCall {
+  background: #ffffff;
+  color: var(--accent);
+}
+
+:global(html:not([data-past-hero])) .bar,
+:global(html[data-covered]) .bar {
+  transform: translateY(140%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (min-width: 760px) {
+  .root {
+    --gutter: 40px;
+  }
+
+  .bar {
+    display: none;
+  }
+
+  .chairList {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .chair {
+    min-height: 200px;
+    align-content: end;
+    padding: 24px;
+  }
+
+  .serviceList {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 40px;
+  }
+
+  .bookWays {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .footGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 960px) {
+  .root {
+    --gutter: 56px;
+  }
+
+  .topNav {
+    display: flex;
+    gap: 28px;
+  }
+
+  .topNav a {
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .hero {
+    grid-template-columns: 1fr 1.1fr;
+    align-items: center;
+    padding: 24px 0 0 0;
+  }
+
+  .heroWords {
+    padding-left: max(var(--gutter), calc((100vw - 1280px) / 2));
+  }
+
+  .head {
+    font-size: clamp(64px, 6vw, 96px);
+  }
+
+  .heroPhoto {
+    aspect-ratio: auto;
+    height: min(78vh, 720px);
+    border-radius: 0 0 0 28px;
+  }
+
+  .tags {
+    grid-column: 1 / -1;
+    padding-left: max(var(--gutter), calc((100vw - 1280px) / 2));
+    margin-top: -4px;
+  }
+
+  .welcome,
+  .chairs,
+  .promise,
+  .services,
+  .book,
+  .foot {
+    padding-inline: max(var(--gutter), calc((100vw - 1280px) / 2));
+  }
+
+  .chairs {
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+    column-gap: 56px;
+  }
+
+  .chairsHead,
+  .chairList {
+    grid-column: 1 / -1;
+  }
+
+  .trio {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 40px;
+    align-items: end;
+  }
+
+  .promise,
+  .services,
+  .book {
+    padding-block: 128px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line > span,
+  .heroPhoto,
+  .heroPhoto img,
+  .chairList[data-shown] .chair::before,
+  .chairList[data-shown] .chair > span {
+    animation: none;
+  }
+
+  .chairList .chair::before {
+    transform: scaleY(1);
+  }
+
+  .chair > span {
+    color: var(--onDeep);
+  }
+
+  .chairLine {
+    color: var(--onDeepMuted) !important;
+  }
+}
