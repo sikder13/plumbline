@@ -1,7 +1,9 @@
 import type { Command } from 'commander';
-import { writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { auditCsv, auditVerified, bookDirectPaths, captureContacts, checkAll, competitorPass, discover, gatherAll, qualifyAll, recheckAll, Registry, relay01Sweep, seedRegistryFromRelay01, sweepDiscover, writeSweepOutputs, type CheckId, type ListId } from '@plumbline/leads';
+import { BASE_PATH, previewPaths, quietContext, serveSite, type PageData } from '@plumbline/preview';
+import { auditCsv, auditVerified, bookDirectPaths, captureContacts, checkAll, competitorPass, discover, gatherAll, qualifyAll, recheckAll, recordScroll, Registry, relay01Sweep, seedRegistryFromRelay01, Shooter, sweepDiscover, withBrowser, writeSweepOutputs, type CheckId, type ListId } from '@plumbline/leads';
+import { HostLimiter, Polite } from '@plumbline/fetch';
 
 const LISTS = ['A', 'B', 'C', 'D'];
 
@@ -86,6 +88,70 @@ export function registerBookDirectLeads(leads: Command): void {
       if (opts.stage === 'report' || opts.stage === 'all') {
         const s = await writeSweepOutputs(opts.sweep, { log: console.log });
         console.log(JSON.stringify({ ...s, top20: undefined }, null, 1));
+      }
+      process.exit(0);
+    });
+  leads
+    .command('review')
+    .description('Book Direct pages: serve the built site here, take full-page and first-screen pictures at 390 and 1440, and with --record the 20 second scroll recordings and the two contact sheets')
+    .requiredOption('--campaign <name>', 'campaign, book-direct')
+    .requiredOption('--batch <name>', 'batch folder, such as book-direct-01')
+    .option('--only <slugs>', 'comma separated slugs')
+    .option('--record', 'also record the scrolls and write the contact sheets')
+    .action(async (opts: { campaign: string; batch: string; only?: string; record?: boolean }) => {
+      const staged = join(previewPaths.out, 'staged');
+      const wanted = opts.only?.split(',');
+      const order = existsSync(join('data', opts.campaign, 'batches', opts.batch, 'BATCH.csv')) ? readFileSync(join('data', opts.campaign, 'batches', opts.batch, 'BATCH.csv'), 'utf8').split('\n').slice(1).map((l) => l.split(',')[1]).filter(Boolean) : [];
+      const pages = readdirSync(staged)
+        .map((f) => JSON.parse(readFileSync(join(staged, f), 'utf8')) as PageData)
+        .filter((p) => p.campaign === opts.campaign && (!wanted || wanted.includes(p.slug)))
+        .sort((a, b) => order.indexOf(a.slug) - order.indexOf(b.slug));
+      const out = join(previewPaths.review, opts.campaign, opts.batch.replace(/^book-direct-/, 'batch-'));
+      const { server, base } = await serveSite(previewPaths.site, 4322, { quiet: true });
+      try {
+        await withBrowser(async (b) => {
+          for (const p of pages) {
+            const url = `${base}${BASE_PATH}/${p.path}/`;
+            for (const width of [390, 1440]) {
+              const ctx = await quietContext(b, { viewport: { width, height: width === 390 ? 844 : 900 }, deviceScaleFactor: 1, isMobile: width === 390, hasTouch: width === 390 });
+              const page = await ctx.newPage();
+              await page.goto(url, { waitUntil: 'networkidle' });
+              await page.waitForTimeout(2500);
+              await page.screenshot({ path: join(out, p.slug, `first-${width}.png`) });
+              await page.evaluate(async () => {
+                for (let y = 0; y < document.body.scrollHeight; y += 400) {
+                  window.scrollTo(0, y);
+                  await new Promise((r) => setTimeout(r, 120));
+                }
+                window.scrollTo(0, 0);
+              });
+              await page.waitForTimeout(800);
+              await page.screenshot({ path: join(out, p.slug, `full-${width}.png`), fullPage: true });
+              await page.goto(`${url}#found`, { waitUntil: 'networkidle' });
+              await page.waitForTimeout(800);
+              await page.screenshot({ path: join(out, p.slug, `found-${width}.png`), fullPage: true });
+              await ctx.close();
+            }
+            if (opts.record) {
+              await recordScroll(b, url, 390, join(out, `${p.slug}-390.webm`));
+              await recordScroll(b, url, 1440, join(out, `${p.slug}-1440.webm`));
+            }
+            console.log(`${p.slug}: ${url}`);
+          }
+        });
+        if (opts.record) {
+          const sh = new Shooter(new Polite(new HostLimiter(1000)));
+          try {
+            for (const width of [390, 1440]) {
+              const items = pages.map((p, i) => ({ file: join(out, p.slug, `first-${width}.png`), label: [`${i + 1}. ${p.name}`, `${(p.demo as { town?: string }).town ?? ''}`, `${BASE_PATH}/${p.path}/`] }));
+              await sh.sheet(items, join(out, `contact-sheet-${width}.jpg`), `Book Direct batch 01: first screens at ${width} px. Built locally, not deployed.`);
+            }
+          } finally {
+            await sh.stop();
+          }
+        }
+      } finally {
+        server.close();
       }
       process.exit(0);
     });

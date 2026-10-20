@@ -13,3 +13,4 @@ export * from './readme.ts';
 export * from './sweep/index.ts';
 export * from './batch/reproof.ts';
 export * from './batch/research.ts';
+export * from './batch/record.ts';
