@@ -193,7 +193,8 @@ export async function checkSite(g: Gathered, shooter: Shooter, shotsDir: string,
     }
   })() : null;
   // A homepage that ends on another domain showing almost nothing (a parking or affiliate redirect) is not the business's site; a rebrand lands on a full page and is fine.
-  const elsewhere = !home.blocked && !home.error && home.finalUrl && siteKey(home.finalUrl) !== siteKey(g.candidate.website) && /^https?:/.test(home.finalUrl) && home.text.replace(/\s+/g, ' ').trim().length < 300 ? `the homepage sends visitors to ${new URL(home.finalUrl).hostname}, which shows almost nothing ("${home.text.replace(/\s+/g, ' ').trim().slice(0, 60)}")` : null;
+  const shown = home.text.replace(/\s+/g, ' ').trim();
+  const elsewhere = !home.blocked && !home.error && home.finalUrl && siteKey(home.finalUrl) !== siteKey(g.candidate.website) && /^https?:/.test(home.finalUrl) && (shown.length < 120 || /verify(?:ing)? (?:that )?you are (?:not a robot|human)|bot verification/i.test(`${home.title} ${shown}`) || PARKED_TEXT.test(shown)) ? `the homepage sends visitors to ${new URL(home.finalUrl).hostname}, which shows almost nothing ("${home.text.replace(/\s+/g, ' ').trim().slice(0, 60)}")` : null;
   const broken = home.blocked ? null : sentOn ? `the homepage sends visitors on to ${sentOn} instead of the business's own site (not opened: that site is off limits)` : (elsewhere ?? brokenHome(home));
   // A plain request read the homepage but the browser was refused: a firewall's choice about us, not what a visitor sees.
   const refusedOnlyToUs = !!broken && !sentOn && !!g.homeUrl && home.status !== null && [401, 403, 429].includes(home.status);
