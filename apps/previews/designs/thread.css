@@ -1,0 +1,530 @@
+/* Super Lawn Mowing and Gardening, Dunedin: the green of a cut lawn on a pale ground, a text thread for a hero. */
+
+.root {
+  --paper: #f3f5ee;
+  --soft: #e3eadb;
+  --ink: #142017;
+  --muted: #45564a;
+  --deep: #123722;
+  --onDeep: #eef5ea;
+  --onDeepMuted: #b9cfbd;
+  --accent: #1e6b37;
+  --onAccent: #ffffff;
+  --rule: #cbd6c4;
+  --display: 'Space Grotesk', system-ui, sans-serif;
+  --text: 'Lora', Georgia, serif;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --gutter: 24px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 18px/1.55 var(--text);
+  overflow-x: clip;
+}
+
+.root a:focus-visible,
+.root button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px var(--gutter);
+  border-bottom: 1px solid var(--rule);
+}
+
+.brand {
+  margin: 0;
+  font: 700 17px/1.2 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.brand span {
+  display: none;
+  font-weight: 500;
+}
+
+.topCall {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--onAccent);
+  font: 600 15px/1 var(--display);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* The hero: their line, big, beside their own sentences laid out as a thread. */
+
+.hero {
+  display: grid;
+  gap: 40px;
+  padding: 40px var(--gutter) 64px;
+}
+
+.place {
+  margin: 0 0 18px;
+  font: 600 13px/1.2 var(--display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.head {
+  margin: 0;
+  font: 700 clamp(72px, 23vw, 112px) / 0.9 var(--display);
+  letter-spacing: -0.045em;
+}
+
+.line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+}
+
+.line > span {
+  display: block;
+  animation: rise 1s var(--ease) both;
+}
+
+.line + .line > span {
+  animation-delay: 0.16s;
+  color: var(--accent);
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(105%);
+  }
+}
+
+.lede {
+  max-width: 30ch;
+  margin: 24px 0 0;
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.heroActs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.primary,
+.secondary,
+.send,
+.alt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: 999px;
+  font: 600 17px/1 var(--display);
+  text-decoration: none;
+}
+
+.primary,
+.send {
+  background: var(--accent);
+  color: var(--onAccent);
+}
+
+.secondary,
+.alt {
+  border: 2px solid var(--ink);
+  color: var(--ink);
+}
+
+.thread {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  margin: 0;
+  padding: 20px;
+  list-style: none;
+  border-radius: 28px;
+  background: var(--soft);
+}
+
+.bubble {
+  justify-self: start;
+  max-width: 88%;
+  padding: 12px 16px;
+  border-radius: 20px 20px 20px 6px;
+  background: #ffffff;
+  font: 400 17px/1.45 var(--text);
+  animation: arrive 0.6s var(--ease) both;
+}
+
+.typing {
+  display: inline-flex;
+  justify-self: start;
+  gap: 5px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: #ffffff;
+  animation: arrive 0.6s var(--ease) 1.8s both;
+}
+
+.typing span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+  animation: dot 1.2s ease-in-out 2.4s 3;
+}
+
+.typing span:nth-child(2) {
+  animation-delay: 2.55s;
+}
+
+.typing span:nth-child(3) {
+  animation-delay: 2.7s;
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes dot {
+  50% {
+    transform: translateY(-4px);
+    opacity: 0.4;
+  }
+}
+
+/* Book a job: the four things, put together into a text. */
+
+.book {
+  display: grid;
+  gap: 40px;
+  padding: 88px var(--gutter);
+  background: var(--deep);
+  color: var(--onDeep);
+  scroll-margin-top: 20px;
+}
+
+.kicker {
+  margin: 0 0 14px;
+  font: 600 13px/1.2 var(--display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.book .kicker {
+  color: var(--onDeepMuted);
+}
+
+.h2 {
+  margin: 0;
+  font: 700 clamp(40px, 11vw, 64px) / 1 var(--display);
+  letter-spacing: -0.03em;
+}
+
+.asks {
+  display: grid;
+  gap: 2px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: none;
+}
+
+.asks li {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgb(238 245 234 / 0.2);
+  font-size: 20px;
+}
+
+.askNo {
+  font: 700 15px/1 var(--display);
+  color: var(--onDeepMuted);
+  font-variant-numeric: tabular-nums;
+}
+
+.note {
+  max-width: 34ch;
+  margin: 22px 0 0;
+  color: var(--onDeepMuted);
+}
+
+.compose {
+  display: grid;
+  gap: 22px;
+  padding: 24px;
+  border-radius: 28px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.pick {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.pickLabel {
+  margin-bottom: 10px;
+  padding: 0;
+  font: 600 13px/1.2 var(--display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 2px solid var(--rule);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--ink);
+  font: 600 16px/1 var(--display);
+  cursor: pointer;
+  transition: background 0.35s var(--ease), border-color 0.35s var(--ease), color 0.35s var(--ease);
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--onAccent);
+}
+
+.preview {
+  display: grid;
+  padding: 18px;
+  border-radius: 22px;
+  background: var(--soft);
+}
+
+.bubbleOut {
+  justify-self: end;
+  display: grid;
+  gap: 2px;
+  max-width: 92%;
+  margin: 0;
+  padding: 14px 18px;
+  border-radius: 22px 22px 6px 22px;
+  background: var(--accent);
+  color: var(--onAccent);
+  font: 400 17px/1.45 var(--text);
+}
+
+.acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Their promises, as they wrote them. */
+
+.promises {
+  padding: 88px var(--gutter);
+}
+
+.promises .kicker {
+  color: var(--muted);
+}
+
+.promiseList {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.promiseList li {
+  padding: 22px 0;
+  border-top: 1px solid var(--rule);
+  font: 600 clamp(24px, 6.4vw, 28px) / 1.25 var(--display);
+  letter-spacing: -0.01em;
+}
+
+.expect {
+  margin: 40px 0 0;
+  padding: 0 0 0 20px;
+  border-left: 4px solid var(--accent);
+}
+
+.expect p {
+  max-width: 62ch;
+  margin: 0;
+  font-size: 20px;
+  font-style: italic;
+}
+
+.foot {
+  padding: 64px var(--gutter) 120px;
+  background: var(--soft);
+}
+
+.footGrid {
+  display: grid;
+  gap: 28px;
+}
+
+.footLabel {
+  margin: 0 0 6px;
+  font: 600 13px/1.2 var(--display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.footText {
+  display: grid;
+  font-style: normal;
+}
+
+.footLink {
+  color: var(--ink);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.small {
+  margin: 40px 0 0;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.small a {
+  color: inherit;
+}
+
+.bar {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  display: flex;
+  gap: 8px;
+  transition: transform 0.4s var(--ease), opacity 0.4s var(--ease);
+}
+
+.barText,
+.barCall {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font: 600 16px/1 var(--display);
+  text-decoration: none;
+  box-shadow: 0 6px 20px rgb(18 55 34 / 0.25);
+}
+
+.barText {
+  background: var(--accent);
+  color: var(--onAccent);
+}
+
+.barCall {
+  background: #ffffff;
+  color: var(--ink);
+}
+
+:global(html:not([data-past-hero])) .bar,
+:global(html[data-covered]) .bar {
+  transform: translateY(140%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (min-width: 760px) {
+  .root {
+    --gutter: 40px;
+  }
+
+  .brand span {
+    display: inline;
+  }
+
+  .hero {
+    grid-template-columns: 1.1fr 0.9fr;
+    align-items: center;
+    padding-block: 72px 112px;
+  }
+
+  .book {
+    grid-template-columns: 0.9fr 1.1fr;
+    align-items: start;
+    padding-block: 128px;
+  }
+
+  .promises {
+    padding-block: 128px;
+  }
+
+  .footGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .bar {
+    display: none;
+  }
+}
+
+@media (min-width: 1100px) {
+  .root {
+    --gutter: 56px;
+  }
+
+  .hero,
+  .book,
+  .promises,
+  .foot {
+    padding-inline: max(var(--gutter), calc((100vw - 1240px) / 2));
+  }
+
+  .head {
+    font-size: 160px;
+  }
+
+  .promiseList li {
+    font-size: 34px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line > span,
+  .bubble,
+  .typing,
+  .typing span {
+    animation: none;
+  }
+
+  .chip,
+  .bar {
+    transition: none;
+  }
+}
+
+.say {
+  min-width: 0;
+}
+
+.bookHead {
+  min-width: 0;
+}
