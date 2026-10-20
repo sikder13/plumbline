@@ -162,6 +162,7 @@ describe('opening hours', () => {
     expect(w.week[1]).toEqual({ open: 420, close: 1080 });
     expect(w.week[3]).toEqual({ open: 420, close: 1080 });
     expect(siteWeek('Breakfast: Mon - Sun 7am - 10am\nLunch: Tue - Sun 11:30am - 2pm\nDinner: Tue - Sat 5pm - 9pm')).toBeNull();
+    expect(siteWeek('Staffed Hours\nMon - Thurs 12 noon - 6pm\nFri & Sat 10am - 2pm\nSun 9am - 1pm')).toBeNull();
     expect(siteWeek('Office Hours - Mon to Fri 8am - 4pm\nKitchen: Sat 11am - 9pm\nChristmas: Sun 10am - 2pm')).toBeNull();
   });
 

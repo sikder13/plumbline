@@ -128,7 +128,7 @@ export function hoursIn(text: string): DayHours | null {
  * (summer and winter, kitchen and bar, two locations) makes the whole page unreadable: null.
  */
 /** Hours that are not the opening hours: the office, the phones, the kitchen, a holiday or a season. */
-const SUB_HOURS = /\b(?:office|reception|phones?|admin|kitchen|bar|breakfast|brunch|lunch|dinner|pool|parking|car ?park|metered|delivery|takeaways?|happy hour|holidays?|christmas|easter|anzac|waitangi|matariki|labour|winter|summer|autumn|spring|school|term|classes?|class|lessons?|session|by appointment|appointments? only|check[- ]?in|check[- ]?out|after hours|emergency)\b/i;
+const SUB_HOURS = /\b(?:office|reception|phones?|admin|kitchen|bar|breakfast|brunch|lunch|dinner|pool|parking|car ?park|metered|delivery|takeaways?|happy hour|holidays?|christmas|easter|anzac|waitangi|matariki|labour|winter|summer|autumn|spring|school|term|classes?|class|lessons?|sessions?|staffed|unstaffed|manned|private|by appointment|appointments? only|check[- ]?in|check[- ]?out|after hours|emergency)\b/i;
 
 export function siteWeek(text: string): { week: Week; lines: string[] } | null {
   const lines = plain(text)
