@@ -14,7 +14,7 @@
   --coral: #b9472c;
   --rule: #d9cdb9;
   --display: 'Young Serif', Georgia, serif;
-  --text: 'Instrument Sans', system-ui, sans-serif;
+  --text: 'Manrope', system-ui, sans-serif;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --gutter: 20px;
   background: var(--paper);

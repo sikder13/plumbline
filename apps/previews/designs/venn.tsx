@@ -40,7 +40,7 @@ interface Content {
  * Health page: no testimonials.
  */
 function Demo({ data }: { data: PageData }) {
-  const { css, s } = designStyles('venn', ['Sora', 'Literata']);
+  const { css, s } = designStyles('venn', ['Sora', 'Petrona']);
   const c = data.demo as Content;
   return (
     <div className={s.root}>
@@ -207,4 +207,4 @@ function Demo({ data }: { data: PageData }) {
   );
 }
 
-export const venn: Design = { Demo, fonts: ['sora-latin-wght-normal', 'literata-latin-wght-normal'], heroSizes: '(min-width: 960px) 46vw, 100vw' };
+export const venn: Design = { Demo, fonts: ['sora-latin-wght-normal', 'petrona-latin-wght-normal'], heroSizes: '(min-width: 960px) 46vw, 100vw' };

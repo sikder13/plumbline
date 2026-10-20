@@ -71,6 +71,22 @@ export const EARLIER_TYPE_PAIRS: { by: string; display: string; text: string }[]
   { by: 'mesa', display: 'Bricolage Grotesque', text: 'Fraunces' },
   { by: 'bay', display: 'Syne', text: 'Familjen Grotesk' },
   { by: 'deck', display: 'Rozha One', text: 'Outfit' },
+  // Book Direct batch 01.
+  { by: 'thread', display: 'Space Grotesk', text: 'Lora' },
+  { by: 'chairs', display: 'Gelasio', text: 'Hanken Grotesk' },
+  { by: 'gentle', display: 'Alegreya', text: 'Onest' },
+  { by: 'season', display: 'Instrument Serif', text: 'Plus Jakarta Sans' },
+  { by: 'house', display: 'Cormorant Garamond', text: 'Work Sans' },
+  { by: 'touch', display: 'Caveat', text: 'Red Hat Display' },
+  { by: 'serene', display: 'Bodoni Moda', text: 'Tenor Sans' },
+  { by: 'trail', display: 'Geologica', text: 'JetBrains Mono' },
+  { by: 'tread', display: 'Epilogue', text: 'Space Mono' },
+  { by: 'lodge', display: 'Young Serif', text: 'Manrope' },
+  { by: 'venn', display: 'Sora', text: 'Petrona' },
+  { by: 'tap', display: 'Anton', text: 'Libre Franklin' },
+  { by: 'sunset', display: 'Bricolage Grotesque', text: 'Crimson Pro' },
+  { by: 'minutes', display: 'Gloock', text: 'Schibsted Grotesk' },
+  { by: 'kennel', display: 'Unbounded', text: 'Zilla Slab' },
 ];
 
 const key = (display: string, text: string) => `${display.toLowerCase()}|${text.toLowerCase()}`;

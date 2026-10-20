@@ -13,7 +13,7 @@
   --leaf: #3f7a4f;
   --rule: #d4d8c8;
   --display: 'Gloock', Georgia, serif;
-  --text: 'Familjen Grotesk', system-ui, sans-serif;
+  --text: 'Schibsted Grotesk', system-ui, sans-serif;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --gutter: 22px;
   background: var(--paper);

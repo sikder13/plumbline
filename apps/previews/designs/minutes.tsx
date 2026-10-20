@@ -27,7 +27,7 @@ interface Content {
  * lists, on foot or by car, in the minutes it gives. Book goes to their own SiteMinder page.
  */
 function Demo({ data }: { data: PageData }) {
-  const { css, s } = designStyles('minutes', ['Gloock', 'Familjen Grotesk']);
+  const { css, s } = designStyles('minutes', ['Gloock', 'Schibsted Grotesk']);
   const c = data.demo as Content;
   return (
     <div className={s.root}>
@@ -170,4 +170,4 @@ function Demo({ data }: { data: PageData }) {
   );
 }
 
-export const minutes: Design = { Demo, fonts: ['gloock-latin-400-normal', 'familjen-grotesk-latin-wght-normal'], heroSizes: '(min-width: 960px) 44vw, 100vw' };
+export const minutes: Design = { Demo, fonts: ['gloock-latin-400-normal', 'schibsted-grotesk-latin-wght-normal'], heroSizes: '(min-width: 960px) 44vw, 100vw' };

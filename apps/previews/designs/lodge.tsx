@@ -30,7 +30,7 @@ interface Content {
  * set as big numerals in their words, and what is close by. Every Book goes to their own Cloudbeds page.
  */
 function Demo({ data }: { data: PageData }) {
-  const { css, s } = designStyles('lodge', ['Young Serif', 'Instrument Sans']);
+  const { css, s } = designStyles('lodge', ['Young Serif', 'Manrope']);
   const c = data.demo as Content;
   return (
     <div className={s.root}>
@@ -193,4 +193,4 @@ function Demo({ data }: { data: PageData }) {
   );
 }
 
-export const lodge: Design = { Demo, fonts: ['young-serif-latin-400-normal', 'instrument-sans-latin-wght-normal'], heroSizes: '(min-width: 960px) 34vw, 92vw' };
+export const lodge: Design = { Demo, fonts: ['young-serif-latin-400-normal', 'manrope-latin-wght-normal'], heroSizes: '(min-width: 960px) 34vw, 92vw' };
