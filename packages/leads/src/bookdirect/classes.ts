@@ -26,6 +26,8 @@ export interface BookLanding {
   status: number | null;
   landedOn: string;
   detail: string;
+  /** The own engine or marketplace the link reached, when it reached one. */
+  engine?: string;
 }
 
 export interface AuditFacts {

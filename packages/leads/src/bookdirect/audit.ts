@@ -110,17 +110,17 @@ async function follow(polite: Polite, homeUrl: string, homeHtml: string, link: {
   const eng = engineOf(r.finalUrl) ?? engineOf(target.toString());
   if (r.status === null) {
     if (r.error === 'ENOTFOUND') return { ...base, outcome: 'not_200', detail: `${target.hostname} does not resolve` };
-    return { ...base, outcome: 'unknown', landedOn: eng?.name ?? target.hostname, detail: r.error === 'robots' ? 'not opened: robots.txt' : `no answer (${r.error ?? 'error'})` };
+    return { ...base, outcome: 'unknown', landedOn: eng?.name ?? target.hostname, detail: r.error === 'robots' ? 'not opened: robots.txt' : `no answer (${r.error ?? 'error'})`, ...(eng && eng.kind !== 'ota' ? { engine: eng.name } : {}) };
   }
-  if ([401, 403, 405, 429].includes(r.status)) return { ...base, outcome: 'unknown', status: r.status, landedOn: eng?.name ?? target.hostname, detail: `answered ${r.status} to us; a browser may differ` };
+  if ([401, 403, 405, 429].includes(r.status)) return { ...base, outcome: 'unknown', status: r.status, landedOn: eng?.name ?? target.hostname, detail: `answered ${r.status} to us; a browser may differ`, ...(eng && eng.kind !== 'ota' ? { engine: eng.name } : {}) };
   if (r.status === 404 || r.status === 410 || r.status >= 500) return { ...base, outcome: 'not_200', status: r.status, landedOn: r.finalUrl, detail: r.finalUrl };
   const $ = cheerio.load(r.body);
   const title = $('title').first().text().trim();
   const h1 = $('h1').first().text().trim();
   if (r.status >= 200 && r.status < 300 && MISSING.test(`${title} ${h1}`) && !eng) return { ...base, outcome: 'not_200', status: r.status, landedOn: r.finalUrl, detail: `the page says "${(h1 || title).slice(0, 60)}"` };
-  if (eng) return { ...base, outcome: 'ok', status: r.status, landedOn: eng.name };
+  if (eng) return { ...base, outcome: 'ok', status: r.status, landedOn: eng.name, ...(eng.kind !== 'ota' ? { engine: eng.name } : {}) };
   const onLanding = bookingFacts([{ url: r.finalUrl, finalUrl: r.finalUrl, status: r.status, html: r.body, role: 'book' }]);
-  if (onLanding.engineKind === 'own' || onLanding.engineKind === 'platform') return { ...base, outcome: 'ok', status: r.status, landedOn: `${onLanding.engine} (on ${r.finalUrl})` };
+  if (onLanding.engineKind === 'own' || onLanding.engineKind === 'platform') return { ...base, outcome: 'ok', status: r.status, landedOn: `${onLanding.engine} (on ${r.finalUrl})`, engine: onLanding.engine };
   const sameSite = hostOfUrl(r.finalUrl) === hostOfUrl(homeUrl);
   const path = (() => {
     try {
@@ -312,6 +312,8 @@ async function auditOne(lead: ContactRow, deps: { polite: Polite; renderer: Rend
   }
   const landings: BookLanding[] = [];
   for (const l of linkSet.slice(0, 6)) landings.push(await follow(deps.polite, cap?.finalUrl ?? homeUrl, homeHtml, l, clicks));
+  // An engine the Book link reaches (a /book-online page that holds the widget) is the lead's engine too.
+  const engineFound = ownEngine || (landings.find((l) => l.engine)?.engine ?? '');
 
   // The phone path on the homepage, as a phone shows it.
   const homeText = cap?.ok ? cap.text : visibleText(cheerio.load(homeHtml));
@@ -342,7 +344,7 @@ async function auditOne(lead: ContactRow, deps: { polite: Polite; renderer: Rend
   const facts: AuditFacts = {
     list: lead.list,
     homeUrl: cap?.finalUrl ?? homeUrl,
-    ownEngine,
+    ownEngine: engineFound,
     otaLinks: booking.otaLinks,
     otaOn: otaPage?.finalUrl ?? '',
     landings,
