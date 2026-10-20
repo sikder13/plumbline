@@ -125,15 +125,17 @@ function Demo({ data }: { data: PageData }) {
               or call {c.phone.display}
             </a>
           </div>
-          <dl className={s.hours}>
-            {c.hours.map((h) => (
-              <div key={h.day}>
-                <dt>{h.day}</dt>
-                <dd>{h.time}</dd>
-              </div>
-            ))}
+          <div>
+            <dl className={s.hours}>
+              {c.hours.map((h) => (
+                <div key={h.day}>
+                  <dt>{h.day}</dt>
+                  <dd>{h.time}</dd>
+                </div>
+              ))}
+            </dl>
             <p className={s.after}>{c.afterHours}</p>
-          </dl>
+          </div>
         </section>
       </main>
 

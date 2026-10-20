@@ -9,6 +9,8 @@ import type { Design } from './types';
 
 interface Content {
   town: string;
+  /** "Estd 1894", as their logo and crew shirts say. */
+  estd: string;
   phone: { tel: string; display: string };
   email: string;
   book: string;
@@ -51,7 +53,9 @@ function Demo({ data }: { data: PageData }) {
           </a>
         </header>
         <div className={s.heroWords}>
-          <p className={s.place}>{c.town} · Estd 1894</p>
+          <p className={s.place}>
+            {c.town} · {c.estd}
+          </p>
           <h1 id="hero-h" className={s.head}>
             {c.headline.map((l, i) => (
               <span key={l} className={s.line} style={{ '--i': i } as CSSProperties}>

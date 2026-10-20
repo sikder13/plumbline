@@ -23,7 +23,8 @@
   overflow-x: clip;
 }
 
-.root a:focus-visible {
+.root a:focus-visible,
+.strip:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 3px;
 }

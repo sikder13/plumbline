@@ -117,7 +117,7 @@ function Demo({ data }: { data: PageData }) {
               ))}
             </ul>
           </div>
-          <div className={s.strip}>
+          <div className={s.strip} role="region" aria-label="Photos of the units, scroll sideways" tabIndex={0}>
             {(['lounge', 'kitchen', 'dining', 'bench'] as const).map((k) => (
               <figure key={k} className={s.snap} data-reveal>
                 <Pic pic={pic(data, k)} sizes="(min-width: 960px) 25vw, 80vw" />
