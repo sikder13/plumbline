@@ -98,7 +98,8 @@ export function registerBookDirectLeads(leads: Command): void {
     .requiredOption('--batch <name>', 'batch folder, such as book-direct-01')
     .option('--only <slugs>', 'comma separated slugs')
     .option('--record', 'also record the scrolls and write the contact sheets')
-    .action(async (opts: { campaign: string; batch: string; only?: string; record?: boolean }) => {
+    .option('--sheets', 'only write the contact sheets, from the first-screen pictures already taken')
+    .action(async (opts: { campaign: string; batch: string; only?: string; record?: boolean; sheets?: boolean }) => {
       const staged = join(previewPaths.out, 'staged');
       const wanted = opts.only?.split(',');
       const order = existsSync(join('data', opts.campaign, 'batches', opts.batch, 'BATCH.csv')) ? readFileSync(join('data', opts.campaign, 'batches', opts.batch, 'BATCH.csv'), 'utf8').split('\n').slice(1).map((l) => l.split(',')[1]).filter(Boolean) : [];
@@ -110,7 +111,7 @@ export function registerBookDirectLeads(leads: Command): void {
       const { server, base } = await serveSite(previewPaths.site, 4322, { quiet: true });
       try {
         await withBrowser(async (b) => {
-          for (const p of pages) {
+          for (const p of opts.sheets ? [] : pages) {
             const url = `${base}${BASE_PATH}/${p.path}/`;
             for (const width of [390, 1440]) {
               const ctx = await quietContext(b, { viewport: { width, height: width === 390 ? 844 : 900 }, deviceScaleFactor: 1, isMobile: width === 390, hasTouch: width === 390 });
@@ -128,6 +129,13 @@ export function registerBookDirectLeads(leads: Command): void {
               await page.waitForTimeout(800);
               await page.screenshot({ path: join(out, p.slug, `full-${width}.png`), fullPage: true });
               await page.goto(`${url}#found`, { waitUntil: 'networkidle' });
+              await page.evaluate(async () => {
+                for (let y = 0; y < document.body.scrollHeight; y += 400) {
+                  window.scrollTo(0, y);
+                  await new Promise((r) => setTimeout(r, 120));
+                }
+                window.scrollTo(0, 0);
+              });
               await page.waitForTimeout(800);
               await page.screenshot({ path: join(out, p.slug, `found-${width}.png`), fullPage: true });
               await ctx.close();
@@ -139,12 +147,14 @@ export function registerBookDirectLeads(leads: Command): void {
             console.log(`${p.slug}: ${url}`);
           }
         });
-        if (opts.record) {
+        if (opts.record || opts.sheets) {
           const sh = new Shooter(new Polite(new HostLimiter(1000)));
           try {
             for (const width of [390, 1440]) {
               const items = pages.map((p, i) => ({ file: join(out, p.slug, `first-${width}.png`), label: [`${i + 1}. ${p.name}`, `${(p.demo as { town?: string }).town ?? ''}`, `${BASE_PATH}/${p.path}/`] }));
-              await sh.sheet(items, join(out, `contact-sheet-${width}.jpg`), `Book Direct batch 01: first screens at ${width} px. Built locally, not deployed.`);
+              // A whole first screen per tile: 390 by 844 phones in tall tiles, 1440 by 900 desktops in wide ones.
+              const tile = width === 390 ? { width: 260, height: 563, columns: 5 } : { width: 440, height: 275, columns: 3 };
+              await sh.sheet(items, join(out, `contact-sheet-${width}.jpg`), `Book Direct batch 01: first screens at ${width} px. Built locally, not deployed.`, tile);
             }
           } finally {
             await sh.stop();

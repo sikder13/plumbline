@@ -295,9 +295,10 @@ export class Shooter {
   }
 
   /** A sheet of pictures with their labels, as one JPEG. */
-  async sheet(items: { file: string; label: string[] }[], out: string, title: string): Promise<void> {
+  /** A labelled contact sheet of pictures, each shown at the top of a tile of the given size: tall tiles for phone screens, wide ones for desktop. */
+  async sheet(items: { file: string; label: string[] }[], out: string, title: string, tile: { width: number; height: number; columns: number } = { width: 260, height: 520, columns: 5 }): Promise<void> {
     const b = await this.start();
-    const page = await b.newPage({ viewport: { width: 1400, height: 900 }, deviceScaleFactor: 1 });
+    const page = await b.newPage({ viewport: { width: Math.max(1400, 32 + tile.columns * (tile.width + 14)), height: 900 }, deviceScaleFactor: 1 });
     try {
       const cells = items
         .map((it) => {
@@ -308,10 +309,10 @@ export class Shooter {
               return '';
             }
           })();
-          return `<figure style="margin:0;width:260px;break-inside:avoid"><div style="height:520px;overflow:hidden;border:1px solid #d1d5db;background:#f3f4f6">${src ? `<img src="${src}" style="width:260px;display:block">` : 'missing picture'}</div><figcaption style="font:12px/1.35 Arial,Helvetica,sans-serif;padding:4px 2px 0">${it.label.map((l, i) => `<div style="${i === 0 ? 'font-weight:700' : ''}">${esc(l)}</div>`).join('')}</figcaption></figure>`;
+          return `<figure style="margin:0;width:${tile.width}px;break-inside:avoid"><div style="height:${tile.height}px;overflow:hidden;border:1px solid #d1d5db;background:#f3f4f6">${src ? `<img src="${src}" style="width:${tile.width}px;display:block">` : 'missing picture'}</div><figcaption style="font:12px/1.35 Arial,Helvetica,sans-serif;padding:4px 2px 0">${it.label.map((l, i) => `<div style="${i === 0 ? 'font-weight:700' : ''}">${esc(l)}</div>`).join('')}</figcaption></figure>`;
         })
         .join('');
-      await page.setContent(`<html><body style="margin:16px;background:#fff;color:#111827"><div style="font:bold 18px Arial,Helvetica,sans-serif;margin-bottom:12px">${esc(title)}</div><div style="display:grid;grid-template-columns:repeat(5,260px);gap:16px 14px">${cells}</div></body></html>`);
+      await page.setContent(`<html><body style="margin:16px;background:#fff;color:#111827"><div style="font:bold 18px Arial,Helvetica,sans-serif;margin-bottom:12px">${esc(title)}</div><div style="display:grid;grid-template-columns:repeat(${tile.columns},${tile.width}px);gap:16px 14px">${cells}</div></body></html>`);
       mkdirSync(dirname(out), { recursive: true });
       await page.screenshot({ path: out, fullPage: true, type: 'jpeg', quality: 72 });
     } finally {
