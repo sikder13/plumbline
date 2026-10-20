@@ -42,6 +42,17 @@ const HOURS = /\b(?:mon(?:day)?|tue(?:s(?:day)?)?|wed(?:nesday)?|thu(?:rs(?:day)
 const CONTACT_PATH = /\/(?:contact|contact[-_ ]?us|get[-_]in[-_]touch|enquir(?:e|y|ies)(?:[-_](?:now|us))?)\/?(?:\.html?|\.php)?$/i;
 const MISSING = /\bnot found\b|\b404\b|\bpage (?:doesn'?t|does not|cannot be) (?:exist|found)\b|\bno longer (?:exists|available)\b/i;
 
+/** Whether a link points into the page it is on. */
+function sameDoc(href: string, pageUrl: string): boolean {
+  try {
+    const a = new URL(href, pageUrl);
+    const b = new URL(pageUrl);
+    return a.origin === b.origin && a.pathname.replace(/\/$/, '') === b.pathname.replace(/\/$/, '');
+  } catch {
+    return false;
+  }
+}
+
 /** Book controls a visitor can see on the first phone screen: Book words, an engine link or widget. */
 export function bookControlsInFold(cap: PageCapture): string[] {
   const out: string[] = [];
@@ -87,7 +98,8 @@ async function follow(polite: Polite, homeUrl: string, homeHtml: string, link: {
   if (!raw || raw === '#' || /^javascript:/i.test(raw)) {
     const c = clicks.find((x) => x.text.toLowerCase() === link.text.trim().toLowerCase());
     if (!c) return { ...base, outcome: 'unknown', detail: 'no target and not tapped (not visible)' };
-    return c.reacted ? { ...base, outcome: 'ok', landedOn: c.how } : { ...base, outcome: 'no_target', detail: 'no link target, and tapping it changed nothing in 3 seconds' };
+    const eng = engineOf(c.how.replace(/^a new tab \((.*)\)$/, '$1'));
+    return c.reacted ? { ...base, outcome: 'ok', landedOn: c.how, ...(eng && eng.kind !== 'ota' ? { engine: eng.name } : {}) } : { ...base, outcome: 'no_target', detail: 'no link target, and tapping it changed nothing in 3 seconds' };
   }
   let target: URL;
   try {
@@ -96,11 +108,16 @@ async function follow(polite: Polite, homeUrl: string, homeHtml: string, link: {
     return { ...base, outcome: 'no_target', detail: 'the link target cannot be read' };
   }
   const home = new URL(homeUrl);
-  if (target.hash.length > 1 && target.origin + target.pathname === home.origin + home.pathname) {
+  if (target.hash.length > 1 && target.origin + target.pathname.replace(/\/$/, '') === home.origin + home.pathname.replace(/\/$/, '')) {
     const id = decodeURIComponent(target.hash.slice(1));
     const $ = cheerio.load(homeHtml);
     const exists = $('[id]').toArray().some((e) => $(e).attr('id') === id) || $('a[name]').toArray().some((e) => $(e).attr('name') === id);
-    return exists ? { ...base, outcome: 'ok', landedOn: 'a section of the same page' } : { ...base, outcome: 'no_target', detail: `the section #${id} does not exist on the page` };
+    if (exists) return { ...base, outcome: 'ok', landedOn: 'a section of the same page' };
+    // The section is missing, but a script may still take the visitor to the engine: only the tap decides.
+    const c = clicks.find((x) => x.text.toLowerCase() === link.text.trim().toLowerCase());
+    if (!c) return { ...base, outcome: 'unknown', detail: `the section #${id} is not on the page, and the link was not tapped` };
+    const eng = engineOf(c.how.replace(/^a new tab \((.*)\)$/, '$1'));
+    return c.reacted ? { ...base, outcome: 'ok', landedOn: c.how, ...(eng && eng.kind !== 'ota' ? { engine: eng.name } : {}) } : { ...base, outcome: 'no_target', detail: `it points at #${id}, which is not on the page, and tapping it changed nothing in 3 seconds` };
   }
   let r = await polite.get(target.toString(), { maxRedirects: 6, timeoutMs: 25_000, maxBytes: 800_000 });
   if ((r.status !== null && r.status >= 500) || (r.status === null && r.error && r.error !== 'robots' && r.error !== 'ENOTFOUND')) {
@@ -265,30 +282,50 @@ async function auditOne(lead: ContactRow, deps: { polite: Polite; renderer: Rend
           window.scrollTo(0, 0);
           return { scrollWidth: sw, innerWidth: window.innerWidth, movesSideways: moved };
         });
-        // A visible Book control with no link target is tapped once (never a form button), to see whether anything opens.
-        const untargeted = c.links.filter((l) => l.visible && isBookWords(l.text) && (!l.raw.trim() || l.raw.trim() === '#' || /^javascript:/i.test(l.raw.trim())));
-        for (const l of untargeted.slice(0, 2)) {
-          if (!l.selector) continue;
+        // A Book control with no link target, or one that points at a section the page does not have, is tapped once
+        // (never one inside a form) to see whether anything opens: a script may take it to the engine.
+        const noSection = async (raw: string) => {
+          const m = /^(?:\/?)#(.+)$/.exec(raw) ?? (raw.includes('#') && sameDoc(raw, page.url()) ? /#(.+)$/.exec(raw) : null);
+          if (!m) return false;
+          const id = decodeURIComponent(m[1]!);
+          return page.evaluate((x) => !document.getElementById(x) && !document.querySelector(`[name="${CSS.escape(x)}"]`), id).catch(() => false);
+        };
+        const untargeted: typeof c.links = [];
+        for (const l of [...c.links].sort((a, b) => Number(b.visible) - Number(a.visible))) {
+          const raw = l.raw.trim();
+          if (!isBookWords(l.text) || !l.selector || untargeted.some((u) => u.raw.trim() === raw && u.text.trim() === l.text.trim())) continue;
+          if (!raw || raw === '#' || /^javascript:/i.test(raw) || (await noSection(raw))) untargeted.push(l);
+        }
+        const bare = (u: string) => u.split('#')[0];
+        const overlays = () => page.evaluate(() => [...document.querySelectorAll('dialog[open], [role="dialog"], [aria-modal="true"], .modal.show, .modal.in, .mfp-ready, .fancybox-is-open, iframe')].filter((e) => {
+          const r = (e as HTMLElement).getBoundingClientRect();
+          return r.width > 100 && r.height > 100 && r.top < window.innerHeight && r.bottom > 0;
+        }).length).catch(() => 0);
+        for (const l of untargeted.slice(0, 3)) {
           const before = page.url();
-          const framesBefore = page.frames().length;
-          const sizeBefore = await page.evaluate(() => document.body?.innerHTML.length ?? 0);
-          const popup = page.context().waitForEvent('page', { timeout: 3500 }).catch(() => null);
           const inForm = await page.locator(l.selector).first().evaluate((el) => !!el.closest('form')).catch(() => true);
           if (inForm) continue;
-          const clicked = await page.locator(l.selector).first().click({ timeout: 3000, noWaitAfter: true }).then(() => true).catch(() => false);
-          if (!clicked) continue;
+          const framesBefore = page.frames().length;
+          const shownBefore = await overlays();
+          const sizeBefore = await page.evaluate(() => document.body?.innerHTML.length ?? 0).catch(() => 0);
+          let navigatedTo = '';
+          const onNav = (f: { url(): string }) => {
+            if (f === page.mainFrame() && bare(f.url()) !== bare(before)) navigatedTo = f.url();
+          };
+          page.on('framenavigated', onNav);
+          const popup = page.context().waitForEvent('page', { timeout: 3500 }).catch(() => null);
+          const fired = await page.locator(l.selector).first().dispatchEvent('click').then(() => true).catch(() => false);
           const opened = await popup;
           await page.waitForTimeout(3000);
-          const after = page.url();
-          const dialog = await page.evaluate(() => [...document.querySelectorAll('dialog[open], [role="dialog"], [aria-modal="true"], .modal.show, .modal.in, .mfp-ready, .fancybox-is-open, iframe')].some((e) => {
-            const r = (e as HTMLElement).getBoundingClientRect();
-            return r.width > 100 && r.height > 100 && r.top < window.innerHeight && r.bottom > 0;
-          })).catch(() => false);
-          const sizeAfter = await page.evaluate(() => document.body?.innerHTML.length ?? 0).catch(() => sizeBefore);
-          const reacted = !!opened || after !== before || page.frames().length !== framesBefore || dialog || Math.abs(sizeAfter - sizeBefore) > 300;
-          clicks.push({ text: l.text.trim(), selector: l.selector, reacted, how: opened ? 'a new tab' : after !== before ? after : dialog ? 'a panel or frame on the page' : 'a change on the page' });
+          page.off('framenavigated', onNav);
+          if (!fired && !navigatedTo && !opened) continue;
+          const left = !!navigatedTo || bare(page.url()) !== bare(before);
+          const shownAfter = left ? shownBefore : await overlays();
+          const sizeAfter = left ? sizeBefore : await page.evaluate(() => document.body?.innerHTML.length ?? 0).catch(() => sizeBefore);
+          const reacted = !!opened || left || page.frames().length > framesBefore || shownAfter > shownBefore || Math.abs(sizeAfter - sizeBefore) > 300;
+          clicks.push({ text: l.text.trim(), selector: l.selector, reacted, how: opened ? `a new tab (${opened.url()})` : left ? navigatedTo || page.url() : shownAfter > shownBefore ? 'a panel or frame on the page' : 'a change on the page' });
           if (opened) await opened.close().catch(() => undefined);
-          if (after !== before) await page.goto(before, { waitUntil: 'domcontentloaded', timeout: 20_000 }).catch(() => undefined);
+          if (left) await page.goto(before, { waitUntil: 'domcontentloaded', timeout: 20_000 }).catch(() => undefined);
         }
       },
     });

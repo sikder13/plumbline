@@ -62,7 +62,7 @@ export function findingsOf(f: AuditFacts, now: Date = new Date()): Finding[] {
 
   const dead = f.landings.find((l) => l.outcome === 'no_target' || l.outcome === 'not_200' || (l.outcome === 'contact_page' && (!!f.ownEngine || f.otaLinks.length > 0)));
   if (dead) {
-    const how = dead.outcome === 'no_target' ? 'does nothing when tapped' : dead.outcome === 'not_200' ? `answers ${dead.status ?? 'no response'}` : `opens the contact page${f.ownEngine ? ` instead of ${f.ownEngine}` : ''}`;
+    const how = dead.outcome === 'no_target' ? 'does nothing when tapped' : dead.outcome === 'not_200' ? (dead.status ? `answers ${dead.status}` : 'goes nowhere') : `opens the contact page${f.ownEngine ? ` instead of ${f.ownEngine}` : ''}`;
     out.push({ cls: 'book_cta_dead', tier: 1, value: `"${dead.text}" ${how}${dead.detail ? ` (${dead.detail})` : ''}`, evidenceUrl: f.homeUrl });
   }
 
