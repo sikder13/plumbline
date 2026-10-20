@@ -59,8 +59,11 @@ const PARKED_TEXT = /\b(?:(?:this )?domain (?:name )?(?:is |may be )?for sale|bu
 const BOT_WALL = /cloudflare|just a moment|checking your browser|verify you are (?:a )?human|captcha|attention required|access denied by|ddos protection|security check/i;
 
 /** What the homepage shows a visitor once it has loaded: an error, a parked domain, a host's placeholder, an empty page, or none of these. */
-export function brokenHome(v: Pick<Visit, 'status' | 'error' | 'blocked' | 'title' | 'text' | 'measure' | 'certError'>): string | null {
+export function brokenHome(v: Pick<Visit, 'status' | 'error' | 'blocked' | 'title' | 'text' | 'measure' | 'certError'> & { frames?: { text: string }[] }): string | null {
   if (v.blocked || (v.error && OUR_NETWORK.test(v.error))) return null;
+  // A parked domain often shows its ad links inside a frame, with nothing on the page itself.
+  const framed = (v.frames ?? []).map((f) => f.text).join(' ');
+  if (v.text.replace(/\s+/g, '').length < 50 && /\b(?:related searches|related search topics|sponsored (?:listings|links)|this domain (?:may be|is) for sale)\b/i.test(framed)) return 'the homepage is a parked domain: a page of advertising links';
   if (v.error && !v.certError) return `the browser could not open it (${v.error})`;
   const text = v.text.replace(/\s+/g, ' ').trim();
   if (v.status !== null && v.status >= 400) {
@@ -199,7 +202,9 @@ export async function checkSite(g: Gathered, shooter: Shooter, shotsDir: string,
   else if (refusedOnlyToUs) push(result('site_down_or_broken', { result: 'unknown', evidenceUrl: homeUrl, http: `${gatherHttp} | browser: ${home.status}`, detail: `the browser was refused (${home.status}) though a plain request read the page` }));
   else if (broken) push(result('site_down_or_broken', { result: 'flag', evidenceUrl: home.finalUrl || homeUrl, http: `${gatherHttp} | browser: ${sentOn ? `sent on to ${home.blockedNav}` : (home.status ?? home.error)}`, detail: broken, shot: home.shot ? await shooter.write(readFileSync(home.shot), shotPath('site_down_or_broken'), ['Site down or broken', broken, home.finalUrl || homeUrl]) : null }));
   else push(result('site_down_or_broken', { result: 'pass', evidenceUrl: home.finalUrl, http: `browser: ${home.status}` }));
-  const homeOk = !broken && !home.blocked && !home.error;
+  // A firewall's "checking your browser" page in front of the homepage: what a visitor sees there cannot be judged.
+  const walled = !broken && home.status !== null && [401, 403, 429].includes(home.status);
+  const homeOk = !broken && !home.blocked && !home.error && !walled;
 
   // 2. not_secure: the address bar on the homepage, then on the contact and booking pages.
   if (home.certError) {
@@ -220,11 +225,11 @@ export async function checkSite(g: Gathered, shooter: Shooter, shotsDir: string,
       }
     }
     if (!done) push(result('not_secure', { result: home.security ? 'pass' : 'unknown', evidenceUrl: home.finalUrl, http: `browser security state: ${home.security ?? 'not reported'}` }));
-  } else push(result('not_secure', { result: 'not_applicable', detail: 'the homepage did not open' }));
+  } else push(result('not_secure', { result: walled ? 'unknown' : 'not_applicable', detail: walled ? `a firewall refused the browser (${home.status})` : 'the homepage did not open' }));
 
   // 10. not_mobile
   const nm = homeOk && home.measure ? notMobile(home.measure) : null;
-  if (!homeOk || !home.measure) push(result('not_mobile', { result: 'not_applicable', detail: 'the homepage did not open' }));
+  if (!homeOk || !home.measure) push(result('not_mobile', { result: walled ? 'unknown' : 'not_applicable', detail: walled ? `a firewall refused the browser (${home.status})` : 'the homepage did not open' }));
   else if (nm) push(await notMobileProof(home, nm, shooter, dir));
   else push(result('not_mobile', { result: 'pass', evidenceUrl: home.finalUrl, http: `viewport tag: ${home.measure.viewport ?? 'none'}; layout width ${home.measure.innerWidth} px; sideways ${home.measure.scrollX} px; median text ${home.measure.medianFontPx} px` }));
 

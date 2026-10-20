@@ -154,6 +154,7 @@ export async function competitorPass(sweep: string, opts: { log?: (l: string) =>
       else if (c.hasOnlineBooking) push({ result: 'pass', detail: `books online: ${c.onlineBookingHow}` });
       else if (!g.candidate.lat) push({ result: 'unknown', detail: 'no location on the Google listing' });
       else if (!g.homeUrl) push({ result: 'unknown', detail: 'only the homepage could be read (a plain request was refused), too little to say the site has no booking at all' });
+      else if (c.home.blocked || (c.home.status !== null && [401, 403, 429].includes(c.home.status))) push({ result: 'unknown', detail: `the browser could not see the homepage (${c.home.blocked ? 'robots.txt' : `a firewall answered ${c.home.status}`})` });
       else {
         const here = { lat: Number(g.candidate.lat), lng: Number(g.candidate.lng) };
         // Rivals are the three nearest of the same trade, all within 30 km: further away is not where this customer shops.
@@ -171,7 +172,7 @@ export async function competitorPass(sweep: string, opts: { log?: (l: string) =>
         if (peers.length < 3) push({ result: 'not_applicable', detail: `fewer than three ${g.candidate.trade} candidates within ${RIVAL_KM} km`, http: named.join(' | ') });
         else if (withBooking.length < 2) push({ result: 'pass', detail: `no online booking, but ${withBooking.length} of the 3 nearest have it`, http: named.join(' | ') });
         else if (late.length) push({ result: 'pass', detail: `the homepage, once its scripts ran, has a booking link: ${'url' in late[0]! ? late[0]!.url : ''}`, http: named.join(' | ') });
-        else if (!rendered?.html) push({ result: 'unknown', detail: `the homepage could not be opened in the browser to look for a booking button (${rendered?.error ?? 'no page'})`, http: named.join(' | ') });
+        else if (!rendered?.html || (rendered.status !== null && [401, 403, 429].includes(rendered.status))) push({ result: 'unknown', detail: `the homepage could not be opened in the browser to look for a booking button (${rendered?.error ?? 'no page'})`, http: named.join(' | ') });
         else {
           const page = g.pages.find((p) => p.role === 'contact' && p.status === 200) ?? g.pages.find((p) => p.role === 'book' && p.status === 200);
           const url = page?.finalUrl ?? c.home.finalUrl;

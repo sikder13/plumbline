@@ -188,6 +188,7 @@ describe('the checks', () => {
     expect(brokenHome({ ...visit, text: '', measure: { ...visit.measure, textChars: 0, images: 0 } })).toMatch(/blank/);
     expect(brokenHome({ ...visit, status: 403, title: 'Just a moment...', text: 'Checking your browser' })).toBeNull();
     expect(brokenHome({ ...visit, status: null, error: 'ERR_NAME_NOT_RESOLVED' })).toMatch(/could not open/);
+    expect(brokenHome({ ...visit, text: '', measure: { ...visit.measure, textChars: 0, images: 0, media: 3 }, frames: [{ text: 'Related Searches Palm Springs Vacation Rentals Pineapple' }] })).toMatch(/parked/);
     // "Coming soon" on a full page is news, not a placeholder.
     expect(brokenHome({ ...visit, text: `New menu coming soon. ${'Our food is great. '.repeat(60)}` })).toBeNull();
   });
