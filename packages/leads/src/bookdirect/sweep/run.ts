@@ -169,7 +169,9 @@ export async function competitorPass(sweep: string, opts: { log?: (l: string) =>
         // A booking button a script adds shows only in the browser: the rendered homepage is read before anything is flagged.
         const rendered = peers.length >= 3 && withBooking.length >= 2 ? await shooter.visit(c.home.finalUrl || c.home.url, { html: true, frames: true }) : null;
         const late = rendered?.html ? [...bookingLinks([{ url: rendered.finalUrl, finalUrl: rendered.finalUrl, status: rendered.status, html: rendered.html, role: 'home' }]).filter((b) => !/contact|enquir|get-in-touch/i.test(b.url)), ...rendered.frames.filter((f) => engineOf(f.url))] : [];
-        if (peers.length < 3) push({ result: 'not_applicable', detail: `fewer than three ${g.candidate.trade} candidates within ${RIVAL_KM} km`, http: named.join(' | ') });
+        const walkIn = rendered?.text && /\bno bookings?\b|\bwalk[- ]?ins? only\b|\bno appointments? (?:needed|necessary|required)\b|\bwalk[- ]?in (?:grooming|service|barber|clinic) only\b/i.exec(rendered.text);
+        if (walkIn) push({ result: 'not_applicable', detail: `a walk-in business: the homepage says "${walkIn[0]}"`, http: named.join(' | ') });
+        else if (peers.length < 3) push({ result: 'not_applicable', detail: `fewer than three ${g.candidate.trade} candidates within ${RIVAL_KM} km`, http: named.join(' | ') });
         else if (withBooking.length < 2) push({ result: 'pass', detail: `no online booking, but ${withBooking.length} of the 3 nearest have it`, http: named.join(' | ') });
         else if (late.length) push({ result: 'pass', detail: `the homepage, once its scripts ran, has a booking link: ${'url' in late[0]! ? late[0]!.url : ''}`, http: named.join(' | ') });
         else if (!rendered?.html || (rendered.status !== null && [401, 403, 429].includes(rendered.status))) push({ result: 'unknown', detail: `the homepage could not be opened in the browser to look for a booking button (${rendered?.error ?? 'no page'})`, http: named.join(' | ') });
