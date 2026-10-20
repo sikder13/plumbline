@@ -51,8 +51,16 @@ import { season } from './season';
 import { house } from './house';
 import { touch } from './touch';
 import { serene } from './serene';
+import { trail } from './trail';
+import { tread } from './tread';
+import { lodge } from './lodge';
+import { venn } from './venn';
+import { tap } from './tap';
+import { sunset } from './sunset';
+import { minutes } from './minutes';
+import { kennel } from './kennel';
 import { recipe } from '@/sections/Recipe';
 import { ENGINES_AS_DESIGNS } from '@/engines';
 
 /** The wave 1 pages each have a design of their own, as does a page made to order. A later page is laid out from its recipe by the section library. */
-export const DESIGNS: Record<string, Design> = { coastal, earth, journal, label, loop, waterline, afoot, paddock, fathom, lineage, earshot, meander, galaxy, latch, landing, haul, pour, backyard, sunpath, lamplight, ingrained, settle, clearing, hush, skyline, aperture, sounder, bearing, longline, wake, spin, haute, plank, mow, column, cottage, letterboard, ticket, panorama, plate, shelf, tier, mesa, bay, deck, thread, chairs, gentle, season, house, touch, serene, recipe, ...ENGINES_AS_DESIGNS };
+export const DESIGNS: Record<string, Design> = { coastal, earth, journal, label, loop, waterline, afoot, paddock, fathom, lineage, earshot, meander, galaxy, latch, landing, haul, pour, backyard, sunpath, lamplight, ingrained, settle, clearing, hush, skyline, aperture, sounder, bearing, longline, wake, spin, haute, plank, mow, column, cottage, letterboard, ticket, panorama, plate, shelf, tier, mesa, bay, deck, thread, chairs, gentle, season, house, touch, serene, trail, tread, lodge, venn, tap, sunset, minutes, kennel, recipe, ...ENGINES_AS_DESIGNS };
