@@ -63,6 +63,8 @@ export interface VisitOptions {
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** Errors that are our own connection, not the site's. */
+export const OUR_NETWORK = /ERR_INTERNET_DISCONNECTED|ERR_NETWORK_CHANGED|ERR_NETWORK_IO_SUSPENDED|ERR_NAME_RESOLUTION_FAILED|ERR_PROXY_CONNECTION_FAILED/;
 export const BROWSER_GONE = /Target page, context or browser has been closed|Browser has been closed|browser\.newContext|Connection closed/i;
 /** A page call that gives up after `ms`, so one hung frame cannot hold the sweep. */
 const within = <T>(p: Promise<T>, ms: number, fallback: T): Promise<T> => Promise.race([p.catch(() => fallback), new Promise<T>((res) => setTimeout(() => res(fallback), ms).unref())]);
@@ -113,6 +115,16 @@ export class Shooter {
   }
 
   async visit(url: string, opts: VisitOptions = {}): Promise<Visit> {
+    const v = await this.visitOnce(url, opts);
+    // A blip in our own connection is tried once more before anything is read into it.
+    if (v.error && OUR_NETWORK.test(v.error)) {
+      await sleep(5000);
+      return this.visitOnce(url, opts);
+    }
+    return v;
+  }
+
+  private async visitOnce(url: string, opts: VisitOptions): Promise<Visit> {
     const v: Visit = { url, finalUrl: url, status: null, error: null, certError: null, blocked: false, security: null, securityIssues: [], loadMs: 0, slowRender: false, title: '', text: '', frames: [], measure: null, html: '', highlighted: false, overlaysHidden: 0, shot: null, at: new Date().toISOString() };
     if (!(await this.polite.robots.allows(url).catch(() => false))) {
       v.blocked = true;

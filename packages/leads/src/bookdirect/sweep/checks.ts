@@ -4,7 +4,7 @@ import * as cheerio from 'cheerio';
 import { engineOf } from '../engines.ts';
 import { bookingFacts, emailsOnPage, greetingNamesOn, visibleText, type SitePage } from '../site.ts';
 import { mxCheck } from '../verify.ts';
-import type { Shooter, Visit } from './browser.ts';
+import { OUR_NETWORK, type Shooter, type Visit } from './browser.ts';
 import { bookingLinks, isEmailProtection, isKeyMenu, linkedinLinks, nzDigits, otaLinks, phonesOnSite, samePhone } from './crawl.ts';
 import { INACTIVE, MISSING, type Follow } from './follow.ts';
 import { plausibleEmail, type Gathered } from './gather.ts';
@@ -47,7 +47,7 @@ const BOT_WALL = /cloudflare|just a moment|checking your browser|verify you are 
 
 /** What the homepage shows a visitor once it has loaded: an error, a parked domain, a host's placeholder, an empty page, or none of these. */
 export function brokenHome(v: Pick<Visit, 'status' | 'error' | 'blocked' | 'title' | 'text' | 'measure' | 'certError'>): string | null {
-  if (v.blocked) return null;
+  if (v.blocked || (v.error && OUR_NETWORK.test(v.error))) return null;
   if (v.error && !v.certError) return `the browser could not open it (${v.error})`;
   const text = v.text.replace(/\s+/g, ' ').trim();
   if (v.status !== null && v.status >= 400) {
@@ -172,6 +172,7 @@ export async function checkSite(g: Gathered, shooter: Shooter, shotsDir: string,
   // A plain request read the homepage but the browser was refused: a firewall's choice about us, not what a visitor sees.
   const refusedOnlyToUs = !!broken && !!g.homeUrl && home.status !== null && [401, 403, 429].includes(home.status);
   if (home.blocked) push(result('site_down_or_broken', { result: 'unknown', evidenceUrl: homeUrl, http: gatherHttp, detail: 'robots.txt does not allow the homepage to be opened' }));
+  else if (home.error && OUR_NETWORK.test(home.error)) push(result('site_down_or_broken', { result: 'unknown', evidenceUrl: homeUrl, http: gatherHttp, detail: `our own connection failed (${home.error})` }));
   else if (refusedOnlyToUs) push(result('site_down_or_broken', { result: 'unknown', evidenceUrl: homeUrl, http: `${gatherHttp} | browser: ${home.status}`, detail: `the browser was refused (${home.status}) though a plain request read the page` }));
   else if (broken) push(result('site_down_or_broken', { result: 'flag', evidenceUrl: home.finalUrl || homeUrl, http: `${gatherHttp} | browser: ${home.status ?? home.error}`, detail: broken, shot: home.shot ? await shooter.write(readFileSync(home.shot), shotPath('site_down_or_broken'), ['Site down or broken', broken, home.finalUrl || homeUrl]) : null }));
   else push(result('site_down_or_broken', { result: 'pass', evidenceUrl: home.finalUrl, http: `browser: ${home.status}` }));
