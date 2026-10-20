@@ -159,11 +159,12 @@ export function registerWaveRun(wave: Command): void {
     .option('--audit-only', 'Book Direct: audit the leads that passed the contact gate (data/book-direct/leads/_verified.csv); no packs')
     .option('--no-speed', 'with --audit-only: leave out the Lighthouse measurement')
     .option('--max <n>', 'with --audit-only: audit at most this many more leads, best first')
-    .action((o: { wave: string; batch: string; file?: string; only?: string; parallel: number; rankOnly?: boolean; speedOnly?: boolean; reserves?: boolean; auditOnly?: boolean; speed?: boolean; max?: string }) => {
+    .option('--list <letters>', 'with --audit-only: only these Book Direct lists, for example C,D')
+    .action((o: { wave: string; batch: string; file?: string; only?: string; parallel: number; rankOnly?: boolean; speedOnly?: boolean; reserves?: boolean; auditOnly?: boolean; speed?: boolean; max?: string; list?: string }) => {
       if (o.auditOnly) {
         if (!o.wave.startsWith('book-direct')) throw new Error('--audit-only is for a book-direct wave');
         // A browser or socket left open would keep the process alive after the work is done.
-        return bookDirectAudit({ only: o.only, parallel: o.parallel, speed: o.speed, max: o.max }).then(() => process.exit(0));
+        return bookDirectAudit({ only: o.only, parallel: o.parallel, speed: o.speed, max: o.max, list: o.list }).then(() => process.exit(0));
       }
       return waveRun(o);
     });

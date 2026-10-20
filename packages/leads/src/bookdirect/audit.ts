@@ -176,6 +176,8 @@ export function auditOrder<T extends Pick<ContactRow, 'list' | 'booking_engine_k
 export interface AuditOptions {
   /** Audit at most this many new leads in this run (those already audited are kept). */
   max?: number;
+  /** Only these lists, for example ['C', 'D']. */
+  lists?: string[];
   parallel?: number;
   lighthouseParallel?: number;
   only?: string[];
@@ -191,6 +193,7 @@ export async function auditVerified(opts: AuditOptions = {}): Promise<{ records:
   mkdirSync(join(dir, 'shots'), { recursive: true });
   let leads = parseCsv(readFileSync(join(p.leads, '_verified.csv'), 'utf8')) as unknown as ContactRow[];
   if (opts.only) leads = leads.filter((l) => opts.only!.includes(l.slug));
+  if (opts.lists) leads = leads.filter((l) => opts.lists!.includes(l.list));
   leads = auditOrder(leads);
   if (opts.max) {
     const dir0 = join(p.data, 'audit');
