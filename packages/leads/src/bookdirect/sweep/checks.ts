@@ -288,7 +288,9 @@ export async function checkHours(g: Gathered, shooter: Shooter, dir: string, cra
       }
     }
   }
-  if (!gweek) push(result('hours_mismatch', { result: 'not_applicable', detail: 'no hours on the Google listing' }));
+  // A motel's hours on its own site are reception's or its cafe's; the listing is the property's. Not comparable.
+  if (g.candidate.industry === 'accommodation') push(result('hours_mismatch', { result: 'not_applicable', detail: 'accommodation: the site gives reception or facility hours, the listing the property' }));
+  else if (!gweek) push(result('hours_mismatch', { result: 'not_applicable', detail: 'no hours on the Google listing' }));
   else if (!siteHours?.week) push(result('hours_mismatch', { result: 'not_applicable', detail: 'no readable hours on the pages read' }));
   else {
     const diff = hoursConflicts(siteHours.week, gweek);

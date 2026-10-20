@@ -128,7 +128,7 @@ export function hoursIn(text: string): DayHours | null {
  * (summer and winter, kitchen and bar, two locations) makes the whole page unreadable: null.
  */
 /** Hours that are not the opening hours: the office, the phones, the kitchen, a holiday or a season. */
-const SUB_HOURS = /\b(?:office|reception|phones?|admin|kitchen|bar|delivery|takeaways?|happy hour|holidays?|christmas|easter|anzac|waitangi|matariki|labour|winter|summer|autumn|spring|school|term|classes?|class|lessons?|session|by appointment|appointments? only|check[- ]?in|check[- ]?out|after hours|emergency)\b/i;
+const SUB_HOURS = /\b(?:office|reception|phones?|admin|kitchen|bar|breakfast|brunch|lunch|dinner|pool|delivery|takeaways?|happy hour|holidays?|christmas|easter|anzac|waitangi|matariki|labour|winter|summer|autumn|spring|school|term|classes?|class|lessons?|session|by appointment|appointments? only|check[- ]?in|check[- ]?out|after hours|emergency)\b/i;
 
 export function siteWeek(text: string): { week: Week; lines: string[] } | null {
   const lines = plain(text)
@@ -154,8 +154,10 @@ export function siteWeek(text: string): { week: Week; lines: string[] } | null {
     if (!h) continue;
     // A second session on the next line ("3:00 - 6:00pm") belongs to the same days.
     while (h !== 'closed' && i + 1 < lines.length && !daysIn(lines[i + 1]!).length && lines[i + 1]!.length < 40) {
-      const more = hoursIn(lines[i + 1]!);
+      let more = hoursIn(lines[i + 1]!);
       if (!more || more === 'closed') break;
+      // "3:00 - 6:00" after a morning session is the afternoon.
+      if (!/am|pm|noon|midday/i.test(lines[i + 1]!) && more.open < h.close && more.open < 720) more = { open: more.open + 720, close: more.close + 720 };
       h = { open: Math.min(h.open, more.open), close: Math.max(h.close, more.close) };
       line = `${line}, ${lines[i + 1]}`;
       i++;

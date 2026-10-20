@@ -146,8 +146,10 @@ describe('opening hours', () => {
   });
 
   it('joins a second session to its days and leaves out office, kitchen and holiday hours', () => {
-    const w = siteWeek('Mon 7:00 - 10:30\n3:00 - 6:00pm\nWed 7:00 - 10:30\n3:00 - 6:00pm\nFri 7:00 - 11:00')!;
+    const w = siteWeek('Mon 7:00 - 10:30\n3:00 - 6:00pm\nWed 7:00 - 10:30\n3:00 - 6:00\nFri 7:00 - 11:00')!;
     expect(w.week[1]).toEqual({ open: 420, close: 1080 });
+    expect(w.week[3]).toEqual({ open: 420, close: 1080 });
+    expect(siteWeek('Breakfast: Mon - Sun 7am - 10am\nLunch: Tue - Sun 11:30am - 2pm\nDinner: Tue - Sat 5pm - 9pm')).toBeNull();
     expect(siteWeek('Office Hours - Mon to Fri 8am - 4pm\nKitchen: Sat 11am - 9pm\nChristmas: Sun 10am - 2pm')).toBeNull();
   });
 
