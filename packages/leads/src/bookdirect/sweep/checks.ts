@@ -147,6 +147,25 @@ export async function notMobileProof(home: Pick<Visit, 'finalUrl' | 'measure' | 
   return r;
 }
 
+/** The crawl cache folder that sits beside a sweep's picture folder. */
+function crawlCacheOf(shotDir: string): string {
+  return join(shotDir, '..', '..', '..', '..', 'cache', 'sweep-sites');
+}
+
+/** Each page's words with the spaces, dashes and brackets inside numbers taken out, so "(07) 834-9915" reads 078349915. */
+export function digitsOnPages(domain: string, crawlCacheDir: string): string[] {
+  const idx = join(crawlCacheDir, domain, 'pages.json');
+  if (!existsSync(idx)) return [];
+  const crawl = JSON.parse(readFileSync(idx, 'utf8')) as { homeTries: { file: string | null }[]; pages: { file: string | null }[] };
+  return [...crawl.homeTries, ...crawl.pages]
+    .filter((p) => p.file)
+    .map((p) => {
+      const html = readFileSync(join(crawlCacheDir, domain, p.file!), 'utf8');
+      const tels = [...html.matchAll(/href=["']tel:([^"']+)/gi)].map((m) => m[1]).join(' ');
+      return `${visibleText(cheerio.load(html))} ${tels}`.replace(/(?<=\d)[\s().\-–+]+(?=\d)/g, '');
+    });
+}
+
 const ENGINE_WALL = /cloudflare|just a moment|verify you are human|captcha/i;
 
 /** A picture with one item outlined: at phone width first, and at desktop width when the phone layout hides it (a closed menu, a desktop-only footer). */
@@ -314,6 +333,7 @@ export async function checkPhone(g: Gathered, shooter: Shooter, dir: string): Pr
   if (!gphone || gphone.length < 8) push(result('phone_mismatch', { result: 'not_applicable', detail: 'no phone on the Google listing' }));
   else if (!sitePhones.length) push(result('phone_mismatch', { result: 'not_applicable', detail: 'no phone number found on the pages read' }));
   else if (sitePhones.some((p) => samePhone(nzDigits(p.shown), gphone) || samePhone(p.digits, gphone))) push(result('phone_mismatch', { result: 'pass', http: `Google ${g.candidate.phone} is on the site` }));
+  else if (digitsOnPages(g.domain, crawlCacheOf(dir)).some((t) => t.includes(gphone) || t.includes(`64${gphone.slice(1)}`))) push(result('phone_mismatch', { result: 'pass', http: `Google ${g.candidate.phone} is on the site, written in another way` }));
   else {
     const first = g.phones.shown[0] ?? g.phones.tel[0]!;
     const shown = [...new Set(g.phones.shown.map((p) => p.shown))].slice(0, 3).join(', ') || [...new Set(g.phones.tel.map((p) => p.shown))].slice(0, 3).join(', ');
