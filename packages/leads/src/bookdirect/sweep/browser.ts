@@ -3,6 +3,7 @@ import { dirname } from 'node:path';
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import { hostOf } from '@plumbline/core';
 import { userAgent, type Polite } from '@plumbline/fetch';
+import { allowHost, allowUrl } from './config.ts';
 
 export interface Measure {
   viewport: string | null;
@@ -37,6 +38,8 @@ export interface Visit {
   frames: { url: string; text: string }[];
   measure: Measure | null;
   html: string;
+  /** A page load the browser was stopped from making: the site sent it on to an off-limits host. */
+  blockedNav: string | null;
   highlighted: boolean;
   /** Pop-ups hidden before the picture. */
   overlaysHidden: number;
@@ -125,7 +128,13 @@ export class Shooter {
   }
 
   private async visitOnce(url: string, opts: VisitOptions): Promise<Visit> {
-    const v: Visit = { url, finalUrl: url, status: null, error: null, certError: null, blocked: false, security: null, securityIssues: [], loadMs: 0, slowRender: false, title: '', text: '', frames: [], measure: null, html: '', highlighted: false, overlaysHidden: 0, shot: null, at: new Date().toISOString() };
+    if (!allowUrl(url)) {
+      const v0 = await this.blank(url);
+      v0.blocked = true;
+      v0.error = 'off_limits_host';
+      return v0;
+    }
+    const v: Visit = { url, finalUrl: url, status: null, error: null, certError: null, blocked: false, security: null, securityIssues: [], loadMs: 0, slowRender: false, title: '', text: '', frames: [], measure: null, html: '', blockedNav: null, highlighted: false, overlaysHidden: 0, shot: null, at: new Date().toISOString() };
     if (!(await this.polite.robots.allows(url).catch(() => false))) {
       v.blocked = true;
       v.error = 'robots';
@@ -157,9 +166,23 @@ export class Shooter {
     return v;
   }
 
+  private async blank(url: string): Promise<Visit> {
+    return { url, finalUrl: url, status: null, error: null, certError: null, blocked: false, security: null, securityIssues: [], loadMs: 0, slowRender: false, title: '', text: '', frames: [], measure: null, html: '', blockedNav: null, highlighted: false, overlaysHidden: 0, shot: null, at: new Date().toISOString() };
+  }
+
   /** Loads, waits, reads and photographs one page. Returns true to try again without the certificate check. */
   private async load(page: Page, ctx: BrowserContext, url: string, v: Visit, opts: VisitOptions, ignoringCert: boolean): Promise<boolean> {
     page.on('dialog', (d) => void d.dismiss().catch(() => undefined));
+    // Pages and frames on off-limits hosts are never loaded, wherever a redirect or a script sends the browser.
+    await page.route(
+      (u) => !allowHost(u.hostname),
+      (route) => {
+        const r = route.request();
+        if (!r.isNavigationRequest()) return route.continue();
+        if (r.frame() === page.mainFrame()) v.blockedNav ??= r.url();
+        return route.abort('blockedbyclient');
+      },
+    );
     page.on('response', (r) => {
       if (r.frame() === page.mainFrame() && r.request().isNavigationRequest()) v.status = r.status();
     });

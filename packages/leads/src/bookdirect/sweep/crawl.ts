@@ -6,6 +6,7 @@ import type { FetchResult, Polite } from '@plumbline/fetch';
 import { engineOf, isBookWords } from '../engines.ts';
 import { hostOfUrl } from '../filters.ts';
 import { pickPages, visibleText, type SitePage } from '../site.ts';
+import { allowHost } from './config.ts';
 
 export interface CrawlPage {
   url: string;
@@ -175,7 +176,7 @@ export async function crawlSite(polite: Polite, c: { domain: string; website: st
     }
     return page;
   };
-  const get = (url: string) => polite.get(url, { maxRedirects: 8, timeoutMs: 25_000, maxBytes: 2_500_000 });
+  const get = (url: string) => polite.get(url, { maxRedirects: 8, timeoutMs: 25_000, maxBytes: 2_500_000, allowHost });
   const homeTries: CrawlPage[] = [];
   let website = c.website;
   if (!/^https?:\/\//i.test(website)) website = `http://${website}`;

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { brokenHome, flagRank, notMobile, type CheckResult } from './checks.ts';
-import { faithReason, onTargetIndustry, perCentreCap, rotation, termShares } from './config.ts';
+import { allowHost, allowUrl, faithReason, onTargetIndustry, perCentreCap, rotation, termShares } from './config.ts';
 import { bookingLinks, isKeyMenu, menuItems, nzDigits, otaLinks, phonesOnSite, samePhone } from './crawl.ts';
 import { INACTIVE } from './follow.ts';
 import { isPlaceholderEmail, plausibleEmail } from './gather.ts';
@@ -25,6 +25,13 @@ describe('sweep discovery rules', () => {
     expect(rotation(c, 1)).toHaveLength(10);
     expect(perCentreCap(25)).toBe(5);
     expect(perCentreCap(14)).toBe(3);
+  });
+
+  it('never opens Booking.com, Bookme, Yellow, Neighbourly, LinkedIn or a travel agent', () => {
+    for (const h of ['www.booking.com', 'bookme.co.nz', 'www.yellow.co.nz', 'neighbourly.co.nz', 'nz.linkedin.com', 'www.airbnb.co.nz', 'www.expedia.co.nz', 'www.tripadvisor.co.nz']) expect(allowHost(h)).toBe(false);
+    expect(allowHost('www.motel.co.nz')).toBe(true);
+    expect(allowHost('book-directonline.com')).toBe(true);
+    expect(allowUrl('https://www.booking.com/searchresults.html?aid=1')).toBe(false);
   });
 
   it('keeps each industry to its own kind of business', () => {

@@ -5,6 +5,25 @@ import { ROOT } from '@plumbline/core';
 import { plainWords } from '../../names.ts';
 import { hasPhrase, hostIn, hostOfUrl, loadDiscoverConfig, onTarget, type Centre, type DiscoverConfig, type PlaceLike } from '../filters.ts';
 
+/**
+ * Hosts the campaign never requests, as a page or a frame, from the crawler or the browser: the relay's
+ * named sites and the travel agents whose terms forbid automated reading. A link to them is recorded, never opened.
+ */
+const OFF_LIMITS = [/(^|\.)booking\.com$/, /(^|\.)bookme\.co\.nz$/, /(^|\.)yellow\.co\.nz$/, /(^|\.)neighbourly\.co\.nz$/, /(^|\.)linkedin\.com$/, /(^|\.)airbnb\.[a-z.]+$/, /(^|\.)expedia\.[a-z.]+$/, /(^|\.)agoda\.com$/, /(^|\.)hotels\.com$/, /(^|\.)tripadvisor\.[a-z.]+$/, /(^|\.)vrbo\.com$/, /(^|\.)trivago\.[a-z.]+$/];
+
+export function allowHost(host: string): boolean {
+  const h = host.toLowerCase();
+  return !!h && !OFF_LIMITS.some((r) => r.test(h));
+}
+
+export function allowUrl(url: string): boolean {
+  try {
+    return allowHost(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+}
+
 export interface Industry {
   id: string;
   label: string;

@@ -168,13 +168,21 @@ export async function checkSite(g: Gathered, shooter: Shooter, shotsDir: string,
   const gatherHttp = g.homeTries.map((t) => `${t.url} -> ${httpOf(t)}`).join(' | ');
 
   // 3. site_down_or_broken
-  const broken = home.blocked ? null : brokenHome(home);
+  // A homepage that sends the visitor on to Booking.com or another off-limits site is not the business's site any more; the browser is stopped at the door.
+  const sentOn = home.blockedNav ? (() => {
+    try {
+      return new URL(home.blockedNav).hostname;
+    } catch {
+      return home.blockedNav;
+    }
+  })() : null;
+  const broken = home.blocked ? null : sentOn ? `the homepage sends visitors on to ${sentOn} instead of the business's own site (not opened: that site is off limits)` : brokenHome(home);
   // A plain request read the homepage but the browser was refused: a firewall's choice about us, not what a visitor sees.
-  const refusedOnlyToUs = !!broken && !!g.homeUrl && home.status !== null && [401, 403, 429].includes(home.status);
+  const refusedOnlyToUs = !!broken && !sentOn && !!g.homeUrl && home.status !== null && [401, 403, 429].includes(home.status);
   if (home.blocked) push(result('site_down_or_broken', { result: 'unknown', evidenceUrl: homeUrl, http: gatherHttp, detail: 'robots.txt does not allow the homepage to be opened' }));
-  else if (home.error && OUR_NETWORK.test(home.error)) push(result('site_down_or_broken', { result: 'unknown', evidenceUrl: homeUrl, http: gatherHttp, detail: `our own connection failed (${home.error})` }));
+  else if (!sentOn && home.error && OUR_NETWORK.test(home.error)) push(result('site_down_or_broken', { result: 'unknown', evidenceUrl: homeUrl, http: gatherHttp, detail: `our own connection failed (${home.error})` }));
   else if (refusedOnlyToUs) push(result('site_down_or_broken', { result: 'unknown', evidenceUrl: homeUrl, http: `${gatherHttp} | browser: ${home.status}`, detail: `the browser was refused (${home.status}) though a plain request read the page` }));
-  else if (broken) push(result('site_down_or_broken', { result: 'flag', evidenceUrl: home.finalUrl || homeUrl, http: `${gatherHttp} | browser: ${home.status ?? home.error}`, detail: broken, shot: home.shot ? await shooter.write(readFileSync(home.shot), shotPath('site_down_or_broken'), ['Site down or broken', broken, home.finalUrl || homeUrl]) : null }));
+  else if (broken) push(result('site_down_or_broken', { result: 'flag', evidenceUrl: home.finalUrl || homeUrl, http: `${gatherHttp} | browser: ${sentOn ? `sent on to ${home.blockedNav}` : (home.status ?? home.error)}`, detail: broken, shot: home.shot ? await shooter.write(readFileSync(home.shot), shotPath('site_down_or_broken'), ['Site down or broken', broken, home.finalUrl || homeUrl]) : null }));
   else push(result('site_down_or_broken', { result: 'pass', evidenceUrl: home.finalUrl, http: `browser: ${home.status}` }));
   const homeOk = !broken && !home.blocked && !home.error;
 

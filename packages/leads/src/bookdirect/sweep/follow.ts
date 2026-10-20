@@ -2,6 +2,7 @@ import * as cheerio from 'cheerio';
 import type { Polite } from '@plumbline/fetch';
 import { engineOf } from '../engines.ts';
 import { visibleText } from '../site.ts';
+import { allowHost, allowUrl } from './config.ts';
 import type { BookingLink, CrawlPage } from './crawl.ts';
 
 /** Words on an engine's page that say the account behind it is gone. */
@@ -44,14 +45,19 @@ export async function followBooking(polite: Polite, links: BookingLink[], crawle
     let redirects: string[];
     let error: string | null;
     let body: string;
+    if (!allowUrl(l.url)) {
+      // Booking.com, Bookme and the like are never opened: the link is recorded as it stands.
+      out.push({ url: l.url, text: l.text, on: l.on, engine: l.engine, how: l.how, status: null, finalUrl: l.url, redirects: [], error: 'off_limits_host', title: '', h1: '', sample: '', says: '', saysText: '', checkedAt: new Date().toISOString() });
+      continue;
+    }
     if (seen) {
       ({ status, finalUrl, redirects, error } = seen);
       body = seen.file ? (html.get(seen.file) ?? '') : '';
     } else {
-      let r = await polite.get(l.url, { maxRedirects: 8, timeoutMs: 25_000, maxBytes: 1_500_000 });
+      let r = await polite.get(l.url, { maxRedirects: 8, timeoutMs: 25_000, maxBytes: 1_500_000, allowHost });
       if ((r.status !== null && r.status >= 500) || (r.status === null && r.error && !['robots', 'ENOTFOUND'].includes(r.error))) {
         await new Promise((res) => setTimeout(res, 3000));
-        r = await polite.get(l.url, { maxRedirects: 8, timeoutMs: 25_000, maxBytes: 1_500_000 });
+        r = await polite.get(l.url, { maxRedirects: 8, timeoutMs: 25_000, maxBytes: 1_500_000, allowHost });
       }
       ({ status, finalUrl, redirects } = r);
       error = r.error ?? null;
