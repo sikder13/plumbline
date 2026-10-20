@@ -346,15 +346,41 @@
   }
 
   .hero {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    grid-template-rows: auto 1fr auto auto auto 1fr;
+    column-gap: 72px;
     padding-block: 104px 144px;
   }
 
+  .place {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
   .hello {
+    grid-column: 1;
+    grid-row: 2 / span 5;
+    align-self: center;
     font-size: 200px;
+    line-height: 0.95;
+  }
+
+  .welcome {
+    grid-column: 2;
+    grid-row: 3;
+    margin-top: 0;
   }
 
   .letter {
+    grid-column: 2;
+    grid-row: 4;
     font-size: 20px;
+  }
+
+  .acts {
+    grid-column: 2;
+    grid-row: 5;
   }
 
   .tailor,
