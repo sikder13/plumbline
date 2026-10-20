@@ -85,11 +85,15 @@ export function findingsOf(f: AuditFacts, now: Date = new Date()): Finding[] {
     out.push({ cls: 'no_prices_or_hours', tier: 4, value: 'no prices and no opening hours on the pages read', evidenceUrl: f.homeUrl });
   }
 
-  const noViewport = !f.layout.viewportMeta || !/width\s*=\s*device-width/i.test(f.layout.viewportMeta);
+  // No viewport tag (the phone lays the page out 980 px wide), a fixed width wider than the screen, or a page that really scrolls sideways.
+  // "initial-scale=1" alone, or a fixed width narrower than the screen, still fits the phone.
+  const noViewport = !f.layout.viewportMeta || !/(?:width|initial-scale)\s*=/i.test(f.layout.viewportMeta);
+  const fixed = Number(/(?:^|[\s,;])width\s*=\s*(\d+)/i.exec(f.layout.viewportMeta ?? '')?.[1] ?? 0);
+  const fixedWide = fixed > 390;
   const tooWide = f.layout.movesSideways && f.layout.scrollWidth > f.layout.innerWidth * 1.2;
-  if (noViewport || tooWide) {
+  if (noViewport || fixedWide || tooWide) {
     const booking = out.some((x) => x.cls === 'ota_only_booking' || x.cls === 'book_cta_dead' || x.cls === 'no_first_screen_cta');
-    const value = noViewport ? (f.layout.viewportMeta ? `viewport is fixed (${f.layout.viewportMeta})` : 'no viewport meta tag') : `the page is ${f.layout.scrollWidth} px wide on a ${f.layout.innerWidth} px screen`;
+    const value = noViewport ? 'no viewport meta tag' : fixedWide ? `viewport is fixed at ${fixed} px (${f.layout.viewportMeta})` : `the page is ${f.layout.scrollWidth} px wide on a ${f.layout.innerWidth} px screen`;
     out.push({ cls: 'not_mobile_layout', tier: booking ? 2 : 3, value, evidenceUrl: f.homeUrl });
   }
 

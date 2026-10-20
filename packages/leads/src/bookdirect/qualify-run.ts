@@ -8,7 +8,7 @@ import { parseCsv } from '../batch.ts';
 import { CallLedger, QuotaStop } from '../enrich.ts';
 import { toCsv } from '../pull.ts';
 import { bookControlsInFold, type AuditRecord } from './audit.ts';
-import { leadFindings } from './classes.ts';
+import { findingsOf, leadFindings } from './classes.ts';
 import type { ContactRow } from './contacts.ts';
 import { BOOK_DIRECT_GAP_MS, PLACES_CAP, bookDirectPaths, type CandidateRow } from './discover.ts';
 import { hostIn, hostOfUrl, loadDiscoverConfig, priorContactReason } from './filters.ts';
@@ -32,6 +32,8 @@ function readRecords(): Map<string, AuditRecord> {
   if (!existsSync(dir)) return out;
   for (const f of readdirSync(dir).filter((x) => x.endsWith('.json'))) {
     const r = JSON.parse(readFileSync(join(dir, f), 'utf8')) as AuditRecord;
+    // The tiers are applied again to the stored measurements, so a rule corrected after a lead was audited still counts.
+    r.findings = findingsOf(r.facts);
     out.set(r.slug, r);
   }
   return out;

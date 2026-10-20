@@ -70,6 +70,9 @@ describe('Book Direct finding classes', () => {
   it('not_mobile_layout: tier 3, tier 2 with a booking class', () => {
     expect(classes(facts({ layout: { viewportMeta: null, scrollWidth: 980, innerWidth: 390, movesSideways: true } }))).toEqual(['not_mobile_layout/3']);
     expect(classes(facts({ firstScreen: { checked: true, controls: [] }, layout: { viewportMeta: 'width=1024', scrollWidth: 1024, innerWidth: 390, movesSideways: true } }))).toEqual(['no_first_screen_cta/2', 'not_mobile_layout/2']);
+    // "initial-scale=1" alone, or a fixed width narrower than the screen, still fits a phone.
+    expect(classes(facts({ layout: { viewportMeta: 'initial-scale=1', scrollWidth: 390, innerWidth: 390, movesSideways: false } }))).toEqual([]);
+    expect(classes(facts({ layout: { viewportMeta: 'width=320, user-scalable=yes', scrollWidth: 320, innerWidth: 320, movesSideways: false } }))).toEqual([]);
     // A wide carousel that does not move the page is not a fixed-width layout.
     expect(classes(facts({ layout: { viewportMeta: 'width=device-width', scrollWidth: 900, innerWidth: 390, movesSideways: false } }))).toEqual([]);
   });
