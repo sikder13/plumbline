@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import pLimit from 'p-limit';
+import { env } from '@plumbline/core';
 import { HostLimiter, Polite } from '@plumbline/fetch';
 import { BOOK_DIRECT_GAP_MS } from '../discover.ts';
 import { verdictOf, zeroBounceCheck, type VerifyStatus } from '../verify.ts';
@@ -189,7 +190,7 @@ export async function verifyFlagged(sweep: string, flaggedEmails: string[], opts
       verdicts.set(e, { email: e, status: v.status, flags: v.flags, checkedAt: c.checkedAt });
     }
   }
-  const key = process.env.ZEROBOUNCE_API_KEY;
+  const key = env().ZEROBOUNCE_API_KEY ?? '';
   if (!key) return { credits: null, checked: 0, verdicts };
   let credits = await (async (): Promise<number | null> => {
     try {
