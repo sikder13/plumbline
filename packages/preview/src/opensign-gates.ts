@@ -22,6 +22,30 @@ export function usTel(href: string): boolean {
   return /^tel:\+1[2-9]\d{9}$/.test(href);
 }
 
+/** A New Zealand number a phone can dial: +64 and the national number, or an 0800 or 0508 number. */
+export function nzTel(href: string): boolean {
+  return /^tel:\+64[2-9]\d{6,9}$/.test(href) || /^tel:0(?:800|508)\d{6,7}$/.test(href);
+}
+
+/** A New Zealand number as a page writes it, whose hyphens are part of the number. */
+const NZ_PHONE = /(?:\+64|\(?0\d{1,3}\)?)[\s-]?\d{2,4}[\s-]\d{3,4}(?:[\s-]\d{1,4})?/g;
+
+/** What differs between campaigns: the bars, the widths checked, the phone rule, and what a page must or must not carry. */
+export interface CampaignGates {
+  limits: typeof OPEN_SIGN_LIMITS;
+  overflowWidths: number[];
+  telOk: (href: string) => boolean;
+  requireDirections: boolean;
+  /** Health and dental pages: no testimonials, reviews or ratings. */
+  noTestimonials: boolean;
+  /** The page must link to the business's own email. */
+  requireEmail: boolean;
+  foundTab: string;
+}
+
+export const OPEN_SIGN_GATES: CampaignGates = { limits: OPEN_SIGN_LIMITS, overflowWidths: [360, 1440], telOk: usTel, requireDirections: true, noTestimonials: false, requireEmail: false, foundTab: 'price' };
+export const BOOK_DIRECT_GATES: CampaignGates = { limits: { performance: 90, accessibility: 95, lcpMs: 2500, cls: 0.05, tbtMs: 200 }, overflowWidths: [360, 390, 768, 1280], telOk: nzTel, requireDirections: false, noTestimonials: false, requireEmail: true, foundTab: 'found' };
+
 export interface OpenSignIssue {
   kind: 'dash' | 'banned' | 'placeholder' | 'number';
   where: string;
@@ -34,7 +58,7 @@ export interface OpenSignIssue {
  * no figure that is not among the facts the page was given (their address, phone and hours, and our price).
  */
 export function openSignCopy(text: string, allowed: Set<string>, where = 'page'): OpenSignIssue[] {
-  const plain = text.replace(US_PHONE, (m) => m.replace(/-/g, ' '));
+  const plain = text.replace(US_PHONE, (m) => m.replace(/-/g, ' ')).replace(NZ_PHONE, (m) => m.replace(/-/g, ' '));
   const around = (i: number, n: number) => plain.slice(Math.max(0, i - 30), i + n + 30);
   const out: OpenSignIssue[] = dashIssues(plain, where).map((d) => ({ ...d, kind: 'dash' as const }));
   for (const word of AI_WORDS) for (const m of plain.matchAll(new RegExp(`\\b${word.replace('-', '[- ]?')}\\w*`, 'gi'))) out.push({ kind: 'banned', where, text: m[0], context: around(m.index, m[0].length) });
@@ -77,7 +101,8 @@ async function walk(page: Page): Promise<void> {
  * Every gate for one Open Sign page, served from this machine. Each browser marks itself as ours and
  * answers the visit report locally, so no check is ever counted as a visit.
  */
-export async function checkOpenSignPage(data: PageData, opts: { base: string; allowed: Set<string>; shotsDir: string; previewDir?: string; lighthouseRuns?: number; log?: (line: string) => void }): Promise<OpenSignReport> {
+export async function checkOpenSignPage(data: PageData, opts: { base: string; allowed: Set<string>; shotsDir: string; previewDir?: string; lighthouseRuns?: number; gates?: CampaignGates; log?: (line: string) => void }): Promise<OpenSignReport> {
+  const G = opts.gates ?? OPEN_SIGN_GATES;
   const url = `${opts.base}${BASE_PATH}/${data.path}/`;
   const log = opts.log ?? (() => undefined);
   const failures: string[] = [];
@@ -88,7 +113,7 @@ export async function checkOpenSignPage(data: PageData, opts: { base: string; al
     log(`  lighthouse ${i + 1}: ${r.error ?? `performance ${r.performance}, accessibility ${r.accessibility}, LCP ${((r.lcpMs ?? 0) / 1000).toFixed(2)} s, CLS ${(r.cls ?? 0).toFixed(3)}, TBT ${Math.round(r.tbtMs ?? 0)} ms`}`);
   }
   const lighthouse = { performance: med(runs.map((r) => r.performance)), accessibility: med(runs.map((r) => r.accessibility)), lcpMs: med(runs.map((r) => r.lcpMs)), cls: med(runs.map((r) => r.cls)), tbtMs: med(runs.map((r) => r.tbtMs)), runs };
-  const L = OPEN_SIGN_LIMITS;
+  const L = G.limits;
   if (runs.length) {
     if ((lighthouse.performance ?? 0) < L.performance) failures.push(`performance ${lighthouse.performance} is under ${L.performance}`);
     if ((lighthouse.accessibility ?? 0) < L.accessibility) failures.push(`accessibility ${lighthouse.accessibility} is under ${L.accessibility}`);
@@ -104,14 +129,14 @@ export async function checkOpenSignPage(data: PageData, opts: { base: string; al
   const texts: { tab: string; text: string }[] = [];
   mkdirSync(opts.shotsDir, { recursive: true });
   try {
-    for (const width of [360, 1440]) {
+    for (const width of G.overflowWidths) {
       const ctx = await quietContext(browser, { viewport: { width, height: 800 }, deviceScaleFactor: 1, isMobile: width < 900, hasTouch: width < 900 });
       const page = await ctx.newPage();
       for (const tab of ['', '#found']) {
         await page.goto(`${url}${tab}`, { waitUntil: 'networkidle' });
         await walk(page);
         const sw = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth));
-        if (sw > width) overflow.push({ width, tab: tab ? 'price' : 'demo', scrollWidth: sw });
+        if (sw > width) overflow.push({ width, tab: tab ? G.foundTab : 'demo', scrollWidth: sw });
       }
       await ctx.close();
     }
@@ -121,7 +146,7 @@ export async function checkOpenSignPage(data: PageData, opts: { base: string; al
       const ctx = await quietContext(browser, { viewport: { width, height: width === 390 ? 844 : 900 }, deviceScaleFactor: width === 390 ? 2 : 1, isMobile: width === 390, hasTouch: width === 390, reducedMotion: 'reduce' });
       const page = await ctx.newPage();
       for (const tab of ['', '#found']) {
-        const name = tab ? 'price' : 'demo';
+        const name = tab ? G.foundTab : 'demo';
         await page.goto(`${url}${tab}`, { waitUntil: 'networkidle' });
         await walk(page);
         await page.waitForLoadState('networkidle');
@@ -165,7 +190,7 @@ export async function checkOpenSignPage(data: PageData, opts: { base: string; al
     for (const l of found) {
       let r = seen.get(l.href);
       if (!r) {
-        if (l.href.startsWith('tel:')) r = { ok: usTel(l.href), note: usTel(l.href) ? 'valid US number' : 'not a valid US number' };
+        if (l.href.startsWith('tel:')) r = { ok: G.telOk(l.href), note: G.telOk(l.href) ? 'a number a phone can dial' : 'not a number a phone can dial from here' };
         else if (l.href.startsWith('mailto:')) r = { ok: validMailto(l.href), note: validMailto(l.href) ? 'valid address' : 'not a valid address' };
         else if (l.href.startsWith('#')) r = { ok: !!l.anchor, note: l.anchor ? 'target exists' : 'no element with that id' };
         else if (/^https?:/.test(l.href)) {
@@ -186,7 +211,13 @@ export async function checkOpenSignPage(data: PageData, opts: { base: string; al
     }
     for (const l of links.filter((x) => !x.ok)) failures.push(`link "${l.label}" ${l.href}: ${l.note}`);
     if (!links.some((l) => l.href.startsWith('tel:'))) failures.push('no call link');
-    if (!links.some((l) => /maps\.google\.com|google\.com\/maps/.test(l.href))) failures.push('no directions link');
+    if (G.requireDirections && !links.some((l) => /maps\.google\.com|google\.com\/maps/.test(l.href))) failures.push('no directions link');
+    if (G.requireEmail && !links.some((l) => l.href.startsWith('mailto:') && !/nahltech/.test(l.href))) failures.push('no email link to the business');
+    if (G.noTestimonials) {
+      const demoText = texts.find((t) => t.tab === 'demo')?.text ?? '';
+      const m = /\b(?:testimonials?|reviews?|rated|stars?|what (?:our )?(?:patients|clients) say)\b|★/i.exec(demoText);
+      if (m) failures.push(`a health page carries "${m[0]}": no testimonials, reviews or ratings`);
+    }
 
     const beacon = await checkBeacon(browser, url, data.path);
     if (!beacon.ok) failures.push(`visit report: ${beacon.early} early, ${beacon.views} view(s), tokens ${beacon.tokens.join(', ') || 'none'}`);
