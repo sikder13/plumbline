@@ -37,6 +37,19 @@ export interface SiteChecks {
   results: CheckResult[];
 }
 
+/** A host's registrable part: "www.motel.co.nz" and "book.motel.co.nz" are both "motel.co.nz". */
+export function siteKey(url: string): string {
+  const h = (() => {
+    try {
+      return new URL(/^[a-z]+:\/\//i.test(url) ? url : `https://${url}`).hostname.toLowerCase();
+    } catch {
+      return url;
+    }
+  })();
+  const parts = h.split('.');
+  return parts.slice(/\.(?:co|org|net|govt|ac|school|gen|maori|iwi|com)\.[a-z]{2}$/.test(h) ? -3 : -2).join('.');
+}
+
 const result = (check: CheckId, r: Partial<CheckResult> & Pick<CheckResult, 'result'>): CheckResult => ({ check, evidenceUrl: '', http: '', detail: '', shot: null, more: [], ...r });
 
 const httpOf = (f: { status: number | null; error?: string | null; finalUrl?: string; redirects?: string[] }) => `${f.status ?? 'no answer'}${f.error ? ` (${f.error})` : ''}${f.redirects?.length ? ` after ${f.redirects.length} redirect(s) to ${f.finalUrl}` : ''}`;
@@ -176,7 +189,9 @@ export async function checkSite(g: Gathered, shooter: Shooter, shotsDir: string,
       return home.blockedNav;
     }
   })() : null;
-  const broken = home.blocked ? null : sentOn ? `the homepage sends visitors on to ${sentOn} instead of the business's own site (not opened: that site is off limits)` : brokenHome(home);
+  // A homepage that ends on another domain showing almost nothing (a parking or affiliate redirect) is not the business's site; a rebrand lands on a full page and is fine.
+  const elsewhere = !home.blocked && !home.error && home.finalUrl && siteKey(home.finalUrl) !== siteKey(g.candidate.website) && /^https?:/.test(home.finalUrl) && home.text.replace(/\s+/g, ' ').trim().length < 300 ? `the homepage sends visitors to ${new URL(home.finalUrl).hostname}, which shows almost nothing ("${home.text.replace(/\s+/g, ' ').trim().slice(0, 60)}")` : null;
+  const broken = home.blocked ? null : sentOn ? `the homepage sends visitors on to ${sentOn} instead of the business's own site (not opened: that site is off limits)` : (elsewhere ?? brokenHome(home));
   // A plain request read the homepage but the browser was refused: a firewall's choice about us, not what a visitor sees.
   const refusedOnlyToUs = !!broken && !sentOn && !!g.homeUrl && home.status !== null && [401, 403, 429].includes(home.status);
   if (home.blocked) push(result('site_down_or_broken', { result: 'unknown', evidenceUrl: homeUrl, http: gatherHttp, detail: 'robots.txt does not allow the homepage to be opened' }));

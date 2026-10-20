@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { brokenHome, flagRank, notMobile, type CheckResult } from './checks.ts';
+import { brokenHome, flagRank, notMobile, siteKey, type CheckResult } from './checks.ts';
 import { allowHost, allowUrl, faithReason, onTargetIndustry, perCentreCap, rotation, termShares } from './config.ts';
 import { bookingLinks, isKeyMenu, menuItems, nzDigits, otaLinks, phonesOnSite, samePhone } from './crawl.ts';
 import { INACTIVE } from './follow.ts';
@@ -199,6 +199,12 @@ describe('the checks', () => {
     expect(notMobile({ ...visit.measure, medianFontPx: 10 })).toMatch(/10 px/);
     // A page with a viewport tag that reports a wide layout but does not move is not flagged on width alone.
     expect(notMobile({ ...visit.measure, innerWidth: 1560 })).toBeNull();
+  });
+
+  it('compares sites by their registrable domain', () => {
+    expect(siteKey('https://www.motel.co.nz/rooms')).toBe('motel.co.nz');
+    expect(siteKey('http://book.motel.co.nz')).toBe('motel.co.nz');
+    expect(siteKey('https://rogotravel.com/red.php?x=1')).toBe('rogotravel.com');
   });
 
   it('ranks a broken booking link first and a layout problem last', () => {

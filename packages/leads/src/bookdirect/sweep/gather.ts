@@ -182,9 +182,15 @@ export function applyLateExclusions(sweep: string): string[] {
     const lat = Number(g.candidate.lat);
     const lng = Number(g.candidate.lng);
     const outsideNz = g.candidate.lat !== '' && (lat > -33 || lat < -48 || lng < 165 || lng > 179);
+    // Where the homepage ended up in the browser: a site that forwards to Facebook, a directory or a group's page is not the owner's own site.
+    const checksFile = join(dir, `${g.domain}.checks.json`);
+    const landed = existsSync(checksFile) ? ((JSON.parse(readFileSync(checksFile, 'utf8')) as { home?: { finalUrl?: string } | null }).home?.finalUrl ?? '') : '';
+    const landedHost = /^https?:/.test(landed) ? new URL(landed).hostname.replace(/^www\./, '') : '';
     const why = outsideNz
       ? `outside_new_zealand (the listing is at ${g.candidate.address || `${lat}, ${lng}`})`
-      : hostIn(g.domain, cfg.directories)
+      : landedHost && hostIn(landedHost, cfg.directories)
+        ? `directory_or_platform_website (the homepage forwards to ${landedHost}; listed after discovery)`
+        : hostIn(g.domain, cfg.directories)
       ? 'directory_or_platform_website (a booking, ordering or listing platform page; listed after discovery)'
       : ind?.chains.some((c) => hasPhrase(g.candidate.name, c))
         ? 'chain_or_franchise (listed after discovery)'
