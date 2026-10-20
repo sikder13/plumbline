@@ -245,6 +245,8 @@ ${checks}
 
 A flag needs a picture: a check that found something but could not photograph it is \`unproven\` and is not counted. \`unknown\` means the check could not be run (robots.txt, a firewall that refused us, no hours to compare).
 
+Every picture is taken at 390 x 844 after the page loaded (network idle, then 3 seconds; 60 seconds at most, \`slow_render\` in the notes past 30). Pop-ups and newsletter boxes covering most of the screen are hidden before the picture; the item proven is outlined in red. When a phone layout hides the item (a closed menu), the picture is the desktop layout (\`*-desktop.png\`).
+
 ## What to check by hand
 
 1. Open each contact sheet. For every tile, say yes or no: would the owner see this on their own phone in ten seconds and be embarrassed by it?
@@ -252,6 +254,7 @@ A flag needs a picture: a check that found something but could not photograph it
 3. \`hours_mismatch\`: holiday hours, seasonal hours and kitchen-versus-bar hours can look like a contradiction. The picture shows the hours the site gives; the Google hours are in the note above it.
 4. \`not_secure\` on a plain-http site is real in Chrome, but campaign rule: SSL alone was hygiene in relay 01. Decide whether it stays a flag.
 5. \`booking_link_broken\` and \`main_nav_404\`: open the evidence URL on a phone. A site fixed since the sweep drops out.
-6. Emails: every address is from the business's own site with its page and the date seen. Flagged sites' addresses are \`needs_verifier\` unless ZeroBounce had credits (it had ${s.zeroBounce.credits ?? 'unknown'}).
+6. Chains: a few sites belong to a group or sell franchises (for example a site whose contact page invites you to "become a Cartel boss", or a tour brand of a travel group). They were not caught by name; drop any you recognise.
+7. Emails: every address is from the business's own site with its page and the date seen. Flagged sites' addresses are \`needs_verifier\` unless ZeroBounce had credits (it had ${s.zeroBounce.credits ?? 'unknown'}).
 `;
 }

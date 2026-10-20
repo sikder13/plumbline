@@ -72,7 +72,8 @@ export async function relay01V2(): Promise<Relay01Check[]> {
   const { savedPages } = await import('../audit.ts');
   const { emailsOnPage } = await import('../site.ts');
   const { mxCheck } = await import('../verify.ts');
-  const { menuItems, isKeyMenu, phonesOnSite, otaLinks, hasAvailabilityForm, nzDigits } = await import('./crawl.ts');
+  const { menuItems, isKeyMenu, phonesOnSite, otaLinks, hasAvailabilityForm, nzDigits, samePhone } = await import('./crawl.ts');
+  const { plausibleEmail } = await import('./gather.ts');
   const p = bookDirectPaths();
   const cands = new Map((parseCsv(readFileSync(join(p.leads, '_candidates.csv'), 'utf8')) as unknown as { slug: string; phone: string }[]).map((c) => [c.slug, c]));
   const contacts = new Map((parseCsv(readFileSync(join(p.leads, '_contacts.csv'), 'utf8')) as unknown as ContactRow[]).map((c) => [registryKey(c.website), c]));
@@ -107,12 +108,12 @@ export async function relay01V2(): Promise<Relay01Check[]> {
     const gphone = nzDigits(cands.get(s.rec.slug)?.phone ?? '');
     const ph = phonesOnSite(pages);
     const all = [...ph.shown, ...ph.tel];
-    if (gphone.length >= 8 && all.length && !all.some((x) => x.digits === gphone)) {
+    if (gphone.length >= 8 && all.length && !all.some((x) => samePhone(x.digits, gphone) || samePhone(nzDigits(x.shown), gphone))) {
       would.push('phone_mismatch');
       detail.push(`phone_mismatch: Google ${cands.get(s.rec.slug)?.phone}, site ${[...new Set(ph.shown.map((x) => x.shown))].slice(0, 3).join(', ')}`);
     }
     const emails = [...new Set(pages.flatMap((x) => emailsOnPage(x.html, x.finalUrl).map((e) => e.email)))];
-    for (const e of emails) {
+    for (const e of emails.filter((x) => plausibleEmail(x))) {
       const d = e.split('@')[1]!;
       if (!mx.has(d)) mx.set(d, mxCheck(e));
       const r = await mx.get(d)!;
