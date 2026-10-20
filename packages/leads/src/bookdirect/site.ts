@@ -228,6 +228,14 @@ export interface Greeting {
   url: string;
 }
 
+/** Words that are a job, a trade or a place, never a person's name. */
+const NOT_A_PERSON = /^(?:physio\w*|chiro\w*|osteo\w*|therapist|therapy|clinic|clinics|practice|practitioner|massage|acupunctur\w*|podiat\w*|pilates|reception\w*|motel|motels|lodge|park|holiday|accommodation|staff|team|director|manager|owner|host|hosts|dental|dentist|hygienist|nurse|doctor|sports?|rehab\w*|wellness|health|injury|spinal|spine)$/i;
+
+export function isPersonName(name: string): boolean {
+  const words = name.trim().split(/\s+/);
+  return words.length > 0 && !words.some((w) => NOT_A_PERSON.test(w));
+}
+
 /** Owner and manager names as the site prints them, each with its page. */
 export function greetingNamesOn(pages: SitePage[]): Greeting[] {
   const out = new Map<string, Greeting>();
@@ -235,6 +243,7 @@ export function greetingNamesOn(pages: SitePage[]): Greeting[] {
     if (!p.html) continue;
     const people: FoundPerson[] = peopleByPattern({ finalUrl: p.finalUrl, blocks: blocksOf(p.html) } as unknown as PageCapture);
     for (const f of people) {
+      if (!isPersonName(f.name)) continue;
       const key = f.name.toLowerCase();
       if (!out.has(key)) out.set(key, { name: f.name, role: f.title, quote: f.quote, url: f.sourceUrl });
     }

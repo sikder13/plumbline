@@ -114,6 +114,7 @@ describe('contact capture', () => {
     expect(names).toContain('Mike');
     expect(names).toContain('Jane Doe');
     expect(greetingNamesOn(pages)[0]!.url).toBe('https://k.nz/about');
+    expect(greetingNamesOn([page('<p>Physiotherapist, Director</p><p>Sam Lee, Manager</p>', 'about')]).map((g) => g.name)).toEqual(['Sam Lee']);
   });
   it('tells a dialable tel: link from one that carries no number', () => {
     expect(telDialable('tel:+6474381234')).toBe(true);

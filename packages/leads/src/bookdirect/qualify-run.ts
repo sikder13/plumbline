@@ -15,7 +15,13 @@ import { hostIn, hostOfUrl, loadDiscoverConfig, priorContactReason } from './fil
 import { loadPriorContact } from './prior.ts';
 import { excludedType, qualifyReason, roomToSell, type QualifyInput } from './qualify.ts';
 import { leadsReadme } from './readme.ts';
+import { isPersonName } from './site.ts';
 import { verdictOf, zeroBounceCheck, type SingleCheck, type VerifyStatus } from './verify.ts';
+
+function otaLabel(url: string): string {
+  const h = hostOfUrl(url);
+  return /booking\.com/.test(h) ? 'Booking.com' : /expedia/.test(h) ? 'Expedia' : /agoda/.test(h) ? 'Agoda' : /airbnb/.test(h) ? 'Airbnb' : /hotels\.com/.test(h) ? 'Hotels.com' : h;
+}
 
 export const QUALIFIED_COLUMNS = ['list', 'business', 'town', 'website', 'email', 'email_source_url', 'email_seen_on', 'verify_status', 'greeting_names', 'booking_engine', 'booking_url', 'ota_links', 'lead_finding', 'lead_value', 'lead_evidence_url', 'second_finding', 'lcp_mobile_s', 'first_screen_cta', 'competitors_book_online', 'rating', 'rating_count', 'score', 'flags'] as const;
 
@@ -276,8 +282,11 @@ export async function qualifyAll(opts: { zeroBounceMax?: number; log?: (l: strin
       email_source_url: c.email_source_url,
       email_seen_on: c.email_seen_on,
       verify_status: status,
-      greeting_names: c.greeting_names,
-      booking_engine: rec?.facts.ownEngine || (c.booking_engine === 'none' && q.otaLinks.length ? 'OTA only' : c.booking_engine),
+      greeting_names: c.greeting_names
+        .split(' | ')
+        .filter((g) => g && isPersonName(g.split(' (')[0] ?? ''))
+        .join(' | '),
+      booking_engine: rec?.facts.ownEngine || (lead.cls === 'ota_only_booking' || (c.booking_engine === 'none' && q.otaLinks.length) ? `OTA only (${[...new Set(q.otaLinks.map(otaLabel))].join(', ')})` : c.booking_engine),
       booking_url: c.booking_url,
       ota_links: q.otaLinks.join(' '),
       lead_finding: lead.cls,
@@ -325,7 +334,7 @@ export async function qualifyAll(opts: { zeroBounceMax?: number; log?: (l: strin
   const engineMix: Record<string, number> = {};
   for (const q of qualified) {
     const e = String(q.booking_engine);
-    const k = ['Seekom', 'STAAH', 'Little Hotelier', 'Cliniko', 'Halaxy'].includes(e) ? e : e === 'OTA only' || e === 'none' ? 'none (OTA only)' : e === 'generic' ? 'none (generic Book link)' : `other: ${e}`;
+    const k = ['Seekom', 'STAAH', 'Little Hotelier', 'Cliniko', 'Halaxy'].includes(e) ? e : e.startsWith('OTA only') || e === 'none' ? 'none (OTA only)' : e === 'generic' ? 'none (generic Book link)' : `other: ${e}`;
     engineMix[k] = (engineMix[k] ?? 0) + 1;
   }
   const recs = [...records.values()];
