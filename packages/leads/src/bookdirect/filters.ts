@@ -112,8 +112,11 @@ export function onTarget(list: ListId, name: string, type: string): boolean {
   }
   if (list === 'B') return CLINIC_TYPES.has(type) || CLINIC_NAME.test(name);
   if (list === 'C') return type === 'dentist' || type === 'dental_clinic' || DENTAL.test(name);
-  return true;
+  return TRADE_TYPES.has(type) || TRADE_NAME.test(name);
 }
+
+const TRADE_TYPES = new Set(['locksmith', 'plumber', 'electrician', 'glazier', 'window_installation_service', 'drainage_service', 'roofing_contractor', 'emergency_service']);
+const TRADE_NAME = /\b(?:lock(?:s|smiths?)?|plumb\w*|electric\w*|glaz\w*|glass|drain\w*|gas ?fitt\w*|maintenance|emergency)\b/i;
 
 /** Flags that travel with a kept place. Top 10 members stay in, flagged, as the relay asks. */
 export function placeFlags(p: PlaceLike, affiliations: string[] = []): string[] {

@@ -210,6 +210,14 @@ describe('list types', () => {
     expect(onTarget('A', 'The Lodge Bar', 'bar')).toBe(false);
     expect(onTarget('A', 'Backpackers Central', 'hostel')).toBe(false);
   });
+  it('keeps dental practices for list C and emergency trades for list D', async () => {
+    const { onTarget } = await import('./filters.ts');
+    expect(onTarget('C', 'Smile Studio', 'health')).toBe(true);
+    expect(onTarget('C', 'City Pharmacy', 'pharmacy')).toBe(false);
+    expect(onTarget('D', 'Kiwi Locksmiths', 'service')).toBe(true);
+    expect(onTarget('D', 'Joe Bloggs Ltd', 'plumber')).toBe(true);
+    expect(onTarget('D', 'Garden World', 'store')).toBe(false);
+  });
   it('keeps physio, chiro and osteo clinics only', async () => {
     const { onTarget } = await import('./filters.ts');
     expect(onTarget('B', 'Body Works', 'physiotherapist')).toBe(true);

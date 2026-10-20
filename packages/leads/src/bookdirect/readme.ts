@@ -7,7 +7,7 @@ Generated ${s.generatedAt} by \`pnpm plumb leads qualify --campaign book-direct\
 ## Files
 
 - \`QUALIFIED.csv\`: ${s.qualified} leads that pass every "room to sell" rule, best first (score, then rating count).
-- \`REJECTED.csv\`: every other candidate, with the one reason that stopped it.
+- \`REJECTED.csv\`: every other candidate, with the one reason that stopped it. \`not_audited\` is not a rejection: the lead passed the contact gate but the audit stopped at the budget before reaching it. Those leads are the reserve for the next run (\`pnpm plumb wave run --wave book-direct-1 --audit-only --max <n>\`, then \`leads qualify\`).
 - \`_candidates.csv\`: every candidate from discovery (Google Places and holidayparks.co.nz), with its list letter.
 - \`_pool_A.csv\`, \`_pool_B.csv\`: every place discovery saw, kept or dropped, with the reason.
 - \`_contacts.csv\`: what Part 2 read on each site: every address found with its page, the one picked, names, phone, booking engine, OTA links, "already full" words.
