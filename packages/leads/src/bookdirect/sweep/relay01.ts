@@ -1,11 +1,13 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseCsv } from '../../batch.ts';
+import { toCsv } from '../../pull.ts';
 import type { AuditRecord } from '../audit.ts';
 import type { ContactRow } from '../contacts.ts';
 import { bookDirectPaths } from '../discover.ts';
 import { nzDate } from '../contacts.ts';
 import { registryKey, type Registry } from './registry.ts';
+import { SWEEP_CANDIDATE_COLUMNS } from './discover.ts';
 
 export const LIST_INDUSTRY: Record<string, string> = { A: 'accommodation', B: 'allied-health', C: 'dental', D: 'trades' };
 
@@ -150,4 +152,24 @@ export async function relay01V2(): Promise<Relay01Check[]> {
     out.push({ domain: s.domain, business: s.rec.name, industry: LIST_INDUSTRY[s.rec.list] ?? s.rec.list, wouldFlag: would.join(';'), detail: detail.join(' | '), notApplicable: na.join('; ') });
   }
   return out;
+}
+
+/**
+ * A sweep made of relay 01's audited sites, for photographing what the cache-only check could not prove.
+ * Every site in it is in the registry, so it is only ever run with --reaudit asked for by name.
+ */
+export function relay01Sweep(name: string, opts: { onlyWouldFlag?: boolean } = {}): number {
+  const p = bookDirectPaths();
+  const rows = parseCsv(readFileSync(join(p.leads, '_candidates.csv'), 'utf8'));
+  const audited = new Map(relay01Sites().map((s) => [s.rec.slug, s]));
+  const would = new Set<string>();
+  const v2 = join(p.data, 'registry', 'relay01-v2.csv');
+  if (opts.onlyWouldFlag && existsSync(v2)) for (const r of parseCsv(readFileSync(v2, 'utf8'))) if (r.wouldFlag) would.add(r.domain ?? '');
+  const out = rows
+    .filter((r) => audited.has(r.slug ?? '') && (!opts.onlyWouldFlag || would.has(registryKey(r.website ?? ''))))
+    .map((r) => ({ domain: registryKey(r.website ?? ''), industry: LIST_INDUSTRY[r.list ?? ''] ?? '', trade: r.term ?? '', term: r.term ?? '', centre: r.centre ?? '', place_id: r.place_id ?? '', name: r.name ?? '', town: r.town ?? '', region: r.region ?? '', address: r.address ?? '', phone: r.phone ?? '', website: r.website ?? '', maps: r.maps ?? '', rating: r.rating ?? '', rating_count: r.rating_count ?? '', status: r.status ?? '', primary_type: r.primary_type ?? '', types: '', lat: '', lng: '', hours: '', hours_periods: '', flags: r.flags ?? '', reason: 'kept (relay 01, re-audit)' }));
+  const dir = join(p.data, 'sweep', name);
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, '_candidates.csv'), toCsv(out, SWEEP_CANDIDATE_COLUMNS));
+  return out.length;
 }

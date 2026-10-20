@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { auditCsv, auditVerified, bookDirectPaths, captureContacts, checkAll, competitorPass, discover, gatherAll, qualifyAll, recheckAll, Registry, seedRegistryFromRelay01, sweepDiscover, writeSweepOutputs, type CheckId, type ListId } from '@plumbline/leads';
+import { auditCsv, auditVerified, bookDirectPaths, captureContacts, checkAll, competitorPass, discover, gatherAll, qualifyAll, recheckAll, Registry, relay01Sweep, seedRegistryFromRelay01, sweepDiscover, writeSweepOutputs, type CheckId, type ListId } from '@plumbline/leads';
 
 const LISTS = ['A', 'B', 'C', 'D'];
 
@@ -14,9 +14,16 @@ export function registerBookDirectLeads(leads: Command): void {
     .option('--list <letter>', 'A accommodation, B allied health, C dental, D emergency trades')
     .option('--sweep <name>', 'a ten-industry sweep instead of a list, for example nz-1000; writes data/book-direct/sweep/<name>/_candidates.csv')
     .option('--reaudit', 'sweep only: keep domains already in the registry as candidates')
+    .option('--from-relay01 <which>', "sweep only, with --reaudit: build the sweep from relay 01's audited sites instead of Places, 'all' or 'would-flag'")
     .option('--cap <n>', 'Places calls allowed in this run, every list together (a sweep defaults to 2000)')
-    .action(async (opts: { campaign: string; list?: string; sweep?: string; reaudit?: boolean; cap?: string }) => {
+    .action(async (opts: { campaign: string; list?: string; sweep?: string; reaudit?: boolean; cap?: string; fromRelay01?: string }) => {
       if (opts.campaign !== 'book-direct') throw new Error('discover is for --campaign book-direct');
+      if (opts.sweep && opts.fromRelay01) {
+        if (!opts.reaudit) throw new Error("relay 01's sites are all in the registry: pass --reaudit to sweep them again");
+        const n = relay01Sweep(opts.sweep, { onlyWouldFlag: opts.fromRelay01 === 'would-flag' });
+        console.log(`${n} relay 01 sites written to data/book-direct/sweep/${opts.sweep}/_candidates.csv; no Places calls`);
+        process.exit(0);
+      }
       if (opts.sweep) {
         const registry = new Registry();
         const added = seedRegistryFromRelay01(registry);
