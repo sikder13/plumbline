@@ -1,0 +1,179 @@
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import pLimit from 'p-limit';
+import { HostLimiter, Polite } from '@plumbline/fetch';
+import { BOOK_DIRECT_GAP_MS } from '../discover.ts';
+import { verdictOf, zeroBounceCheck, type VerifyStatus } from '../verify.ts';
+import { Shooter } from './browser.ts';
+import { checkSite, type CheckResult, type SiteChecks } from './checks.ts';
+import { sweepPaths } from './discover.ts';
+import type { Gathered } from './gather.ts';
+
+export function loadGathered(sweep: string): Gathered[] {
+  const dir = sweepPaths(sweep).sites;
+  return readdirSync(dir)
+    .filter((f) => f.endsWith('.gather.json'))
+    .map((f) => JSON.parse(readFileSync(join(dir, f), 'utf8')) as Gathered);
+}
+
+export function loadChecks(sweep: string, domain: string): SiteChecks | null {
+  const f = join(sweepPaths(sweep).sites, `${domain}.checks.json`);
+  return existsSync(f) ? (JSON.parse(readFileSync(f, 'utf8')) as SiteChecks) : null;
+}
+
+const saveChecks = (sweep: string, c: SiteChecks) => writeFileSync(join(sweepPaths(sweep).sites, `${c.domain}.checks.json`), JSON.stringify(c, null, 1));
+
+/** Stage 2: every gathered site that is not excluded, through the browser and the checks. Saved per site. */
+export async function checkAll(sweep: string, opts: { browsers?: number; only?: string[]; refresh?: boolean; log?: (l: string) => void } = {}): Promise<SiteChecks[]> {
+  const sp = sweepPaths(sweep);
+  const log = opts.log ?? (() => undefined);
+  let sites = loadGathered(sweep).filter((g) => !g.excluded);
+  if (opts.only) sites = sites.filter((g) => opts.only!.includes(g.domain));
+  const polite = new Polite(new HostLimiter(BOOK_DIRECT_GAP_MS));
+  const shooter = new Shooter(polite);
+  const limit = pLimit(opts.browsers ?? 8);
+  const out: SiteChecks[] = [];
+  let done = 0;
+  const started = Date.now();
+  try {
+    await Promise.all(
+      sites.map((g) =>
+        limit(async () => {
+          const prev = opts.refresh ? null : loadChecks(sweep, g.domain);
+          if (prev) {
+            out.push(prev);
+            done++;
+            return;
+          }
+          let c: SiteChecks;
+          try {
+            c = await withTimeout(checkSite(g, shooter, sp.shots, sp.crawlCache), 6 * 60_000);
+          } catch (e) {
+            c = { domain: g.domain, checkedAt: new Date().toISOString(), home: null, homeShot: null, hasOnlineBooking: false, onlineBookingHow: '', engine: '', results: [], error: (e as Error).message.slice(0, 200) } as SiteChecks;
+          }
+          saveChecks(sweep, c);
+          // The browser may have read contacts a plain request could not.
+          if (g.readBy) writeFileSync(join(sp.sites, `${g.domain}.gather.json`), JSON.stringify(g, null, 1));
+          out.push(c);
+          const flags = c.results.filter((r) => r.result === 'flag').map((r) => r.check);
+          done++;
+          if (flags.length || done % 20 === 0) log(`[${done}/${sites.length}, ${Math.round((Date.now() - started) / 60000)} min] ${g.domain}: ${flags.join(', ') || 'no flag'}`);
+        }),
+      ),
+    );
+  } finally {
+    await shooter.stop();
+  }
+  return out;
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error(`timed out after ${ms / 1000} s`)), ms).unref())]);
+}
+
+const COMPETITOR_INDUSTRIES = ['allied-health', 'dental', 'hair-beauty', 'fitness'];
+
+function km(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+  const r = (x: number) => (x * Math.PI) / 180;
+  const h = Math.sin(r(b.lat - a.lat) / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(r(b.lng - a.lng) / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(h));
+}
+
+/**
+ * Check 9, once every site is read: a clinic, practice, salon or studio with no online booking at all,
+ * while at least two of its three nearest same-trade candidates have it. The site's contact or book
+ * page is photographed with the three rivals named.
+ */
+export async function competitorPass(sweep: string, opts: { log?: (l: string) => void } = {}): Promise<number> {
+  const sp = sweepPaths(sweep);
+  const gathered = loadGathered(sweep).filter((g) => !g.excluded);
+  const checks = new Map(gathered.map((g) => [g.domain, loadChecks(sweep, g.domain)]));
+  const polite = new Polite(new HostLimiter(BOOK_DIRECT_GAP_MS));
+  const shooter = new Shooter(polite);
+  let flagged = 0;
+  try {
+    for (const g of gathered) {
+      const c = checks.get(g.domain);
+      if (!c || !c.home) continue;
+      c.results = c.results.filter((r) => r.check !== 'no_online_booking_vs_competitors');
+      const push = (r: Partial<CheckResult> & Pick<CheckResult, 'result'>) => c.results.push({ check: 'no_online_booking_vs_competitors', evidenceUrl: '', http: '', detail: '', shot: null, more: [], ...r });
+      if (!COMPETITOR_INDUSTRIES.includes(g.candidate.industry)) push({ result: 'not_applicable' });
+      else if (c.hasOnlineBooking) push({ result: 'pass', detail: `books online: ${c.onlineBookingHow}` });
+      else if (!g.candidate.lat) push({ result: 'unknown', detail: 'no location on the Google listing' });
+      else {
+        const here = { lat: Number(g.candidate.lat), lng: Number(g.candidate.lng) };
+        const peers = gathered
+          .filter((x) => x.domain !== g.domain && x.candidate.industry === g.candidate.industry && x.candidate.trade === g.candidate.trade && x.candidate.lat && checks.get(x.domain)?.home)
+          .map((x) => ({ x, d: km(here, { lat: Number(x.candidate.lat), lng: Number(x.candidate.lng) }), c: checks.get(x.domain)! }))
+          .sort((a, b) => a.d - b.d)
+          .slice(0, 3);
+        const withBooking = peers.filter((p) => p.c.hasOnlineBooking);
+        const named = peers.map((p) => `${p.x.candidate.name} (${p.x.candidate.town}, ${p.d.toFixed(1)} km): ${p.c.hasOnlineBooking ? p.c.onlineBookingHow.split(' ').slice(0, 3).join(' ') : 'no online booking'}`);
+        if (peers.length < 3 || withBooking.length < 2) push({ result: 'pass', detail: `no online booking, but ${withBooking.length} of the ${peers.length} nearest have it`, http: named.join(' | ') });
+        else {
+          const page = g.pages.find((p) => p.role === 'contact' && p.status === 200) ?? g.pages.find((p) => p.role === 'book' && p.status === 200);
+          const url = page?.finalUrl ?? c.home.finalUrl;
+          const dir = join(sp.shots, g.domain);
+          const v = await shooter.visit(url, { shot: join(dir, 'competitor-page.png') });
+          const lines = ['No online booking found on this site; nearby rivals book online', ...peers.map((p) => `${p.x.candidate.name}, ${p.d.toFixed(1)} km: ${p.c.hasOnlineBooking ? p.c.onlineBookingHow.replace(/^booking link /, 'booking link ').slice(0, 60) : 'no online booking'}`)];
+          const shot = v.shot ? await shooter.write(readFileSync(v.shot), join(dir, 'no_online_booking_vs_competitors.png'), lines) : null;
+          push({ result: shot ? 'flag' : 'unproven', evidenceUrl: url, http: named.join(' | '), detail: `no booking engine, widget or booking link on the ${g.pages.length + 1} pages read; ${withBooking.length} of the 3 nearest ${g.candidate.trade} candidates book online`, shot });
+          if (shot) flagged++;
+          opts.log?.(`competitor: ${g.domain} flagged`);
+        }
+      }
+      saveChecks(sweep, c);
+    }
+  } finally {
+    await shooter.stop();
+  }
+  return flagged;
+}
+
+export interface EmailVerdict {
+  email: string;
+  status: VerifyStatus;
+  flags: string[];
+  checkedAt: string;
+}
+
+/**
+ * Single-address checks, for flagged sites only, while credits last. With none, every flagged address
+ * stays at syntax and MX with `needs_verifier`. Results are cached per address.
+ */
+export async function verifyFlagged(sweep: string, flaggedEmails: string[], opts: { log?: (l: string) => void } = {}): Promise<{ credits: number | null; checked: number; verdicts: Map<string, EmailVerdict> }> {
+  const sp = sweepPaths(sweep);
+  const dir = join(sp.data, 'cache', 'zerobounce');
+  const verdicts = new Map<string, EmailVerdict>();
+  for (const e of flaggedEmails) {
+    const f = join(dir, `${e}.json`);
+    if (existsSync(f)) {
+      const c = JSON.parse(readFileSync(f, 'utf8')) as Parameters<typeof verdictOf>[0];
+      const v = verdictOf(c);
+      verdicts.set(e, { email: e, status: v.status, flags: v.flags, checkedAt: c.checkedAt });
+    }
+  }
+  const key = process.env.ZEROBOUNCE_API_KEY;
+  if (!key) return { credits: null, checked: 0, verdicts };
+  let credits = await (async (): Promise<number | null> => {
+    try {
+      const r = (await (await fetch(`https://api.zerobounce.net/v2/getcredits?api_key=${encodeURIComponent(key)}`, { signal: AbortSignal.timeout(20_000) })).json()) as { Credits?: string | number };
+      return Number(r.Credits ?? 0);
+    } catch {
+      return null;
+    }
+  })();
+  opts.log?.(`ZeroBounce credits: ${credits ?? 'unknown'}`);
+  let checked = 0;
+  for (const e of flaggedEmails) {
+    if (verdicts.has(e) || !credits || credits <= 0) continue;
+    const c = await zeroBounceCheck(e, key);
+    if (c.error) continue;
+    writeFileSync(join(dir, `${e}.json`), JSON.stringify(c, null, 1));
+    const v = verdictOf(c);
+    verdicts.set(e, { email: e, status: v.status, flags: v.flags, checkedAt: c.checkedAt });
+    checked++;
+    if (c.status !== 'unknown') credits--;
+  }
+  return { credits, checked, verdicts };
+}

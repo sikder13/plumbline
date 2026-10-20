@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { auditCsv, auditVerified, bookDirectPaths, captureContacts, discover, gatherAll, qualifyAll, Registry, seedRegistryFromRelay01, sweepDiscover, type ListId } from '@plumbline/leads';
+import { auditCsv, auditVerified, bookDirectPaths, captureContacts, checkAll, competitorPass, discover, gatherAll, qualifyAll, Registry, seedRegistryFromRelay01, sweepDiscover, writeSweepOutputs, type ListId } from '@plumbline/leads';
 
 const LISTS = ['A', 'B', 'C', 'D'];
 
@@ -56,6 +56,17 @@ export function registerBookDirectLeads(leads: Command): void {
         const started = Date.now();
         const g = await gatherAll(opts.sweep, { parallel: Number(opts.parallel), only, refresh: opts.refresh, log: console.log });
         console.log(`gathered ${g.length} sites in ${Math.round((Date.now() - started) / 1000)} s`);
+      }
+      if (opts.stage === 'check' || opts.stage === 'all') {
+        const started = Date.now();
+        const c = await checkAll(opts.sweep, { browsers: Number(opts.browsers), only, refresh: opts.refresh, log: console.log });
+        console.log(`checked ${c.length} sites in ${Math.round((Date.now() - started) / 1000)} s`);
+        const n = await competitorPass(opts.sweep, { log: console.log });
+        console.log(`competitor check: ${n} flagged`);
+      }
+      if (opts.stage === 'report' || opts.stage === 'all') {
+        const s = await writeSweepOutputs(opts.sweep, { log: console.log });
+        console.log(JSON.stringify({ ...s, top20: undefined }, null, 1));
       }
       process.exit(0);
     });
