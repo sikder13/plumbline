@@ -43,6 +43,8 @@ export interface Visit {
   highlighted: boolean;
   /** Pop-ups hidden before the picture. */
   overlaysHidden: number;
+  /** What `collect` returned. */
+  collected: unknown;
   shot: string | null;
   at: string;
 }
@@ -63,6 +65,8 @@ export interface VisitOptions {
   html?: boolean;
   /** Push the page as far right as it goes before the picture: shows a page wider than the phone. */
   scrollRight?: boolean;
+  /** Scroll the page through, so lazy content loads, then run this in the page and keep what it returns. */
+  collect?: () => unknown;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -134,7 +138,7 @@ export class Shooter {
       v0.error = 'off_limits_host';
       return v0;
     }
-    const v: Visit = { url, finalUrl: url, status: null, error: null, certError: null, blocked: false, security: null, securityIssues: [], loadMs: 0, slowRender: false, title: '', text: '', frames: [], measure: null, html: '', blockedNav: null, highlighted: false, overlaysHidden: 0, shot: null, at: new Date().toISOString() };
+    const v: Visit = { url, finalUrl: url, status: null, error: null, certError: null, blocked: false, security: null, securityIssues: [], loadMs: 0, slowRender: false, title: '', text: '', frames: [], measure: null, html: '', blockedNav: null, highlighted: false, overlaysHidden: 0, collected: null, shot: null, at: new Date().toISOString() };
     if (!(await this.polite.robots.allows(url).catch(() => false))) {
       v.blocked = true;
       v.error = 'robots';
@@ -167,7 +171,7 @@ export class Shooter {
   }
 
   private async blank(url: string): Promise<Visit> {
-    return { url, finalUrl: url, status: null, error: null, certError: null, blocked: false, security: null, securityIssues: [], loadMs: 0, slowRender: false, title: '', text: '', frames: [], measure: null, html: '', blockedNav: null, highlighted: false, overlaysHidden: 0, shot: null, at: new Date().toISOString() };
+    return { url, finalUrl: url, status: null, error: null, certError: null, blocked: false, security: null, securityIssues: [], loadMs: 0, slowRender: false, title: '', text: '', frames: [], measure: null, html: '', blockedNav: null, highlighted: false, overlaysHidden: 0, collected: null, shot: null, at: new Date().toISOString() };
   }
 
   /** Loads, waits, reads and photographs one page. Returns true to try again without the certificate check. */
@@ -228,6 +232,21 @@ export class Shooter {
     v.title = await within(page.title(), 10_000, '');
     if (opts.measure) v.measure = await within(page.evaluate(MEASURE), 20_000, null);
     v.text = await within(page.evaluate(() => (document.body ? document.body.innerText : '').slice(0, 20_000)), 15_000, '');
+    if (opts.collect) {
+      await within(
+        page.evaluate(async () => {
+          for (let y = 0; y < document.body.scrollHeight; y += 500) {
+            window.scrollTo(0, y);
+            await new Promise((r) => setTimeout(r, 120));
+          }
+          window.scrollTo(0, 0);
+        }),
+        30_000,
+        undefined,
+      );
+      await sleep(800);
+      v.collected = await within(page.evaluate(opts.collect), 15_000, null);
+    }
     if (opts.html) v.html = await within(page.content(), 15_000, '');
     if (opts.frames) {
       for (const f of page.frames().slice(1, 8)) {
