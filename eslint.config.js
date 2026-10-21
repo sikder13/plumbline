@@ -20,6 +20,11 @@ export default tseslint.config(
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
   },
   {
+    // A design's own motion, written into its page as it is.
+    files: ['apps/previews/designs/*.motion.js'],
+    languageOptions: { globals: { ...globals.browser }, sourceType: 'script' },
+  },
+  {
     files: ['packages/*/src/inpage*.js'],
     languageOptions: { globals: { ...globals.browser }, sourceType: 'script' },
     rules: { '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }] },

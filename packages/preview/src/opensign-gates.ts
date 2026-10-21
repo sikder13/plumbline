@@ -1,5 +1,6 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { gzipSync } from 'node:zlib';
 import { AxeBuilder } from '@axe-core/playwright';
 import { chromium, type Browser, type Page } from 'playwright';
 import { median } from '@plumbline/core';
@@ -15,7 +16,17 @@ const PLACEHOLDER = /\b(lorem|ipsum|placeholder|todo|tbd|xxx|coming soon)\b/gi;
 /** A US phone number as a page writes it; its hyphen is part of the number, not a dash in a sentence. */
 const US_PHONE = /\(\d{3}\)\s?\d{3}-\d{4}/g;
 
-export const OPEN_SIGN_LIMITS = { performance: 85, accessibility: 95, lcpMs: 2500, cls: 0.05, tbtMs: 200 };
+export interface Limits {
+  performance: number;
+  accessibility: number;
+  /** Checked only where it is set. */
+  bestPractices?: number;
+  lcpMs: number;
+  cls: number;
+  tbtMs: number;
+}
+
+export const OPEN_SIGN_LIMITS: Limits = { performance: 85, accessibility: 95, lcpMs: 2500, cls: 0.05, tbtMs: 200 };
 
 /** A US number in international form: +1, then ten digits. */
 export function usTel(href: string): boolean {
@@ -32,7 +43,7 @@ const NZ_PHONE = /(?:\+64|\(?0\d{1,3}\)?)[\s-]?\d{2,4}[\s-]\d{3,4}(?:[\s-]\d{1,4
 
 /** What differs between campaigns: the bars, the widths checked, the phone rule, and what a page must or must not carry. */
 export interface CampaignGates {
-  limits: typeof OPEN_SIGN_LIMITS;
+  limits: Limits;
   overflowWidths: number[];
   telOk: (href: string) => boolean;
   requireDirections: boolean;
@@ -40,10 +51,32 @@ export interface CampaignGates {
   noTestimonials: boolean;
   /** The page must link to the business's own email. */
   requireEmail: boolean;
-  foundTab: string;
+  /** The second tab's name in the report, or null for a page with no second tab. */
+  foundTab: string | null;
+  /** Every script the page runs, in its own files and inside the page, gzipped, at most this many bytes. */
+  jsBudgetGz?: number;
+  /** The largest paint must be of this element or of something inside it, such as the headline that opens the page. */
+  lcpInside?: string;
 }
 
 export const OPEN_SIGN_GATES: CampaignGates = { limits: OPEN_SIGN_LIMITS, overflowWidths: [360, 1440], telOk: usTel, requireDirections: true, noTestimonials: false, requireEmail: false, foundTab: 'price' };
+/**
+ * A sample homepage (sample.ts): the stricter bars of its relay, every width from 360 to 1440, no
+ * second tab, a link to the business's own email, at most 60 KB of script gzipped, and the headline
+ * that opens the page as the largest paint.
+ */
+export const SAMPLE_GATES: CampaignGates = {
+  limits: { performance: 90, accessibility: 95, bestPractices: 95, lcpMs: 2500, cls: 0.05, tbtMs: 200 },
+  overflowWidths: [360, 390, 768, 1280, 1440],
+  telOk: usTel,
+  requireDirections: true,
+  noTestimonials: true,
+  requireEmail: true,
+  foundTab: null,
+  jsBudgetGz: 60_000,
+  lcpInside: 'h1',
+};
+
 export const BOOK_DIRECT_GATES: CampaignGates = { limits: { performance: 90, accessibility: 95, lcpMs: 2500, cls: 0.05, tbtMs: 200 }, overflowWidths: [360, 390, 768, 1280], telOk: nzTel, requireDirections: false, noTestimonials: false, requireEmail: true, foundTab: 'found' };
 
 export interface OpenSignIssue {
@@ -70,7 +103,9 @@ export function openSignCopy(text: string, allowed: Set<string>, where = 'page')
 export interface OpenSignReport {
   slug: string;
   url: string;
-  lighthouse: { performance: number | null; accessibility: number | null; lcpMs: number | null; cls: number | null; tbtMs: number | null; runs: LighthouseRun[] };
+  lighthouse: { performance: number | null; accessibility: number | null; bestPractices: number | null; lcpMs: number | null; cls: number | null; tbtMs: number | null; runs: LighthouseRun[] };
+  /** The scripts the page runs: each file and each script inside the page, with its size gzipped. */
+  scripts: { src: string; gz: number }[];
   axe: { tab: string; id: string; impact: string; nodes: number; first: string }[];
   overflow: { width: number; tab: string; scrollWidth: number }[];
   links: { href: string; label: string; ok: boolean; note: string }[];
@@ -112,11 +147,20 @@ export async function checkOpenSignPage(data: PageData, opts: { base: string; al
     const r = runs[i]!;
     log(`  lighthouse ${i + 1}: ${r.error ?? `performance ${r.performance}, accessibility ${r.accessibility}, LCP ${((r.lcpMs ?? 0) / 1000).toFixed(2)} s, CLS ${(r.cls ?? 0).toFixed(3)}, TBT ${Math.round(r.tbtMs ?? 0)} ms`}`);
   }
-  const lighthouse = { performance: med(runs.map((r) => r.performance)), accessibility: med(runs.map((r) => r.accessibility)), lcpMs: med(runs.map((r) => r.lcpMs)), cls: med(runs.map((r) => r.cls)), tbtMs: med(runs.map((r) => r.tbtMs)), runs };
+  const lighthouse = { performance: med(runs.map((r) => r.performance)), accessibility: med(runs.map((r) => r.accessibility)), bestPractices: med(runs.map((r) => r.bestPractices)), lcpMs: med(runs.map((r) => r.lcpMs)), cls: med(runs.map((r) => r.cls)), tbtMs: med(runs.map((r) => r.tbtMs)), runs };
   const L = G.limits;
   if (runs.length) {
     if ((lighthouse.performance ?? 0) < L.performance) failures.push(`performance ${lighthouse.performance} is under ${L.performance}`);
     if ((lighthouse.accessibility ?? 0) < L.accessibility) failures.push(`accessibility ${lighthouse.accessibility} is under ${L.accessibility}`);
+    if (L.bestPractices !== undefined && (lighthouse.bestPractices ?? 0) < L.bestPractices) failures.push(`best practices ${lighthouse.bestPractices} is under ${L.bestPractices}`);
+    if (G.lcpInside) {
+      const tag = G.lcpInside;
+      for (const [i, r] of runs.entries()) {
+        const el = r.lcpElement;
+        const inside = !!el && (new RegExp(`(?:^|[\\s>])${tag}(?:[.#:\\[\\s>]|$)`).test(el.selector) || el.snippet.startsWith(`<${tag}`));
+        if (!inside) failures.push(`Lighthouse run ${i + 1}: the largest paint is not inside the ${tag} (${el ? `${el.selector} ${el.snippet.slice(0, 60)}` : 'none found'})`);
+      }
+    }
     if (lighthouse.lcpMs === null || lighthouse.lcpMs >= L.lcpMs) failures.push(`LCP ${((lighthouse.lcpMs ?? 0) / 1000).toFixed(2)} s is not under 2.5 s`);
     if (lighthouse.cls === null || lighthouse.cls >= L.cls) failures.push(`CLS ${lighthouse.cls} is not under 0.05`);
     if (lighthouse.tbtMs === null || lighthouse.tbtMs >= L.tbtMs) failures.push(`TBT ${Math.round(lighthouse.tbtMs ?? 0)} ms is not under 200 ms`);
@@ -127,16 +171,40 @@ export async function checkOpenSignPage(data: PageData, opts: { base: string; al
   const axe: OpenSignReport['axe'] = [];
   const screenshots: string[] = [];
   const texts: { tab: string; text: string }[] = [];
+  const tabs = G.foundTab ? ['', '#found'] : [''];
+  const tabName = (tab: string) => (tab ? (G.foundTab ?? 'found') : 'demo');
+  const scripts: OpenSignReport['scripts'] = [];
   mkdirSync(opts.shotsDir, { recursive: true });
   try {
+    // Every script the page runs, gzipped: its script files as served, and the scripts written inside the page.
+    {
+      const ctx = await quietContext(browser, { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+      const page = await ctx.newPage();
+      const files: Promise<void>[] = [];
+      page.on('response', (res) => {
+        if (res.request().resourceType() !== 'script') return;
+        files.push(res.body().then((b) => void scripts.push({ src: res.url().replace(opts.base, ''), gz: gzipSync(b).length }), () => undefined));
+      });
+      await page.goto(url, { waitUntil: 'load' });
+      // Our other pages fetch their scripts at the first touch, so the page is touched once.
+      await page.touchscreen.tap(30, 250).catch(() => undefined);
+      await page.waitForTimeout(3000);
+      await page.waitForLoadState('networkidle');
+      await Promise.all(files);
+      const inline = await page.evaluate(() => [...document.querySelectorAll('script:not([src])')].map((e) => e.textContent ?? ''));
+      for (const [i, code] of inline.entries()) if (code.trim()) scripts.push({ src: `inside the page ${i + 1}`, gz: gzipSync(code).length });
+      await ctx.close();
+      const total = scripts.reduce((n, x) => n + x.gz, 0);
+      if (G.jsBudgetGz !== undefined && total > G.jsBudgetGz) failures.push(`scripts come to ${total} bytes gzipped, over ${G.jsBudgetGz}`);
+    }
     for (const width of G.overflowWidths) {
       const ctx = await quietContext(browser, { viewport: { width, height: 800 }, deviceScaleFactor: 1, isMobile: width < 900, hasTouch: width < 900 });
       const page = await ctx.newPage();
-      for (const tab of ['', '#found']) {
+      for (const tab of tabs) {
         await page.goto(`${url}${tab}`, { waitUntil: 'networkidle' });
         await walk(page);
         const sw = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth));
-        if (sw > width) overflow.push({ width, tab: tab ? G.foundTab : 'demo', scrollWidth: sw });
+        if (sw > width) overflow.push({ width, tab: tabName(tab), scrollWidth: sw });
       }
       await ctx.close();
     }
@@ -145,8 +213,8 @@ export async function checkOpenSignPage(data: PageData, opts: { base: string; al
     for (const width of [390, 1440]) {
       const ctx = await quietContext(browser, { viewport: { width, height: width === 390 ? 844 : 900 }, deviceScaleFactor: width === 390 ? 2 : 1, isMobile: width === 390, hasTouch: width === 390, reducedMotion: 'reduce' });
       const page = await ctx.newPage();
-      for (const tab of ['', '#found']) {
-        const name = tab ? G.foundTab : 'demo';
+      for (const tab of tabs) {
+        const name = tabName(tab);
         await page.goto(`${url}${tab}`, { waitUntil: 'networkidle' });
         await walk(page);
         await page.waitForLoadState('networkidle');
@@ -220,7 +288,7 @@ export async function checkOpenSignPage(data: PageData, opts: { base: string; al
     if (G.noTestimonials) {
       const demoText = texts.find((t) => t.tab === 'demo')?.text ?? '';
       const m = /\b(?:testimonials?|reviews?|rated|stars?|what (?:our )?(?:patients|clients) say)\b|★/i.exec(demoText);
-      if (m) failures.push(`a health page carries "${m[0]}": no testimonials, reviews or ratings`);
+      if (m) failures.push(`the page carries "${m[0]}": no testimonials, reviews or ratings`);
     }
 
     const beacon = await checkBeacon(browser, url, data.path);
@@ -228,7 +296,7 @@ export async function checkOpenSignPage(data: PageData, opts: { base: string; al
 
     const copy = texts.flatMap((t) => openSignCopy(t.text, opts.allowed, t.tab));
     for (const c of copy) failures.push(`copy ${c.kind} in ${c.where}: "${c.text}" in "${c.context.replace(/\s+/g, ' ')}"`);
-    return { slug: data.slug, url, lighthouse, axe, overflow, links, beacon, reducedMotion, copy, screenshots, failures };
+    return { slug: data.slug, url, lighthouse, scripts, axe, overflow, links, beacon, reducedMotion, copy, screenshots, failures };
   } finally {
     await browser.close();
   }

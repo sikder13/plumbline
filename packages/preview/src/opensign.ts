@@ -16,6 +16,8 @@ export interface OpenSignContent extends Pick<ContentFile, 'images' | 'look' | '
   name: string;
   /** Their own site's domain, shown above the findings. */
   domain?: string;
+  /** A sample homepage: the demo alone, with no price tab and none of our actions. */
+  sample?: boolean;
 }
 
 export function openSignContent(slug: string): OpenSignContent {
@@ -50,6 +52,7 @@ export async function buildOpenSignPage(db: Db, campaign: string, slug: string, 
     reply: { email: opts.replyEmail, subject: `${content.name} website`, call: '' },
     builtAtNz: nzTime(opts.now ?? new Date()),
     campaign,
+    ...(content.sample ? { sample: true } : {}),
   };
   mkdirSync(previewPaths.data, { recursive: true });
   writeFileSync(join(previewPaths.data, `${slug}.json`), JSON.stringify(data, null, 2));
