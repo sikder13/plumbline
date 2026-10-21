@@ -1,8 +1,11 @@
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { chromium } from 'playwright';
 import { describe, expect, it } from 'vitest';
-import { cropInPixels, mediaDir, nzReadable, plainDates, plainImpact, plainSeen, secondCheckList, secondCheckOf, withoutDashes } from './build.ts';
+import { cropInPixels, mediaDir, nzReadable, plainDates, plainImpact, plainSeen, secondCheckList, secondCheckOf, servedFile, withoutDashes } from './build.ts';
 import { bannedIssues, dashIssues, numberIssues, numberSet, scanPage, splitPage, visibleText } from './copy.ts';
 import { holds, kindOf, pageFacts } from './crawlmouse.ts';
 import { quietContext, validMailto, validTel } from './gates.ts';
@@ -240,5 +243,34 @@ describe("which of the second tool's findings a wave page lists", () => {
     expect(() => ids([4])).toThrow('finding 4 did not hold when we opened its pages ourselves');
     expect(() => ids([5])).toThrow('finding 5 did not hold when we opened its pages ourselves');
     expect(() => ids([9])).toThrow('finding 9 is not one of the second check\'s findings for this business');
+  });
+});
+
+describe('what a built site carries', () => {
+  it('leaves out the notes of what each photo was made from, even through the linked folder the framework copies', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'plumb-site-'));
+    try {
+      // As in a real build: the photos and their notes, a public folder linking to them, and the framework's output.
+      const photos = join(dir, 'assets', 'page-abc123', 'img');
+      mkdirSync(photos, { recursive: true });
+      writeFileSync(join(photos, 'p01-400.webp'), 'webp');
+      writeFileSync(join(photos, 'p01.made'), '/home/someone/data/photo-01.jpg|null|1');
+      const out = join(dir, 'out');
+      mkdirSync(out);
+      writeFileSync(join(out, 'index.html'), '<html></html>');
+      symlinkSync(join(dir, 'assets', 'page-abc123'), join(out, 'page-abc123'));
+      const site = join(dir, 'site');
+      cpSync(out, site, { recursive: true, dereference: true, filter: servedFile });
+      expect(existsSync(join(site, 'page-abc123', 'img', 'p01-400.webp'))).toBe(true);
+      expect(readdirSync(join(site, 'page-abc123', 'img'))).toEqual(['p01-400.webp']);
+      expect(existsSync(join(site, 'index.html'))).toBe(true);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('keeps every other file', () => {
+    for (const f of ['/demo/p/img/p01-400.webp', '/demo/p/index.html', '/demo/fonts/inter-latin-wght-normal.woff2', '/demo/p/made.txt']) expect(servedFile(f), f).toBe(true);
+    expect(servedFile('/demo/p/img/hero.made')).toBe(false);
   });
 });

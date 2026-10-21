@@ -8,8 +8,9 @@ import { Shell } from '@/components/Shell';
 import { DESIGNS } from '@/designs';
 import { allPages, pageByPath, pic } from '@/lib/data';
 import { PHONE_MEDIA } from '@/components/Pic';
-import { BASE, BOOK_DIRECT, ENGINE_DESIGNS, FOUND_LINK, OPEN_SIGN, SENDER, SENDER_SITE } from '@/lib/offer';
+import { BASE, BOOK_DIRECT, ENGINE_DESIGNS, FOUND_LINK, OPEN_SIGN, OWN_VISITS, SENDER, SENDER_SITE, VISIT_ENDPOINT } from '@/lib/offer';
 import { Visits } from '@/components/Visits';
+import { PAGE_SCRIPT, visitScript } from '@plumbline/preview/sample';
 
 export const dynamicParams = false;
 
@@ -19,7 +20,8 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ page: string }> }): Promise<Metadata> {
   const data = pageByPath((await params).page);
-  return { title: `${data.name}: design demo` };
+  // A sample homepage is titled as the business's own page would be.
+  return { title: data.sample ? data.name : `${data.name}: design demo` };
 }
 
 export default async function Page({ params }: { params: Promise<{ page: string }> }) {
@@ -36,6 +38,16 @@ export default async function Page({ params }: { params: Promise<{ page: string 
   const phoneHero = hero ? data.images.heroPhone?.sources[0] : undefined;
 
   const Demo = design.Demo;
+  // A sample homepage stands on its own: the design alone, and the visit report as a script of its own,
+  // since the framework's scripts are taken out of it after the build (packages/preview/src/sample.ts).
+  if (data.sample) {
+    return (
+      <>
+        <Demo data={data} />
+        <script {...{ [PAGE_SCRIPT]: '' }} dangerouslySetInnerHTML={{ __html: visitScript({ token: data.path, endpoint: VISIT_ENDPOINT, own: OWN_VISITS }) }} />
+      </>
+    );
+  }
   return (
     <>
       {phoneHero && <link rel="preload" as="image" type={phoneHero.type} imageSrcSet={phoneHero.srcset} imageSizes="100vw" media={PHONE_MEDIA} fetchPriority="high" />}

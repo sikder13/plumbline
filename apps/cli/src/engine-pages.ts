@@ -7,7 +7,7 @@ import { chromium } from 'playwright';
 import { ROOT, db, env, paths, type Db } from '@plumbline/core';
 import { CHECK_IDS } from '@plumbline/checks';
 import { loadLibrary } from '@plumbline/impact';
-import { BASE_PATH, EngineConfig, MIN_SCORE, MIN_WIDTH, OWN_VISIT, PHONE_KINDS, bannedIssues, measuredOn, buildEngineSample, contentDir, dashIssues, numberIssues, numberSet, ensureToken, gradeEnginePhotos, nzReadable, packCards, previewPaths, quietContext, serveSite, sharpnessScore, tokenFor, type FactPack, type PageData } from '@plumbline/preview';
+import { BASE_PATH, servedFile, EngineConfig, MIN_SCORE, MIN_WIDTH, OWN_VISIT, PHONE_KINDS, bannedIssues, measuredOn, buildEngineSample, contentDir, dashIssues, numberIssues, numberSet, ensureToken, gradeEnginePhotos, nzReadable, packCards, previewPaths, quietContext, serveSite, sharpnessScore, tokenFor, type FactPack, type PageData } from '@plumbline/preview';
 import { isSuppressed } from '@plumbline/wave';
 import { suppressionList } from './approve.ts';
 import { gateEnginePage, phoneShots, type SampleGate } from './engine.ts';
@@ -207,13 +207,13 @@ export function buildPagesSite(slugs: string[]): void {
   const site = join(PAGES_OUT, 'site');
   const served = join(site, BASE_PATH);
   rmSync(site, { recursive: true, force: true });
-  cpSync(join(app, 'out'), served, { recursive: true, dereference: true });
+  cpSync(join(app, 'out'), served, { recursive: true, dereference: true, filter: servedFile });
   const pages = readdirSync(staged).map((f) => JSON.parse(readFileSync(join(staged, f), 'utf8')) as PageData);
   const published = new Set(pages.map((p) => p.path));
   for (const e of readdirSync(served, { withFileTypes: true })) if (e.isDirectory() && /-[a-z0-9]{6}$/.test(e.name) && !published.has(e.name)) rmSync(join(served, e.name), { recursive: true, force: true });
   for (const page of pages) {
     const assets = join(previewPaths.out, 'assets', page.path);
-    if (existsSync(assets)) cpSync(assets, join(served, page.path), { recursive: true, filter: (from) => !from.endsWith('.made') });
+    if (existsSync(assets)) cpSync(assets, join(served, page.path), { recursive: true, filter: servedFile });
     const html = join(served, page.path, 'index.html');
     writeFileSync(html, scriptsAfterPaint(readFileSync(html, 'utf8')));
   }
@@ -266,13 +266,13 @@ export function buildWholeSite(): number {
   execFileSync(join(app, 'node_modules', '.bin', 'next'), ['build'], { cwd: app, stdio: 'inherit', env: { ...process.env, PREVIEWS_DATA: staged, NEXT_TELEMETRY_DISABLED: '1' } });
   const served = join(previewPaths.site, BASE_PATH);
   rmSync(previewPaths.site, { recursive: true, force: true });
-  cpSync(join(app, 'out'), served, { recursive: true, dereference: true });
+  cpSync(join(app, 'out'), served, { recursive: true, dereference: true, filter: servedFile });
   const pages = readdirSync(staged).map((f) => JSON.parse(readFileSync(join(staged, f), 'utf8')) as PageData);
   const published = new Set(pages.map((p) => p.path));
   for (const e of readdirSync(served, { withFileTypes: true })) if (e.isDirectory() && /-[a-z0-9]{6}$/.test(e.name) && !published.has(e.name)) rmSync(join(served, e.name), { recursive: true, force: true });
   for (const page of pages) {
     const assets = join(previewPaths.out, 'assets', page.path);
-    if (existsSync(assets)) cpSync(assets, join(served, page.path), { recursive: true, filter: (from) => !from.endsWith('.made') });
+    if (existsSync(assets)) cpSync(assets, join(served, page.path), { recursive: true, filter: servedFile });
     const html = join(served, page.path, 'index.html');
     writeFileSync(html, scriptsAfterPaint(readFileSync(html, 'utf8')));
   }

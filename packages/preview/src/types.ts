@@ -62,6 +62,8 @@ export interface PageData {
   builtAtNz: string;
   /** Set for a page outside the audit waves, such as "open-sign": it carries our price instead of findings. */
   campaign?: string;
+  /** A sample homepage shown to the owner as it would stand on its own: none of our frame, tabs, price or actions, and static once built (sample.ts). */
+  sample?: boolean;
 }
 
 /** previews/content/<slug>/content.json */
@@ -75,8 +77,8 @@ export interface ContentFile {
   secondCheckNotes?: string[];
   /** The business name as it should read on the page, when the stored name carries extra words. */
   name?: string;
-  /** `quality` (20 to 60, 48 unless given) sets how hard a photograph is compressed: a busy one at the top of a page may need less to load in time. `sharpen` applies a light, even sharpen to each size after it is resized. */
-  images: Record<string, { file: string; alt: string; widths?: number[]; position?: string; quality?: number; crop?: { left: number; top: number; width: number; height: number }; sharpen?: boolean }>;
+  /** `quality` (20 to 60, 48 unless given) sets how hard a photograph is compressed: a busy one at the top of a page may need less to load in time. `sharpen` applies a light, even sharpen to each size after it is resized. `formats` replaces AVIF and WebP: with `jpeg` among them, a JPEG of each size is the fallback for a browser that takes none of the others. */
+  images: Record<string, { file: string; alt: string; widths?: number[]; position?: string; quality?: number; crop?: { left: number; top: number; width: number; height: number }; sharpen?: boolean; formats?: ('avif' | 'webp' | 'jpeg')[] }>;
   /** A short loop cut from the business's own film, under previews/content/<slug>/. */
   video?: { file: string };
   /** Awards and certifications shown on the business's own site, each with the page it is shown on. */

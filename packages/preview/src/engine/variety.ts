@@ -60,6 +60,8 @@ export const EARLIER_TYPE_PAIRS: { by: string; display: string; text: string }[]
   { by: 'plank', display: 'League Spartan', text: 'Source Serif 4' },
   { by: 'mow', display: 'Big Shoulders Display', text: 'Work Sans' },
   { by: 'column', display: 'Unbounded', text: 'Onest' },
+  // Haute Ink's sample homepage (relay HAUTE-INK-V2), which replaced haute on its page.
+  { by: 'wall', display: 'Clash Display', text: 'Inter' },
   // Open Sign batch 02.
   { by: 'cottage', display: 'Marcellus', text: 'Alegreya' },
   { by: 'letterboard', display: 'Oswald', text: 'Bitter' },

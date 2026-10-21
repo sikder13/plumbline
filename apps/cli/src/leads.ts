@@ -3,7 +3,7 @@ import type { Command } from 'commander';
 import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { db } from '@plumbline/core';
-import { BASE_PATH, BOOK_DIRECT_GATES, buildOpenSignPage, checkOpenSignPage, numbersIn, previewPaths, serveSite, type PageData } from '@plumbline/preview';
+import { BASE_PATH, BOOK_DIRECT_GATES, SAMPLE_GATES, buildOpenSignPage, checkOpenSignPage, numbersIn, previewPaths, serveSite, staticSample, servedFile, type PageData } from '@plumbline/preview';
 import { scriptsAfterPaint, VERCEL_JSON } from './preview.ts';
 import { registerBookDirectLeads } from './book-direct.ts';
 import { campaignPaths, enrich, pickBatch, pickSweepBatch, pullLeads, sweep, writeEnriched, type PoolRow } from '@plumbline/leads';
@@ -145,13 +145,21 @@ export function registerLeads(program: Command): Command {
       execFileSync(join(app, 'node_modules', '.bin', 'next'), ['build'], { cwd: app, stdio: 'inherit', env: { ...process.env, PREVIEWS_DATA: staged, NEXT_TELEMETRY_DISABLED: '1' } });
       const served = join(previewPaths.site, BASE_PATH);
       rmSync(previewPaths.site, { recursive: true, force: true });
-      cpSync(join(app, 'out'), served, { recursive: true, dereference: true });
+      cpSync(join(app, 'out'), served, { recursive: true, dereference: true, filter: servedFile });
       for (const f of readdirSync(staged)) {
-        const page = JSON.parse(readFileSync(join(staged, f), 'utf8')) as { path: string };
+        const page = JSON.parse(readFileSync(join(staged, f), 'utf8')) as { path: string; sample?: boolean };
         for (const e of readdirSync(served)) if (/-[a-z0-9]{6}$/.test(e) && !pages.some((p) => e.startsWith(`${p}-`))) rmSync(join(served, e), { recursive: true, force: true });
-        cpSync(join(previewPaths.out, 'assets', page.path), join(served, page.path), { recursive: true, filter: (from) => !from.endsWith('.made') });
+        cpSync(join(previewPaths.out, 'assets', page.path), join(served, page.path), { recursive: true, filter: servedFile });
         const html = join(served, page.path, 'index.html');
-        writeFileSync(html, scriptsAfterPaint(readFileSync(html, 'utf8')));
+        if (page.sample) {
+          // A sample page is static and carries its own fonts, so its folder can be copied into any built site by itself.
+          const made = staticSample(readFileSync(html, 'utf8'), page.path);
+          writeFileSync(html, made.html);
+          mkdirSync(join(served, page.path, 'fonts'), { recursive: true });
+          for (const font of made.fonts) cpSync(join(served, 'fonts', font), join(served, page.path, 'fonts', font));
+          // The framework's own copies of the page are read only by its scripts, which a sample page no longer has.
+          for (const e of readdirSync(join(served, page.path))) if (e.endsWith('.txt')) rmSync(join(served, page.path, e));
+        } else writeFileSync(html, scriptsAfterPaint(readFileSync(html, 'utf8')));
       }
       writeFileSync(join(previewPaths.site, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
       writeFileSync(join(previewPaths.out, 'vercel.json'), JSON.stringify(VERCEL_JSON, null, 2));
@@ -181,7 +189,7 @@ export function registerLeads(program: Command): Command {
           const ours = opts.campaign === 'book-direct' ? offer.slice(offer.indexOf('BOOK_DIRECT')) : offer.slice(offer.indexOf('OPEN_SIGN'), offer.indexOf('BOOK_DIRECT') > 0 ? offer.indexOf('BOOK_DIRECT') : undefined);
           const allowed = new Set([...numbersIn(JSON.stringify(page.demo)).map((n) => n.token), ...numbersIn(ours).map((n) => n.token), '30', ...Array.from({ length: 24 }, (_, i) => String(i + 1)), ...Array.from({ length: 20 }, (_, i) => String(i + 1).padStart(2, '0'))]);
           // A Book Direct page is held to the stricter bars, and a health or dental page carries no testimonials.
-          const gates = opts.campaign === 'book-direct' ? { ...BOOK_DIRECT_GATES, noTestimonials: !!(page.demo as { health?: boolean }).health } : undefined;
+          const gates = opts.campaign === 'book-direct' ? { ...BOOK_DIRECT_GATES, noTestimonials: !!(page.demo as { health?: boolean }).health } : page.sample ? SAMPLE_GATES : undefined;
           const shots = join(previewPaths.review, opts.campaign, opts.campaign === 'book-direct' ? opts.batch.replace(/^book-direct-/, 'batch-') : '', page.slug);
           const report = await checkOpenSignPage(page, { base, allowed, shotsDir: shots, previewDir: folderOf(page.slug), lighthouseRuns: Number(opts.runs), gates, log: console.log });
           mkdirSync(shots, { recursive: true });

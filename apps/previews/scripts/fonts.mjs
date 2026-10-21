@@ -100,9 +100,29 @@ const FONTS = [
   ['Marcellus', '@fontsource/marcellus', 'marcellus', '400', '400', ['normal']],
   ['Tenor Sans', '@fontsource/tenor-sans', 'tenor-sans', '400', '400', ['normal']],
   ['Fragment Mono', '@fontsource/fragment-mono', 'fragment-mono', '400', '400', ['normal']],
+  // Held between the two weights a page sets, so the file carries no more of the axis than it uses.
+  ['Inter', '@fontsource-variable/inter', 'inter', 'wght', '400 500', ['normal'], { wght: { min: 400, max: 500 } }],
+  // From Fontshare, one file a weight.
+  ['Clash Display', 'fontshare:clash-display', 'clash-display', '600', '600', ['normal']],
+  ['Clash Display', 'fontshare:clash-display', 'clash-display', '700', '700', ['normal']],
 ];
 
 mkdirSync(out, { recursive: true });
+
+/**
+ * A face from Fontshare, fetched once from its own address into assets/fonts. That folder is not in the
+ * repository: Fontshare's licence lets a site serve the files but not pass them on, and the repository is public.
+ */
+async function fontshare(slug, weight, to) {
+  if (existsSync(to)) return;
+  const css = await (await fetch(`https://api.fontshare.com/v2/css?f[]=${slug}@${weight}&display=swap`)).text();
+  const url = /url\('([^']+\.woff2)'\)/.exec(css)?.[1];
+  if (!url) throw new Error(`Fontshare gave no woff2 file for ${slug} at ${weight}`);
+  const res = await fetch(url.startsWith('//') ? `https:${url}` : url);
+  if (!res.ok) throw new Error(`Fontshare answered ${res.status} for ${slug} at ${weight}`);
+  mkdirSync(dirname(to), { recursive: true });
+  writeFileSync(to, Buffer.from(await res.arrayBuffer()));
+}
 
 /** Writes a cut-down copy of a font. It is made afresh each time, so a changed rule here is never masked by an older file. */
 async function cut(from, to, text, held) {
@@ -121,6 +141,14 @@ for (const row of FONTS) {
   const [family, pkg, stem, axis, range, styles, pin] = row;
   const held = typeof pin === 'number' ? { wght: pin } : pin;
   const weight = typeof pin === 'number' ? String(pin) : range;
+  if (pkg.startsWith('fontshare:')) {
+    const source = join(app, 'assets', 'fonts', `${stem}-${axis}.woff2`);
+    await fontshare(pkg.slice('fontshare:'.length), axis, source);
+    const name = `${stem}-latin-${axis}-normal.woff2`;
+    await cut(source, join(out, name), LATIN_TEXT);
+    css += `@font-face{font-family:'${family}';font-style:normal;font-weight:${weight};font-display:swap;src:url(/demo/fonts/${name}) format('woff2');unicode-range:${LATIN}}\n`;
+    continue;
+  }
   for (const style of styles) {
     const files = join(app, 'node_modules', pkg, 'files');
     const latin = join(files, `${stem}-latin-${axis}-${style}.woff2`);

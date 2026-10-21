@@ -3,7 +3,7 @@ import { createReadStream, existsSync, mkdirSync, readFileSync, statSync } from 
 import { createServer, type Server } from 'node:http';
 import { dirname, extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createGzip } from 'node:zlib';
+import { createGzip, gzipSync } from 'node:zlib';
 import { AxeBuilder } from '@axe-core/playwright';
 import { chromium, type Browser, type BrowserContext, type BrowserContextOptions } from 'playwright';
 import { median } from '@plumbline/core';
@@ -45,6 +45,12 @@ export function serveSite(dir: string = previewPaths.site, port = 4321, opts: { 
     }
     const type = TYPES[extname(file)] ?? 'application/octet-stream';
     const compress = /text|javascript|json|svg/.test(type) && /gzip/.test(String(req.headers['accept-encoding'] ?? ''));
+    // A sample page reports from a script inside the page itself, so its pages are answered the same way.
+    if (opts.quiet && extname(file) === '.html') {
+      const html = readFileSync(file, 'utf8').replaceAll(LIVE_VISIT_ENDPOINT, '/api/demo-visit');
+      res.writeHead(200, { 'content-type': type, 'cache-control': 'no-cache', ...(compress ? { 'content-encoding': 'gzip' } : {}) });
+      return void res.end(compress ? gzipSync(html) : html);
+    }
     res.writeHead(200, { 'content-type': type, 'cache-control': extname(file) === '.html' ? 'no-cache' : 'public, max-age=31536000, immutable', ...(compress ? { 'content-encoding': 'gzip' } : {}) });
     if (compress) createReadStream(file).pipe(createGzip()).pipe(res);
     else createReadStream(file).pipe(res);
@@ -58,10 +64,15 @@ export interface LighthouseRun {
   version?: string;
   performance?: number | null;
   accessibility?: number | null;
+  bestPractices?: number | null;
   lcpMs?: number | null;
   cls?: number | null;
   tbtMs?: number | null;
   failedAccessibility?: string[];
+  failedBestPractices?: string[];
+  consoleErrors?: string[];
+  /** The element the largest paint was of. */
+  lcpElement?: { selector: string; snippet: string } | null;
 }
 
 export function lighthouseOnce(url: string): Promise<LighthouseRun> {

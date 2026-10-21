@@ -80,6 +80,15 @@ function hex(n: number): string {
 }
 
 /** Writes AVIF and WebP versions of one photo at phone and desktop widths. Skips files that are already newer than the source. */
+/**
+ * Whether a file belongs in a built site. The note of what each photo was made from (`<key>.made`, written by
+ * buildPicture) does not: it names folders on this machine. Notes reach the framework's output through the app's
+ * public folder, which links to the photos, so every copy into a site filters them out.
+ */
+export function servedFile(path: string): boolean {
+  return !path.endsWith('.made');
+}
+
 export async function buildPicture(source: string, outDir: string, urlBase: string, key: string, spec: ContentFile['images'][string]): Promise<Picture> {
   if (!existsSync(source)) throw new Error(`image ${source} does not exist`);
   mkdirSync(outDir, { recursive: true });
@@ -95,13 +104,16 @@ export async function buildPicture(source: string, outDir: string, urlBase: stri
   const widths = [...new Set((spec.widths ?? DEFAULT_WIDTHS).map((w) => Math.min(w, full.width)))].sort((a, b) => a - b);
   // What the stored versions were made from. A key that now points at another photo, or another crop of it, is made again.
   // A photograph with no quality of its own is recorded as it always was, so nothing already made is made again.
-  const made = `${source}|${JSON.stringify(crop ?? null)}|${statSync(source).mtimeMs}${spec.quality ? `|q${spec.quality}` : ''}${spec.sharpen ? '|sharpen' : ''}`;
+  const made = `${source}|${JSON.stringify(crop ?? null)}|${statSync(source).mtimeMs}${spec.quality ? `|q${spec.quality}` : ''}${spec.sharpen ? '|sharpen' : ''}${spec.formats ? `|${spec.formats.join('+')}` : ''}`;
   const madeFile = join(outDir, `${key}.made`);
   const current = existsSync(madeFile) && readFileSync(madeFile, 'utf8') === made;
+  // AVIF and WebP unless the content file names its own formats. A JPEG is never a source: it is the fallback for a browser that takes neither.
+  const wanted = spec.formats ?? ['avif', 'webp'];
   const formats = [
     { ext: 'avif', type: 'image/avif', write: (img: Sharp) => img.avif({ quality: spec.quality ?? 48, effort: 5 }) },
     { ext: 'webp', type: 'image/webp', write: (img: Sharp) => img.webp({ quality: spec.quality ? spec.quality + 22 : 70, effort: 5 }) },
-  ];
+    { ext: 'jpg', type: 'image/jpeg', write: (img: Sharp) => img.jpeg({ quality: spec.quality ? spec.quality + 22 : 72, mozjpeg: true }) },
+  ].filter((f) => wanted.includes(f.ext === 'jpg' ? 'jpeg' : (f.ext as 'avif' | 'webp')));
   const sources: Picture['sources'] = [];
   for (const f of formats) {
     const parts: string[] = [];
@@ -115,7 +127,7 @@ export async function buildPicture(source: string, outDir: string, urlBase: stri
       }
       parts.push(`${urlBase}/${name} ${w}w`);
     }
-    sources.push({ type: f.type, srcset: parts.join(', ') });
+    if (f.ext !== 'jpg') sources.push({ type: f.type, srcset: parts.join(', ') });
   }
   writeFileSync(madeFile, made);
   const { channels } = await sharp(meta.data).stats();
@@ -125,7 +137,7 @@ export async function buildPicture(source: string, outDir: string, urlBase: stri
     height: full.height,
     alt: spec.alt,
     sources,
-    fallback: `${urlBase}/${key}-${mid}.webp`,
+    fallback: `${urlBase}/${key}-${mid}.${wanted.includes('jpeg') ? 'jpg' : 'webp'}`,
     colour: `#${hex(channels[0]!.mean)}${hex(channels[1]!.mean)}${hex(channels[2]!.mean)}`,
     position: spec.position ?? null,
   };
