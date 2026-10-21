@@ -7,7 +7,7 @@ Relay: RELAY-HAUTE-INK-V2 (UD, 21 October 2026). Branch feat/open-sign in ~/nahl
 - **PASS.** Every gate passes, and the review scores 9 overall at both 390 and 1440 (no quality under 8), in one round plus fixes found while recording.
 - **Accent: #E7CC7D**, the median of the gold ring's pixels in their logo file. Inside the logo's circle, gold is 59% of the saturated pixels and jade 25% (at saturation 0.25 and up). Jade only leads when the smeared crop outside the circle is counted, which is not part of the logo.
 - **Display face: Clash Display**, loaded from Fontshare's own files and self hosted (600 for headlines, 700 for the artists' initials). Inter 400 to 500 for text, JetBrains Mono 400 for eyebrows and tags.
-- **Photos: the ten in data/open-sign/assets/haute-ink-tattoo-studio/**, all ten in the work rows, each in one row only. No instagram/ folder, no cover photo file, no storefront photo. The logo file gave the dagger mark (traced, see below).
+- **Photos: the ten in data/open-sign/assets/haute-ink-tattoo-studio/**, all ten in the work rows at first, each in one row only (nine after UD's fixes below). No instagram/ folder, no cover photo file, no storefront photo. The logo file gave the dagger mark (traced, see below).
 - **Reduced for lack of photos:** the artist cards (no photo is attributed to an artist, so each is their mark on a dark field with the artist's initial) and Find us (no storefront photo, so no card image). The work section runs in full: two rows, ten photos.
 
 ## What was built
@@ -85,6 +85,16 @@ Gate screenshots and gates.json are in previews/review/open-sign/haute-ink-tatto
 10. **Added beyond the relay:** a pause button on the work rows (moving content needs a way to stop it), a finger drag on the rows, the phone number under the address, the shop's handle as the Book panel's first line, a small counter on the artist cards, and click reports on Message the shop, Email, Call and Directions as on other pages.
 11. **The previous design (haute) stays in the repository** and its content is kept beside the new one as previews/content/haute-ink-tattoo-studio/content-seal.json, so going back is one file.
 12. **Recordings are scripted scrolls**: headless Chrome ignored synthesized touch gestures, so the page and the artist rail are scrolled from the page itself.
+
+## Fixes from UD (relay HAUTE-INK-V2-FIX-AND-DEPLOY, part 1)
+
+1. **The two-view back piece on a white board (photo-05) is out of the work rows.** It is gone from the content file's photo list, and its file stays in the assets folder. Nine photos now run in two rows of four and five, balanced by width (the wide three-view piece sits with the four, so the rows are 3.5 and 4.0 photo heights wide), and each row still loops without a gap. The page folder holds 50 images.
+2. **The desktop hero is tighter.** From 1100 px the space from the hero's actions to the artists' eyebrow is 176 px instead of 256 (56 px under the actions, 120 px above the eyebrow), about a third less. Phones keep their spacing.
+3. **"LGBTQ+ owned & operated."**, their own line, sits under the address in Find us, above Directions, in body text and the secondary colour. This replaces decision 7 above.
+
+Gates after the fixes, on the rebuilt page: performance 99, accessibility 100, best practices 100, LCP 1.96 s inside the headline in all three runs, CLS 0.000, TBT 0 ms, 5.7 KB of script gzipped, 21 of 21 links, no axe issue, no sideways scroll at any width, reduced motion still, visit report correct, copy clean. PASS.
+
+Re-recorded at 1440 only (recording-1440.webm, 25 s). preview-1440.png and section-05-find-us-1440.png are saved again, and the other stills with them, since the old ones still showed the removed photo. recording-390.webm is from before these fixes.
 
 ## Fixed after the report
 
