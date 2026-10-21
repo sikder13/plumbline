@@ -57,6 +57,11 @@ body {
   max-width: 100%;
 }
 
+.root a,
+.root button {
+  -webkit-tap-highlight-color: transparent;
+}
+
 .root a:focus-visible,
 .root button:focus-visible,
 .root [tabindex]:focus-visible {
@@ -288,6 +293,8 @@ body {
 
 .section {
   padding-top: var(--pad);
+  /* A jump from the bar lands 64 px above the eyebrow, not at the top of the padding, so a section fits under the bar. */
+  scroll-margin-top: calc(64px - var(--pad));
 }
 
 .h2 {
