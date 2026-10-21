@@ -63,7 +63,6 @@
     var W = 0;
     var H = 0;
     var mark = null;
-    var held = null;
     var strokes = [];
     var start = performance.now();
     var TRACE = 1400;
@@ -120,7 +119,6 @@
       var w = box[2] * s;
       var y = wide ? (H - h) / 2 : 56;
       mark = { x: right - w - box[0] * s, y: y - box[1] * s, s: s };
-      held = null;
       var now = performance.now();
       var count = W < 768 ? 6 : 9;
       strokes = [];
@@ -172,19 +170,7 @@
       var mx = pointer.x * 6;
       var my = pointer.y * 6;
       var p = Math.min(1, (now - start) / TRACE);
-      if (p < 1) traceMark(ctx, p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2, mx, my);
-      else {
-        // Once traced, the mark is kept as a picture and only moved.
-        if (!held) {
-          held = document.createElement('canvas');
-          held.width = canvas.width;
-          held.height = canvas.height;
-          var hc = held.getContext('2d');
-          hc.setTransform(dpr, 0, 0, dpr, 0, 0);
-          traceMark(hc, 1, 0, 0);
-        }
-        ctx.drawImage(held, mx, my, W, H);
-      }
+      traceMark(ctx, p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2, mx, my);
       schedule();
     }
 
@@ -198,7 +184,7 @@
       var lastW = W;
       new ResizeObserver(function () {
         // A phone's address bar changes the height only: the drawing is kept.
-        if (Math.abs(hero.getBoundingClientRect().width - lastW) < 1 && held) return;
+        if (Math.abs(hero.getBoundingClientRect().width - lastW) < 1) return;
         layout();
         lastW = W;
       }).observe(hero);
