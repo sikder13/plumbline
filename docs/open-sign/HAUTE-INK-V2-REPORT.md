@@ -86,9 +86,9 @@ Gate screenshots and gates.json are in previews/review/open-sign/haute-ink-tatto
 11. **The previous design (haute) stays in the repository** and its content is kept beside the new one as previews/content/haute-ink-tattoo-studio/content-seal.json, so going back is one file.
 12. **Recordings are scripted scrolls**: headless Chrome ignored synthesized touch gestures, so the page and the artist rail are scrolled from the page itself.
 
-## Not fixed here
+## Fixed after the report
 
-Every other built page ships its photos' `.made` notes, which name folders on this machine (73 files in this checkout's site, 68 in main's). The sample page no longer does. Leaving them out of every page is a one line change in the site build for each campaign, best made on main.
+Every built page shipped its photos' `.made` notes, which name folders on this machine (73 files in this checkout's site, 68 in main's built site). All five site builds now copy the framework's output through one filter, `servedFile` in packages/preview/src/build.ts, with a test. The Open Sign site rebuilt here has none left and keeps all 502 images. The main preview and engine builds use the same copy but were not rebuilt here, since their data is not in this checkout; main's built site keeps its notes until it is rebuilt from code with this change.
 
 ## Deploy (not done)
 
