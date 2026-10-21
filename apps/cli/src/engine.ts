@@ -9,7 +9,7 @@ import { fingerprintUrl } from '@plumbline/collect';
 import { HostLimiter, Polite, RobotsCache } from '@plumbline/fetch';
 import { Renderer, type PageCapture } from '@plumbline/render';
 import { AxeBuilder } from '@axe-core/playwright';
-import { BASE_PATH, ENGINES, EngineConfig, buildEngineSample, checkBeacon, checkLinks, checkOwnFlag, contentDir, engineLook, engineVarietyIssues, gradeEnginePhotos, heroFor, lighthouseOnce, paletteChecks, paletteFrom, previewPaths, quietContext, rankPhotos, scanPage, serveSite, splitPage, swatchesOf, type EngineName, type GradedIndex, type LighthouseRun, type Look, type PageData, type Swatch } from '@plumbline/preview';
+import { BASE_PATH, servedFile, ENGINES, EngineConfig, buildEngineSample, checkBeacon, checkLinks, checkOwnFlag, contentDir, engineLook, engineVarietyIssues, gradeEnginePhotos, heroFor, lighthouseOnce, paletteChecks, paletteFrom, previewPaths, quietContext, rankPhotos, scanPage, serveSite, splitPage, swatchesOf, type EngineName, type GradedIndex, type LighthouseRun, type Look, type PageData, type Swatch } from '@plumbline/preview';
 import { chromium } from 'playwright';
 import { collectPhotos, fullSize, imageUrlsIn, type FoundImage } from '@plumbline/wave';
 import sharp from 'sharp';
@@ -173,11 +173,11 @@ export function buildSampleSite(): void {
   const site = join(SAMPLE_OUT, 'site');
   const served = join(site, BASE_PATH);
   rmSync(site, { recursive: true, force: true });
-  cpSync(join(app, 'out'), served, { recursive: true, dereference: true });
+  cpSync(join(app, 'out'), served, { recursive: true, dereference: true, filter: servedFile });
   for (const f of readdirSync(join(SAMPLE_OUT, 'data'))) {
     const page = JSON.parse(readFileSync(join(SAMPLE_OUT, 'data', f), 'utf8')) as PageData;
     const assets = join(SAMPLE_OUT, 'assets', page.path);
-    if (existsSync(assets)) cpSync(assets, join(served, page.path), { recursive: true, filter: (from) => !from.endsWith('.made') });
+    if (existsSync(assets)) cpSync(assets, join(served, page.path), { recursive: true, filter: servedFile });
     const html = join(served, page.path, 'index.html');
     writeFileSync(html, scriptsAfterPaint(readFileSync(html, 'utf8')));
   }

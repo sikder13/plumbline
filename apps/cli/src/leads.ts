@@ -3,7 +3,7 @@ import type { Command } from 'commander';
 import { execFileSync } from 'node:child_process';
 import { cpSync, existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { db } from '@plumbline/core';
-import { BASE_PATH, BOOK_DIRECT_GATES, SAMPLE_GATES, buildOpenSignPage, checkOpenSignPage, numbersIn, previewPaths, serveSite, staticSample, type PageData } from '@plumbline/preview';
+import { BASE_PATH, BOOK_DIRECT_GATES, SAMPLE_GATES, buildOpenSignPage, checkOpenSignPage, numbersIn, previewPaths, serveSite, staticSample, servedFile, type PageData } from '@plumbline/preview';
 import { scriptsAfterPaint, VERCEL_JSON } from './preview.ts';
 import { registerBookDirectLeads } from './book-direct.ts';
 import { campaignPaths, enrich, pickBatch, pickSweepBatch, pullLeads, sweep, writeEnriched, type PoolRow } from '@plumbline/leads';
@@ -145,11 +145,11 @@ export function registerLeads(program: Command): Command {
       execFileSync(join(app, 'node_modules', '.bin', 'next'), ['build'], { cwd: app, stdio: 'inherit', env: { ...process.env, PREVIEWS_DATA: staged, NEXT_TELEMETRY_DISABLED: '1' } });
       const served = join(previewPaths.site, BASE_PATH);
       rmSync(previewPaths.site, { recursive: true, force: true });
-      cpSync(join(app, 'out'), served, { recursive: true, dereference: true });
+      cpSync(join(app, 'out'), served, { recursive: true, dereference: true, filter: servedFile });
       for (const f of readdirSync(staged)) {
         const page = JSON.parse(readFileSync(join(staged, f), 'utf8')) as { path: string; sample?: boolean };
         for (const e of readdirSync(served)) if (/-[a-z0-9]{6}$/.test(e) && !pages.some((p) => e.startsWith(`${p}-`))) rmSync(join(served, e), { recursive: true, force: true });
-        cpSync(join(previewPaths.out, 'assets', page.path), join(served, page.path), { recursive: true, filter: (from) => !from.endsWith('.made') });
+        cpSync(join(previewPaths.out, 'assets', page.path), join(served, page.path), { recursive: true, filter: servedFile });
         const html = join(served, page.path, 'index.html');
         if (page.sample) {
           // A sample page is static and carries its own fonts, so its folder can be copied into any built site by itself.
@@ -157,10 +157,8 @@ export function registerLeads(program: Command): Command {
           writeFileSync(html, made.html);
           mkdirSync(join(served, page.path, 'fonts'), { recursive: true });
           for (const font of made.fonts) cpSync(join(served, 'fonts', font), join(served, page.path, 'fonts', font));
-          // The framework's own copies of the page are read only by its scripts, which a sample page no longer has,
-          // and the notes of what each photo was made from name folders on this machine.
+          // The framework's own copies of the page are read only by its scripts, which a sample page no longer has.
           for (const e of readdirSync(join(served, page.path))) if (e.endsWith('.txt')) rmSync(join(served, page.path, e));
-          for (const e of readdirSync(join(served, page.path, 'img'))) if (e.endsWith('.made')) rmSync(join(served, page.path, 'img', e));
         } else writeFileSync(html, scriptsAfterPaint(readFileSync(html, 'utf8')));
       }
       writeFileSync(join(previewPaths.site, 'robots.txt'), 'User-agent: *\nDisallow: /\n');

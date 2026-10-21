@@ -6,7 +6,7 @@ import { db, env, nzTime, paths, type Business, type Db } from '@plumbline/core'
 import { Polite } from '@plumbline/fetch';
 import { limits, spent } from '@plumbline/budget';
 import { latestBatch } from '@plumbline/export';
-import { BASE_PATH, EARLIER_LOOKS, LIMITS, RECHECK_EDIT, WAVE1_LAYOUTS, lookIssues, draftAfterRecheck, liveBatches, recordLiveBatches, retireRecipe, fillDraft, fixedBlocks, numbersIn, parseDraft, scanEmail, withStatus, askCorrected, buildPage, layoutOf, loadPlan, loadRecipe, lookOf, pagesToPublish, recipeSlugs, varietyIssues, checkPage, contentDir, correctedQuestions, correctedSummary, forgetToken, planCorrected, previewPaths, readVisits, removeGenerated, serveSite, summarise, tokenFor, verifyCrawlmouse, type ContentFile, type Dropped, type GateReport, type Look, type PageData } from '@plumbline/preview';
+import { BASE_PATH, servedFile, EARLIER_LOOKS, LIMITS, RECHECK_EDIT, WAVE1_LAYOUTS, lookIssues, draftAfterRecheck, liveBatches, recordLiveBatches, retireRecipe, fillDraft, fixedBlocks, numbersIn, parseDraft, scanEmail, withStatus, askCorrected, buildPage, layoutOf, loadPlan, loadRecipe, lookOf, pagesToPublish, recipeSlugs, varietyIssues, checkPage, contentDir, correctedQuestions, correctedSummary, forgetToken, planCorrected, previewPaths, readVisits, removeGenerated, serveSite, summarise, tokenFor, verifyCrawlmouse, type ContentFile, type Dropped, type GateReport, type Look, type PageData } from '@plumbline/preview';
 import { aiSummary } from '@plumbline/ai';
 import { speedRuns, statedSentence, waveMembers } from '@plumbline/wave';
 import { waveBatch, waveCrawlmouse } from './wave.ts';
@@ -295,7 +295,7 @@ export async function previewBuild(d: Db, opts: { only?: string; draft?: boolean
   // The host serves the site folder as it is, so the pages sit under the same path they are reached at.
   const served = join(previewPaths.site, BASE_PATH);
   rmSync(previewPaths.site, { recursive: true, force: true });
-  cpSync(join(app, 'out'), served, { recursive: true, dereference: true });
+  cpSync(join(app, 'out'), served, { recursive: true, dereference: true, filter: servedFile });
   // Only what is published belongs in the site. Photographs linked into the app's public folder, for looking at a page in development, are left behind.
   const published = new Set(readdirSync(staged).map((f) => (JSON.parse(readFileSync(join(staged, f), 'utf8')) as PageData).path));
   for (const e of readdirSync(served, { withFileTypes: true })) {
@@ -303,7 +303,7 @@ export async function previewBuild(d: Db, opts: { only?: string; draft?: boolean
   }
   const assets = join(previewPaths.out, 'assets');
   for (const page of readdirSync(staged).map((f) => JSON.parse(readFileSync(join(staged, f), 'utf8')) as PageData)) {
-    if (existsSync(join(assets, page.path))) cpSync(join(assets, page.path), join(served, page.path), { recursive: true, filter: (from) => !from.endsWith('.made') });
+    if (existsSync(join(assets, page.path))) cpSync(join(assets, page.path), join(served, page.path), { recursive: true, filter: servedFile });
     const html = join(served, page.path, 'index.html');
     writeFileSync(html, scriptsAfterPaint(readFileSync(html, 'utf8')));
   }

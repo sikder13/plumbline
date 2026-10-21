@@ -80,6 +80,15 @@ function hex(n: number): string {
 }
 
 /** Writes AVIF and WebP versions of one photo at phone and desktop widths. Skips files that are already newer than the source. */
+/**
+ * Whether a file belongs in a built site. The note of what each photo was made from (`<key>.made`, written by
+ * buildPicture) does not: it names folders on this machine. Notes reach the framework's output through the app's
+ * public folder, which links to the photos, so every copy into a site filters them out.
+ */
+export function servedFile(path: string): boolean {
+  return !path.endsWith('.made');
+}
+
 export async function buildPicture(source: string, outDir: string, urlBase: string, key: string, spec: ContentFile['images'][string]): Promise<Picture> {
   if (!existsSync(source)) throw new Error(`image ${source} does not exist`);
   mkdirSync(outDir, { recursive: true });
