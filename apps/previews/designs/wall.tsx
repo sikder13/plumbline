@@ -245,6 +245,7 @@ function Demo({ data }: { data: PageData }) {
             <div className={s.glassWrap} data-reveal>
               <Mark className={s.glassMark} />
               <div className={s.glass}>
+                <p className={s.glassTag}>{c.instagram.handle}</p>
                 <p className={s.bookLine}>{c.bookLine}</p>
               </div>
             </div>
@@ -291,6 +292,14 @@ function Demo({ data }: { data: PageData }) {
                     <span key={l}>{l}</span>
                   ))}
                 </address>
+                {c.phone && (
+                  <>
+                    <h3 className={s.label}>Phone</h3>
+                    <a className={s.phone} href={c.phone.tel}>
+                      {c.phone.display}
+                    </a>
+                  </>
+                )}
                 <a className={`${s.primary} ${s.directions}`} href={maps} data-visit="cta_click">
                   Directions <Arrow up />
                 </a>

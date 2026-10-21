@@ -590,13 +590,23 @@ body {
 .glass {
   flex: 1;
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
   padding: 28px;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: rgb(17 17 17 / 0.7);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
+}
+
+.glassTag {
+  margin: 0;
+  color: var(--bone-2);
+  font: 400 var(--mono-s) / 1.4 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .bookLine {
@@ -671,6 +681,22 @@ body {
   font-style: normal;
   letter-spacing: 0.02em;
   text-transform: uppercase;
+}
+
+.address {
+  margin-bottom: 32px;
+}
+
+.phone {
+  color: var(--bone);
+  font: 400 var(--mono-l) / 1.6 var(--mono);
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+.phone:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 .directions {
@@ -842,8 +868,8 @@ body {
     margin-top: auto;
   }
 
-  .address {
-    margin-bottom: 32px;
+  .phone {
+    margin-bottom: 40px;
   }
 
   .when {
