@@ -157,8 +157,10 @@ export function registerLeads(program: Command): Command {
           writeFileSync(html, made.html);
           mkdirSync(join(served, page.path, 'fonts'), { recursive: true });
           for (const font of made.fonts) cpSync(join(served, 'fonts', font), join(served, page.path, 'fonts', font));
-          // The framework's own copies of the page are read only by its scripts, which a sample page no longer has.
+          // The framework's own copies of the page are read only by its scripts, which a sample page no longer has,
+          // and the notes of what each photo was made from name folders on this machine.
           for (const e of readdirSync(join(served, page.path))) if (e.endsWith('.txt')) rmSync(join(served, page.path, e));
+          for (const e of readdirSync(join(served, page.path, 'img'))) if (e.endsWith('.made')) rmSync(join(served, page.path, 'img', e));
         } else writeFileSync(html, scriptsAfterPaint(readFileSync(html, 'utf8')));
       }
       writeFileSync(join(previewPaths.site, 'robots.txt'), 'User-agent: *\nDisallow: /\n');
