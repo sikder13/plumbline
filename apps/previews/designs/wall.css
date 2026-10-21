@@ -695,6 +695,11 @@ body {
   margin-bottom: 32px;
 }
 
+.owned {
+  margin: -20px 0 32px;
+  color: var(--bone-2);
+}
+
 .phone {
   color: var(--bone);
   font: 400 var(--mono-l) / 1.6 var(--mono);

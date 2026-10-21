@@ -38,6 +38,8 @@ interface Content {
   mark: { viewBox: string; d: string };
   /** The tab's icon: their mark, small, as a data address. */
   icon?: string;
+  /** A line of their own about who runs the studio, set under the address as they wrote it. */
+  owned?: string;
 }
 
 /** A script the page runs once it has been parsed: the ink, the rails, the tilt and the reveals. */
@@ -292,6 +294,7 @@ function Demo({ data }: { data: PageData }) {
                     <span key={l}>{l}</span>
                   ))}
                 </address>
+                {c.owned && <p className={s.owned}>{c.owned}</p>}
                 {c.phone && (
                   <>
                     <h3 className={s.label}>Phone</h3>
