@@ -906,8 +906,13 @@ body {
     --rg: 24px;
   }
 
+  /* The actions sit closer to the hero's foot, and the artists follow sooner. */
   .heroIn {
-    padding-block: 64px 96px;
+    padding-block: 64px 56px;
+  }
+
+  .hero + .section {
+    padding-top: 120px;
   }
 
   .heroText {
