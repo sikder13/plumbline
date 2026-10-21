@@ -38,3 +38,6 @@ apps/previews/next-env.d.ts
 apps/previews/app/fonts.css
 apps/previews/app/faces.css
 data/book-direct/
+
+# Faces fetched from Fontshare: served by the pages, never passed on in the repository
+apps/previews/assets/fonts/
