@@ -339,6 +339,30 @@
       },
       { passive: true },
     );
+    // A finger can drag a row along; the page still scrolls up and down under it.
+    rows.forEach(function (r) {
+      var drag = null;
+      r.row.addEventListener('pointerdown', function (e) {
+        if (e.pointerType === 'mouse') return;
+        drag = { id: e.pointerId, x: e.clientX, from: r.x };
+        r.anim = null;
+      });
+      r.row.addEventListener('pointermove', function (e) {
+        if (!drag || e.pointerId !== drag.id) return;
+        r.x = drag.from + e.clientX - drag.x;
+        hold.touch = true;
+        run();
+      });
+      var end = function () {
+        drag = null;
+        clearTimeout(touchTimer);
+        touchTimer = setTimeout(function () {
+          hold.touch = false;
+        }, 2500);
+      };
+      r.row.addEventListener('pointerup', end);
+      r.row.addEventListener('pointercancel', end);
+    });
     var section = group.closest('section') || group;
     section.addEventListener('focusin', function () {
       hold.focus = true;

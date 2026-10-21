@@ -527,6 +527,7 @@ body {
 :global(html[data-wall-motion]) .row {
   overflow: hidden;
   padding-inline: 0;
+  touch-action: pan-y;
 }
 
 .track {
